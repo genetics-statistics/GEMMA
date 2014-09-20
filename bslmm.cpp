@@ -70,6 +70,7 @@ void BSLMM::CopyFromParam (PARAM &cPar)
 	file_bfile=cPar.file_bfile;
 	file_geno=cPar.file_geno;
 	file_out=cPar.file_out;
+	path_out=cPar.path_out;
 	
 	l_min=cPar.h_min;	
 	l_max=cPar.h_max;  
@@ -134,7 +135,7 @@ void BSLMM::CopyToParam (PARAM &cPar)
 void BSLMM::WriteBV (const gsl_vector *bv) 
 {
 	string file_str;
-	file_str="./output/"+file_out;
+	file_str=path_out+"/"+file_out;
 	file_str+=".bv.txt";
 
 	ofstream outfile (file_str.c_str(), ofstream::out);
@@ -162,7 +163,7 @@ void BSLMM::WriteBV (const gsl_vector *bv)
 void BSLMM::WriteParam (vector<pair<double, double> > &beta_g, const gsl_vector *alpha, const size_t w) 
 {
 	string file_str;
-	file_str="./output/"+file_out;
+	file_str=path_out+"/"+file_out;
 	file_str+=".param.txt";
 
 	ofstream outfile (file_str.c_str(), ofstream::out);
@@ -198,7 +199,7 @@ void BSLMM::WriteParam (vector<pair<double, double> > &beta_g, const gsl_vector 
 void BSLMM::WriteParam (const gsl_vector *alpha) 
 {
 	string file_str;
-	file_str="./output/"+file_out;
+	file_str=path_out+"/"+file_out;
 	file_str+=".param.txt";
 
 	ofstream outfile (file_str.c_str(), ofstream::out);
@@ -228,9 +229,9 @@ void BSLMM::WriteParam (const gsl_vector *alpha)
 void BSLMM::WriteResult (const int flag, const gsl_matrix *Result_hyp, const gsl_matrix *Result_gamma, const size_t w_col) 
 {
 	string file_gamma, file_hyp;
-	file_gamma="./output/"+file_out;
+	file_gamma=path_out+"/"+file_out;
 	file_gamma+=".gamma.txt";
-	file_hyp="./output/"+file_out;
+	file_hyp=path_out+"/"+file_out;
 	file_hyp+=".hyp.txt";
 
 	ofstream outfile_gamma, outfile_hyp;
@@ -1448,7 +1449,7 @@ void BSLMM::SetXgamma (const gsl_matrix *X, const gsl_matrix *X_old, const gsl_m
       //somehow the lapack_dgemm does not work here
       //#ifdef WITH_LAPACK
       //lapack_dgemm ((char *)"T", (char *)"N", 1.0, X_add, X_add, 0.0, XtX_aa);
-      //lapack_dgemm ((char *)"T", (char *)"N", 1.0, X_add, X_old, 0.0, XtX_ao);
+      //lapack_dgemm ((char *)"T", (char *)"N", 1.0, X_add, X_temp, 0.0, XtX_at);
       
       //#else
       gsl_blas_dgemm (CblasTrans, CblasNoTrans, 1.0, X_add, X_add, 0.0, XtX_aa);

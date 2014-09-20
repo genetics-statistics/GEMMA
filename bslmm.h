@@ -49,6 +49,7 @@ public:
 	string file_bfile;
 	string file_geno;
 	string file_out;
+	string path_out;
 	
 	// LMM related parameters
 	double l_min;

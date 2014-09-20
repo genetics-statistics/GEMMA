@@ -44,6 +44,7 @@ public:
 	string file_bfile;
 	string file_geno;
 	string file_out;
+	string path_out;
 	
 	vector<vector<int> > indicator_pheno;
 	vector<int> indicator_cvt;

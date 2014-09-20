@@ -1,5 +1,5 @@
 /*
-    Genome-wide Efficient Mixed Model Association (GEMMA)
+	Genome-wide Efficient Mixed Model Association (GEMMA)
     Copyright (C) 2011  Xiang Zhou
 
     This program is free software: you can redistribute it and/or modify
@@ -66,6 +66,7 @@ void LMM::CopyFromParam (PARAM &cPar)
 	file_bfile=cPar.file_bfile;
 	file_geno=cPar.file_geno;
 	file_out=cPar.file_out;
+	path_out=cPar.path_out;
 	file_gene=cPar.file_gene;
 	
 	l_min=cPar.l_min;
@@ -109,7 +110,7 @@ void LMM::CopyToParam (PARAM &cPar)
 void LMM::WriteFiles () 
 {
 	string file_str;
-	file_str="./output/"+file_out;
+	file_str=path_out+"/"+file_out;
 	file_str+=".assoc.txt";
 
 	ofstream outfile (file_str.c_str(), ofstream::out);

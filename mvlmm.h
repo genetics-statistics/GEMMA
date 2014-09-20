@@ -47,6 +47,7 @@ public:
 	string file_bfile;
 	string file_geno;
 	string file_out;
+	string path_out;
 	
 	// MVLMM related parameters
 	double l_min;

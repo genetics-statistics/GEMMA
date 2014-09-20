@@ -57,6 +57,7 @@ class VC {
 public:
 	// IO related parameters
 	string file_out;
+	string path_out;
 
 	vector<double> v_sigma2;
 	vector<double> v_se_sigma2;
@@ -72,6 +73,7 @@ public:
 	// Main functions
 	void CopyFromParam (PARAM &cPar);
 	void CopyToParam (PARAM &cPar);
+	void CalcVChe (const gsl_matrix *K, const gsl_matrix *W, const gsl_vector *y);
 	void CalcVCreml (const gsl_matrix *K, const gsl_matrix *W, const gsl_vector *y);
 };
 

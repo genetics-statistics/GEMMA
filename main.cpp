@@ -56,14 +56,14 @@ int main(int argc, char * argv[])
 	if (argc==2 && argv[1][0] == '-' && argv[1][1] == 'l') {
 		cGemma.PrintLicense();
 		return EXIT_SUCCESS;
-	}
-	
-	ifstream check_dir("output/");
-	if (!check_dir) {
-		mkdir("output", S_IRWXU|S_IRGRP|S_IROTH);
 	}	
 	
 	cGemma.Assign(argc, argv, cPar); 
+
+	ifstream check_dir((cPar.path_out).c_str());
+	if (!check_dir) {
+	  mkdir((cPar.path_out).c_str(), S_IRWXU|S_IRGRP|S_IROTH);
+	}	
 		
 	if (cPar.error==true) {return EXIT_FAILURE;}
 	     

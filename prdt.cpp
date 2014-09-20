@@ -61,6 +61,7 @@ void PRDT::CopyFromParam (PARAM &cPar)
 	file_bfile=cPar.file_bfile;
 	file_geno=cPar.file_geno;
 	file_out=cPar.file_out;
+	path_out=cPar.path_out;
 	
 	indicator_pheno=cPar.indicator_pheno;	
 	indicator_cvt=cPar.indicator_cvt;
@@ -94,7 +95,7 @@ void PRDT::CopyToParam (PARAM &cPar)
 void PRDT::WriteFiles (gsl_vector *y_prdt) 
 {
 	string file_str;
-	file_str="./output/"+file_out;
+	file_str=path_out+"/"+file_out;
 	file_str+=".";
 	file_str+="prdt";
 	file_str+=".txt";
@@ -121,7 +122,7 @@ void PRDT::WriteFiles (gsl_vector *y_prdt)
 void PRDT::WriteFiles (gsl_matrix *Y_full) 
 {
 	string file_str;
-	file_str="./output/"+file_out;
+	file_str=path_out+"/"+file_out;
 	file_str+=".prdt.txt";
 	
 	ofstream outfile (file_str.c_str(), ofstream::out);

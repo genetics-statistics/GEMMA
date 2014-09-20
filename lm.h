@@ -44,6 +44,7 @@ public:
 	string file_bfile;
 	string file_geno;
 	string file_out;
+	string path_out;
 	
 	string file_gene;
 	

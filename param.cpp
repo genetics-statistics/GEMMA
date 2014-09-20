@@ -41,7 +41,7 @@ using namespace std;
 
 PARAM::PARAM(void):	
 mode_silence (false), a_mode (0), k_mode(1), d_pace (100000),
-file_out("result"), 
+file_out("result"), path_out("./output/"),
 miss_level(0.05), maf_level(0.01), hwe_level(0), r2_level(0.9999),
 l_min(1e-5), l_max(1e5), n_region(10),p_nr(0.001),em_prec(0.0001),nr_prec(0.0001),em_iter(10000),nr_iter(100),crt(0),
 pheno_mean(0),
@@ -614,7 +614,7 @@ void PARAM::CalcKin (gsl_matrix *matrix_kin)  {
 void PARAM::WriteMatrix (const gsl_matrix *matrix_U, const string suffix) 
 {
 	string file_str;
-	file_str="./output/"+file_out;
+	file_str=path_out+"/"+file_out;
 	file_str+=".";
 	file_str+=suffix;
 	file_str+=".txt";	
@@ -640,7 +640,7 @@ void PARAM::WriteMatrix (const gsl_matrix *matrix_U, const string suffix)
 void PARAM::WriteVector (const gsl_vector *vector_D, const string suffix) 
 {
 	string file_str;
-	file_str="./output/"+file_out;
+	file_str=path_out+"/"+file_out;
 	file_str+=".";
 	file_str+=suffix;
 	file_str+=".txt";

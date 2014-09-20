@@ -68,6 +68,7 @@ void MVLMM::CopyFromParam (PARAM &cPar)
 	file_bfile=cPar.file_bfile;
 	file_geno=cPar.file_geno;
 	file_out=cPar.file_out;
+	path_out=cPar.path_out;
 	
 	l_min=cPar.l_min;
 	l_max=cPar.l_max;
@@ -132,7 +133,7 @@ void MVLMM::CopyToParam (PARAM &cPar)
 void MVLMM::WriteFiles () 
 {
 	string file_str;
-	file_str="./output/"+file_out;
+	file_str=path_out+"/"+file_out;
 	file_str+=".assoc.txt";
 	
 	ofstream outfile (file_str.c_str(), ofstream::out);

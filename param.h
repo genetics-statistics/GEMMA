@@ -100,6 +100,7 @@ public:
 	string file_ku, file_kd;
 	string file_mk;
 	string file_out;
+	string path_out;
 	
 	string file_epm;		//estimated parameter file
 	string file_ebv;		//estimated breeding value file

@@ -61,7 +61,7 @@ using namespace std;
 
 
 GEMMA::GEMMA(void):	
-version("0.95"), date("08/08/2014"), year("2011")
+version("0.95alpha"), date("08/08/2014"), year("2011")
 {}
 
 void GEMMA::PrintHeader (void)
@@ -238,6 +238,7 @@ void GEMMA::PrintHelp(size_t option)
 		cout<<"                   2: \"id  id  value\" format"<<endl;
 		cout<<" -n        [num]          "<<" specify phenotype column in the phenotype/*.fam file (optional; default 1)"<<endl;	
 		cout<<" -pace     [num]          "<<" specify terminal display update pace (default 100000 SNPs or 100000 iterations)."<<endl;
+		cout<<" -outdir   [path]         "<<" specify output directory path (default \"./output/\")"<<endl; 
 		cout<<" -o        [prefix]       "<<" specify output file prefix (default \"result\")"<<endl;  
 		cout<<"          output: prefix.cXX.txt or prefix.sXX.txt from kinship/relatedness matrix estimation"<<endl;	
 		cout<<"          output: prefix.assoc.txt and prefix.log.txt form association tests"<<endl;	
@@ -518,6 +519,13 @@ void GEMMA::Assign(int argc, char ** argv, PARAM &cPar)
 			str.clear();
 			str.assign(argv[i]);
 			cPar.d_pace=atoi(str.c_str());
+		}
+		else if (strcmp(argv[i], "-outdir")==0) {
+			if(argv[i+1] == NULL || argv[i+1][0] == '-') {continue;}
+			++i;
+			str.clear();
+			str.assign(argv[i]);
+			cPar.path_out=str;
 		}
 		else if (strcmp(argv[i], "-o")==0) {
 			if(argv[i+1] == NULL || argv[i+1][0] == '-') {continue;}
@@ -1567,7 +1575,7 @@ void GEMMA::BatchRun (PARAM &cPar)
 void GEMMA::WriteLog (int argc, char ** argv, PARAM &cPar) 
 {
 	string file_str;
-	file_str="./output/"+cPar.file_out;
+	file_str=cPar.path_out+"/"+cPar.file_out;
 	file_str+=".log.txt";
 	
 	ofstream outfile (file_str.c_str(), ofstream::out);
