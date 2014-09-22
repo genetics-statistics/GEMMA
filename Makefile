@@ -16,7 +16,7 @@ SYS = LNX
 # Disable WITH_ARPACK option only disable -apprx option in the software
 WITH_LAPACK = 1
 FORCE_32BIT = 
-FORCE_DYNAMIC = 1
+FORCE_DYNAMIC = 
 FORCE_FLOAT = 
 
 # --------------------------------------------------------------------
@@ -48,17 +48,17 @@ HDR =
 
 LIBS_LNX_D_LAPACK = -llapack
 LIBS_MAC_D_LAPACK = -framework Veclib
-LIBS_LNX_S_LAPACK = -llapack -lgfortran  /usr/lib64/atlas/libf77blas.a /usr/lib64/atlas/libatlas.a
+LIBS_LNX_S_LAPACK = /usr/lib/lapack/liblapack.a -lgfortran  /usr/lib/atlas-base/libatlas.a /usr/lib/libblas/libblas.a -Wl,--allow-multiple-definition 
 
 # Options
 
 ifdef FORCE_FLOAT
   CPPFLAGS += -DFORCE_FLOAT
-  SOURCES += $(SRC_DIR)/param_float.cpp $(SRC_DIR)/gemma_float.cpp $(SRC_DIR)/io_float.cpp $(SRC_DIR)/lmm_float.cpp $(SRC_DIR)/mvlmm_float.cpp $(SRC_DIR)/bslmm_float.cpp $(SRC_DIR)/prdt_float.cpp $(SRC_DIR)/mathfunc_float.cpp $(SRC_DIR)/gzstream.cpp
-  HDR += $(SRC_DIR)/param_float.h $(SRC_DIR)/gemma_float.h $(SRC_DIR)/io_float.h $(SRC_DIR)/lmm_float.h $(SRC_DIR)/mvlmm_float.h $(SRC_DIR)/bslmm_float.h $(SRC_DIR)/prdt_float.h $(SRC_DIR)/mathfunc_float.h $(SRC_DIR)/gzstream.h
+  SOURCES += $(SRC_DIR)/param_float.cpp $(SRC_DIR)/gemma_float.cpp $(SRC_DIR)/io_float.cpp $(SRC_DIR)/lm_float.cpp $(SRC_DIR)/vc_float.cpp $(SRC_DIR)/lmm_float.cpp $(SRC_DIR)/mvlmm_float.cpp $(SRC_DIR)/bslmm_float.cpp $(SRC_DIR)/prdt_float.cpp $(SRC_DIR)/mathfunc_float.cpp $(SRC_DIR)/gzstream.cpp
+  HDR += $(SRC_DIR)/param_float.h $(SRC_DIR)/gemma_float.h $(SRC_DIR)/io_float.h $(SRC_DIR)/lm_float.h $(SRC_DIR)/lmm_float.h $(SRC_DIR)/vc_float.h $(SRC_DIR)/mvlmm_float.h $(SRC_DIR)/bslmm_float.h $(SRC_DIR)/prdt_float.h $(SRC_DIR)/mathfunc_float.h $(SRC_DIR)/gzstream.h
 else
-  SOURCES += $(SRC_DIR)/param.cpp $(SRC_DIR)/gemma.cpp $(SRC_DIR)/io.cpp $(SRC_DIR)/lmm.cpp $(SRC_DIR)/mvlmm.cpp $(SRC_DIR)/bslmm.cpp $(SRC_DIR)/prdt.cpp $(SRC_DIR)/mathfunc.cpp $(SRC_DIR)/gzstream.cpp
-  HDR += $(SRC_DIR)/param.h $(SRC_DIR)/gemma.h $(SRC_DIR)/io.h $(SRC_DIR)/lmm.h $(SRC_DIR)/mvlmm.h $(SRC_DIR)/bslmm.h $(SRC_DIR)/prdt.h $(SRC_DIR)/mathfunc.h $(SRC_DIR)/gzstream.h
+  SOURCES += $(SRC_DIR)/param.cpp $(SRC_DIR)/gemma.cpp $(SRC_DIR)/io.cpp $(SRC_DIR)/lm.cpp $(SRC_DIR)/lmm.cpp $(SRC_DIR)/vc.cpp $(SRC_DIR)/mvlmm.cpp $(SRC_DIR)/bslmm.cpp $(SRC_DIR)/prdt.cpp $(SRC_DIR)/mathfunc.cpp $(SRC_DIR)/gzstream.cpp
+  HDR += $(SRC_DIR)/param.h $(SRC_DIR)/gemma.h $(SRC_DIR)/io.h $(SRC_DIR)/lm.h $(SRC_DIR)/lmm.h $(SRC_DIR)/vc.h $(SRC_DIR)/mvlmm.h $(SRC_DIR)/bslmm.h $(SRC_DIR)/prdt.h $(SRC_DIR)/mathfunc.h $(SRC_DIR)/gzstream.h
 endif
 
 ifdef WITH_LAPACK
