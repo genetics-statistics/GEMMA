@@ -32,7 +32,11 @@ CPP = g++
 
 CPPFLAGS = -Wall -O3
 
+ifdef FORCE_DYNAMIC
+LIBS = -lgsl -lgslcblas -lblas -pthread -lz
+else
 LIBS = -lgsl -lgslcblas -pthread -lz
+endif
 
 OUTPUT = $(BIN_DIR)/gemma
 
