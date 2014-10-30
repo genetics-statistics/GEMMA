@@ -1,0 +1,4 @@
+.gitignore
+*.o
+*.tar.gz
+bin/
