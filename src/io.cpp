@@ -563,11 +563,12 @@ bool ReadFile_geno (const string &file_geno, const set<string> &setSnps, const g
 		
 		if (flag_poly!=1) {indicator_snp.push_back(0); continue;}
 		
-		if (hwe_level!=0) {
+		if (hwe_level!=0 && maf_level!=-1) {
 			if (CalcHWE(n_0, n_2, n_1)<hwe_level) {indicator_snp.push_back(0); continue;}
 		}
 		
 		//filter SNP if it is correlated with W
+		//unless W has only one column, of 1s
 		for (size_t i=0; i<genotype->size; ++i) {			
 			if (gsl_vector_get (genotype_miss, i)==1) {geno=maf*2.0; gsl_vector_set (genotype, i, geno);}		
 		}
@@ -577,7 +578,7 @@ bool ReadFile_geno (const string &file_geno, const set<string> &setSnps, const g
 		gsl_blas_ddot (genotype, genotype, &v_x);
 		gsl_blas_ddot (Wtx, WtWiWtx, &v_w);
 		
-		if (v_w/v_x >= r2_level) {indicator_snp.push_back(0); continue;}
+		if (W->size2!=1 && v_w/v_x >= r2_level) {indicator_snp.push_back(0); continue;}
 		
 		indicator_snp.push_back(1); 
 		ns_test++;
@@ -698,12 +699,13 @@ bool ReadFile_bed (const string &file_bed, const set<string> &setSnps, const gsl
 		
 		if ( (n_0+n_1)==0 || (n_1+n_2)==0 || (n_2+n_0)==0) {indicator_snp.push_back(0); continue;}
 		
-		if (hwe_level!=1) {
+		if (hwe_level!=1 && maf_level!=-1) {
 			if (CalcHWE(n_0, n_2, n_1)<hwe_level) {indicator_snp.push_back(0); continue;}
 		}
 			
 		
 		//filter SNP if it is correlated with W
+		//unless W has only one column, of 1s
 		for (size_t i=0; i<genotype->size; ++i) {			
 			if (gsl_vector_get (genotype_miss, i)==1) {geno=maf*2.0; gsl_vector_set (genotype, i, geno);}		
 		}
@@ -713,7 +715,7 @@ bool ReadFile_bed (const string &file_bed, const set<string> &setSnps, const gsl
 		gsl_blas_ddot (genotype, genotype, &v_x);
 		gsl_blas_ddot (Wtx, WtWiWtx, &v_w);
 		
-		if (v_w/v_x > r2_level) {indicator_snp.push_back(0); continue;}
+		if (W->size2!=1 && v_w/v_x > r2_level) {indicator_snp.push_back(0); continue;}
 		
 		indicator_snp.push_back(1); 
 		ns_test++;
