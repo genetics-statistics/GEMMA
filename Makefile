@@ -105,7 +105,7 @@ $(OBJS) : $(HDR)
 
 
 clean:
-	rm -rf ${SRC_DIR}/*.o ${SRC_DIR}/*~ *~ ${SRC_DIR}/*_float.*
+	rm -rf ${SRC_DIR}/*.o ${SRC_DIR}/*~ *~ ${SRC_DIR}/*_float.* $(OUTPUT)
 tar:
 	tar cvzf gemma-0.93.tar.gz COPYING.txt  README.txt  Makefile  src  doc  example  bin
 
