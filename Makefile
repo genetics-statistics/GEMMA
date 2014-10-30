@@ -18,6 +18,7 @@ WITH_LAPACK = 1
 FORCE_32BIT = 
 FORCE_DYNAMIC = 
 FORCE_FLOAT = 
+DIST_NAME = gemma-0.95alpha
 
 # --------------------------------------------------------------------
 # Edit below this line with caution
@@ -32,7 +33,11 @@ CPP = g++
 
 CPPFLAGS = -Wall -O3
 
+ifdef FORCE_DYNAMIC
+LIBS = -lgsl -lgslcblas -lblas -pthread -lz
+else
 LIBS = -lgsl -lgslcblas -pthread -lz
+endif
 
 OUTPUT = $(BIN_DIR)/gemma
 
@@ -106,6 +111,14 @@ $(OBJS) : $(HDR)
 
 clean:
 	rm -rf ${SRC_DIR}/*.o ${SRC_DIR}/*~ *~ ${SRC_DIR}/*_float.* $(OUTPUT)
+
+DIST_COMMON = COPYING.txt README.txt Makefile
+DIST_SUBDIRS = src doc example bin
+
 tar:
-	tar cvzf gemma-0.93.tar.gz COPYING.txt  README.txt  Makefile  src  doc  example  bin
+	mkdir -p ./$(DIST_NAME)
+	cp $(DIST_COMMON) ./$(DIST_NAME)/
+	cp -r $(DIST_SUBDIRS) ./$(DIST_NAME)/
+	tar cvzf $(DIST_NAME).tar.gz ./$(DIST_NAME)/
+	rm -r ./$(DIST_NAME)
 
