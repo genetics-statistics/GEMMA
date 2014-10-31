@@ -79,7 +79,7 @@
 \section{Introduction}
 
 \subsection{What is GEMMA}
-GEMMA is the software implementing the Genome-wide Efficient Mixed Model Association algorithm \cite{Zhou:2012} for a standard linear mixed model and some of its close relatives for genome-wide association studies (GWAS). It fits a univariate linear mixed model (LMM) for marker association tests with a single phenotype to account for population stratification and sample structure, and for estimating the proportion of variance in phenotypes explained (PVE) by typed genotypes (i.e. "chip heritability") \cite{Zhou:2012}.  It fits a multivariate linear mixed model (mvLMM) for testing marker associations with multiple phenotypes simultaneously while controlling for population stratification, and for estimating genetic correlations among complex phenotypes \cite{Zhou:2013b}. It fits a Bayesian sparse linear mixed model (BSLMM) using Markov chain Monte Carlo (MCMC) for estimating PVE by typed genotypes, predicting phenotypes, and identifying associated markers by jointly modeling all markers while controlling for population structure \cite{Zhou:2013}. It is computationally efficient for large scale GWAS and uses freely available open-source numerical libraries.
+GEMMA is the software implementing the Genome-wide Efficient Mixed Model Association algorithm \cite{Zhou:2012} for a standard linear mixed model and some of its close relatives for genome-wide association studies (GWAS). It fits a univariate linear mixed model (LMM) for marker association tests with a single phenotype to account for population stratification and sample structure, and for estimating the proportion of variance in phenotypes explained (PVE) by typed genotypes (i.e. "chip heritability") \cite{Zhou:2012}.  It fits a multivariate linear mixed model (mvLMM) for testing marker associations with multiple phenotypes simultaneously while controlling for population stratification, and for estimating genetic correlations among complex phenotypes \cite{Zhou:2014}. It fits a Bayesian sparse linear mixed model (BSLMM) using Markov chain Monte Carlo (MCMC) for estimating PVE by typed genotypes, predicting phenotypes, and identifying associated markers by jointly modeling all markers while controlling for population structure \cite{Zhou:2013}. It is computationally efficient for large scale GWAS and uses freely available open-source numerical libraries.
 
 
 \subsection{How to Cite GEMMA}
@@ -87,7 +87,7 @@ GEMMA is the software implementing the Genome-wide Efficient Mixed Model Associa
 \item Software tool and univariate linear mixed models \\
 Xiang Zhou and Matthew Stephens (2012). Genome-wide efficient mixed-model analysis for association studies. Nature Genetics. 44: 821-824.
 \item Multivariate linear mixed models \\
-Xiang Zhou and Matthew Stephens (2014). Efficient algorithms for multivariate linear mixed models in genome-wide association studies. Nature Methods. in press.
+Xiang Zhou and Matthew Stephens (2014). Efficient multivariate linear mixed model algorithms for genome-wide association studies. Nature Methods. 11: 407-409.
 \item Bayesian sparse linear mixed models \\
 Xiang Zhou, Peter Carbonetto and Matthew Stephens (2013). Polygenic modeling with Bayesian sparse linear mixed models. PLoS Genetics. 9(2): e1003264.
 \end{itemize}
@@ -622,6 +622,6 @@ A: One should always use the same phenotype and genotype files for both fitting 
 	
 \clearpage
 \bibliographystyle{plain}
-\bibliography{/net/wallace/ga/xz7/Documents/Papers/BIB/lmm,/net/wallace/ga/xz7/Documents/Papers/BIB/bslmm,/net/wallace/ga/xz7/Documents/Papers/BIB/mvlmm}
+\bibliography{GEMMAmanual}
 
 \end{document}
