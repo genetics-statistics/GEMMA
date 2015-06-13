@@ -110,7 +110,9 @@ public:
 	string file_gene;		//gene expression file
 	
 	string file_snps;		//file containing analyzed snps or genes
-	
+
+	// WJA Added	
+	string file_bgenfile;	
 	
 	
 	// QC related parameters	

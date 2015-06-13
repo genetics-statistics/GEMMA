@@ -65,6 +65,9 @@ public:
 	
 	string file_gene;
 	
+	// WJA added
+	string file_bgenfile;
+
 	// LMM related parameters
 	double l_min;
 	double l_max;
@@ -93,6 +96,7 @@ public:
 	void CopyToParam (PARAM &cPar);
 	void AnalyzeGene (const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *UtW, const gsl_vector *Utx, const gsl_matrix *W, const gsl_vector *x);
 	void AnalyzePlink (const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *UtW, const gsl_vector *Uty, const gsl_matrix *W, const gsl_vector *y);
+	void AnalyzeBGEN (const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *UtW, const gsl_vector *Uty, const gsl_matrix *W, const gsl_vector *y);
 	void AnalyzeBimbam (const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *UtW, const gsl_vector *Uty, const gsl_matrix *W, const gsl_vector *y);
 	void WriteFiles ();
 	

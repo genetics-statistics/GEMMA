@@ -381,6 +381,15 @@ void GEMMA::Assign(int argc, char ** argv, PARAM &cPar)
 			str.assign(argv[i]);
 			cPar.file_bfile=str;
 		}
+		// WJA added	
+		else if (strcmp(argv[i], "-bgenfile")==0 || strcmp(argv[i], "--bgenfile")==0 || strcmp(argv[i], "-bgen")==0) {
+			if(argv[i+1] == NULL || argv[i+1][0] == '-') {continue;}
+			++i;
+			str.clear();
+			str.assign(argv[i]);
+			cPar.file_bgenfile=str;
+		}
+
 		else if (strcmp(argv[i], "-silence")==0) {
 			cPar.mode_silence=true;
 		}
@@ -1424,7 +1433,12 @@ void GEMMA::BatchRun (PARAM &cPar)
 						cLmm.AnalyzeGene (U, eval, UtW, &UtY_col.vector, W, &Y_col.vector); //y is the predictor, not the phenotype
 					} else if (!cPar.file_bfile.empty()) {
 						cLmm.AnalyzePlink (U, eval, UtW, &UtY_col.vector, W, &Y_col.vector);
-					} else {
+					}
+					 // WJA added
+				        else if(!cPar.file_bgenfile.empty()) {
+						cLmm.AnalyzeBGEN (U, eval, UtW, &UtY_col.vector, W, &Y_col.vector);	
+					}	
+				   	else {
 						cLmm.AnalyzeBimbam (U, eval, UtW, &UtY_col.vector, W, &Y_col.vector);
 					}	
 					

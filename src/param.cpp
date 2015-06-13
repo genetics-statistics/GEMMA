@@ -127,7 +127,34 @@ void PARAM::ReadFiles (void)
 	} else {
 		n_cvt=1;
 	}
-
+	std::cout<<"should be reading oxford phenotype file too"<<std::endl;
+	// WJA added 
+	//read genotype and phenotype file for bgen format
+	if (!file_bgenfile.empty()) {
+		std::cout<<"should allow reading Oxford phenotypes here"<<std::endl;
+		file_str="./mouse_hs1940.bim";
+		if (ReadFile_bim (file_str, snpInfo)==false) {error=true;}		
+		
+		file_str="./mouse_hs1940.fam";
+		if (ReadFile_fam (file_str, indicator_pheno, pheno, mapID2num, p_column)==false) {error=true;}
+		
+	
+	//post-process covariates and phenotypes, obtain ni_test, save all useful covariates
+		ProcessCvtPhen();
+		
+		//obtain covariate matrix
+		gsl_matrix *W=gsl_matrix_alloc (ni_test, n_cvt);
+		CopyCvt (W);
+		
+		file_str=file_bgenfile;
+		std::cout<<"going in"<<std::endl;
+		if (ReadFile_bgen (file_str, setSnps, W, indicator_idv, indicator_snp, snpInfo, maf_level, miss_level, hwe_level, r2_level, ns_test)==false) {error=true;}
+		
+		gsl_matrix_free(W);
+		
+		ns_total=indicator_snp.size();
+	}
+	
 	//read genotype and phenotype file for plink format
 	if (!file_bfile.empty()) {
 		file_str=file_bfile+".bim";
@@ -328,6 +355,9 @@ void PARAM::CheckParam (void)
 	if (!file_bfile.empty()) {flag++;}
 	if (!file_geno.empty()) {flag++;}
 	if (!file_gene.empty()) {flag++;}
+	// WJA added
+	if (!file_bgenfile.empty()) {flag++;}
+	
 	
 	if (flag!=1 && a_mode!=43 && a_mode!=5 && a_mode!=61) {
 		cout<<"error! either plink binary files, or bimbam mean genotype files, or gene expression files are required."<<endl; error=true;

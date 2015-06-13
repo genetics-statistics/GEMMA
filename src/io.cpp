@@ -351,7 +351,8 @@ bool ReadFile_cvt (const string &file_cvt, vector<int> &indicator_cvt, vector<ve
 
 //Read .bim file
 bool ReadFile_bim (const string &file_bim, vector<SNPINFO> &snpInfo)
-{
+{	
+	std::cout<<"HERE TOO"<<std::endl;
 	snpInfo.clear();
 	
 	ifstream infile (file_bim.c_str(), ifstream::in);
@@ -394,6 +395,7 @@ bool ReadFile_bim (const string &file_bim, vector<SNPINFO> &snpInfo)
 //Read .fam file
 bool ReadFile_fam (const string &file_fam, vector<vector<int> > &indicator_pheno, vector<vector<double> > &pheno, map<string, int> &mapID2num, const vector<size_t> &p_column)
 {
+	std::cout<<"HERE"<<std::endl;
 	indicator_pheno.clear();
 	pheno.clear();
 	mapID2num.clear();	
@@ -606,6 +608,7 @@ bool ReadFile_geno (const string &file_geno, const set<string> &setSnps, const g
 //Read bed file, the first time
 bool ReadFile_bed (const string &file_bed, const set<string> &setSnps, const gsl_matrix *W, vector<int> &indicator_idv, vector<int> &indicator_snp, vector<SNPINFO> &snpInfo, const double &maf_level, const double &miss_level, const double &hwe_level, const double &r2_level, size_t &ns_test)
 {
+	std::cout<<"Am here"<<std::endl;
 	indicator_snp.clear();
 	size_t ns_total=snpInfo.size();
 	
@@ -720,7 +723,317 @@ bool ReadFile_bed (const string &file_bed, const set<string> &setSnps, const gsl
 		indicator_snp.push_back(1); 
 		ns_test++;
 	}
+	std::cout<<"leaving here"<<std::endl;
+	gsl_vector_free (genotype);
+	gsl_vector_free (genotype_miss);
+	gsl_matrix_free (WtW);
+	gsl_matrix_free (WtWi);
+	gsl_vector_free (Wtx);
+	gsl_vector_free (WtWiWtx);
+	gsl_permutation_free (pmt);
+		  
+	infile.close();
+	infile.clear();	
 	
+	return true;
+}
+
+
+//ReadFile_geno (const string &file_geno, const set<string> &setSnps, const gsl_matrix *W, vector<int> &indicator_idv, vector<int> &indicator_snp, const double &maf_level, const double &miss_level, const double &hwe_level, const double &r2_level, map<string, string> &mapRS2chr, map<string, long int> &mapRS2bp, map<string, double> &mapRS2cM, vector<SNPINFO> &snpInfo, size_t &ns_test)
+
+// WJA Added      
+//Read bgen file, the first time
+#include <cstdint>
+bool ReadFile_bgen(const string &file_bgen, const set<string> &setSnps, const gsl_matrix *W, vector<int> &indicator_idv, vector<int> &indicator_snp, vector<SNPINFO> &snpInfo, const double &maf_level, const double &miss_level, const double &hwe_level, const double &r2_level, size_t &ns_test)
+{
+	indicator_snp.clear();
+	
+	ifstream infile (file_bgen.c_str(), ios::binary);
+	if (!infile) {cout<<"error reading bgen file:"<<file_bgen<<endl; return false;}
+
+	gsl_vector *genotype=gsl_vector_alloc (W->size1);
+	gsl_vector *genotype_miss=gsl_vector_alloc (W->size1);
+	gsl_matrix *WtW=gsl_matrix_alloc (W->size2, W->size2);
+	gsl_matrix *WtWi=gsl_matrix_alloc (W->size2, W->size2);
+	gsl_vector *Wtx=gsl_vector_alloc (W->size2);
+	gsl_vector *WtWiWtx=gsl_vector_alloc (W->size2);
+	gsl_permutation * pmt=gsl_permutation_alloc (W->size2);
+	
+	gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, W, W, 0.0, WtW);
+	int sig;	
+	LUDecomp (WtW, pmt, &sig);
+	LUInvert (WtW, pmt, WtWi);
+	
+	uint32_t bgen_header_offset;
+	uint32_t bgen_header_length;
+	uint32_t bgen_nsamples;
+	uint32_t bgen_nsnps;
+	uint32_t bgen_flags;
+	infile.read(reinterpret_cast<char*>(&bgen_header_offset),4);
+	infile.read(reinterpret_cast<char*>(&bgen_header_length),4);
+	infile.read(reinterpret_cast<char*>(&bgen_nsnps),4);	
+	infile.read(reinterpret_cast<char*>(&bgen_nsamples),4);
+	infile.ignore(4+bgen_header_length-20);
+	infile.read(reinterpret_cast<char*>(&bgen_flags),4);
+	bool CompressedSNPBlocks=bgen_flags&0x1;
+	bool LongIds=bgen_flags&0x4;
+
+	size_t ns_total=static_cast<size_t>(bgen_nsnps);
+	std::cout<< "Should print here we don't support old version if LongIds=0";
+
+	std::cout<<"Hello"<<std::endl;
+	std::cout<<"header offset:"<<bgen_header_offset<<std::endl;
+	std::cout<<"header length:"<<bgen_header_length<<std::endl;
+	std::cout<<"nsnps:"<<bgen_nsnps<<std::endl;
+	std::cout<<"n samples:"<<bgen_nsamples<<std::endl;
+	std::cout<<"flags:"<<bgen_flags<<std::endl;
+	std::cout<<"snps_compressed="<<CompressedSNPBlocks<<std::endl;
+	std::cout<<"Long Ids="<<LongIds<<std::endl;
+	
+	snpInfo.clear();
+	string rs;
+	long int b_pos;
+	string chr;
+	double cM;
+	string major;
+	string minor;
+	string id;
+
+/* 	
+	string line;
+	char *ch_ptr;
+	
+	
+	while (getline(infile, line)) {
+		ch_ptr=strtok ((char *)line.c_str(), " \t");
+		chr=ch_ptr;
+		ch_ptr=strtok (NULL, " \t");
+		rs=ch_ptr;
+		ch_ptr=strtok (NULL, " \t");
+		cM=atof(ch_ptr);
+		ch_ptr=strtok (NULL, " \t");
+		b_pos=atol(ch_ptr);
+		ch_ptr=strtok (NULL, " \t");
+		minor=ch_ptr;
+		ch_ptr=strtok (NULL, " \t");
+		major=ch_ptr;
+		
+		SNPINFO sInfo={chr, rs, cM, b_pos, minor, major, -9, -9, -9};
+		snpInfo.push_back(sInfo);
+	}
+	
+	infile.close();
+	infile.clear();	
+	return true;
+	*/
+
+	size_t ni_total=indicator_idv.size();   // total number of samples in phenotype file
+	size_t ni_test=0;   // number of samples to use in test
+	for (size_t i=0; i<ni_total; ++i) {
+		ni_test+=indicator_idv[i];
+	}
+
+	uint32_t bgen_N;
+	uint16_t bgen_LS;
+	uint16_t bgen_LR;
+	uint16_t bgen_LC;	
+	uint32_t bgen_SNP_pos;
+	uint32_t bgen_LA;
+	std::string bgen_A_allele;
+	uint32_t bgen_LB;
+	std::string bgen_B_allele;
+	uint32_t bgen_P;
+	
+	
+//	ns_total=1;
+	for (size_t t=0; t<ns_total; ++t) {
+	
+		id.clear();
+		rs.clear();
+		chr.clear();
+		bgen_A_allele.clear();
+		bgen_B_allele.clear();
+
+		
+		infile.read(reinterpret_cast<char*>(&bgen_N),4);
+		std::cout<<"N="<<bgen_N<<std::endl;
+
+		infile.read(reinterpret_cast<char*>(&bgen_LS),2);
+		std::cout<<"LS="<<bgen_LS<<std::endl;
+
+		std::copy_n(std::istreambuf_iterator<char>(infile), static_cast<size_t>(bgen_LS), std::back_inserter(id));
+		infile.ignore(1);
+		infile.read(reinterpret_cast<char*>(&bgen_LR),2);
+		std::cout<<"LR="<<bgen_LR<<std::endl;
+
+		std::copy_n(std::istreambuf_iterator<char>(infile), static_cast<size_t>(bgen_LR), std::back_inserter(rs));
+		infile.ignore(1);
+		infile.read(reinterpret_cast<char*>(&bgen_LC),2);
+		std::copy_n(std::istreambuf_iterator<char>(infile), static_cast<size_t>(bgen_LC), std::back_inserter(chr));
+		infile.ignore(1);
+		
+		infile.read(reinterpret_cast<char*>(&bgen_SNP_pos),4);
+		infile.read(reinterpret_cast<char*>(&bgen_LA),4);
+		std::copy_n(std::istreambuf_iterator<char>(infile), static_cast<size_t>(bgen_LA), std::back_inserter(bgen_A_allele));
+		infile.ignore(1);
+	std::cout<<"LA="<<bgen_LA<<std::endl;
+
+		infile.read(reinterpret_cast<char*>(&bgen_LB),4);
+	std::cout<<"LB="<<bgen_LB<<std::endl;
+
+		std::copy_n(std::istreambuf_iterator<char>(infile), static_cast<size_t>(bgen_LB), std::back_inserter(bgen_B_allele));
+		infile.ignore(1);
+					std::cout<<"LC="<<bgen_LC<<std::endl;
+		std::cout<<"id="<<id<<std::endl;
+
+		std::cout<<"rs="<<rs<<std::endl;
+		std::cout<<"chr="<<chr<<std::endl;
+			//	infile.ignore(bgen_P);
+
+
+
+		std::cout<<"A_allele="<<bgen_A_allele<<std::endl;
+		std::cout<<"B_allele="<<bgen_B_allele<<std::endl;
+
+		if(CompressedSNPBlocks)
+		{
+			infile.read(reinterpret_cast<char*>(&bgen_P),4);
+				std::cout<<"P="<<bgen_P<<std::endl;
+
+			uint8_t zipped_data[bgen_P];
+			uint8_t unzipped_data[6*bgen_N];
+			infile.read(reinterpret_cast<char*>(zipped_data),bgen_P);
+			std::cout<<"INITunzip="<<unzipped_data<<std::endl;
+	
+			// deflate
+			// zlib struct
+			z_stream defstream;
+			defstream.zalloc = Z_NULL;
+			defstream.zfree = Z_NULL;
+			defstream.opaque = Z_NULL;
+			defstream.avail_in = static_cast<size_t>(bgen_P); // size of input, string + terminator
+			defstream.next_in = reinterpret_cast<uint8_t*>(zipped_data); // input char array
+			defstream.avail_out =  static_cast<size_t>(6*bgen_P);// size of output
+			defstream.next_out = reinterpret_cast<uint8_t*>(unzipped_data);
+
+			deflateInit(&defstream, Z_BEST_COMPRESSION);
+			std::cout<<"deflate="<<deflate(&defstream, Z_FINISH)<<std::endl;
+			deflateEnd(&defstream);
+						std::cout<<"zip="<<zipped_data<<std::endl;
+
+				std::cout<<"unzip="<<unzipped_data<<std::endl;
+
+
+		}
+		else
+			bgen_P=6*bgen_N;
+	
+	
+		if (setSnps.size()!=0 && setSnps.count(rs)==0) {
+			SNPINFO sInfo={"-9", rs, -9, -9, minor, major, -9, -9, -9};
+			snpInfo.push_back(sInfo);
+			indicator_snp.push_back(0);
+			continue;
+		}
+	
+
+
+	
+	
+  	}
+	return true;
+
+	// old
+	double v_x, v_w, geno;
+	size_t c_idv=0;
+	
+	char ch[1];
+	bitset<8> b;
+  		ns_test=0;
+	
+	//calculate n_bit and c, the number of bit for each snp
+	size_t n_bit;
+	if (ni_total%4==0) {n_bit=ni_total/4;}
+	else {n_bit=ni_total/4+1;}
+
+	//ignore the first three majic numbers
+	for (int i=0; i<3; ++i) {
+		infile.read(ch,1);
+		b=ch[0];
+	}
+	
+	double maf;
+	size_t n_miss;
+	size_t n_0, n_1, n_2, c;	
+	
+	//start reading snps and doing association test
+	for (size_t t=0; t<ns_total; ++t) {
+		infile.seekg(t*n_bit+3);		//n_bit, and 3 is the number of magic numbers
+		
+		if (setSnps.size()!=0 && setSnps.count(snpInfo[t].rs_number)==0) {
+			snpInfo[t].n_miss=-9;
+			snpInfo[t].missingness=-9;
+			snpInfo[t].maf=-9;
+			indicator_snp.push_back(0);
+			continue;
+		}
+
+		//read genotypes
+		c=0; maf=0.0; n_miss=0; n_0=0; n_1=0; n_2=0;
+		c_idv=0; gsl_vector_set_zero (genotype_miss);
+		for (size_t i=0; i<n_bit; ++i) {
+			infile.read(ch,1);
+			b=ch[0];
+			for (size_t j=0; j<4; ++j) {                //minor allele homozygous: 2.0; major: 0.0;
+				if ((i==(n_bit-1)) && c==ni_total) {break;}
+				if (indicator_idv[c]==0) {c++; continue;}
+				c++;
+				
+				if (b[2*j]==0) {
+					if (b[2*j+1]==0) {gsl_vector_set(genotype, c_idv, 2.0); maf+=2.0; n_2++;}
+					else {gsl_vector_set(genotype, c_idv, 1.0); maf+=1.0; n_1++;}
+				}
+				else {
+					if (b[2*j+1]==1) {gsl_vector_set(genotype, c_idv, 0.0); maf+=0.0; n_0++;}                                  
+					else {gsl_vector_set(genotype_miss, c_idv, 1); n_miss++; }
+				}
+				c_idv++;
+			}
+		}
+		maf/=2.0*(double)(ni_test-n_miss);
+		
+		snpInfo[t].n_miss=n_miss;
+		snpInfo[t].missingness=(double)n_miss/(double)ni_test;
+		snpInfo[t].maf=maf;
+		
+		if ( (double)n_miss/(double)ni_test > miss_level) {indicator_snp.push_back(0); continue;}
+		
+		if ( (maf<maf_level || maf> (1.0-maf_level)) && maf_level!=-1 ) {indicator_snp.push_back(0); continue;}
+		
+		if ( (n_0+n_1)==0 || (n_1+n_2)==0 || (n_2+n_0)==0) {indicator_snp.push_back(0); continue;}
+		
+		if (hwe_level!=1 && maf_level!=-1) {
+			if (CalcHWE(n_0, n_2, n_1)<hwe_level) {indicator_snp.push_back(0); continue;}
+		}
+			
+		
+		//filter SNP if it is correlated with W
+		//unless W has only one column, of 1s
+		for (size_t i=0; i<genotype->size; ++i) {			
+			if (gsl_vector_get (genotype_miss, i)==1) {geno=maf*2.0; gsl_vector_set (genotype, i, geno);}		
+		}
+		
+		gsl_blas_dgemv (CblasTrans, 1.0, W, genotype, 0.0, Wtx);
+		gsl_blas_dgemv (CblasNoTrans, 1.0, WtWi, Wtx, 0.0, WtWiWtx);
+		gsl_blas_ddot (genotype, genotype, &v_x);
+		gsl_blas_ddot (Wtx, WtWiWtx, &v_w);
+		
+		if (W->size2!=1 && v_w/v_x > r2_level) {indicator_snp.push_back(0); continue;}
+		
+		indicator_snp.push_back(1); 
+		ns_test++;
+	}
+	std::cout<<"leaving here"<<std::endl;
 	gsl_vector_free (genotype);
 	gsl_vector_free (genotype_miss);
 	gsl_matrix_free (WtW);
