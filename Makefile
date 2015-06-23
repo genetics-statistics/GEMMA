@@ -31,12 +31,12 @@ SRC_DIR  = ./src
 
 CPP = g++
 
-CPPFLAGS = -Wall -O3
+CPPFLAGS = -Wall -O3 -std=c++0x
 
 ifdef FORCE_DYNAMIC
-LIBS = -lgsl -lgslcblas -lblas -pthread -lz
+LIBS = -lgsl -lgslcblas -lblas -pthread -lz -std=c++0x
 else
-LIBS = -lgsl -lgslcblas -pthread -lz
+LIBS = -lgsl -lgslcblas -pthread -lz -std=c++0x
 endif
 
 OUTPUT = $(BIN_DIR)/gemma
