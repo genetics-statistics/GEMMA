@@ -127,29 +127,27 @@ void PARAM::ReadFiles (void)
 	} else {
 		n_cvt=1;
 	}
-	std::cout<<"should be reading oxford phenotype file too"<<std::endl;
+
 	// WJA added 
 	//read genotype and phenotype file for bgen format
 	if (!file_bgenfile.empty()) {
-		std::cout<<"should allow reading Oxford phenotypes here"<<std::endl;
-		file_str="./mouse_hs1940.bim";
-		if (ReadFile_bim (file_str, snpInfo)==false) {error=true;}		
-		
-		file_str="./mouse_hs1940.fam";
-		if (ReadFile_fam (file_str, indicator_pheno, pheno, mapID2num, p_column)==false) {error=true;}
-		
+		file_str=file_bgenfile+".sample";
+		if (ReadFile_sample(file_str, indicator_pheno, pheno, p_column,indicator_cvt, cvt, n_cvt)==false) {error=true;}
+		if ((indicator_cvt).size()==0) {
+			n_cvt=1;
+		} 		
+	//	n_cvt=1;
 	
-	//post-process covariates and phenotypes, obtain ni_test, save all useful covariates
+		//post-process covariates and phenotypes, obtain ni_test, save all useful covariates
 		ProcessCvtPhen();
-		
+
+
 		//obtain covariate matrix
 		gsl_matrix *W=gsl_matrix_alloc (ni_test, n_cvt);
 		CopyCvt (W);
-		
-		file_str=file_bgenfile;
-		std::cout<<"going in"<<std::endl;
+
+		file_str=file_bgenfile+".bgen";
 		if (ReadFile_bgen (file_str, setSnps, W, indicator_idv, indicator_snp, snpInfo, maf_level, miss_level, hwe_level, r2_level, ns_test)==false) {error=true;}
-		
 		gsl_matrix_free(W);
 		
 		ns_total=indicator_snp.size();
@@ -166,10 +164,11 @@ void PARAM::ReadFiles (void)
 		//post-process covariates and phenotypes, obtain ni_test, save all useful covariates
 		ProcessCvtPhen();
 		
+
 		//obtain covariate matrix
 		gsl_matrix *W=gsl_matrix_alloc (ni_test, n_cvt);
 		CopyCvt (W);
-		
+	
 		file_str=file_bfile+".bed";
 		if (ReadFile_bed (file_str, setSnps, W, indicator_idv, indicator_snp, snpInfo, maf_level, miss_level, hwe_level, r2_level, ns_test)==false) {error=true;}
 		
@@ -243,7 +242,6 @@ void PARAM::ReadFiles (void)
 		//post-process covariates and phenotypes, obtain ni_test, save all useful covariates
 		ProcessCvtPhen();
 	}
-
 	return;
 }
 
@@ -256,7 +254,6 @@ void PARAM::CheckParam (void)
 {	
 	struct stat fileInfo;
 	string str;
-	
 	//check parameters
 	if (k_mode!=1 && k_mode!=2) {cout<<"error! unknown kinship/relatedness input mode: "<<k_mode<<endl; error=true;}
 	if (a_mode!=1 && a_mode!=2 && a_mode!=3 && a_mode!=4 && a_mode!=5 && a_mode!=11 && a_mode!=12 && a_mode!=13 && a_mode!=21 && a_mode!=22 && a_mode!=31 && a_mode!=41 && a_mode!=42 && a_mode!=43 && a_mode!=51 && a_mode!=52 && a_mode!=53 && a_mode!=54 && a_mode!=61)   
@@ -423,8 +420,14 @@ void PARAM::CheckParam (void)
 
 
 void PARAM::CheckData (void) {
+
+	std::cout<<"Note this check needs updating by someone who knows how the programme works"<<std::endl;
+	if(file_bgenfile.empty())	// WJA NOTE: I added this condition so that covariates can be added through sample, probably not exactly what is wanted
+
+	{
 	if ((file_cvt).empty() || (indicator_cvt).size()==0) {
 		n_cvt=1;
+	}
 	}
 	if ( (indicator_cvt).size()!=0 && (indicator_cvt).size()!=(indicator_idv).size()) {
 		error=true;

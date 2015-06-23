@@ -1461,28 +1461,30 @@ void LMM::AnalyzePlink (const gsl_matrix *U, const gsl_vector *eval, const gsl_m
 }
 
 // WJA added
+#include <assert.h>
 void LMM::AnalyzeBGEN (const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *UtW, const gsl_vector *Uty, const gsl_matrix *W, const gsl_vector *y) 
 {
-	string file_bgen=file_bgenfile;
+	string file_bgen=file_bgenfile+".bgen";
 	ifstream infile (file_bgen.c_str(), ios::binary);
 	if (!infile) {cout<<"error reading bgen file:"<<file_bgen<<endl; return;}
-	
+
+
 	clock_t time_start=clock();
 	
-//	char ch[1];
-	bitset<8> b;	
+	string line;
 	
 	double lambda_mle=0, lambda_remle=0, beta=0, se=0, p_wald=0, p_lrt=0, p_score=0;
 	double logl_H1=0.0;
-	int n_bit, n_miss, ci_total, ci_test;
+	int n_miss, c_phen;
 	double geno, x_mean;
-		
+	
 	//Calculate basic quantities
 	size_t n_index=(n_cvt+2+1)*(n_cvt+2)/2;
 
 	gsl_vector *x=gsl_vector_alloc (U->size1);
+	gsl_vector *x_miss=gsl_vector_alloc (U->size1);
 	gsl_vector *Utx=gsl_vector_alloc (U->size2);
-	gsl_matrix *Uab=gsl_matrix_alloc (U->size2, n_index);	
+	gsl_matrix *Uab=gsl_matrix_alloc (U->size2, n_index);
 	gsl_vector *ab=gsl_vector_alloc (n_index);	
 	
 	gsl_matrix_set_zero (Uab);
@@ -1490,78 +1492,156 @@ void LMM::AnalyzeBGEN (const gsl_matrix *U, const gsl_vector *eval, const gsl_ma
 //	if (e_mode!=0) {
 //		gsl_vector_set_zero (ab);
 //		Calcab (W, y, ab);
-//	}
-		
-	//calculate n_bit and c, the number of bit for each snp
-	if (ni_total%4==0) {n_bit=ni_total/4;}
-	else {n_bit=ni_total/4+1; }
-	
-	/*//print the first three majic numbers
-	for (int i=0; i<3; ++i) {
-		infile.read(ch,1);
-		b=ch[0];
-	}*/
+//	}	
 
-	unsigned int bgen_header_offset;
-	unsigned int bgen_header_length;
-	unsigned int bgen_nsamples;
-	unsigned int bgen_nsnps;
-	unsigned int bgen_flags;
+	// Read in header
+	uint32_t bgen_header_offset;
+	uint32_t bgen_header_length;
+	uint32_t bgen_nsamples;
+	uint32_t bgen_nsnps;
+	uint32_t bgen_flags;
 	infile.read(reinterpret_cast<char*>(&bgen_header_offset),4);
 	infile.read(reinterpret_cast<char*>(&bgen_header_length),4);
 	infile.read(reinterpret_cast<char*>(&bgen_nsnps),4);	
 	infile.read(reinterpret_cast<char*>(&bgen_nsamples),4);
 	infile.ignore(4+bgen_header_length-20);
 	infile.read(reinterpret_cast<char*>(&bgen_flags),4);
+	bool CompressedSNPBlocks=bgen_flags&0x1;
+	bool LongIds=bgen_flags&0x4;
+	double bgen_geno_prob_AA, bgen_geno_prob_AB, bgen_geno_prob_BB, bgen_geno_prob_miss;
+
+	uint32_t bgen_N;
+	uint16_t bgen_LS;
+	uint16_t bgen_LR;
+	uint16_t bgen_LC;	
+	uint32_t bgen_SNP_pos;
+	uint32_t bgen_LA;
+	std::string bgen_A_allele;
+	uint32_t bgen_LB;
+	std::string bgen_B_allele;
+	uint32_t bgen_P;
+	size_t unzipped_data_size;
+	string id;
+	string rs;
+	string chr;
+	std::cout<<"Warning: WJA hard coded SNP missingness threshold of 10%"<<std::endl;
 
 
-	std::cout<<bgen_header_offset<<std::endl;
-	std::cout<<bgen_header_length<<std::endl;
-	std::cout<<bgen_nsnps<<std::endl;
-	std::cout<<bgen_nsamples<<std::endl;
 	
-/*	for (vector<SNPINFO>::size_type t=0; t<snpInfo.size(); ++t) {
-		if (t%d_pace==0 || t==snpInfo.size()-1) {ProgressBar ("Reading SNPs  ", t, snpInfo.size()-1);}
-		if (indicator_snp[t]==0) {continue;}
+	//start reading genotypes and analyze	
+	for (size_t t=0; t<indicator_snp.size(); ++t) 
+	{
 		
-		infile.seekg(t*n_bit+3);		//n_bit, and 3 is the number of magic numbers
+//		if (t>1) {break;}
+		if (t%d_pace==0 || t==(ns_total-1)) {ProgressBar ("Reading SNPs  ", t, ns_total-1);}
+		// read SNP header
+		id.clear();
+		rs.clear();
+		chr.clear();
+		bgen_A_allele.clear();
+		bgen_B_allele.clear();
 		
-		//read genotypes
-		x_mean=0.0;	n_miss=0; ci_total=0; ci_test=0; 
-		for (int i=0; i<n_bit; ++i) {
-			infile.read(ch,1);
-			b=ch[0];
-			for (size_t j=0; j<4; ++j) {                //minor allele homozygous: 2.0; major: 0.0;
-				if ((i==(n_bit-1)) && ci_total==(int)ni_total) {break;}
-				if (indicator_idv[ci_total]==0) {ci_total++; continue;}
+		infile.read(reinterpret_cast<char*>(&bgen_N),4);
+		infile.read(reinterpret_cast<char*>(&bgen_LS),2);
 
-				if (b[2*j]==0) {
-					if (b[2*j+1]==0) {gsl_vector_set(x, ci_test, 2); x_mean+=2.0; }
-					else {gsl_vector_set(x, ci_test, 1); x_mean+=1.0; }
-				}
-				else {
-					if (b[2*j+1]==1) {gsl_vector_set(x, ci_test, 0); }                                  
-					else {gsl_vector_set(x, ci_test, -9); n_miss++; }
-				}
+		std::copy_n(std::istreambuf_iterator<char>(infile), static_cast<size_t>(bgen_LS), std::back_inserter(id));
+		infile.ignore(1);
+		infile.read(reinterpret_cast<char*>(&bgen_LR),2);
 
-				ci_total++;
-				ci_test++;
-			}
+		std::copy_n(std::istreambuf_iterator<char>(infile), static_cast<size_t>(bgen_LR), std::back_inserter(rs));
+		infile.ignore(1);
+		infile.read(reinterpret_cast<char*>(&bgen_LC),2);
+		std::copy_n(std::istreambuf_iterator<char>(infile), static_cast<size_t>(bgen_LC), std::back_inserter(chr));
+		infile.ignore(1);
+		
+		infile.read(reinterpret_cast<char*>(&bgen_SNP_pos),4);
+		infile.read(reinterpret_cast<char*>(&bgen_LA),4);
+		std::copy_n(std::istreambuf_iterator<char>(infile), static_cast<size_t>(bgen_LA), std::back_inserter(bgen_A_allele));
+		infile.ignore(1);
+
+		infile.read(reinterpret_cast<char*>(&bgen_LB),4);
+
+		std::copy_n(std::istreambuf_iterator<char>(infile), static_cast<size_t>(bgen_LB), std::back_inserter(bgen_B_allele));
+		infile.ignore(1);
+		
+
+		uint16_t unzipped_data[3*bgen_N];
+
+		if (indicator_snp[t]==0) {
+			if(CompressedSNPBlocks)
+				infile.read(reinterpret_cast<char*>(&bgen_P),4);
+			else	
+				bgen_P=6*bgen_N;
+		
+			infile.ignore(static_cast<size_t>(bgen_P));
+
+			continue;
 		}
+
+
+		if(CompressedSNPBlocks)
+		{
+
 		
-		x_mean/=(double)(ni_test-n_miss);
+			infile.read(reinterpret_cast<char*>(&bgen_P),4);
+			uint8_t zipped_data[bgen_P];
+
+			unzipped_data_size=6*bgen_N;
+	
+			infile.read(reinterpret_cast<char*>(zipped_data),bgen_P);	
+
+			int result=uncompress(reinterpret_cast<Bytef*>(unzipped_data), reinterpret_cast<uLongf*>(&unzipped_data_size), reinterpret_cast<Bytef*>(zipped_data), static_cast<uLong> (bgen_P));
+			assert(result == Z_OK);
 				
-		for (size_t i=0; i<ni_test; ++i) {			
-			geno=gsl_vector_get(x,i);
-			if (geno==-9) {gsl_vector_set(x, i, x_mean); geno=x_mean;}
+		}
+		else
+		{
+
+			bgen_P=6*bgen_N;
+			infile.read(reinterpret_cast<char*>(unzipped_data),bgen_P);
+		}
+	
+		x_mean=0.0; c_phen=0; n_miss=0;
+		gsl_vector_set_zero(x_miss);
+		for (size_t i=0; i<ni_total; ++i) {
+			if (indicator_idv[i]==0) {continue;}
+			
+		
+				bgen_geno_prob_AA=static_cast<double>(unzipped_data[i*3])/32768.0;
+				bgen_geno_prob_AB=static_cast<double>(unzipped_data[i*3+1])/32768.0;
+				bgen_geno_prob_BB=static_cast<double>(unzipped_data[i*3+2])/32768.0;
+				// WJA
+				bgen_geno_prob_miss=1.0-bgen_geno_prob_AA-bgen_geno_prob_AB-bgen_geno_prob_BB;
+				if (bgen_geno_prob_miss>0.1) {gsl_vector_set(x_miss, c_phen, 0.0); n_miss++;}
+				else {
+
+					bgen_geno_prob_AA=bgen_geno_prob_AA/(1.0-bgen_geno_prob_miss);
+					bgen_geno_prob_AB=bgen_geno_prob_AB/(1.0-bgen_geno_prob_miss);
+					bgen_geno_prob_BB=bgen_geno_prob_BB/(1.0-bgen_geno_prob_miss);
+
+					geno=2.0*bgen_geno_prob_AA+bgen_geno_prob_AB;		
+				
+					gsl_vector_set(x, c_phen, geno); 
+					gsl_vector_set(x_miss, c_phen, 1.0); 
+					x_mean+=geno;
+			}
+			c_phen++;
+		}	
+
+		x_mean/=(double)(ni_test-n_miss);
+	
+		for (size_t i=0; i<ni_test; ++i) {
+			if (gsl_vector_get (x_miss, i)==0) {gsl_vector_set(x, i, x_mean);}
+			geno=gsl_vector_get(x, i);
 			if (x_mean>1) {
 				gsl_vector_set(x, i, 2-geno);
 			}
 		}
 		
+		
 		//calculate statistics
 		time_start=clock();
-		gsl_blas_dgemv (CblasTrans, 1.0, U, x, 0.0, Utx);
+		gsl_blas_dgemv (CblasTrans, 1.0, U, x, 0.0, Utx);		
 		time_UtX+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
 		
 		CalcUab(UtW, Uty, Utx, Uab);
@@ -1572,7 +1652,7 @@ void LMM::AnalyzeBGEN (const gsl_matrix *U, const gsl_vector *eval, const gsl_ma
 		time_start=clock();
 		FUNC_PARAM param1={false, ni_test, n_cvt, eval, Uab, ab, 0};
 		
-		//3 is before 1, for beta
+		//3 is before 1
 		if (a_mode==3 || a_mode==4) {
 			CalcRLScore (l_mle_null, param1, beta, se, p_score);
 		}
@@ -1585,9 +1665,9 @@ void LMM::AnalyzeBGEN (const gsl_matrix *U, const gsl_vector *eval, const gsl_ma
 		if (a_mode==2 || a_mode==4) {
 			CalcLambda ('L', param1, l_min, l_max, n_region, lambda_mle, logl_H1);
 			p_lrt=gsl_cdf_chisq_Q (2.0*(logl_H1-logl_mle_H0), 1);	
-		}		
+		}			
 		
-		if (x_mean>1) {beta*=-1;}		
+		if (x_mean>1) {beta*=-1;}
 		
 		time_opt+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
 		
@@ -1595,18 +1675,19 @@ void LMM::AnalyzeBGEN (const gsl_matrix *U, const gsl_vector *eval, const gsl_ma
 		SUMSTAT SNPs={beta, se, lambda_remle, lambda_mle, p_wald, p_lrt, p_score};
 		sumStat.push_back(SNPs);
     }	
-	*/	
 	cout<<endl;
 	
 	gsl_vector_free (x);
+	gsl_vector_free (x_miss);
 	gsl_vector_free (Utx);
 	gsl_matrix_free (Uab);
 	gsl_vector_free (ab);
 	
 	infile.close();
-	infile.clear();	
+	infile.clear();
 	
 	return;
+
 }
 
 

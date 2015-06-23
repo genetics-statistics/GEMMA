@@ -176,7 +176,11 @@ void GEMMA::PrintHelp(size_t option)
 	if (option==2) {
 		cout<<" FILE I/O RELATED OPTIONS" << endl;
 		cout<<" -bfile    [prefix]       "<<" specify input PLINK binary ped file prefix."<<endl;	
-		cout<<"          requires: *.fam, *.bim and *.bed files"<<endl;	
+		cout<<"          requires: *.fam, *.bim and *.bed files"<<endl;
+		// WJA added
+		cout<<" -bgenfile    [prefix]       "<<" specify input Oxford genotype bgen file prefix."<<endl;	
+		cout<<"          requires: *.bggen, *.sample files"<<endl;	
+	
 		cout<<"          missing value: -9"<<endl;
 		cout<<" -g        [filename]     "<<" specify input BIMBAM mean genotype file name"<<endl;
 		cout<<"          format: rs#1, allele0, allele1, genotype for individual 1, genotype for individual 2, ..."<<endl;	
@@ -835,8 +839,11 @@ void GEMMA::BatchRun (PARAM &cPar)
 	cout<<"Reading Files ... "<<endl;
 	cPar.ReadFiles();
 	if (cPar.error==true) {cout<<"error! fail to read files. "<<endl; return;}
+
 	cPar.CheckData();
+
 	if (cPar.error==true) {cout<<"error! fail to check data. "<<endl; return;}
+
 	//Prediction for bslmm	
 	if (cPar.a_mode==41 || cPar.a_mode==42) {
 		gsl_vector *y_prdt;
@@ -1307,7 +1314,7 @@ void GEMMA::BatchRun (PARAM &cPar)
 		//set covariates matrix W and phenotype matrix Y		
 		//an intercept should be included in W, 
 		cPar.CopyCvtPhen (W, Y, 0);
-				
+		
 		//read relatedness matrix G	
 		if (!(cPar.file_kin).empty()) {
 			ReadFile_kin (cPar.file_kin, cPar.indicator_idv, cPar.mapID2num, cPar.k_mode, cPar.error, G);
@@ -1429,19 +1436,20 @@ void GEMMA::BatchRun (PARAM &cPar)
 					gsl_vector_view Y_col=gsl_matrix_column (Y, 0);
 					gsl_vector_view UtY_col=gsl_matrix_column (UtY, 0);
 					
-					if (!cPar.file_gene.empty()) {		
+					if (!cPar.file_gene.empty()) 		
 						cLmm.AnalyzeGene (U, eval, UtW, &UtY_col.vector, W, &Y_col.vector); //y is the predictor, not the phenotype
-					} else if (!cPar.file_bfile.empty()) {
-						cLmm.AnalyzePlink (U, eval, UtW, &UtY_col.vector, W, &Y_col.vector);
-					}
-					 // WJA added
-				        else if(!cPar.file_bgenfile.empty()) {
-						cLmm.AnalyzeBGEN (U, eval, UtW, &UtY_col.vector, W, &Y_col.vector);	
-					}	
-				   	else {
-						cLmm.AnalyzeBimbam (U, eval, UtW, &UtY_col.vector, W, &Y_col.vector);
-					}	
 					
+					else if (!cPar.file_bfile.empty()) 
+						cLmm.AnalyzePlink (U, eval, UtW, &UtY_col.vector, W, &Y_col.vector);
+							
+						
+						 // WJA added
+				       	else if(!cPar.file_bgenfile.empty()) 
+						cLmm.AnalyzeBGEN (U, eval, UtW, &UtY_col.vector, W, &Y_col.vector);	
+													 		
+				   	else 
+						cLmm.AnalyzeBimbam (U, eval, UtW, &UtY_col.vector, W, &Y_col.vector);
+											
 					cLmm.WriteFiles();
 					cLmm.CopyToParam(cPar);
 				} else {			 

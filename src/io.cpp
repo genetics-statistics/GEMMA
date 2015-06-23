@@ -327,9 +327,10 @@ bool ReadFile_cvt (const string &file_cvt, vector<int> &indicator_cvt, vector<ve
 			ch_ptr=strtok (NULL, " , \t");	
 		}
 		if (flag_na==0) {indicator_cvt.push_back(1);} else {indicator_cvt.push_back(0);} 
-		cvt.push_back(v_d);
+		cvt.push_back(v_d);	
+
 	}
-	
+
 	if (indicator_cvt.empty()) {n_cvt=0;}
 	else {
 		flag_na=0;
@@ -340,10 +341,9 @@ bool ReadFile_cvt (const string &file_cvt, vector<int> &indicator_cvt, vector<ve
 			if (flag_na!=0 && n_cvt!=cvt[i].size()) {cout<<"error! number of covariates in row "<<i<<" do not match other rows."<<endl; return false;}
 		}
 	}
-	
 	infile.close();
 	infile.clear();	
-	
+
 	return true;
 }
 
@@ -352,7 +352,6 @@ bool ReadFile_cvt (const string &file_cvt, vector<int> &indicator_cvt, vector<ve
 //Read .bim file
 bool ReadFile_bim (const string &file_bim, vector<SNPINFO> &snpInfo)
 {	
-	std::cout<<"HERE TOO"<<std::endl;
 	snpInfo.clear();
 	
 	ifstream infile (file_bim.c_str(), ifstream::in);
@@ -385,17 +384,205 @@ bool ReadFile_bim (const string &file_bim, vector<SNPINFO> &snpInfo)
 		SNPINFO sInfo={chr, rs, cM, b_pos, minor, major, -9, -9, -9};
 		snpInfo.push_back(sInfo);
 	}
-	
+
 	infile.close();
 	infile.clear();	
 	return true;
 }
 
+// WJA Added
+//Read Oxford sample file
+bool ReadFile_sample(const string &file_sample, vector<vector<int> > &indicator_pheno, vector<vector<double> > &pheno, const vector<size_t> &p_column, vector<int> &indicator_cvt, vector<vector<double> > &cvt, size_t &n_cvt)
+{
+	indicator_pheno.clear();
+	pheno.clear();
+	indicator_cvt.clear();
+
+	igzstream infile (file_sample.c_str(), igzstream::in);
+
+	if (!infile) {cout<<"error! fail to open sample file: "<<file_sample<<endl; return false;}
+
+	string line;
+	char *ch_ptr;
+
+  
+	string id;
+	double p,d;
+	
+	vector<double> pheno_row;
+	vector<int> ind_pheno_row;
+	int flag_na=0;	
+
+	size_t num_cols=0;
+	size_t num_p_in_file=0;
+	size_t num_cvt_in_file=0;
+	
+	size_t p_max=*max_element(p_column.begin(), p_column.end());
+
+	map<size_t, size_t> mapP2c;
+	for (size_t i=0; i<p_column.size(); i++) {
+		mapP2c[p_column[i]]=i;
+		pheno_row.push_back(-9);
+		ind_pheno_row.push_back(0);
+	}	
+	// read header line1
+	if(!safeGetline(infile, line).eof()) {
+		ch_ptr=strtok((char *)line.c_str(), " ");
+		if(strcmp(ch_ptr, "ID_1")!=0) {return false;}
+		ch_ptr=strtok(NULL, " ");
+		if(strcmp(ch_ptr, "ID_2")!=0) {return false;}
+		ch_ptr=strtok(NULL, " ");
+		if(strcmp(ch_ptr, "missing")!=0) {return false;}
+		while (ch_ptr!=NULL) {
+			num_cols++;
+			ch_ptr=strtok (NULL, " ");
+		
+		}
+		num_cols--;
+	}
+
+	vector<map<uint32_t, size_t> > cvt_factor_levels;
+
+	char col_type[num_cols];
+	// read header line2
+	if(!safeGetline(infile, line).eof()) {
+		ch_ptr=strtok ((char *)line.c_str(), " ");
+		if(strcmp(ch_ptr, "0")!=0) {return false;}
+		ch_ptr=strtok(NULL, " ");
+		if(strcmp(ch_ptr, "0")!=0) {return false;}
+		ch_ptr=strtok(NULL, " ");
+		if(strcmp(ch_ptr, "0")!=0) {return false;}
+		size_t it=0;
+		ch_ptr=strtok (NULL, " ");
+		if(ch_ptr!=NULL)
+			while(ch_ptr!=NULL){
+				col_type[it++]=ch_ptr[0];
+				if(ch_ptr[0]=='D') {cvt_factor_levels.push_back(map<uint32_t, size_t>());num_cvt_in_file++;}
+				if(ch_ptr[0]=='C') {num_cvt_in_file++;}
+				if((ch_ptr[0]=='P')||(ch_ptr[0]=='B')) {num_p_in_file++;}
+				ch_ptr=strtok(NULL, " ");
+			}
+	
+	}
+
+	while (!safeGetline(infile, line).eof()) {
+
+		ch_ptr=strtok ((char *)line.c_str(), " ");
+
+		for(int it=0;it<3;it++){ch_ptr=strtok(NULL, " ");}
+
+
+		size_t i=0;
+		size_t p_i=0;
+		size_t fac_cvt_i=0;
+		
+		while (i<num_cols) {
+		
+			if((col_type[i]=='P')||(col_type[i]=='B'))	
+			{
+				if (mapP2c.count(p_i+1)!=0) {
+					if (strcmp(ch_ptr, "NA")==0) {ind_pheno_row[mapP2c[p_i+1]]=0; pheno_row[mapP2c[p_i+1]]=-9;}
+					else {p=atof(ch_ptr); ind_pheno_row[mapP2c[p_i+1]]=1; pheno_row[mapP2c[p_i+1]]=p;}
+				}
+				p_i++;
+			}
+			if((col_type[i]=='D'))	
+			{
+				// NOTE THIS DOES NOT CHECK TO BE SURE LEVEL IS INTEGRAL i.e for atoi error
+				if (strcmp(ch_ptr, "NA")!=0) {uint32_t level=atoi(ch_ptr); if(cvt_factor_levels[fac_cvt_i].count(level) == 0) {cvt_factor_levels[fac_cvt_i][level]=cvt_factor_levels[fac_cvt_i].size();}}
+				fac_cvt_i++;
+			}
+
+			ch_ptr=strtok (NULL, " ");	
+			i++;
+		}
+	
+	
+		indicator_pheno.push_back(ind_pheno_row);	
+		pheno.push_back(pheno_row);
+					
+	}
+	// close and reopen the file
+	infile.close();
+	infile.clear();	
+
+	if(num_cvt_in_file>0)
+	{
+		igzstream infile2 (file_sample.c_str(), igzstream::in);
+
+		if (!infile2) {cout<<"error! fail to open sample file: "<<file_sample<<endl; return false;}
+		// skip header
+		safeGetline(infile2, line);
+		safeGetline(infile2, line);
+
+		// pull in the covariates now we now the number of factor levels
+		while (!safeGetline(infile2, line).eof()) {
+
+			vector<double> v_d; flag_na=0;
+			ch_ptr=strtok ((char *)line.c_str(), " ");
+		
+			for(int it=0;it<3;it++){ch_ptr=strtok(NULL, " ");}
+
+
+			size_t i=0;
+			size_t fac_cvt_i=0;
+			size_t num_vars_req;
+			size_t num_fac_levels;
+			while (i<num_cols) {
+			
+				if(col_type[i]=='C')
+				{
+					if (strcmp(ch_ptr, "NA")==0) {flag_na=1; d=-9;}
+					else {d=atof(ch_ptr);}
+				
+					v_d.push_back(d);
+				}
+
+			
+				if((col_type[i]=='D'))	
+				{
+					// NOTE THIS DOES NOT CHECK TO BE SURE LEVEL IS INTEGRAL i.e for atoi error
+					num_fac_levels=cvt_factor_levels[fac_cvt_i].size();
+					if(num_fac_levels>1)
+					{
+						if (strcmp(ch_ptr, "NA")==0) {flag_na=1; for(size_t it=0;it<num_fac_levels-1; it++) {v_d.push_back(-9);}}
+						else {uint32_t level=atoi(ch_ptr); for(size_t it=0;it<num_fac_levels-1;it++) {cvt_factor_levels[fac_cvt_i][level]==it+1 ? v_d.push_back(1.0) : v_d.push_back(0.0); }}
+					}
+					fac_cvt_i++;
+				}
+	
+				ch_ptr=strtok (NULL, " ");	
+				i++;
+			}
+		
+			if (flag_na==0) {indicator_cvt.push_back(1);} else {indicator_cvt.push_back(0);} 
+			cvt.push_back(v_d);
+
+					
+		}
+
+		if (indicator_cvt.empty()) {n_cvt=0;}
+		else {
+			flag_na=0;
+			for (vector<int>::size_type i=0; i<indicator_cvt.size(); ++i) {
+				if (indicator_cvt[i]==0) {continue;}
+				
+				if (flag_na==0) {flag_na=1; n_cvt=cvt[i].size();}
+					if (flag_na!=0 && n_cvt!=cvt[i].size()) {cout<<"error! number of covariates in row "<<i<<" do not match other rows."<<endl; return false;}
+			}
+		}
+
+		infile2.close();
+		infile2.clear();	
+	}
+	return true;
+}
+
+
 
 //Read .fam file
 bool ReadFile_fam (const string &file_fam, vector<vector<int> > &indicator_pheno, vector<vector<double> > &pheno, map<string, int> &mapID2num, const vector<size_t> &p_column)
 {
-	std::cout<<"HERE"<<std::endl;
 	indicator_pheno.clear();
 	pheno.clear();
 	mapID2num.clear();	
@@ -608,7 +795,6 @@ bool ReadFile_geno (const string &file_geno, const set<string> &setSnps, const g
 //Read bed file, the first time
 bool ReadFile_bed (const string &file_bed, const set<string> &setSnps, const gsl_matrix *W, vector<int> &indicator_idv, vector<int> &indicator_snp, vector<SNPINFO> &snpInfo, const double &maf_level, const double &miss_level, const double &hwe_level, const double &r2_level, size_t &ns_test)
 {
-	std::cout<<"Am here"<<std::endl;
 	indicator_snp.clear();
 	size_t ns_total=snpInfo.size();
 	
@@ -723,7 +909,7 @@ bool ReadFile_bed (const string &file_bed, const set<string> &setSnps, const gsl
 		indicator_snp.push_back(1); 
 		ns_test++;
 	}
-	std::cout<<"leaving here"<<std::endl;
+	
 	gsl_vector_free (genotype);
 	gsl_vector_free (genotype_miss);
 	gsl_matrix_free (WtW);
@@ -744,8 +930,10 @@ bool ReadFile_bed (const string &file_bed, const set<string> &setSnps, const gsl
 // WJA Added      
 //Read bgen file, the first time
 #include <cstdint>
+#include <assert.h>
 bool ReadFile_bgen(const string &file_bgen, const set<string> &setSnps, const gsl_matrix *W, vector<int> &indicator_idv, vector<int> &indicator_snp, vector<SNPINFO> &snpInfo, const double &maf_level, const double &miss_level, const double &hwe_level, const double &r2_level, size_t &ns_test)
 {
+		
 	indicator_snp.clear();
 	
 	ifstream infile (file_bgen.c_str(), ios::binary);
@@ -779,16 +967,6 @@ bool ReadFile_bgen(const string &file_bgen, const set<string> &setSnps, const gs
 	bool LongIds=bgen_flags&0x4;
 
 	size_t ns_total=static_cast<size_t>(bgen_nsnps);
-	std::cout<< "Should print here we don't support old version if LongIds=0";
-
-	std::cout<<"Hello"<<std::endl;
-	std::cout<<"header offset:"<<bgen_header_offset<<std::endl;
-	std::cout<<"header length:"<<bgen_header_length<<std::endl;
-	std::cout<<"nsnps:"<<bgen_nsnps<<std::endl;
-	std::cout<<"n samples:"<<bgen_nsamples<<std::endl;
-	std::cout<<"flags:"<<bgen_flags<<std::endl;
-	std::cout<<"snps_compressed="<<CompressedSNPBlocks<<std::endl;
-	std::cout<<"Long Ids="<<LongIds<<std::endl;
 	
 	snpInfo.clear();
 	string rs;
@@ -799,39 +977,21 @@ bool ReadFile_bgen(const string &file_bgen, const set<string> &setSnps, const gs
 	string minor;
 	string id;
 
-/* 	
-	string line;
+	double v_x, v_w;
+	int c_idv=0;
 	char *ch_ptr;
+
+
+	double maf, geno, geno_old;
+	size_t n_miss;
+	size_t n_0, n_1, n_2;
+	int flag_poly;
 	
+	double bgen_geno_prob_AA, bgen_geno_prob_AB, bgen_geno_prob_BB, bgen_geno_prob_miss;
 	
-	while (getline(infile, line)) {
-		ch_ptr=strtok ((char *)line.c_str(), " \t");
-		chr=ch_ptr;
-		ch_ptr=strtok (NULL, " \t");
-		rs=ch_ptr;
-		ch_ptr=strtok (NULL, " \t");
-		cM=atof(ch_ptr);
-		ch_ptr=strtok (NULL, " \t");
-		b_pos=atol(ch_ptr);
-		ch_ptr=strtok (NULL, " \t");
-		minor=ch_ptr;
-		ch_ptr=strtok (NULL, " \t");
-		major=ch_ptr;
-		
-		SNPINFO sInfo={chr, rs, cM, b_pos, minor, major, -9, -9, -9};
-		snpInfo.push_back(sInfo);
-	}
-	
-	infile.close();
-	infile.clear();	
-	return true;
-	*/
 
 	size_t ni_total=indicator_idv.size();   // total number of samples in phenotype file
 	size_t ni_test=0;   // number of samples to use in test
-	for (size_t i=0; i<ni_total; ++i) {
-		ni_test+=indicator_idv[i];
-	}
 
 	uint32_t bgen_N;
 	uint16_t bgen_LS;
@@ -843,6 +1003,13 @@ bool ReadFile_bgen(const string &file_bgen, const set<string> &setSnps, const gs
 	uint32_t bgen_LB;
 	std::string bgen_B_allele;
 	uint32_t bgen_P;
+	size_t unzipped_data_size;
+
+	for (size_t i=0; i<ni_total; ++i) {
+	
+		ni_test+=indicator_idv[i];
+	}
+
 	
 	
 //	ns_total=1;
@@ -853,18 +1020,13 @@ bool ReadFile_bgen(const string &file_bgen, const set<string> &setSnps, const gs
 		chr.clear();
 		bgen_A_allele.clear();
 		bgen_B_allele.clear();
-
 		
 		infile.read(reinterpret_cast<char*>(&bgen_N),4);
-		std::cout<<"N="<<bgen_N<<std::endl;
-
 		infile.read(reinterpret_cast<char*>(&bgen_LS),2);
-		std::cout<<"LS="<<bgen_LS<<std::endl;
 
 		std::copy_n(std::istreambuf_iterator<char>(infile), static_cast<size_t>(bgen_LS), std::back_inserter(id));
 		infile.ignore(1);
 		infile.read(reinterpret_cast<char*>(&bgen_LR),2);
-		std::cout<<"LR="<<bgen_LR<<std::endl;
 
 		std::copy_n(std::istreambuf_iterator<char>(infile), static_cast<size_t>(bgen_LR), std::back_inserter(rs));
 		infile.ignore(1);
@@ -876,146 +1038,108 @@ bool ReadFile_bgen(const string &file_bgen, const set<string> &setSnps, const gs
 		infile.read(reinterpret_cast<char*>(&bgen_LA),4);
 		std::copy_n(std::istreambuf_iterator<char>(infile), static_cast<size_t>(bgen_LA), std::back_inserter(bgen_A_allele));
 		infile.ignore(1);
-	std::cout<<"LA="<<bgen_LA<<std::endl;
 
 		infile.read(reinterpret_cast<char*>(&bgen_LB),4);
-	std::cout<<"LB="<<bgen_LB<<std::endl;
 
 		std::copy_n(std::istreambuf_iterator<char>(infile), static_cast<size_t>(bgen_LB), std::back_inserter(bgen_B_allele));
 		infile.ignore(1);
-					std::cout<<"LC="<<bgen_LC<<std::endl;
-		std::cout<<"id="<<id<<std::endl;
-
-		std::cout<<"rs="<<rs<<std::endl;
-		std::cout<<"chr="<<chr<<std::endl;
-			//	infile.ignore(bgen_P);
-
+		
+		// should we switch according to MAF?
+		minor=bgen_A_allele;
+		major=bgen_B_allele;
+		b_pos=static_cast<long int>(bgen_SNP_pos);
 
 
-		std::cout<<"A_allele="<<bgen_A_allele<<std::endl;
-		std::cout<<"B_allele="<<bgen_B_allele<<std::endl;
+		uint16_t unzipped_data[3*bgen_N];
 
-		if(CompressedSNPBlocks)
-		{
-			infile.read(reinterpret_cast<char*>(&bgen_P),4);
-				std::cout<<"P="<<bgen_P<<std::endl;
-
-			uint8_t zipped_data[bgen_P];
-			uint8_t unzipped_data[6*bgen_N];
-			infile.read(reinterpret_cast<char*>(zipped_data),bgen_P);
-			std::cout<<"INITunzip="<<unzipped_data<<std::endl;
-	
-			// deflate
-			// zlib struct
-			z_stream defstream;
-			defstream.zalloc = Z_NULL;
-			defstream.zfree = Z_NULL;
-			defstream.opaque = Z_NULL;
-			defstream.avail_in = static_cast<size_t>(bgen_P); // size of input, string + terminator
-			defstream.next_in = reinterpret_cast<uint8_t*>(zipped_data); // input char array
-			defstream.avail_out =  static_cast<size_t>(6*bgen_P);// size of output
-			defstream.next_out = reinterpret_cast<uint8_t*>(unzipped_data);
-
-			deflateInit(&defstream, Z_BEST_COMPRESSION);
-			std::cout<<"deflate="<<deflate(&defstream, Z_FINISH)<<std::endl;
-			deflateEnd(&defstream);
-						std::cout<<"zip="<<zipped_data<<std::endl;
-
-				std::cout<<"unzip="<<unzipped_data<<std::endl;
-
-
-		}
-		else
-			bgen_P=6*bgen_N;
-	
-	
 		if (setSnps.size()!=0 && setSnps.count(rs)==0) {
 			SNPINFO sInfo={"-9", rs, -9, -9, minor, major, -9, -9, -9};
 			snpInfo.push_back(sInfo);
 			indicator_snp.push_back(0);
-			continue;
-		}
-	
-
-
-	
-	
-  	}
-	return true;
-
-	// old
-	double v_x, v_w, geno;
-	size_t c_idv=0;
-	
-	char ch[1];
-	bitset<8> b;
-  		ns_test=0;
-	
-	//calculate n_bit and c, the number of bit for each snp
-	size_t n_bit;
-	if (ni_total%4==0) {n_bit=ni_total/4;}
-	else {n_bit=ni_total/4+1;}
-
-	//ignore the first three majic numbers
-	for (int i=0; i<3; ++i) {
-		infile.read(ch,1);
-		b=ch[0];
-	}
-	
-	double maf;
-	size_t n_miss;
-	size_t n_0, n_1, n_2, c;	
-	
-	//start reading snps and doing association test
-	for (size_t t=0; t<ns_total; ++t) {
-		infile.seekg(t*n_bit+3);		//n_bit, and 3 is the number of magic numbers
+			if(CompressedSNPBlocks)
+				infile.read(reinterpret_cast<char*>(&bgen_P),4);
+			else	
+				bgen_P=6*bgen_N;
 		
-		if (setSnps.size()!=0 && setSnps.count(snpInfo[t].rs_number)==0) {
-			snpInfo[t].n_miss=-9;
-			snpInfo[t].missingness=-9;
-			snpInfo[t].maf=-9;
-			indicator_snp.push_back(0);
+			infile.ignore(static_cast<size_t>(bgen_P));
+
 			continue;
 		}
 
-		//read genotypes
-		c=0; maf=0.0; n_miss=0; n_0=0; n_1=0; n_2=0;
-		c_idv=0; gsl_vector_set_zero (genotype_miss);
-		for (size_t i=0; i<n_bit; ++i) {
-			infile.read(ch,1);
-			b=ch[0];
-			for (size_t j=0; j<4; ++j) {                //minor allele homozygous: 2.0; major: 0.0;
-				if ((i==(n_bit-1)) && c==ni_total) {break;}
-				if (indicator_idv[c]==0) {c++; continue;}
-				c++;
+
+		if(CompressedSNPBlocks)
+		{
+			infile.read(reinterpret_cast<char*>(&bgen_P),4);
+			uint8_t zipped_data[bgen_P];
+	
+			unzipped_data_size=6*bgen_N;
+	
+			infile.read(reinterpret_cast<char*>(zipped_data),bgen_P);		
+			int result=uncompress(reinterpret_cast<Bytef*>(unzipped_data), reinterpret_cast<uLongf*>(&unzipped_data_size), reinterpret_cast<Bytef*>(zipped_data), static_cast<uLong> (bgen_P));
+			assert(result == Z_OK);
 				
-				if (b[2*j]==0) {
-					if (b[2*j+1]==0) {gsl_vector_set(genotype, c_idv, 2.0); maf+=2.0; n_2++;}
-					else {gsl_vector_set(genotype, c_idv, 1.0); maf+=1.0; n_1++;}
-				}
-				else {
-					if (b[2*j+1]==1) {gsl_vector_set(genotype, c_idv, 0.0); maf+=0.0; n_0++;}                                  
-					else {gsl_vector_set(genotype_miss, c_idv, 1); n_miss++; }
-				}
-				c_idv++;
-			}
 		}
+		else
+		{
+			bgen_P=6*bgen_N;
+			infile.read(reinterpret_cast<char*>(unzipped_data),bgen_P);
+
+		}
+	
+			
+		maf=0; n_miss=0; flag_poly=0; geno_old=-9;
+		n_0=0; n_1=0; n_2=0;
+		c_idv=0; 
+		gsl_vector_set_zero (genotype_miss);
+		for (size_t i=0; i<ni_total; ++i) {
+			// CHECK this set correctly!
+			if (indicator_idv[i]==0) {continue;}		
+		
+		
+			bgen_geno_prob_AA=static_cast<double>(unzipped_data[i*3])/32768.0;
+			bgen_geno_prob_AB=static_cast<double>(unzipped_data[i*3+1])/32768.0;
+			bgen_geno_prob_BB=static_cast<double>(unzipped_data[i*3+2])/32768.0;
+			bgen_geno_prob_miss=1.0-bgen_geno_prob_AA-bgen_geno_prob_AB-bgen_geno_prob_BB;
+		
+			//CHECK 0.1 OK
+			if (bgen_geno_prob_miss>0.1) {gsl_vector_set (genotype_miss, c_idv, 1); n_miss++; c_idv++; continue;}
+			
+			
+			bgen_geno_prob_AA=bgen_geno_prob_AA/(1.0-bgen_geno_prob_miss);
+			bgen_geno_prob_AB=bgen_geno_prob_AB/(1.0-bgen_geno_prob_miss);
+			bgen_geno_prob_BB=bgen_geno_prob_BB/(1.0-bgen_geno_prob_miss);
+
+			geno=2.0*bgen_geno_prob_AA+bgen_geno_prob_AB;
+			if (geno>=0 && geno<=0.5) {n_0++;}
+			if (geno>0.5 && geno<1.5) {n_1++;}
+			if (geno>=1.5 && geno<=2.0) {n_2++;}
+			
+			gsl_vector_set (genotype, c_idv, geno); 			
+
+			// CHECK WHAT THIS DOES
+			if (flag_poly==0) {geno_old=geno; flag_poly=2;}
+			if (flag_poly==2 && geno!=geno_old) {flag_poly=1;}
+			
+			maf+=geno;
+			
+			c_idv++;
+		}
+		//	std::cerr<<"maf="<<maf<<std::endl;
+
 		maf/=2.0*(double)(ni_test-n_miss);
 		
-		snpInfo[t].n_miss=n_miss;
-		snpInfo[t].missingness=(double)n_miss/(double)ni_test;
-		snpInfo[t].maf=maf;
+		SNPINFO sInfo={chr, rs, -9, b_pos, minor, major, n_miss, (double)n_miss/(double)ni_test, maf};
+		snpInfo.push_back(sInfo);
 		
 		if ( (double)n_miss/(double)ni_test > miss_level) {indicator_snp.push_back(0); continue;}
 		
 		if ( (maf<maf_level || maf> (1.0-maf_level)) && maf_level!=-1 ) {indicator_snp.push_back(0); continue;}
 		
-		if ( (n_0+n_1)==0 || (n_1+n_2)==0 || (n_2+n_0)==0) {indicator_snp.push_back(0); continue;}
+		if (flag_poly!=1) {indicator_snp.push_back(0); continue;}
 		
-		if (hwe_level!=1 && maf_level!=-1) {
+		if (hwe_level!=0 && maf_level!=-1) {
 			if (CalcHWE(n_0, n_2, n_1)<hwe_level) {indicator_snp.push_back(0); continue;}
 		}
-			
 		
 		//filter SNP if it is correlated with W
 		//unless W has only one column, of 1s
@@ -1028,24 +1152,18 @@ bool ReadFile_bgen(const string &file_bgen, const set<string> &setSnps, const gs
 		gsl_blas_ddot (genotype, genotype, &v_x);
 		gsl_blas_ddot (Wtx, WtWiWtx, &v_w);
 		
-		if (W->size2!=1 && v_w/v_x > r2_level) {indicator_snp.push_back(0); continue;}
+		if (W->size2!=1 && v_w/v_x >= r2_level) {indicator_snp.push_back(0); continue;}
 		
 		indicator_snp.push_back(1); 
 		ns_test++;
-	}
-	std::cout<<"leaving here"<<std::endl;
-	gsl_vector_free (genotype);
-	gsl_vector_free (genotype_miss);
-	gsl_matrix_free (WtW);
-	gsl_matrix_free (WtWi);
-	gsl_vector_free (Wtx);
-	gsl_vector_free (WtWiWtx);
-	gsl_permutation_free (pmt);
-		  
-	infile.close();
-	infile.clear();	
 	
+	}
+
+			
+
+
 	return true;
+
 }
 
 
