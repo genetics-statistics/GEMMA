@@ -417,7 +417,7 @@ bool ReadFile_sample(const string &file_sample, vector<vector<int> > &indicator_
 	size_t num_p_in_file=0;
 	size_t num_cvt_in_file=0;
 	
-	size_t p_max=*max_element(p_column.begin(), p_column.end());
+//	size_t p_max=*max_element(p_column.begin(), p_column.end());
 
 	map<size_t, size_t> mapP2c;
 	for (size_t i=0; i<p_column.size(); i++) {
@@ -486,7 +486,7 @@ bool ReadFile_sample(const string &file_sample, vector<vector<int> > &indicator_
 				}
 				p_i++;
 			}
-			if((col_type[i]=='D'))	
+			if(col_type[i]=='D')	
 			{
 				// NOTE THIS DOES NOT CHECK TO BE SURE LEVEL IS INTEGRAL i.e for atoi error
 				if (strcmp(ch_ptr, "NA")!=0) {uint32_t level=atoi(ch_ptr); if(cvt_factor_levels[fac_cvt_i].count(level) == 0) {cvt_factor_levels[fac_cvt_i][level]=cvt_factor_levels[fac_cvt_i].size();}}
@@ -526,7 +526,6 @@ bool ReadFile_sample(const string &file_sample, vector<vector<int> > &indicator_
 
 			size_t i=0;
 			size_t fac_cvt_i=0;
-			size_t num_vars_req;
 			size_t num_fac_levels;
 			while (i<num_cols) {
 			
@@ -539,7 +538,7 @@ bool ReadFile_sample(const string &file_sample, vector<vector<int> > &indicator_
 				}
 
 			
-				if((col_type[i]=='D'))	
+				if(col_type[i]=='D')	
 				{
 					// NOTE THIS DOES NOT CHECK TO BE SURE LEVEL IS INTEGRAL i.e for atoi error
 					num_fac_levels=cvt_factor_levels[fac_cvt_i].size();
@@ -964,7 +963,7 @@ bool ReadFile_bgen(const string &file_bgen, const set<string> &setSnps, const gs
 	infile.ignore(4+bgen_header_length-20);
 	infile.read(reinterpret_cast<char*>(&bgen_flags),4);
 	bool CompressedSNPBlocks=bgen_flags&0x1;
-	bool LongIds=bgen_flags&0x4;
+//	bool LongIds=bgen_flags&0x4;
 
 	size_t ns_total=static_cast<size_t>(bgen_nsnps);
 	
@@ -972,14 +971,13 @@ bool ReadFile_bgen(const string &file_bgen, const set<string> &setSnps, const gs
 	string rs;
 	long int b_pos;
 	string chr;
-	double cM;
+//	double cM;
 	string major;
 	string minor;
 	string id;
 
 	double v_x, v_w;
 	int c_idv=0;
-	char *ch_ptr;
 
 
 	double maf, geno, geno_old;

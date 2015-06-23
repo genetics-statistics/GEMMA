@@ -1507,7 +1507,7 @@ void LMM::AnalyzeBGEN (const gsl_matrix *U, const gsl_vector *eval, const gsl_ma
 	infile.ignore(4+bgen_header_length-20);
 	infile.read(reinterpret_cast<char*>(&bgen_flags),4);
 	bool CompressedSNPBlocks=bgen_flags&0x1;
-	bool LongIds=bgen_flags&0x4;
+//	bool LongIds=bgen_flags&0x4;
 	double bgen_geno_prob_AA, bgen_geno_prob_AB, bgen_geno_prob_BB, bgen_geno_prob_miss;
 
 	uint32_t bgen_N;
