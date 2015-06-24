@@ -1462,7 +1462,7 @@ void LMM::AnalyzePlink (const gsl_matrix *U, const gsl_vector *eval, const gsl_m
 
 // WJA added
 #include <assert.h>
-void LMM::AnalyzeBGEN (const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *UtW, const gsl_vector *Uty, const gsl_matrix *W, const gsl_vector *y) 
+void LMM::Analyzebgen (const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *UtW, const gsl_vector *Uty, const gsl_matrix *W, const gsl_vector *y) 
 {
 	string file_bgen=file_bgenfile+".bgen";
 	ifstream infile (file_bgen.c_str(), ios::binary);
@@ -1494,21 +1494,29 @@ void LMM::AnalyzeBGEN (const gsl_matrix *U, const gsl_vector *eval, const gsl_ma
 //		Calcab (W, y, ab);
 //	}	
 
-	// Read in header
-	uint32_t bgen_header_offset;
+	// read in header
+	uint32_t bgen_snp_block_offset;
 	uint32_t bgen_header_length;
 	uint32_t bgen_nsamples;
 	uint32_t bgen_nsnps;
 	uint32_t bgen_flags;
-	infile.read(reinterpret_cast<char*>(&bgen_header_offset),4);
+	infile.read(reinterpret_cast<char*>(&bgen_snp_block_offset),4);
 	infile.read(reinterpret_cast<char*>(&bgen_header_length),4);
+	bgen_snp_block_offset-=4;
 	infile.read(reinterpret_cast<char*>(&bgen_nsnps),4);	
+	bgen_snp_block_offset-=4;
 	infile.read(reinterpret_cast<char*>(&bgen_nsamples),4);
+	bgen_snp_block_offset-=4;
 	infile.ignore(4+bgen_header_length-20);
+	bgen_snp_block_offset-=4+bgen_header_length-20;
 	infile.read(reinterpret_cast<char*>(&bgen_flags),4);
+	bgen_snp_block_offset-=4;
 	bool CompressedSNPBlocks=bgen_flags&0x1;
 //	bool LongIds=bgen_flags&0x4;
-	double bgen_geno_prob_AA, bgen_geno_prob_AB, bgen_geno_prob_BB, bgen_geno_prob_miss;
+
+	infile.ignore(bgen_snp_block_offset);
+
+	double bgen_geno_prob_AA, bgen_geno_prob_AB, bgen_geno_prob_BB, bgen_geno_prob_non_miss;
 
 	uint32_t bgen_N;
 	uint16_t bgen_LS;
@@ -1544,27 +1552,31 @@ void LMM::AnalyzeBGEN (const gsl_matrix *U, const gsl_vector *eval, const gsl_ma
 		infile.read(reinterpret_cast<char*>(&bgen_N),4);
 		infile.read(reinterpret_cast<char*>(&bgen_LS),2);
 
-		std::copy_n(std::istreambuf_iterator<char>(infile), static_cast<size_t>(bgen_LS), std::back_inserter(id));
-		infile.ignore(1);
-		infile.read(reinterpret_cast<char*>(&bgen_LR),2);
-
-		std::copy_n(std::istreambuf_iterator<char>(infile), static_cast<size_t>(bgen_LR), std::back_inserter(rs));
-		infile.ignore(1);
-		infile.read(reinterpret_cast<char*>(&bgen_LC),2);
-		std::copy_n(std::istreambuf_iterator<char>(infile), static_cast<size_t>(bgen_LC), std::back_inserter(chr));
-		infile.ignore(1);
+		id.resize(bgen_LS);
+		infile.read(&id[0], bgen_LS);
 		
+		infile.read(reinterpret_cast<char*>(&bgen_LR),2);
+		rs.resize(bgen_LR);
+		infile.read(&rs[0], bgen_LR);
+	
+		infile.read(reinterpret_cast<char*>(&bgen_LC),2);
+		chr.resize(bgen_LC);
+		infile.read(&chr[0], bgen_LC);
+	
 		infile.read(reinterpret_cast<char*>(&bgen_SNP_pos),4);
+
 		infile.read(reinterpret_cast<char*>(&bgen_LA),4);
-		std::copy_n(std::istreambuf_iterator<char>(infile), static_cast<size_t>(bgen_LA), std::back_inserter(bgen_A_allele));
-		infile.ignore(1);
+		bgen_A_allele.resize(bgen_LA);
+		infile.read(&bgen_A_allele[0], bgen_LA);
+	
 
 		infile.read(reinterpret_cast<char*>(&bgen_LB),4);
-
-		std::copy_n(std::istreambuf_iterator<char>(infile), static_cast<size_t>(bgen_LB), std::back_inserter(bgen_B_allele));
-		infile.ignore(1);
+		bgen_B_allele.resize(bgen_LB);
+		infile.read(&bgen_B_allele[0], bgen_LB);
 		
+	
 
+		
 		uint16_t unzipped_data[3*bgen_N];
 
 		if (indicator_snp[t]==0) {
@@ -1603,7 +1615,7 @@ void LMM::AnalyzeBGEN (const gsl_matrix *U, const gsl_vector *eval, const gsl_ma
 	
 		x_mean=0.0; c_phen=0; n_miss=0;
 		gsl_vector_set_zero(x_miss);
-		for (size_t i=0; i<ni_total; ++i) {
+		for (size_t i=0; i<bgen_N; ++i) {
 			if (indicator_idv[i]==0) {continue;}
 			
 		
@@ -1611,15 +1623,15 @@ void LMM::AnalyzeBGEN (const gsl_matrix *U, const gsl_vector *eval, const gsl_ma
 				bgen_geno_prob_AB=static_cast<double>(unzipped_data[i*3+1])/32768.0;
 				bgen_geno_prob_BB=static_cast<double>(unzipped_data[i*3+2])/32768.0;
 				// WJA
-				bgen_geno_prob_miss=1.0-bgen_geno_prob_AA-bgen_geno_prob_AB-bgen_geno_prob_BB;
-				if (bgen_geno_prob_miss>0.1) {gsl_vector_set(x_miss, c_phen, 0.0); n_miss++;}
+				bgen_geno_prob_non_miss=bgen_geno_prob_AA+bgen_geno_prob_AB+bgen_geno_prob_BB;
+				if (bgen_geno_prob_non_miss<0.9) {gsl_vector_set(x_miss, c_phen, 0.0); n_miss++;}
 				else {
 
-					bgen_geno_prob_AA=bgen_geno_prob_AA/(1.0-bgen_geno_prob_miss);
-					bgen_geno_prob_AB=bgen_geno_prob_AB/(1.0-bgen_geno_prob_miss);
-					bgen_geno_prob_BB=bgen_geno_prob_BB/(1.0-bgen_geno_prob_miss);
+					bgen_geno_prob_AA/=bgen_geno_prob_non_miss;
+					bgen_geno_prob_AB/=bgen_geno_prob_non_miss;
+					bgen_geno_prob_BB/=bgen_geno_prob_non_miss;
 
-					geno=2.0*bgen_geno_prob_AA+bgen_geno_prob_AB;		
+					geno=2.0*bgen_geno_prob_BB+bgen_geno_prob_AB;		
 				
 					gsl_vector_set(x, c_phen, geno); 
 					gsl_vector_set(x_miss, c_phen, 1.0); 
@@ -1628,7 +1640,7 @@ void LMM::AnalyzeBGEN (const gsl_matrix *U, const gsl_vector *eval, const gsl_ma
 			c_phen++;
 		}	
 
-		x_mean/=(double)(ni_test-n_miss);
+		x_mean/=static_cast<double>(ni_test-n_miss);
 	
 		for (size_t i=0; i<ni_test; ++i) {
 			if (gsl_vector_get (x_miss, i)==0) {gsl_vector_set(x, i, x_mean);}

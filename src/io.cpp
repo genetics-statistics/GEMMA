@@ -951,19 +951,31 @@ bool ReadFile_bgen(const string &file_bgen, const set<string> &setSnps, const gs
 	LUDecomp (WtW, pmt, &sig);
 	LUInvert (WtW, pmt, WtWi);
 	
-	uint32_t bgen_header_offset;
+	// read in header
+	uint32_t bgen_snp_block_offset;
 	uint32_t bgen_header_length;
 	uint32_t bgen_nsamples;
 	uint32_t bgen_nsnps;
 	uint32_t bgen_flags;
-	infile.read(reinterpret_cast<char*>(&bgen_header_offset),4);
+	infile.read(reinterpret_cast<char*>(&bgen_snp_block_offset),4);
 	infile.read(reinterpret_cast<char*>(&bgen_header_length),4);
+	bgen_snp_block_offset-=4;
 	infile.read(reinterpret_cast<char*>(&bgen_nsnps),4);	
+	bgen_snp_block_offset-=4;
 	infile.read(reinterpret_cast<char*>(&bgen_nsamples),4);
+	bgen_snp_block_offset-=4;
 	infile.ignore(4+bgen_header_length-20);
+	bgen_snp_block_offset-=4+bgen_header_length-20;
 	infile.read(reinterpret_cast<char*>(&bgen_flags),4);
+	bgen_snp_block_offset-=4;
 	bool CompressedSNPBlocks=bgen_flags&0x1;
-//	bool LongIds=bgen_flags&0x4;
+	bool LongIds=bgen_flags&0x4;
+
+	if(!LongIds) {return false;}
+
+	infile.ignore(bgen_snp_block_offset);
+
+
 
 	size_t ns_total=static_cast<size_t>(bgen_nsnps);
 	
@@ -985,7 +997,7 @@ bool ReadFile_bgen(const string &file_bgen, const set<string> &setSnps, const gs
 	size_t n_0, n_1, n_2;
 	int flag_poly;
 	
-	double bgen_geno_prob_AA, bgen_geno_prob_AB, bgen_geno_prob_BB, bgen_geno_prob_miss;
+	double bgen_geno_prob_AA, bgen_geno_prob_AB, bgen_geno_prob_BB, bgen_geno_prob_non_miss;
 	
 
 	size_t ni_total=indicator_idv.size();   // total number of samples in phenotype file
@@ -1022,31 +1034,33 @@ bool ReadFile_bgen(const string &file_bgen, const set<string> &setSnps, const gs
 		infile.read(reinterpret_cast<char*>(&bgen_N),4);
 		infile.read(reinterpret_cast<char*>(&bgen_LS),2);
 
-		std::copy_n(std::istreambuf_iterator<char>(infile), static_cast<size_t>(bgen_LS), std::back_inserter(id));
-		infile.ignore(1);
+		id.resize(bgen_LS);
+		infile.read(&id[0], bgen_LS);
+				
 		infile.read(reinterpret_cast<char*>(&bgen_LR),2);
-
-		std::copy_n(std::istreambuf_iterator<char>(infile), static_cast<size_t>(bgen_LR), std::back_inserter(rs));
-		infile.ignore(1);
+		rs.resize(bgen_LR);
+		infile.read(&rs[0], bgen_LR);
+	
 		infile.read(reinterpret_cast<char*>(&bgen_LC),2);
-		std::copy_n(std::istreambuf_iterator<char>(infile), static_cast<size_t>(bgen_LC), std::back_inserter(chr));
-		infile.ignore(1);
-		
+		chr.resize(bgen_LC);
+		infile.read(&chr[0], bgen_LC);
+	
 		infile.read(reinterpret_cast<char*>(&bgen_SNP_pos),4);
+
 		infile.read(reinterpret_cast<char*>(&bgen_LA),4);
-		std::copy_n(std::istreambuf_iterator<char>(infile), static_cast<size_t>(bgen_LA), std::back_inserter(bgen_A_allele));
-		infile.ignore(1);
+		bgen_A_allele.resize(bgen_LA);
+		infile.read(&bgen_A_allele[0], bgen_LA);
+	
 
 		infile.read(reinterpret_cast<char*>(&bgen_LB),4);
-
-		std::copy_n(std::istreambuf_iterator<char>(infile), static_cast<size_t>(bgen_LB), std::back_inserter(bgen_B_allele));
-		infile.ignore(1);
+		bgen_B_allele.resize(bgen_LB);
+		infile.read(&bgen_B_allele[0], bgen_LB);
+	
 		
 		// should we switch according to MAF?
-		minor=bgen_A_allele;
-		major=bgen_B_allele;
+		minor=bgen_B_allele;
+		major=bgen_A_allele;
 		b_pos=static_cast<long int>(bgen_SNP_pos);
-
 
 		uint16_t unzipped_data[3*bgen_N];
 
@@ -1089,7 +1103,7 @@ bool ReadFile_bgen(const string &file_bgen, const set<string> &setSnps, const gs
 		n_0=0; n_1=0; n_2=0;
 		c_idv=0; 
 		gsl_vector_set_zero (genotype_miss);
-		for (size_t i=0; i<ni_total; ++i) {
+		for (size_t i=0; i<bgen_N; ++i) {
 			// CHECK this set correctly!
 			if (indicator_idv[i]==0) {continue;}		
 		
@@ -1097,17 +1111,17 @@ bool ReadFile_bgen(const string &file_bgen, const set<string> &setSnps, const gs
 			bgen_geno_prob_AA=static_cast<double>(unzipped_data[i*3])/32768.0;
 			bgen_geno_prob_AB=static_cast<double>(unzipped_data[i*3+1])/32768.0;
 			bgen_geno_prob_BB=static_cast<double>(unzipped_data[i*3+2])/32768.0;
-			bgen_geno_prob_miss=1.0-bgen_geno_prob_AA-bgen_geno_prob_AB-bgen_geno_prob_BB;
+			bgen_geno_prob_non_miss=bgen_geno_prob_AA+bgen_geno_prob_AB+bgen_geno_prob_BB;
 		
 			//CHECK 0.1 OK
-			if (bgen_geno_prob_miss>0.1) {gsl_vector_set (genotype_miss, c_idv, 1); n_miss++; c_idv++; continue;}
+			if (bgen_geno_prob_non_miss<0.9) {gsl_vector_set (genotype_miss, c_idv, 1); n_miss++; c_idv++; continue;}
 			
 			
-			bgen_geno_prob_AA=bgen_geno_prob_AA/(1.0-bgen_geno_prob_miss);
-			bgen_geno_prob_AB=bgen_geno_prob_AB/(1.0-bgen_geno_prob_miss);
-			bgen_geno_prob_BB=bgen_geno_prob_BB/(1.0-bgen_geno_prob_miss);
+			bgen_geno_prob_AA/=bgen_geno_prob_non_miss;
+			bgen_geno_prob_AB/=bgen_geno_prob_non_miss;
+			bgen_geno_prob_BB/=bgen_geno_prob_non_miss;
 
-			geno=2.0*bgen_geno_prob_AA+bgen_geno_prob_AB;
+			geno=2.0*bgen_geno_prob_BB+bgen_geno_prob_AB;
 			if (geno>=0 && geno<=0.5) {n_0++;}
 			if (geno>0.5 && geno<1.5) {n_1++;}
 			if (geno>=1.5 && geno<=2.0) {n_2++;}
@@ -1124,7 +1138,7 @@ bool ReadFile_bgen(const string &file_bgen, const set<string> &setSnps, const gs
 		}
 		//	std::cerr<<"maf="<<maf<<std::endl;
 
-		maf/=2.0*(double)(ni_test-n_miss);
+		maf/=2.0*static_cast<double>(ni_test-n_miss);
 		
 		SNPINFO sInfo={chr, rs, -9, b_pos, minor, major, n_miss, (double)n_miss/(double)ni_test, maf};
 		snpInfo.push_back(sInfo);

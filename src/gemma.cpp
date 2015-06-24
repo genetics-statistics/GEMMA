@@ -1445,7 +1445,7 @@ void GEMMA::BatchRun (PARAM &cPar)
 						
 						 // WJA added
 				       	else if(!cPar.file_bgenfile.empty()) 
-						cLmm.AnalyzeBGEN (U, eval, UtW, &UtY_col.vector, W, &Y_col.vector);	
+						cLmm.Analyzebgen (U, eval, UtW, &UtY_col.vector, W, &Y_col.vector);	
 													 		
 				   	else 
 						cLmm.AnalyzeBimbam (U, eval, UtW, &UtY_col.vector, W, &Y_col.vector);
