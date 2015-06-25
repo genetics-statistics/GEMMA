@@ -975,7 +975,7 @@ bool ReadFile_bgen(const string &file_bgen, const set<string> &setSnps, const gs
 
 	infile.ignore(bgen_snp_block_offset);
 
-
+	ns_test=0;
 
 	size_t ns_total=static_cast<size_t>(bgen_nsnps);
 	

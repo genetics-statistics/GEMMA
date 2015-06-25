@@ -2940,7 +2940,6 @@ void MVLMM::Analyzebgen (const gsl_matrix *U, const gsl_vector *eval, const gsl_
 	time_UtX=0; time_opt=0;
 	
 	string line;
-	char *ch_ptr;
 	
 	//	double lambda_mle=0, lambda_remle=0, beta=0, se=0, ;
 	double logl_H0=0.0, logl_H1=0.0, p_wald=0, p_lrt=0, p_score=0;
@@ -3292,6 +3291,14 @@ void MVLMM::Analyzebgen (const gsl_matrix *U, const gsl_vector *eval, const gsl_
 				gsl_vector_set(x, i, 2-geno);
 			}
 		}
+		
+
+
+
+
+
+/
+	
 
 		//calculate statistics
 		time_start=clock();		
@@ -3414,9 +3421,9 @@ void MVLMM::Analyzebgen (const gsl_matrix *U, const gsl_vector *eval, const gsl_
 
 void MVLMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *UtW, const gsl_matrix *UtY) 
 {
-	igzstream infile (file_geno.c_str(), igzstream::in);
-//	ifstream infile (file_geno.c_str(), ifstream::in);
-	if (!infile) {cout<<"error reading genotype file:"<<file_geno<<endl; return;}
+	string file_bgen=file_oxford+".bgen";
+	ifstream infile (file_bgen.c_str(), ios::binary);
+	if (!infile) {cout<<"error reading bgen file:"<<file_bgen<<endl; return;}
 
 	clock_t time_start=clock();
 	time_UtX=0; time_opt=0;
