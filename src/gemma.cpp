@@ -178,8 +178,8 @@ void GEMMA::PrintHelp(size_t option)
 		cout<<" -bfile    [prefix]       "<<" specify input PLINK binary ped file prefix."<<endl;	
 		cout<<"          requires: *.fam, *.bim and *.bed files"<<endl;
 		// WJA added
-		cout<<" -bgenfile    [prefix]       "<<" specify input Oxford genotype bgen file prefix."<<endl;	
-		cout<<"          requires: *.bggen, *.sample files"<<endl;	
+		cout<<" -oxford    [prefix]       "<<" specify input Oxford genotype bgen file prefix."<<endl;	
+		cout<<"          requires: *.bgen, *.sample files"<<endl;	
 	
 		cout<<"          missing value: -9"<<endl;
 		cout<<" -g        [filename]     "<<" specify input BIMBAM mean genotype file name"<<endl;
@@ -386,12 +386,12 @@ void GEMMA::Assign(int argc, char ** argv, PARAM &cPar)
 			cPar.file_bfile=str;
 		}
 		// WJA added	
-		else if (strcmp(argv[i], "-bgenfile")==0 || strcmp(argv[i], "--bgenfile")==0 || strcmp(argv[i], "-bgen")==0) {
+		else if (strcmp(argv[i], "-oxford")==0 || strcmp(argv[i], "--oxford")==0 || strcmp(argv[i], "-x")==0) {
 			if(argv[i+1] == NULL || argv[i+1][0] == '-') {continue;}
 			++i;
 			str.clear();
 			str.assign(argv[i]);
-			cPar.file_bgenfile=str;
+			cPar.file_oxford=str;
 		}
 
 		else if (strcmp(argv[i], "-silence")==0) {
@@ -1106,10 +1106,13 @@ void GEMMA::BatchRun (PARAM &cPar)
 				cLm.AnalyzeGene (W, &Y_col.vector); //y is the predictor, not the phenotype
 			} else if (!cPar.file_bfile.empty()) {
 				cLm.AnalyzePlink (W, &Y_col.vector);
+			} else if(!cPar.file_oxford.empty()) {
+				cLm.Analyzebgen (W, &Y_col.vector);
 			} else {
 				cLm.AnalyzeBimbam (W, &Y_col.vector);
 			}
 			
+
 			cLm.WriteFiles();
 			cLm.CopyToParam(cPar);
 		}
@@ -1444,7 +1447,7 @@ void GEMMA::BatchRun (PARAM &cPar)
 							
 						
 						 // WJA added
-				       	else if(!cPar.file_bgenfile.empty()) 
+				       	else if(!cPar.file_oxford.empty()) 
 						cLmm.Analyzebgen (U, eval, UtW, &UtY_col.vector, W, &Y_col.vector);	
 													 		
 				   	else 
@@ -1458,7 +1461,16 @@ void GEMMA::BatchRun (PARAM &cPar)
 					
 					if (!cPar.file_bfile.empty()) {
 						cMvlmm.AnalyzePlink (U, eval, UtW, UtY);
-					} else {
+					} 
+						
+					// WJA added
+				       	else if(!cPar.file_oxford.empty()) 
+					{
+						cMvlmm.Analyzebgen (U, eval, UtW, UtY);
+	
+					}
+					else {
+					
 						cMvlmm.AnalyzeBimbam (U, eval, UtW, UtY);
 					}
 					

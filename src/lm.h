@@ -43,6 +43,7 @@ public:
 	
 	string file_bfile;
 	string file_geno;
+	string file_oxford;
 	string file_out;
 	string path_out;
 	
@@ -69,6 +70,9 @@ public:
 	void AnalyzeGene (const gsl_matrix *W, const gsl_vector *x);
 	void AnalyzePlink (const gsl_matrix *W, const gsl_vector *y);
 	void AnalyzeBimbam (const gsl_matrix *W, const gsl_vector *y);
+	// WJA added
+	void Analyzebgen (const gsl_matrix *W, const gsl_vector *y);
+
 	void WriteFiles ();
 };
 void MatrixCalcLmLR (const gsl_matrix *X, const gsl_vector *y, vector<pair<size_t, double> > &pos_loglr);

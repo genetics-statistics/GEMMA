@@ -66,7 +66,7 @@ public:
 	string file_gene;
 	
 	// WJA added
-	string file_bgenfile;
+	string file_oxford;
 
 	// LMM related parameters
 	double l_min;

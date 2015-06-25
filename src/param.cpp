@@ -130,8 +130,8 @@ void PARAM::ReadFiles (void)
 
 	// WJA added 
 	//read genotype and phenotype file for bgen format
-	if (!file_bgenfile.empty()) {
-		file_str=file_bgenfile+".sample";
+	if (!file_oxford.empty()) {
+		file_str=file_oxford+".sample";
 		if (ReadFile_sample(file_str, indicator_pheno, pheno, p_column,indicator_cvt, cvt, n_cvt)==false) {error=true;}
 		if ((indicator_cvt).size()==0) {
 			n_cvt=1;
@@ -146,7 +146,7 @@ void PARAM::ReadFiles (void)
 		gsl_matrix *W=gsl_matrix_alloc (ni_test, n_cvt);
 		CopyCvt (W);
 
-		file_str=file_bgenfile+".bgen";
+		file_str=file_oxford+".bgen";
 		if (ReadFile_bgen (file_str, setSnps, W, indicator_idv, indicator_snp, snpInfo, maf_level, miss_level, hwe_level, r2_level, ns_test)==false) {error=true;}
 		gsl_matrix_free(W);
 		
@@ -353,7 +353,7 @@ void PARAM::CheckParam (void)
 	if (!file_geno.empty()) {flag++;}
 	if (!file_gene.empty()) {flag++;}
 	// WJA added
-	if (!file_bgenfile.empty()) {flag++;}
+	if (!file_oxford.empty()) {flag++;}
 	
 	
 	if (flag!=1 && a_mode!=43 && a_mode!=5 && a_mode!=61) {
@@ -422,7 +422,7 @@ void PARAM::CheckParam (void)
 void PARAM::CheckData (void) {
 
 	std::cout<<"Note this check needs updating by someone who knows how the programme works"<<std::endl;
-	if(file_bgenfile.empty())	// WJA NOTE: I added this condition so that covariates can be added through sample, probably not exactly what is wanted
+	if(file_oxford.empty())	// WJA NOTE: I added this condition so that covariates can be added through sample, probably not exactly what is wanted
 
 	{
 	if ((file_cvt).empty() || (indicator_cvt).size()==0) {

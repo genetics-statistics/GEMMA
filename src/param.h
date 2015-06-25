@@ -112,7 +112,7 @@ public:
 	string file_snps;		//file containing analyzed snps or genes
 
 	// WJA Added	
-	string file_bgenfile;	
+	string file_oxford;	
 	
 	
 	// QC related parameters	

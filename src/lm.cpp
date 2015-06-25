@@ -67,6 +67,8 @@ void LM::CopyFromParam (PARAM &cPar)
 	file_out=cPar.file_out;
 	path_out=cPar.path_out;
 	file_gene=cPar.file_gene;
+	// WJA added
+	file_oxford=cPar.file_oxford;
 	
 	time_opt=0.0;
 	
@@ -323,6 +325,234 @@ void LM::AnalyzeGene (const gsl_matrix *W, const gsl_vector *x)
 	
 	return;
 }
+
+
+// WJA added
+#include <assert.h>
+void LM::Analyzebgen (const gsl_matrix *W, const gsl_vector *y)
+{
+	string file_bgen=file_oxford+".bgen";
+	ifstream infile (file_bgen.c_str(), ios::binary);
+	if (!infile) {cout<<"error reading bgen file:"<<file_bgen<<endl; return;}
+
+
+	clock_t time_start=clock();
+	
+	string line;
+	char *ch_ptr;
+	
+	double beta=0, se=0, p_wald=0, p_lrt=0, p_score=0;
+	int n_miss, c_phen;
+	double geno, x_mean;
+	
+	//calculate some basic quantities
+	double yPwy, xPwy, xPwx;
+	double df=(double)W->size1-(double)W->size2-1.0;
+
+	gsl_vector *x=gsl_vector_alloc (W->size1);
+	gsl_vector *x_miss=gsl_vector_alloc (W->size1);
+
+	gsl_matrix *WtW=gsl_matrix_alloc (W->size2, W->size2);
+	gsl_matrix *WtWi=gsl_matrix_alloc (W->size2, W->size2);		
+	gsl_vector *Wty=gsl_vector_alloc (W->size2);
+	gsl_vector *Wtx=gsl_vector_alloc (W->size2);
+	gsl_permutation * pmt=gsl_permutation_alloc (W->size2);
+
+	gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, W, W, 0.0, WtW);
+	int sig;
+	LUDecomp (WtW, pmt, &sig);
+	LUInvert (WtW, pmt, WtWi);
+
+	gsl_blas_dgemv (CblasTrans, 1.0, W, y, 0.0, Wty);
+	CalcvPv(WtWi, Wty, y, yPwy);
+	
+	// read in header
+	uint32_t bgen_snp_block_offset;
+	uint32_t bgen_header_length;
+	uint32_t bgen_nsamples;
+	uint32_t bgen_nsnps;
+	uint32_t bgen_flags;
+	infile.read(reinterpret_cast<char*>(&bgen_snp_block_offset),4);
+	infile.read(reinterpret_cast<char*>(&bgen_header_length),4);
+	bgen_snp_block_offset-=4;
+	infile.read(reinterpret_cast<char*>(&bgen_nsnps),4);	
+	bgen_snp_block_offset-=4;
+	infile.read(reinterpret_cast<char*>(&bgen_nsamples),4);
+	bgen_snp_block_offset-=4;
+	infile.ignore(4+bgen_header_length-20);
+	bgen_snp_block_offset-=4+bgen_header_length-20;
+	infile.read(reinterpret_cast<char*>(&bgen_flags),4);
+	bgen_snp_block_offset-=4;
+	bool CompressedSNPBlocks=bgen_flags&0x1;
+//	bool LongIds=bgen_flags&0x4;
+
+	infile.ignore(bgen_snp_block_offset);
+
+	double bgen_geno_prob_AA, bgen_geno_prob_AB, bgen_geno_prob_BB, bgen_geno_prob_non_miss;
+
+	uint32_t bgen_N;
+	uint16_t bgen_LS;
+	uint16_t bgen_LR;
+	uint16_t bgen_LC;	
+	uint32_t bgen_SNP_pos;
+	uint32_t bgen_LA;
+	std::string bgen_A_allele;
+	uint32_t bgen_LB;
+	std::string bgen_B_allele;
+	uint32_t bgen_P;
+	size_t unzipped_data_size;
+	string id;
+	string rs;
+	string chr;
+	std::cout<<"Warning: WJA hard coded SNP missingness threshold of 10%"<<std::endl;
+
+
+	
+	//start reading genotypes and analyze	
+	for (size_t t=0; t<indicator_snp.size(); ++t) 
+	{
+		
+//		if (t>1) {break;}
+		if (t%d_pace==0 || t==(ns_total-1)) {ProgressBar ("Reading SNPs  ", t, ns_total-1);}
+		// read SNP header
+		id.clear();
+		rs.clear();
+		chr.clear();
+		bgen_A_allele.clear();
+		bgen_B_allele.clear();
+		
+		infile.read(reinterpret_cast<char*>(&bgen_N),4);
+		infile.read(reinterpret_cast<char*>(&bgen_LS),2);
+
+		id.resize(bgen_LS);
+		infile.read(&id[0], bgen_LS);
+		
+		infile.read(reinterpret_cast<char*>(&bgen_LR),2);
+		rs.resize(bgen_LR);
+		infile.read(&rs[0], bgen_LR);
+	
+		infile.read(reinterpret_cast<char*>(&bgen_LC),2);
+		chr.resize(bgen_LC);
+		infile.read(&chr[0], bgen_LC);
+	
+		infile.read(reinterpret_cast<char*>(&bgen_SNP_pos),4);
+
+		infile.read(reinterpret_cast<char*>(&bgen_LA),4);
+		bgen_A_allele.resize(bgen_LA);
+		infile.read(&bgen_A_allele[0], bgen_LA);
+	
+
+		infile.read(reinterpret_cast<char*>(&bgen_LB),4);
+		bgen_B_allele.resize(bgen_LB);
+		infile.read(&bgen_B_allele[0], bgen_LB);
+		
+	
+
+		
+		uint16_t unzipped_data[3*bgen_N];
+
+		if (indicator_snp[t]==0) {
+			if(CompressedSNPBlocks)
+				infile.read(reinterpret_cast<char*>(&bgen_P),4);
+			else	
+				bgen_P=6*bgen_N;
+		
+			infile.ignore(static_cast<size_t>(bgen_P));
+
+			continue;
+		}
+
+
+		if(CompressedSNPBlocks)
+		{
+
+		
+			infile.read(reinterpret_cast<char*>(&bgen_P),4);
+			uint8_t zipped_data[bgen_P];
+
+			unzipped_data_size=6*bgen_N;
+	
+			infile.read(reinterpret_cast<char*>(zipped_data),bgen_P);	
+
+			int result=uncompress(reinterpret_cast<Bytef*>(unzipped_data), reinterpret_cast<uLongf*>(&unzipped_data_size), reinterpret_cast<Bytef*>(zipped_data), static_cast<uLong> (bgen_P));
+			assert(result == Z_OK);
+				
+		}
+		else
+		{
+
+			bgen_P=6*bgen_N;
+			infile.read(reinterpret_cast<char*>(unzipped_data),bgen_P);
+		}
+	
+		x_mean=0.0; c_phen=0; n_miss=0;
+		gsl_vector_set_zero(x_miss);
+		for (size_t i=0; i<bgen_N; ++i) {
+			if (indicator_idv[i]==0) {continue;}
+			
+		
+				bgen_geno_prob_AA=static_cast<double>(unzipped_data[i*3])/32768.0;
+				bgen_geno_prob_AB=static_cast<double>(unzipped_data[i*3+1])/32768.0;
+				bgen_geno_prob_BB=static_cast<double>(unzipped_data[i*3+2])/32768.0;
+				// WJA
+				bgen_geno_prob_non_miss=bgen_geno_prob_AA+bgen_geno_prob_AB+bgen_geno_prob_BB;
+				if (bgen_geno_prob_non_miss<0.9) {gsl_vector_set(x_miss, c_phen, 0.0); n_miss++;}
+				else {
+
+					bgen_geno_prob_AA/=bgen_geno_prob_non_miss;
+					bgen_geno_prob_AB/=bgen_geno_prob_non_miss;
+					bgen_geno_prob_BB/=bgen_geno_prob_non_miss;
+
+					geno=2.0*bgen_geno_prob_BB+bgen_geno_prob_AB;		
+				
+					gsl_vector_set(x, c_phen, geno); 
+					gsl_vector_set(x_miss, c_phen, 1.0); 
+					x_mean+=geno;
+			}
+			c_phen++;
+		}	
+
+		x_mean/=static_cast<double>(ni_test-n_miss);
+	
+		for (size_t i=0; i<ni_test; ++i) {
+			if (gsl_vector_get (x_miss, i)==0) {gsl_vector_set(x, i, x_mean);}
+			geno=gsl_vector_get(x, i);
+			if (x_mean>1) {
+				gsl_vector_set(x, i, 2-geno);
+			}
+		}
+		
+
+		//calculate statistics		
+		time_start=clock();		
+
+		gsl_blas_dgemv(CblasTrans, 1.0, W, x, 0.0, Wtx);		
+		CalcvPv(WtWi, Wty, Wtx, y, x, xPwy, xPwx);
+		LmCalcP (a_mode-50, yPwy, xPwy, xPwx, df, W->size1, beta, se, p_wald, p_lrt, p_score);
+		
+		time_opt+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
+		
+		//store summary data
+		SUMSTAT SNPs={beta, se, 0.0, 0.0, p_wald, p_lrt, p_score};
+		sumStat.push_back(SNPs);
+	}	
+	cout<<endl;
+
+	gsl_vector_free(x);
+	gsl_vector_free(x_miss);
+
+	gsl_matrix_free(WtW);
+	gsl_matrix_free(WtWi);
+	gsl_vector_free(Wty);
+	gsl_vector_free(Wtx);
+	gsl_permutation_free(pmt);
+	
+	infile.close();
+	infile.clear();
+	
+	return;
+}
+
 
 
 

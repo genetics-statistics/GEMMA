@@ -46,6 +46,7 @@ public:
 	
 	string file_bfile;
 	string file_geno;
+	string file_oxford;
 	string file_out;
 	string path_out;
 	
@@ -83,6 +84,8 @@ public:
 	void CopyToParam (PARAM &cPar);
 	void AnalyzeBimbam (const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *UtW, const gsl_matrix *UtY);
 	void AnalyzePlink (const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *UtW, const gsl_matrix *UtY);
+	void Analyzebgen (const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *UtW, const gsl_matrix *UtY);
+
 	void WriteFiles ();
 	
 };

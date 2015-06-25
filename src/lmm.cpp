@@ -69,7 +69,7 @@ void LMM::CopyFromParam (PARAM &cPar)
 	path_out=cPar.path_out;
 	file_gene=cPar.file_gene;
 	// WJA added
-	file_bgenfile=cPar.file_bgenfile;
+	file_oxford=cPar.file_oxford;
 	
 	l_min=cPar.l_min;
 	l_max=cPar.l_max;
@@ -1464,7 +1464,7 @@ void LMM::AnalyzePlink (const gsl_matrix *U, const gsl_vector *eval, const gsl_m
 #include <assert.h>
 void LMM::Analyzebgen (const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *UtW, const gsl_vector *Uty, const gsl_matrix *W, const gsl_vector *y) 
 {
-	string file_bgen=file_bgenfile+".bgen";
+	string file_bgen=file_oxford+".bgen";
 	ifstream infile (file_bgen.c_str(), ios::binary);
 	if (!infile) {cout<<"error reading bgen file:"<<file_bgen<<endl; return;}
 
