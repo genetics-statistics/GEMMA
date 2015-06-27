@@ -10,13 +10,13 @@
 #       float precision				FORCE_FLOAT
 
 # Set this variable to either LNX or MAC
-SYS = LNX
+SYS = MAC
 # Leave blank after "=" to disable; put "= 1" to enable
 # Disable WITH_LAPACK option can slow computation speed significantly and is not recommended
 # Disable WITH_ARPACK option only disable -apprx option in the software
 WITH_LAPACK = 1
 FORCE_32BIT = 
-FORCE_DYNAMIC = 
+FORCE_DYNAMIC = 1 
 FORCE_FLOAT = 
 DIST_NAME = gemma-0.95alpha
 
@@ -31,12 +31,14 @@ SRC_DIR  = ./src
 
 CPP = g++
 
-CPPFLAGS = -Wall -O3 -std=c++0x
+CPPFLAGS = -Wall -O1
 
 ifdef FORCE_DYNAMIC
-LIBS = -lgsl -lgslcblas -lblas -pthread -lz -std=c++0x
+#LIBS = -lgsl -lgslcblas -lblas -pthread -lz
+LIBS = -lgsl -lgslcblas -lblas -lz
 else
-LIBS = -lgsl -lgslcblas -pthread -lz -std=c++0x
+#LIBS = -lgsl -lgslcblas -pthread -lz
+LIBS = -lgsl -lgslcblas -lz
 endif
 
 OUTPUT = $(BIN_DIR)/gemma
@@ -52,7 +54,7 @@ HDR =
 # Detailed libary paths, D for dynamic and S for static
 
 LIBS_LNX_D_LAPACK = -llapack
-LIBS_MAC_D_LAPACK = -framework Veclib
+LIBS_MAC_D_LAPACK = -framework Accelerate
 LIBS_LNX_S_LAPACK = /usr/lib/lapack/liblapack.a -lgfortran  /usr/lib/atlas-base/libatlas.a /usr/lib/libblas/libblas.a -Wl,--allow-multiple-definition 
 
 # Options
