@@ -631,6 +631,10 @@ void PARAM::CalcKin (gsl_matrix *matrix_kin)  {
 	if (!file_bfile.empty() ) {		
 		file_str=file_bfile+".bed";
 		if (PlinkKin (file_str, indicator_snp, a_mode-20, d_pace, matrix_kin)==false) {error=true;}
+	}	
+ 	else if (!file_oxford.empty() ) {		
+		file_str=file_oxford+".bgen";
+		if (bgenKin (file_str, indicator_snp, a_mode-20, d_pace, matrix_kin)==false) {error=true;}
 	}
 	else {
 		file_str=file_geno;

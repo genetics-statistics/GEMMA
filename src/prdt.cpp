@@ -148,7 +148,6 @@ void PRDT::WriteFiles (gsl_matrix *Y_full)
 
 
 
-
 void PRDT::AddBV (gsl_matrix *G, const gsl_vector *u_hat, gsl_vector *y_prdt) 
 {
 	size_t ni_test=u_hat->size, ni_total=G->size1;

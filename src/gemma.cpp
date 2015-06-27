@@ -838,6 +838,7 @@ void GEMMA::BatchRun (PARAM &cPar)
 	//Read Files
 	cout<<"Reading Files ... "<<endl;
 	cPar.ReadFiles();
+
 	if (cPar.error==true) {cout<<"error! fail to read files. "<<endl; return;}
 
 	cPar.CheckData();
@@ -909,7 +910,7 @@ void GEMMA::BatchRun (PARAM &cPar)
 		
 		gsl_vector_free(y_prdt);
 	}
-	
+
 	
 	//Prediction with kinship matrix only; for one or more phenotypes
 	if (cPar.a_mode==43) {
@@ -1063,8 +1064,7 @@ void GEMMA::BatchRun (PARAM &cPar)
 		gsl_matrix_free(G_full);		
 		gsl_matrix_free(H_full);
 	}
-	
-	
+
 	//Generate Kinship matrix
 	if (cPar.a_mode==21 || cPar.a_mode==22) {  
 		cout<<"Calculating Relatedness Matrix ... "<<endl;
@@ -1084,7 +1084,7 @@ void GEMMA::BatchRun (PARAM &cPar)
 		
 		gsl_matrix_free (G);
 	}
-	
+
 	
 	//LM
 	if (cPar.a_mode==51 || cPar.a_mode==52 || cPar.a_mode==53 || cPar.a_mode==54) {  //Fit LM

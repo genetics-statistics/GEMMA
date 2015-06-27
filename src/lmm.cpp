@@ -1471,7 +1471,6 @@ void LMM::Analyzebgen (const gsl_matrix *U, const gsl_vector *eval, const gsl_ma
 
 	clock_t time_start=clock();
 	
-	string line;
 	
 	double lambda_mle=0, lambda_remle=0, beta=0, se=0, p_wald=0, p_lrt=0, p_score=0;
 	double logl_H1=0.0;

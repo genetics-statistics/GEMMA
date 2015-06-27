@@ -1136,7 +1136,6 @@ bool ReadFile_bgen(const string &file_bgen, const set<string> &setSnps, const gs
 			
 			c_idv++;
 		}
-		//	std::cerr<<"maf="<<maf<<std::endl;
 
 		maf/=2.0*static_cast<double>(ni_test-n_miss);
 		
@@ -1353,6 +1352,210 @@ void ReadFile_eigenD (const string &file_kd, bool &error, gsl_vector *eval)
 	return;
 }
 
+
+
+//read oxford genotype file and calculate kinship matrix
+bool bgenKin (const string &file_oxford, vector<int> &indicator_snp, const int k_mode, const int display_pace, gsl_matrix *matrix_kin) 
+{
+	string file_bgen=file_oxford;
+	ifstream infile (file_bgen.c_str(), ios::binary);
+	if (!infile) {cout<<"error reading bgen file:"<<file_bgen<<endl; return false;}
+
+
+	// read in header
+	uint32_t bgen_snp_block_offset;
+	uint32_t bgen_header_length;
+	uint32_t bgen_nsamples;
+	uint32_t bgen_nsnps;
+	uint32_t bgen_flags;
+	infile.read(reinterpret_cast<char*>(&bgen_snp_block_offset),4);
+	infile.read(reinterpret_cast<char*>(&bgen_header_length),4);
+	bgen_snp_block_offset-=4;
+	infile.read(reinterpret_cast<char*>(&bgen_nsnps),4);	
+	bgen_snp_block_offset-=4;
+	infile.read(reinterpret_cast<char*>(&bgen_nsamples),4);
+	bgen_snp_block_offset-=4;
+	infile.ignore(4+bgen_header_length-20);
+	bgen_snp_block_offset-=4+bgen_header_length-20;
+	infile.read(reinterpret_cast<char*>(&bgen_flags),4);
+	bgen_snp_block_offset-=4;
+	bool CompressedSNPBlocks=bgen_flags&0x1;
+//	bool LongIds=bgen_flags&0x4;
+
+	infile.ignore(bgen_snp_block_offset);
+
+	double bgen_geno_prob_AA, bgen_geno_prob_AB, bgen_geno_prob_BB, bgen_geno_prob_non_miss;
+
+	uint32_t bgen_N;
+	uint16_t bgen_LS;
+	uint16_t bgen_LR;
+	uint16_t bgen_LC;	
+	uint32_t bgen_SNP_pos;
+	uint32_t bgen_LA;
+	std::string bgen_A_allele;
+	uint32_t bgen_LB;
+	std::string bgen_B_allele;
+	uint32_t bgen_P;
+	size_t unzipped_data_size;
+	string id;
+	string rs;
+	string chr;
+	double genotype;
+
+
+	size_t n_miss;
+	double d, geno_mean, geno_var;
+	
+	size_t ni_total=matrix_kin->size1;
+	gsl_vector *geno=gsl_vector_alloc (ni_total);
+	gsl_vector *geno_miss=gsl_vector_alloc (ni_total);
+
+	size_t ns_test=0;
+	for (size_t t=0; t<indicator_snp.size(); ++t) {
+		
+		if (t%display_pace==0 || t==(indicator_snp.size()-1)) {ProgressBar ("Reading SNPs  ", t, indicator_snp.size()-1);}
+	
+		id.clear();
+		rs.clear();
+		chr.clear();
+		bgen_A_allele.clear();
+		bgen_B_allele.clear();
+		
+		infile.read(reinterpret_cast<char*>(&bgen_N),4);
+		infile.read(reinterpret_cast<char*>(&bgen_LS),2);
+
+		id.resize(bgen_LS);
+		infile.read(&id[0], bgen_LS);
+		
+		infile.read(reinterpret_cast<char*>(&bgen_LR),2);
+		rs.resize(bgen_LR);
+		infile.read(&rs[0], bgen_LR);
+	
+		infile.read(reinterpret_cast<char*>(&bgen_LC),2);
+		chr.resize(bgen_LC);
+		infile.read(&chr[0], bgen_LC);
+	
+		infile.read(reinterpret_cast<char*>(&bgen_SNP_pos),4);
+
+		infile.read(reinterpret_cast<char*>(&bgen_LA),4);
+		bgen_A_allele.resize(bgen_LA);
+		infile.read(&bgen_A_allele[0], bgen_LA);
+	
+
+		infile.read(reinterpret_cast<char*>(&bgen_LB),4);
+		bgen_B_allele.resize(bgen_LB);
+		infile.read(&bgen_B_allele[0], bgen_LB);
+		
+	
+
+		
+		uint16_t unzipped_data[3*bgen_N];
+
+		if (indicator_snp[t]==0) {
+			if(CompressedSNPBlocks)
+				infile.read(reinterpret_cast<char*>(&bgen_P),4);
+			else	
+				bgen_P=6*bgen_N;
+		
+			infile.ignore(static_cast<size_t>(bgen_P));
+
+			continue;
+		}
+
+
+
+		if(CompressedSNPBlocks)
+		{
+
+		
+			infile.read(reinterpret_cast<char*>(&bgen_P),4);
+			uint8_t zipped_data[bgen_P];
+
+			unzipped_data_size=6*bgen_N;
+	
+			infile.read(reinterpret_cast<char*>(zipped_data),bgen_P);	
+
+			int result=uncompress(reinterpret_cast<Bytef*>(unzipped_data), reinterpret_cast<uLongf*>(&unzipped_data_size), reinterpret_cast<Bytef*>(zipped_data), static_cast<uLong> (bgen_P));
+			assert(result == Z_OK);
+				
+		}
+		else
+		{
+
+			bgen_P=6*bgen_N;
+			infile.read(reinterpret_cast<char*>(unzipped_data),bgen_P);
+		}
+
+		
+		
+		geno_mean=0.0; n_miss=0; geno_var=0.0;
+		gsl_vector_set_all(geno_miss, 0);
+
+		for (size_t i=0; i<bgen_N; ++i) {
+				
+		
+				bgen_geno_prob_AA=static_cast<double>(unzipped_data[i*3])/32768.0;
+				bgen_geno_prob_AB=static_cast<double>(unzipped_data[i*3+1])/32768.0;
+				bgen_geno_prob_BB=static_cast<double>(unzipped_data[i*3+2])/32768.0;
+				// WJA
+				bgen_geno_prob_non_miss=bgen_geno_prob_AA+bgen_geno_prob_AB+bgen_geno_prob_BB;
+				if (bgen_geno_prob_non_miss<0.9) {gsl_vector_set(geno_miss, i, 0.0); n_miss++;}
+				else {
+
+					bgen_geno_prob_AA/=bgen_geno_prob_non_miss;
+					bgen_geno_prob_AB/=bgen_geno_prob_non_miss;
+					bgen_geno_prob_BB/=bgen_geno_prob_non_miss;
+
+					genotype=2.0*bgen_geno_prob_BB+bgen_geno_prob_AB;		
+				
+					gsl_vector_set(geno, i, genotype); 
+					gsl_vector_set(geno_miss, i, 1.0); 
+					geno_mean+=genotype;
+					geno_var+=genotype*genotype;
+				}
+		
+		}	
+
+		
+		geno_mean/=(double)(ni_total-n_miss);
+		geno_var+=geno_mean*geno_mean*(double)n_miss;
+		geno_var/=(double)ni_total;
+		geno_var-=geno_mean*geno_mean;
+//		geno_var=geno_mean*(1-geno_mean*0.5);
+		
+		for (size_t i=0; i<ni_total; ++i) {
+			if (gsl_vector_get (geno_miss, i)==0) {gsl_vector_set(geno, i, geno_mean);}
+		}		
+		
+		gsl_vector_add_constant (geno, -1.0*geno_mean);
+		
+		if (geno_var!=0) {
+			if (k_mode==1) {gsl_blas_dsyr (CblasUpper, 1.0, geno, matrix_kin);}
+			else if (k_mode==2) {gsl_blas_dsyr (CblasUpper, 1.0/geno_var, geno, matrix_kin);}
+			else {cout<<"Unknown kinship mode."<<endl;}
+		}
+		
+		ns_test++;
+    }	
+	cout<<endl;
+	
+	gsl_matrix_scale (matrix_kin, 1.0/(double)ns_test);
+	
+	for (size_t i=0; i<ni_total; ++i) {
+		for (size_t j=0; j<i; ++j) {
+			d=gsl_matrix_get (matrix_kin, j, i);
+			gsl_matrix_set (matrix_kin, i, j, d);
+		}
+	}
+	
+	gsl_vector_free (geno);
+	gsl_vector_free (geno_miss);
+	
+	infile.close();
+	infile.clear();	
+	
+	return true;
+}
 
 
 //read bimbam mean genotype file and calculate kinship matrix
