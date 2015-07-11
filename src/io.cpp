@@ -1759,17 +1759,18 @@ bool ReadFile_sample(const string &file_sample, vector<vector<int> > &indicator_
 		pheno_row.push_back(-9);
 		ind_pheno_row.push_back(0);
 	}
+
 	// read header line1
 	if(!safeGetline(infile, line).eof()) {
-		ch_ptr=strtok((char *)line.c_str(), " ");
+		ch_ptr=strtok((char *)line.c_str(), " \t");
 		if(strcmp(ch_ptr, "ID_1")!=0) {return false;}
-		ch_ptr=strtok(NULL, " ");
+		ch_ptr=strtok(NULL, " \t");
 		if(strcmp(ch_ptr, "ID_2")!=0) {return false;}
-		ch_ptr=strtok(NULL, " ");
+		ch_ptr=strtok(NULL, " \t");
 		if(strcmp(ch_ptr, "missing")!=0) {return false;}
 		while (ch_ptr!=NULL) {
 			num_cols++;
-			ch_ptr=strtok (NULL, " ");
+			ch_ptr=strtok (NULL, " \t");
 
 		}
 		num_cols--;
@@ -1780,30 +1781,30 @@ bool ReadFile_sample(const string &file_sample, vector<vector<int> > &indicator_
 	char col_type[num_cols];
 	// read header line2
 	if(!safeGetline(infile, line).eof()) {
-		ch_ptr=strtok ((char *)line.c_str(), " ");
+		ch_ptr=strtok ((char *)line.c_str(), " \t");
 		if(strcmp(ch_ptr, "0")!=0) {return false;}
-		ch_ptr=strtok(NULL, " ");
+		ch_ptr=strtok(NULL, " \t");
 		if(strcmp(ch_ptr, "0")!=0) {return false;}
-		ch_ptr=strtok(NULL, " ");
+		ch_ptr=strtok(NULL, " \t");
 		if(strcmp(ch_ptr, "0")!=0) {return false;}
 		size_t it=0;
-		ch_ptr=strtok (NULL, " ");
+		ch_ptr=strtok (NULL, " \t");
 		if(ch_ptr!=NULL)
 			while(ch_ptr!=NULL){
 				col_type[it++]=ch_ptr[0];
 				if(ch_ptr[0]=='D') {cvt_factor_levels.push_back(map<uint32_t, size_t>());num_cvt_in_file++;}
 				if(ch_ptr[0]=='C') {num_cvt_in_file++;}
 				if((ch_ptr[0]=='P')||(ch_ptr[0]=='B')) {num_p_in_file++;}
-				ch_ptr=strtok(NULL, " ");
+				ch_ptr=strtok(NULL, " \t");
 			}
 
 	}
 
 	while (!safeGetline(infile, line).eof()) {
 
-		ch_ptr=strtok ((char *)line.c_str(), " ");
+		ch_ptr=strtok ((char *)line.c_str(), " \t");
 
-		for(int it=0;it<3;it++){ch_ptr=strtok(NULL, " ");}
+		for(int it=0;it<3;it++){ch_ptr=strtok(NULL, " \t");}
 
 
 		size_t i=0;
@@ -1827,7 +1828,7 @@ bool ReadFile_sample(const string &file_sample, vector<vector<int> > &indicator_
 				fac_cvt_i++;
 			}
 
-			ch_ptr=strtok (NULL, " ");
+			ch_ptr=strtok (NULL, " \t");
 			i++;
 		}
 
@@ -1853,9 +1854,9 @@ bool ReadFile_sample(const string &file_sample, vector<vector<int> > &indicator_
 		while (!safeGetline(infile2, line).eof()) {
 
 			vector<double> v_d; flag_na=0;
-			ch_ptr=strtok ((char *)line.c_str(), " ");
+			ch_ptr=strtok ((char *)line.c_str(), " \t");
 
-			for(int it=0;it<3;it++){ch_ptr=strtok(NULL, " ");}
+			for(int it=0;it<3;it++){ch_ptr=strtok(NULL, " \t");}
 
 
 			size_t i=0;
@@ -1884,7 +1885,7 @@ bool ReadFile_sample(const string &file_sample, vector<vector<int> > &indicator_
 					fac_cvt_i++;
 				}
 
-				ch_ptr=strtok (NULL, " ");
+				ch_ptr=strtok (NULL, " \t");
 				i++;
 			}
 

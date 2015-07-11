@@ -169,7 +169,6 @@ void PARAM::ReadFiles (void)
 		//post-process covariates and phenotypes, obtain ni_test, save all useful covariates
 		ProcessCvtPhen();
 
-
 		//obtain covariate matrix
 		gsl_matrix *W=gsl_matrix_alloc (ni_test, n_cvt);
 		CopyCvt (W);
@@ -242,12 +241,12 @@ void PARAM::ReadFiles (void)
 			indicator_idv.push_back(k);
 		}
 
-        //post-process covariates and phenotypes, obtain ni_test, save all useful covariates
-        ProcessCvtPhen();
+		//post-process covariates and phenotypes, obtain ni_test, save all useful covariates
+		ProcessCvtPhen();
 
-        //obtain covariate matrix
-        gsl_matrix *W=gsl_matrix_alloc (ni_test, n_cvt);
-        CopyCvt (W);
+		//obtain covariate matrix
+		gsl_matrix *W=gsl_matrix_alloc (ni_test, n_cvt);
+		CopyCvt (W);
 
 		if (ReadFile_gene (file_gene, vec_read, snpInfo, ng_total)==false) {error=true;}
 	}
@@ -381,9 +380,9 @@ void PARAM::CheckParam (void)
 	}
 
 	if (!file_oxford.empty()) {
-		str=file_bfile+".bgen";
+		str=file_oxford+".bgen";
 		if (stat(str.c_str(),&fileInfo)==-1) {cout<<"error! fail to open .bgen file: "<<str<<endl; error=true;}
-		str=file_bfile+".sample";
+		str=file_oxford+".sample";
 		if (stat(str.c_str(),&fileInfo)==-1) {cout<<"error! fail to open .sample file: "<<str<<endl; error=true;}
 	}
 
