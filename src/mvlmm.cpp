@@ -3747,3 +3747,825 @@ void CalcMvLmmVgVeBeta (const gsl_vector *eval, const gsl_matrix *UtW, const gsl
 	return;
 }
 
+
+
+
+
+void MVLMM::AnalyzeBimbamGXE (const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *UtW, const gsl_matrix *UtY, const gsl_vector *env) 
+{
+	igzstream infile (file_geno.c_str(), igzstream::in);
+//	ifstream infile (file_geno.c_str(), ifstream::in);
+	if (!infile) {cout<<"error reading genotype file:"<<file_geno<<endl; return;}
+
+	clock_t time_start=clock();
+	time_UtX=0; time_opt=0;
+	
+	string line;
+	char *ch_ptr;
+	
+	//	double lambda_mle=0, lambda_remle=0, beta=0, se=0, ;
+	double logl_H0=0.0, logl_H1=0.0, p_wald=0, p_lrt=0, p_score=0;
+	double crt_a, crt_b, crt_c;
+	int n_miss, c_phen;
+	double geno, x_mean;
+	size_t c=0;
+	//	double s=0.0;
+	size_t n_size=UtY->size1, d_size=UtY->size2, c_size=UtW->size2+2;	
+	size_t dc_size=d_size*(c_size+1), v_size=d_size*(d_size+1)/2;
+
+	//large matrices for EM
+	gsl_matrix *U_hat=gsl_matrix_alloc (d_size, n_size);
+	gsl_matrix *E_hat=gsl_matrix_alloc (d_size, n_size);
+	gsl_matrix *OmegaU=gsl_matrix_alloc (d_size, n_size);
+	gsl_matrix *OmegaE=gsl_matrix_alloc (d_size, n_size);
+	gsl_matrix *UltVehiY=gsl_matrix_alloc (d_size, n_size);
+	gsl_matrix *UltVehiBX=gsl_matrix_alloc (d_size, n_size);
+	gsl_matrix *UltVehiU=gsl_matrix_alloc (d_size, n_size);
+	gsl_matrix *UltVehiE=gsl_matrix_alloc (d_size, n_size);	
+	
+	//large matrices for NR
+	gsl_matrix *Hi_all=gsl_matrix_alloc (d_size, d_size*n_size);	//each dxd block is H_k^{-1}
+	gsl_matrix *Hiy_all=gsl_matrix_alloc (d_size, n_size);		//each column is H_k^{-1}y_k
+	gsl_matrix *xHi_all=gsl_matrix_alloc (dc_size, d_size*n_size);  //each dcxdc block is x_k\otimes H_k^{-1}
+	gsl_matrix *Hessian=gsl_matrix_alloc (v_size*2, v_size*2);
+	
+	gsl_vector *x=gsl_vector_alloc (n_size);
+	gsl_vector *x_miss=gsl_vector_alloc (n_size);
+	
+	gsl_matrix *Y=gsl_matrix_alloc (d_size, n_size);
+	gsl_matrix *X=gsl_matrix_alloc (c_size+1, n_size);
+	gsl_matrix *V_g=gsl_matrix_alloc (d_size, d_size);
+	gsl_matrix *V_e=gsl_matrix_alloc (d_size, d_size);
+	gsl_matrix *B=gsl_matrix_alloc (d_size, c_size+1);
+	gsl_vector *beta=gsl_vector_alloc (d_size);
+	gsl_matrix *Vbeta=gsl_matrix_alloc (d_size, d_size);
+	
+	//null estimates for initial values; including env but not including x
+	gsl_matrix *V_g_null=gsl_matrix_alloc (d_size, d_size);
+	gsl_matrix *V_e_null=gsl_matrix_alloc (d_size, d_size);
+	gsl_matrix *B_null=gsl_matrix_alloc (d_size, c_size+1);
+	gsl_matrix *se_B_null1=gsl_matrix_alloc (d_size, c_size-1);
+	gsl_matrix *se_B_null2=gsl_matrix_alloc (d_size, c_size);
+	
+	gsl_matrix_view X_sub1=gsl_matrix_submatrix (X, 0, 0, c_size-1, n_size);	
+	gsl_matrix_view B_sub1=gsl_matrix_submatrix (B, 0, 0, d_size, c_size-1);
+	gsl_matrix_view xHi_all_sub1=gsl_matrix_submatrix (xHi_all, 0, 0, d_size*(c_size-1), d_size*n_size);
+
+	gsl_matrix_view X_sub2=gsl_matrix_submatrix (X, 0, 0, c_size, n_size);	
+	gsl_matrix_view B_sub2=gsl_matrix_submatrix (B, 0, 0, d_size, c_size);
+	gsl_matrix_view xHi_all_sub2=gsl_matrix_submatrix (xHi_all, 0, 0, d_size*c_size, d_size*n_size);
+
+	gsl_matrix_transpose_memcpy (Y, UtY);
+
+	gsl_matrix_view X_sub0=gsl_matrix_submatrix (X, 0, 0, c_size-2, n_size);	
+	gsl_matrix_transpose_memcpy (&X_sub0.matrix, UtW);
+	gsl_vector_view X_row0=gsl_matrix_row(X, c_size-2);
+	gsl_blas_dgemv (CblasTrans, 1.0, U, env, 0.0, &X_row0.vector);
+
+	gsl_vector_view X_row1=gsl_matrix_row(X, c_size-1);
+	gsl_vector_set_zero(&X_row1.vector);
+	gsl_vector_view X_row2=gsl_matrix_row(X, c_size);
+	gsl_vector_set_zero(&X_row2.vector);
+
+	gsl_vector_view B_col1=gsl_matrix_column(B, c_size-1);
+	gsl_vector_set_zero(&B_col1.vector);		
+	gsl_vector_view B_col2=gsl_matrix_column(B, c_size);
+	gsl_vector_set_zero(&B_col2.vector);
+
+	MphInitial(em_iter, em_prec, nr_iter, nr_prec, eval, &X_sub1.matrix, Y, l_min, l_max, n_region, V_g, V_e, &B_sub1.matrix);
+	logl_H0=MphEM ('R', em_iter, em_prec, eval, &X_sub1.matrix, Y, U_hat, E_hat, OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE, V_g, V_e, &B_sub1.matrix);	
+	logl_H0=MphNR ('R', nr_iter, nr_prec, eval, &X_sub1.matrix, Y, Hi_all, &xHi_all_sub1.matrix, Hiy_all, V_g, V_e, Hessian, crt_a, crt_b, crt_c);
+	MphCalcBeta (eval, &X_sub1.matrix, Y, V_g, V_e, UltVehiY, &B_sub1.matrix, se_B_null1);
+	
+	c=0;
+	Vg_remle_null.clear();
+	Ve_remle_null.clear();
+	for (size_t i=0; i<d_size; i++) {
+		for (size_t j=i; j<d_size; j++) {
+			Vg_remle_null.push_back(gsl_matrix_get (V_g, i, j) );
+			Ve_remle_null.push_back(gsl_matrix_get (V_e, i, j) );
+			VVg_remle_null.push_back(gsl_matrix_get (Hessian, c, c) );
+			VVe_remle_null.push_back(gsl_matrix_get (Hessian, c+v_size, c+v_size) );
+			c++;
+		}
+	}
+	beta_remle_null.clear(); 
+	se_beta_remle_null.clear();
+	for (size_t i=0; i<se_B_null1->size1; i++) {
+		for (size_t j=0; j<se_B_null1->size2; j++) {
+			beta_remle_null.push_back(gsl_matrix_get(B, i, j) );
+			se_beta_remle_null.push_back(gsl_matrix_get(se_B_null1, i, j) );
+		}
+	}
+	logl_remle_H0=logl_H0;
+	
+	cout.setf(std::ios_base::fixed, std::ios_base::floatfield);
+	cout.precision(4);
+	
+	cout<<"REMLE estimate for Vg in the null model: "<<endl;
+	for (size_t i=0; i<d_size; i++) {
+		for (size_t j=0; j<=i; j++) {
+			cout<<gsl_matrix_get(V_g, i, j)<<"\t";
+		}
+		cout<<endl;
+	}
+	cout<<"se(Vg): "<<endl;	
+	for (size_t i=0; i<d_size; i++) {
+		for (size_t j=0; j<=i; j++) {
+			c=GetIndex(i, j, d_size);
+			cout<<sqrt(gsl_matrix_get(Hessian, c, c))<<"\t";
+		}
+		cout<<endl;		
+	}
+	cout<<"REMLE estimate for Ve in the null model: "<<endl;
+	for (size_t i=0; i<d_size; i++) {
+		for (size_t j=0; j<=i; j++) {
+			cout<<gsl_matrix_get(V_e, i, j)<<"\t";
+		}
+		cout<<endl;
+	}
+	cout<<"se(Ve): "<<endl;	
+	for (size_t i=0; i<d_size; i++) {
+		for (size_t j=0; j<=i; j++) {
+			c=GetIndex(i, j, d_size);
+			cout<<sqrt(gsl_matrix_get(Hessian, c+v_size, c+v_size))<<"\t";
+		}
+		cout<<endl;		
+	}
+	cout<<"REMLE likelihood = "<<logl_H0<<endl;
+	
+	
+	logl_H0=MphEM ('L', em_iter, em_prec, eval, &X_sub1.matrix, Y, U_hat, E_hat, OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE, V_g, V_e, &B_sub1.matrix);
+	logl_H0=MphNR ('L', nr_iter, nr_prec, eval, &X_sub1.matrix, Y, Hi_all, &xHi_all_sub1.matrix, Hiy_all, V_g, V_e, Hessian, crt_a, crt_b, crt_c);
+	MphCalcBeta (eval, &X_sub1.matrix, Y, V_g, V_e, UltVehiY, &B_sub1.matrix, se_B_null1);
+	
+	c=0;
+	Vg_mle_null.clear();
+	Ve_mle_null.clear();
+	for (size_t i=0; i<d_size; i++) {
+		for (size_t j=i; j<d_size; j++) {
+			Vg_mle_null.push_back(gsl_matrix_get (V_g, i, j) );
+			Ve_mle_null.push_back(gsl_matrix_get (V_e, i, j) );
+			VVg_mle_null.push_back(gsl_matrix_get (Hessian, c, c) );
+			VVe_mle_null.push_back(gsl_matrix_get (Hessian, c+v_size, c+v_size) );
+			c++;
+		}
+	}
+	beta_mle_null.clear(); 
+	se_beta_mle_null.clear();
+	for (size_t i=0; i<se_B_null1->size1; i++) {
+		for (size_t j=0; j<se_B_null1->size2; j++) {
+			beta_mle_null.push_back(gsl_matrix_get(B, i, j) );
+			se_beta_mle_null.push_back(gsl_matrix_get(se_B_null1, i, j) );
+		}
+	}
+	logl_mle_H0=logl_H0;
+	
+	cout<<"MLE estimate for Vg in the null model: "<<endl;
+	for (size_t i=0; i<d_size; i++) {
+		for (size_t j=0; j<=i; j++) {
+			cout<<gsl_matrix_get(V_g, i, j)<<"\t";
+		}
+		cout<<endl;
+	}
+	cout<<"se(Vg): "<<endl;	
+	for (size_t i=0; i<d_size; i++) {
+		for (size_t j=0; j<=i; j++) {
+			c=GetIndex(i, j, d_size);
+			cout<<sqrt(gsl_matrix_get(Hessian, c, c))<<"\t";
+		}
+		cout<<endl;		
+	}
+	cout<<"MLE estimate for Ve in the null model: "<<endl;
+	for (size_t i=0; i<d_size; i++) {
+		for (size_t j=0; j<=i; j++) {
+			cout<<gsl_matrix_get(V_e, i, j)<<"\t";
+		}
+		cout<<endl;
+	}
+	cout<<"se(Ve): "<<endl;	
+	for (size_t i=0; i<d_size; i++) {
+		for (size_t j=0; j<=i; j++) {
+			c=GetIndex(i, j, d_size);
+			cout<<sqrt(gsl_matrix_get(Hessian, c+v_size, c+v_size))<<"\t";
+		}
+		cout<<endl;		
+	}
+	cout<<"MLE likelihood = "<<logl_H0<<endl;
+
+	
+	vector<double> v_beta, v_Vg, v_Ve, v_Vbeta;
+	for (size_t i=0; i<d_size; i++) {
+		v_beta.push_back(0.0);
+	}
+	for (size_t i=0; i<d_size; i++) {
+		for (size_t j=i; j<d_size; j++) {
+			v_Vg.push_back(0.0);
+			v_Ve.push_back(0.0);
+			v_Vbeta.push_back(0.0);
+		}
+	}
+	
+	gsl_matrix_memcpy (V_g_null, V_g);
+	gsl_matrix_memcpy (V_e_null, V_e);
+	gsl_matrix_memcpy (B_null, B);
+	
+	//start reading genotypes and analyze		
+	for (size_t t=0; t<indicator_snp.size(); ++t) {
+		//if (t>=1) {break;}
+		!safeGetline(infile, line).eof();
+		if (t%d_pace==0 || t==(ns_total-1)) {ProgressBar ("Reading SNPs  ", t, ns_total-1);}
+		if (indicator_snp[t]==0) {continue;}
+		
+		ch_ptr=strtok ((char *)line.c_str(), " , \t");
+		ch_ptr=strtok (NULL, " , \t");
+		ch_ptr=strtok (NULL, " , \t");		
+
+		x_mean=0.0; c_phen=0; n_miss=0;
+		gsl_vector_set_zero(x_miss);
+		for (size_t i=0; i<ni_total; ++i) {
+			ch_ptr=strtok (NULL, " , \t");
+			if (indicator_idv[i]==0) {continue;}
+			
+			if (strcmp(ch_ptr, "NA")==0) {gsl_vector_set(x_miss, c_phen, 0.0); n_miss++;}
+			else {
+				geno=atof(ch_ptr); 				
+				
+				gsl_vector_set(x, c_phen, geno); 
+				gsl_vector_set(x_miss, c_phen, 1.0); 
+				x_mean+=geno;
+			}
+			c_phen++;
+		}
+
+		x_mean/=(double)(ni_test-n_miss);
+		
+		for (size_t i=0; i<ni_test; ++i) {
+			if (gsl_vector_get (x_miss, i)==0) {gsl_vector_set(x, i, x_mean);}
+			geno=gsl_vector_get(x, i);
+			if (x_mean>1) {
+				gsl_vector_set(x, i, 2-geno);
+			}
+		}
+
+		//calculate statistics
+		time_start=clock();
+		gsl_blas_dgemv (CblasTrans, 1.0, U, x, 0.0, &X_row1.vector);
+		gsl_vector_mul (x, env);
+		gsl_blas_dgemv (CblasTrans, 1.0, U, x, 0.0, &X_row2.vector);
+		time_UtX+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
+
+		//initial values
+		gsl_matrix_memcpy (V_g, V_g_null);
+		gsl_matrix_memcpy (V_e, V_e_null);
+		gsl_matrix_memcpy (B, B_null);
+
+		if (a_mode==2 || a_mode==3 || a_mode==4) {
+		  if (a_mode==3 || a_mode==4) {
+		    logl_H0=MphEM ('R', em_iter/10, em_prec*10, eval, &X_sub2.matrix, Y, U_hat, E_hat, OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE, V_g, V_e, &B_sub2.matrix);
+		    logl_H0=MphNR ('R', nr_iter/10, nr_prec*10, eval, &X_sub2.matrix, Y, Hi_all, &xHi_all_sub2.matrix, Hiy_all, V_g, V_e, Hessian, crt_a, crt_b, crt_c);
+		    MphCalcBeta (eval, &X_sub2.matrix, Y, V_g, V_e, UltVehiY, &B_sub2.matrix, se_B_null2);
+		  }
+		
+		  if (a_mode==2 || a_mode==4) {
+		    logl_H0=MphEM ('L', em_iter/10, em_prec*10, eval, &X_sub2.matrix, Y, U_hat, E_hat, OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE, V_g, V_e, &B_sub2.matrix);
+		    logl_H0=MphNR ('L', nr_iter/10, nr_prec*10, eval, &X_sub2.matrix, Y, Hi_all, &xHi_all_sub2.matrix, Hiy_all, V_g, V_e, Hessian, crt_a, crt_b, crt_c);
+		    MphCalcBeta (eval, &X_sub2.matrix, Y, V_g, V_e, UltVehiY, &B_sub2.matrix, se_B_null2);
+		  }
+		}	
+		
+		
+		time_start=clock();
+		
+		//3 is before 1
+		if (a_mode==3 || a_mode==4) {			
+			p_score=MphCalcP (eval, &X_row2.vector, &X_sub2.matrix, Y, V_g_null, V_e_null, UltVehiY, beta, Vbeta);
+			if (p_score<p_nr && crt==1) {
+				logl_H1=MphNR ('R', 1, nr_prec*10, eval, X, Y, Hi_all, xHi_all, Hiy_all, V_g, V_e, Hessian, crt_a, crt_b, crt_c);
+				p_score=PCRT (3, d_size, p_score, crt_a, crt_b, crt_c);
+			}
+		}		
+
+		if (a_mode==2 || a_mode==4) {
+			logl_H1=MphEM ('L', em_iter/10, em_prec*10, eval, X, Y, U_hat, E_hat, OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE, V_g, V_e, B);
+			//calculate beta and Vbeta
+			p_lrt=MphCalcP (eval, &X_row2.vector, &X_sub2.matrix, Y, V_g, V_e, UltVehiY, beta, Vbeta);
+			p_lrt=gsl_cdf_chisq_Q (2.0*(logl_H1-logl_H0), (double)d_size );	
+			
+			if (p_lrt<p_nr) {
+				logl_H1=MphNR ('L', nr_iter/10, nr_prec*10, eval, X, Y, Hi_all, xHi_all, Hiy_all, V_g, V_e, Hessian, crt_a, crt_b, crt_c);
+				//calculate beta and Vbeta
+				p_lrt=MphCalcP (eval, &X_row2.vector, &X_sub2.matrix, Y, V_g, V_e, UltVehiY, beta, Vbeta);
+				p_lrt=gsl_cdf_chisq_Q (2.0*(logl_H1-logl_H0), (double)d_size );	
+				
+				if (crt==1) {
+					p_lrt=PCRT (2, d_size, p_lrt, crt_a, crt_b, crt_c);
+				}
+			}			
+		}			
+
+		if (a_mode==1 || a_mode==4) {
+			logl_H1=MphEM ('R', em_iter/10, em_prec*10, eval, X, Y, U_hat, E_hat, OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE, V_g, V_e, B);
+			p_wald=MphCalcP (eval, &X_row2.vector, &X_sub2.matrix, Y, V_g, V_e, UltVehiY, beta, Vbeta);
+			
+			if (p_wald<p_nr) {
+				logl_H1=MphNR ('R', nr_iter/10, nr_prec*10, eval, X, Y, Hi_all, xHi_all, Hiy_all, V_g, V_e, Hessian, crt_a, crt_b, crt_c);
+				p_wald=MphCalcP (eval, &X_row2.vector, &X_sub2.matrix, Y, V_g, V_e, UltVehiY, beta, Vbeta);
+				
+				if (crt==1) {
+					p_wald=PCRT (1, d_size, p_wald, crt_a, crt_b, crt_c);
+				}
+			}			
+		}		
+
+		if (x_mean>1) {gsl_vector_scale(beta, -1.0);}
+		
+		time_opt+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
+		
+		//store summary data
+		//SUMSTAT SNPs={snpInfo[t].get_chr(), snpInfo[t].get_rs(), snpInfo[t].get_pos(), n_miss, beta, se, lambda_remle, lambda_mle, p_wald, p_lrt, p_score};
+		for (size_t i=0; i<d_size; i++) {
+			v_beta[i]=gsl_vector_get (beta, i);			
+		}
+		
+		c=0;
+		for (size_t i=0; i<d_size; i++) {
+			for (size_t j=i; j<d_size; j++) {
+				v_Vg[c]=gsl_matrix_get (V_g, i, j);
+				v_Ve[c]=gsl_matrix_get (V_e, i, j);
+				v_Vbeta[c]=gsl_matrix_get (Vbeta, i, j);
+				c++;
+			}
+		}
+		
+		MPHSUMSTAT SNPs={v_beta, p_wald, p_lrt, p_score, v_Vg, v_Ve, v_Vbeta};
+		sumStat.push_back(SNPs);
+    }	
+	cout<<endl;
+	
+	
+	infile.close();
+	infile.clear();
+	
+	gsl_matrix_free(U_hat);
+	gsl_matrix_free(E_hat);
+	gsl_matrix_free(OmegaU);
+	gsl_matrix_free(OmegaE);
+	gsl_matrix_free(UltVehiY);
+	gsl_matrix_free(UltVehiBX);
+	gsl_matrix_free(UltVehiU);
+	gsl_matrix_free(UltVehiE);
+	
+	gsl_matrix_free(Hi_all);
+	gsl_matrix_free(Hiy_all);
+	gsl_matrix_free(xHi_all);
+	gsl_matrix_free(Hessian);
+	
+	gsl_vector_free(x);
+	gsl_vector_free(x_miss);
+	
+	gsl_matrix_free(Y);
+	gsl_matrix_free(X);	
+	gsl_matrix_free(V_g);
+	gsl_matrix_free(V_e);
+	gsl_matrix_free(B);
+	gsl_vector_free(beta);
+	gsl_matrix_free(Vbeta);
+	
+	gsl_matrix_free(V_g_null);
+	gsl_matrix_free(V_e_null);
+	gsl_matrix_free(B_null);	
+	gsl_matrix_free(se_B_null1);
+	gsl_matrix_free(se_B_null2);
+	
+	return;
+}
+
+
+
+
+
+
+
+void MVLMM::AnalyzePlinkGXE (const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *UtW, const gsl_matrix *UtY, const gsl_vector *env) 
+{
+	string file_bed=file_bfile+".bed";
+	ifstream infile (file_bed.c_str(), ios::binary);
+	if (!infile) {cout<<"error reading bed file:"<<file_bed<<endl; return;}
+	
+	clock_t time_start=clock();
+	time_UtX=0; time_opt=0;
+	
+	char ch[1];
+	bitset<8> b;
+	
+	//	double lambda_mle=0, lambda_remle=0, beta=0, se=0, ;
+	double logl_H0=0.0, logl_H1=0.0, p_wald=0, p_lrt=0, p_score=0;
+	double crt_a, crt_b, crt_c;
+	int n_bit, n_miss, ci_total, ci_test;
+	double geno, x_mean;
+	size_t c=0;
+	//	double s=0.0;
+	size_t n_size=UtY->size1, d_size=UtY->size2, c_size=UtW->size2+2;	
+	size_t dc_size=d_size*(c_size+1), v_size=d_size*(d_size+1)/2;
+			
+	//large matrices for EM
+	gsl_matrix *U_hat=gsl_matrix_alloc (d_size, n_size);
+	gsl_matrix *E_hat=gsl_matrix_alloc (d_size, n_size);
+	gsl_matrix *OmegaU=gsl_matrix_alloc (d_size, n_size);
+	gsl_matrix *OmegaE=gsl_matrix_alloc (d_size, n_size);
+	gsl_matrix *UltVehiY=gsl_matrix_alloc (d_size, n_size);
+	gsl_matrix *UltVehiBX=gsl_matrix_alloc (d_size, n_size);
+	gsl_matrix *UltVehiU=gsl_matrix_alloc (d_size, n_size);
+	gsl_matrix *UltVehiE=gsl_matrix_alloc (d_size, n_size);	
+	
+	//large matrices for NR
+	gsl_matrix *Hi_all=gsl_matrix_alloc (d_size, d_size*n_size);		//each dxd block is H_k^{-1}
+	gsl_matrix *Hiy_all=gsl_matrix_alloc (d_size, n_size);				//each column is H_k^{-1}y_k
+	gsl_matrix *xHi_all=gsl_matrix_alloc (dc_size, d_size*n_size);		//each dcxdc block is x_k\otimes H_k^{-1}
+	gsl_matrix *Hessian=gsl_matrix_alloc (v_size*2, v_size*2);
+	
+	gsl_vector *x=gsl_vector_alloc (n_size);
+	
+	gsl_matrix *Y=gsl_matrix_alloc (d_size, n_size);
+	gsl_matrix *X=gsl_matrix_alloc (c_size+1, n_size);		
+	gsl_matrix *V_g=gsl_matrix_alloc (d_size, d_size);
+	gsl_matrix *V_e=gsl_matrix_alloc (d_size, d_size);
+	gsl_matrix *B=gsl_matrix_alloc (d_size, c_size+1);
+	gsl_vector *beta=gsl_vector_alloc (d_size);
+	gsl_matrix *Vbeta=gsl_matrix_alloc (d_size, d_size);
+		
+	//null estimates for initial values
+	gsl_matrix *V_g_null=gsl_matrix_alloc (d_size, d_size);
+	gsl_matrix *V_e_null=gsl_matrix_alloc (d_size, d_size);
+	gsl_matrix *B_null=gsl_matrix_alloc (d_size, c_size+1);	
+	gsl_matrix *se_B_null1=gsl_matrix_alloc (d_size, c_size-1);
+	gsl_matrix *se_B_null2=gsl_matrix_alloc (d_size, c_size);
+	
+	gsl_matrix_view X_sub1=gsl_matrix_submatrix (X, 0, 0, c_size-1, n_size);	
+	gsl_matrix_view B_sub1=gsl_matrix_submatrix (B, 0, 0, d_size, c_size-1);
+	gsl_matrix_view xHi_all_sub1=gsl_matrix_submatrix (xHi_all, 0, 0, d_size*(c_size-1), d_size*n_size);
+
+	gsl_matrix_view X_sub2=gsl_matrix_submatrix (X, 0, 0, c_size, n_size);	
+	gsl_matrix_view B_sub2=gsl_matrix_submatrix (B, 0, 0, d_size, c_size);
+	gsl_matrix_view xHi_all_sub2=gsl_matrix_submatrix (xHi_all, 0, 0, d_size*c_size, d_size*n_size);
+
+	gsl_matrix_transpose_memcpy (Y, UtY);
+
+	gsl_matrix_view X_sub0=gsl_matrix_submatrix (X, 0, 0, c_size-2, n_size);	
+	gsl_matrix_transpose_memcpy (&X_sub0.matrix, UtW);
+	gsl_vector_view X_row0=gsl_matrix_row(X, c_size-2);
+	gsl_blas_dgemv (CblasTrans, 1.0, U, env, 0.0, &X_row0.vector);
+
+	gsl_vector_view X_row1=gsl_matrix_row(X, c_size-1);
+	gsl_vector_set_zero(&X_row1.vector);
+	gsl_vector_view X_row2=gsl_matrix_row(X, c_size);
+	gsl_vector_set_zero(&X_row2.vector);
+
+	gsl_vector_view B_col1=gsl_matrix_column(B, c_size-1);
+	gsl_vector_set_zero(&B_col1.vector);		
+	gsl_vector_view B_col2=gsl_matrix_column(B, c_size);
+	gsl_vector_set_zero(&B_col2.vector);
+	
+	//time_start=clock();			
+	MphInitial(em_iter, em_prec, nr_iter, nr_prec, eval, &X_sub1.matrix, Y, l_min, l_max, n_region, V_g, V_e, &B_sub1.matrix);
+		
+	logl_H0=MphEM ('R', em_iter, em_prec, eval, &X_sub1.matrix, Y, U_hat, E_hat, OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE, V_g, V_e, &B_sub1.matrix);
+	logl_H0=MphNR ('R', nr_iter, nr_prec, eval, &X_sub1.matrix, Y, Hi_all, &xHi_all_sub1.matrix, Hiy_all, V_g, V_e, Hessian, crt_a, crt_b, crt_c);
+	MphCalcBeta (eval, &X_sub1.matrix, Y, V_g, V_e, UltVehiY, &B_sub1.matrix, se_B_null1);
+	//cout<<"time for REML in the null = "<<(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0)<<endl;
+	
+	c=0;
+	Vg_remle_null.clear();
+	Ve_remle_null.clear();
+	for (size_t i=0; i<d_size; i++) {
+		for (size_t j=i; j<d_size; j++) {
+			Vg_remle_null.push_back(gsl_matrix_get (V_g, i, j) );
+			Ve_remle_null.push_back(gsl_matrix_get (V_e, i, j) );
+			VVg_remle_null.push_back(gsl_matrix_get (Hessian, c, c) );
+			VVe_remle_null.push_back(gsl_matrix_get (Hessian, c+v_size, c+v_size) );
+			c++;
+		}
+	}
+	beta_remle_null.clear(); 
+	se_beta_remle_null.clear();
+	for (size_t i=0; i<se_B_null1->size1; i++) {
+		for (size_t j=0; j<se_B_null1->size2; j++) {
+			beta_remle_null.push_back(gsl_matrix_get(B, i, j) );
+			se_beta_remle_null.push_back(gsl_matrix_get(se_B_null1, i, j) );
+		}
+	}
+	logl_remle_H0=logl_H0;
+	
+	cout.setf(std::ios_base::fixed, std::ios_base::floatfield);
+	cout.precision(4);
+	cout<<"REMLE estimate for Vg in the null model: "<<endl;
+	for (size_t i=0; i<d_size; i++) {
+		for (size_t j=0; j<=i; j++) {
+			cout<<gsl_matrix_get(V_g, i, j)<<"\t";
+		}
+		cout<<endl;
+	}
+	cout<<"se(Vg): "<<endl;	
+	for (size_t i=0; i<d_size; i++) {
+		for (size_t j=0; j<=i; j++) {
+			c=GetIndex(i, j, d_size);
+			cout<<sqrt(gsl_matrix_get(Hessian, c, c))<<"\t";
+		}
+		cout<<endl;		
+	}
+	cout<<"REMLE estimate for Ve in the null model: "<<endl;
+	for (size_t i=0; i<d_size; i++) {
+		for (size_t j=0; j<=i; j++) {
+			cout<<gsl_matrix_get(V_e, i, j)<<"\t";
+		}
+		cout<<endl;
+	}
+	cout<<"se(Ve): "<<endl;	
+	for (size_t i=0; i<d_size; i++) {
+		for (size_t j=0; j<=i; j++) {
+			c=GetIndex(i, j, d_size);
+			cout<<sqrt(gsl_matrix_get(Hessian, c+v_size, c+v_size))<<"\t";
+		}
+		cout<<endl;		
+	}
+	cout<<"REMLE likelihood = "<<logl_H0<<endl;
+	
+	//time_start=clock();	
+	logl_H0=MphEM ('L', em_iter, em_prec, eval, &X_sub1.matrix, Y, U_hat, E_hat, OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE, V_g, V_e, &B_sub1.matrix);
+	logl_H0=MphNR ('L', nr_iter, nr_prec, eval, &X_sub1.matrix, Y, Hi_all, &xHi_all_sub1.matrix, Hiy_all, V_g, V_e, Hessian, crt_a, crt_b, crt_c);
+	MphCalcBeta (eval, &X_sub1.matrix, Y, V_g, V_e, UltVehiY, &B_sub1.matrix, se_B_null1);
+	//cout<<"time for MLE in the null = "<<(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0)<<endl;
+		
+	c=0;
+	Vg_mle_null.clear();
+	Ve_mle_null.clear();
+	for (size_t i=0; i<d_size; i++) {
+		for (size_t j=i; j<d_size; j++) {
+			Vg_mle_null.push_back(gsl_matrix_get (V_g, i, j) );
+			Ve_mle_null.push_back(gsl_matrix_get (V_e, i, j) );
+			VVg_mle_null.push_back(gsl_matrix_get (Hessian, c, c) );
+			VVe_mle_null.push_back(gsl_matrix_get (Hessian, c+v_size, c+v_size) );
+			c++;
+		}
+	}
+	beta_mle_null.clear(); 
+	se_beta_mle_null.clear();
+	for (size_t i=0; i<se_B_null1->size1; i++) {
+		for (size_t j=0; j<se_B_null1->size2; j++) {
+			beta_mle_null.push_back(gsl_matrix_get(B, i, j) );
+			se_beta_mle_null.push_back(gsl_matrix_get(se_B_null1, i, j) );
+		}
+	}
+	logl_mle_H0=logl_H0;
+	
+	cout<<"MLE estimate for Vg in the null model: "<<endl;
+	for (size_t i=0; i<d_size; i++) {
+		for (size_t j=0; j<=i; j++) {
+			cout<<gsl_matrix_get(V_g, i, j)<<"\t";
+		}
+		cout<<endl;
+	}
+	cout<<"se(Vg): "<<endl;	
+	for (size_t i=0; i<d_size; i++) {
+		for (size_t j=0; j<=i; j++) {
+			c=GetIndex(i, j, d_size);
+			cout<<sqrt(gsl_matrix_get(Hessian, c, c))<<"\t";
+		}
+		cout<<endl;		
+	}
+	cout<<"MLE estimate for Ve in the null model: "<<endl;
+	for (size_t i=0; i<d_size; i++) {
+		for (size_t j=0; j<=i; j++) {
+			cout<<gsl_matrix_get(V_e, i, j)<<"\t";
+		}
+		cout<<endl;
+	}
+	cout<<"se(Ve): "<<endl;	
+	for (size_t i=0; i<d_size; i++) {
+		for (size_t j=0; j<=i; j++) {
+			c=GetIndex(i, j, d_size);
+			cout<<sqrt(gsl_matrix_get(Hessian, c+v_size, c+v_size))<<"\t";
+		}
+		cout<<endl;		
+	}
+	cout<<"MLE likelihood = "<<logl_H0<<endl;
+	
+	vector<double> v_beta, v_Vg, v_Ve, v_Vbeta;
+	for (size_t i=0; i<d_size; i++) {
+		v_beta.push_back(0.0);
+	}
+	for (size_t i=0; i<d_size; i++) {
+		for (size_t j=i; j<d_size; j++) {
+			v_Vg.push_back(0.0);
+			v_Ve.push_back(0.0);
+			v_Vbeta.push_back(0.0);
+		}
+	}
+	
+	gsl_matrix_memcpy (V_g_null, V_g);
+	gsl_matrix_memcpy (V_e_null, V_e);
+	gsl_matrix_memcpy (B_null, B);	
+	
+	
+	//start reading genotypes and analyze	
+	
+	//calculate n_bit and c, the number of bit for each snp
+	if (ni_total%4==0) {n_bit=ni_total/4;}
+	else {n_bit=ni_total/4+1; }
+	
+	//print the first three majic numbers
+	for (int i=0; i<3; ++i) {
+		infile.read(ch,1);
+		b=ch[0];
+	}
+	
+	for (vector<SNPINFO>::size_type t=0; t<snpInfo.size(); ++t) {
+		if (t%d_pace==0 || t==snpInfo.size()-1) {ProgressBar ("Reading SNPs  ", t, snpInfo.size()-1);}
+		if (indicator_snp[t]==0) {continue;}
+		
+		//if (t>=0) {break;}
+		//if (snpInfo[t].rs_number!="MAG18140902") {continue;}
+		//cout<<t<<endl;
+		
+		infile.seekg(t*n_bit+3);		//n_bit, and 3 is the number of magic numbers
+				
+		//read genotypes
+		x_mean=0.0;	n_miss=0; ci_total=0; ci_test=0; 
+		for (int i=0; i<n_bit; ++i) {
+			infile.read(ch,1);
+			b=ch[0];
+			for (size_t j=0; j<4; ++j) {                //minor allele homozygous: 2.0; major: 0.0;
+				if ((i==(n_bit-1)) && ci_total==(int)ni_total) {break;}
+				if (indicator_idv[ci_total]==0) {ci_total++; continue;}
+				
+				if (b[2*j]==0) {
+					if (b[2*j+1]==0) {gsl_vector_set(x, ci_test, 2); x_mean+=2.0; }
+					else {gsl_vector_set(x, ci_test, 1); x_mean+=1.0; }
+				}
+				else {
+					if (b[2*j+1]==1) {gsl_vector_set(x, ci_test, 0); }                                  
+					else {gsl_vector_set(x, ci_test, -9); n_miss++; }
+				}
+				
+				ci_total++;
+				ci_test++;
+			}
+		}
+		
+		x_mean/=(double)(ni_test-n_miss);
+		
+		for (size_t i=0; i<ni_test; ++i) {			
+			geno=gsl_vector_get(x,i);
+			if (geno==-9) {gsl_vector_set(x, i, x_mean); geno=x_mean;}
+			if (x_mean>1) {
+				gsl_vector_set(x, i, 2-geno);
+			}
+		}		
+		
+		/*
+		if (t==0) {			
+			ofstream outfile ("./snp1.txt", ofstream::out);
+			if (!outfile) {cout<<"error writing file: "<<endl; return;}
+			for (size_t i=0; i<x->size; i++) {
+				outfile<<gsl_vector_get(x, i)<<endl;
+			}
+			outfile.clear();
+			outfile.close();			
+		}
+		*/
+	
+		//calculate statistics
+		time_start=clock();
+		gsl_blas_dgemv (CblasTrans, 1.0, U, x, 0.0, &X_row1.vector);
+		gsl_vector_mul (x, env);
+		gsl_blas_dgemv (CblasTrans, 1.0, U, x, 0.0, &X_row2.vector);
+		time_UtX+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
+
+		//initial values
+		gsl_matrix_memcpy (V_g, V_g_null);
+		gsl_matrix_memcpy (V_e, V_e_null);
+		gsl_matrix_memcpy (B, B_null);
+
+		if (a_mode==2 || a_mode==3 || a_mode==4) {
+		  if (a_mode==3 || a_mode==4) {
+		    logl_H0=MphEM ('R', em_iter/10, em_prec*10, eval, &X_sub2.matrix, Y, U_hat, E_hat, OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE, V_g, V_e, &B_sub2.matrix);
+		    logl_H0=MphNR ('R', nr_iter/10, nr_prec*10, eval, &X_sub2.matrix, Y, Hi_all, &xHi_all_sub2.matrix, Hiy_all, V_g, V_e, Hessian, crt_a, crt_b, crt_c);
+		    MphCalcBeta (eval, &X_sub2.matrix, Y, V_g, V_e, UltVehiY, &B_sub2.matrix, se_B_null2);
+		  }
+		
+		  if (a_mode==2 || a_mode==4) {
+		    logl_H0=MphEM ('L', em_iter/10, em_prec*10, eval, &X_sub2.matrix, Y, U_hat, E_hat, OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE, V_g, V_e, &B_sub2.matrix);
+		    logl_H0=MphNR ('L', nr_iter/10, nr_prec*10, eval, &X_sub2.matrix, Y, Hi_all, &xHi_all_sub2.matrix, Hiy_all, V_g, V_e, Hessian, crt_a, crt_b, crt_c);
+		    MphCalcBeta (eval, &X_sub2.matrix, Y, V_g, V_e, UltVehiY, &B_sub2.matrix, se_B_null2);
+		  }
+		}	
+		
+		time_start=clock();
+		
+		//3 is before 1
+		if (a_mode==3 || a_mode==4) {
+			p_score=MphCalcP (eval, &X_row2.vector, &X_sub2.matrix, Y, V_g_null, V_e_null, UltVehiY, beta, Vbeta);
+			
+			if (p_score<p_nr && crt==1) {
+				logl_H1=MphNR ('R', 1, nr_prec*10, eval, X, Y, Hi_all, xHi_all, Hiy_all, V_g, V_e, Hessian, crt_a, crt_b, crt_c);
+				p_score=PCRT (3, d_size, p_score, crt_a, crt_b, crt_c);
+			}
+		}		
+		
+		if (a_mode==2 || a_mode==4) {
+			logl_H1=MphEM ('L', em_iter/10, em_prec*10, eval, X, Y, U_hat, E_hat, OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE, V_g, V_e, B);
+			//calculate beta and Vbeta
+			p_lrt=MphCalcP (eval, &X_row2.vector, &X_sub2.matrix, Y, V_g, V_e, UltVehiY, beta, Vbeta);
+			p_lrt=gsl_cdf_chisq_Q (2.0*(logl_H1-logl_H0), (double)d_size );	
+			
+			if (p_lrt<p_nr) {
+				logl_H1=MphNR ('L', nr_iter/10, nr_prec*10, eval, X, Y, Hi_all, xHi_all, Hiy_all, V_g, V_e, Hessian, crt_a, crt_b, crt_c);
+
+				//calculate beta and Vbeta
+				p_lrt=MphCalcP (eval, &X_row2.vector, &X_sub2.matrix, Y, V_g, V_e, UltVehiY, beta, Vbeta);
+				p_lrt=gsl_cdf_chisq_Q (2.0*(logl_H1-logl_H0), (double)d_size );	
+				if (crt==1) {
+					p_lrt=PCRT (2, d_size, p_lrt, crt_a, crt_b, crt_c);
+				}				
+			}
+		}			
+		
+		if (a_mode==1 || a_mode==4) {
+			logl_H1=MphEM ('R', em_iter/10, em_prec*10, eval, X, Y, U_hat, E_hat, OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE, V_g, V_e, B);
+			p_wald=MphCalcP (eval, &X_row2.vector, &X_sub2.matrix, Y, V_g, V_e, UltVehiY, beta, Vbeta);
+			
+			if (p_wald<p_nr) {
+				logl_H1=MphNR ('R', nr_iter/10, nr_prec*10, eval, X, Y, Hi_all, xHi_all, Hiy_all, V_g, V_e, Hessian, crt_a, crt_b, crt_c);
+				p_wald=MphCalcP (eval, &X_row2.vector, &X_sub2.matrix, Y, V_g, V_e, UltVehiY, beta, Vbeta);
+				
+				if (crt==1) {
+					p_wald=PCRT (1, d_size, p_wald, crt_a, crt_b, crt_c);
+				}
+			}
+		}
+		
+		//cout<<setprecision(10)<<p_wald<<"\t"<<p_lrt<<"\t"<<p_score<<endl;
+		
+		if (x_mean>1) {gsl_vector_scale(beta, -1.0);}
+		
+		time_opt+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
+		
+		//store summary data
+		//SUMSTAT SNPs={snpInfo[t].get_chr(), snpInfo[t].get_rs(), snpInfo[t].get_pos(), n_miss, beta, se, lambda_remle, lambda_mle, p_wald, p_lrt, p_score};
+		for (size_t i=0; i<d_size; i++) {
+			v_beta[i]=gsl_vector_get (beta, i);			
+		}
+
+		c=0;
+		for (size_t i=0; i<d_size; i++) {
+			for (size_t j=i; j<d_size; j++) {
+				v_Vg[c]=gsl_matrix_get (V_g, i, j);
+				v_Ve[c]=gsl_matrix_get (V_e, i, j);
+				v_Vbeta[c]=gsl_matrix_get (Vbeta, i, j);
+				c++;
+			}
+		}
+		
+		MPHSUMSTAT SNPs={v_beta, p_wald, p_lrt, p_score, v_Vg, v_Ve, v_Vbeta};
+		sumStat.push_back(SNPs);
+    }	
+	cout<<endl;	
+	
+	//cout<<"time_opt = "<<time_opt<<endl;
+	
+	infile.close();
+	infile.clear();
+	
+	gsl_matrix_free(U_hat);
+	gsl_matrix_free(E_hat);
+	gsl_matrix_free(OmegaU);
+	gsl_matrix_free(OmegaE);
+	gsl_matrix_free(UltVehiY);
+	gsl_matrix_free(UltVehiBX);
+	gsl_matrix_free(UltVehiU);
+	gsl_matrix_free(UltVehiE);
+	
+	gsl_matrix_free(Hi_all);
+	gsl_matrix_free(Hiy_all);
+	gsl_matrix_free(xHi_all);
+	gsl_matrix_free(Hessian);
+	
+	gsl_vector_free(x);
+	
+	gsl_matrix_free(Y);
+	gsl_matrix_free(X);	
+	gsl_matrix_free(V_g);
+	gsl_matrix_free(V_e);
+	gsl_matrix_free(B);
+	gsl_vector_free(beta);
+	gsl_matrix_free(Vbeta);
+	
+	gsl_matrix_free(V_g_null);
+	gsl_matrix_free(V_e_null);
+	gsl_matrix_free(B_null);
+	gsl_matrix_free(se_B_null1);
+	gsl_matrix_free(se_B_null2);
+	
+	return;
+}

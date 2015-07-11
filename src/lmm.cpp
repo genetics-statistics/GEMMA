@@ -1101,7 +1101,7 @@ void Calcab (const gsl_matrix *W, const gsl_vector *y, const gsl_vector *x, gsl_
 
 void LMM::AnalyzeGene (const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *UtW, const gsl_vector *Utx, const gsl_matrix *W, const gsl_vector *x) 
 {
-	ifstream infile (file_gene.c_str(), ifstream::in);
+	igzstream infile (file_gene.c_str(), igzstream::in);
 	if (!infile) {cout<<"error reading gene expression file:"<<file_gene<<endl; return;}
 	
 	clock_t time_start=clock();
@@ -1274,7 +1274,7 @@ void LMM::AnalyzeBimbam (const gsl_matrix *U, const gsl_vector *eval, const gsl_
 		
 		//calculate statistics
 		time_start=clock();
-		gsl_blas_dgemv (CblasTrans, 1.0, U, x, 0.0, Utx);		
+		gsl_blas_dgemv (CblasTrans, 1.0, U, x, 0.0, Utx);
 		time_UtX+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
 		
 		CalcUab(UtW, Uty, Utx, Uab);
@@ -1769,3 +1769,304 @@ void CalcLmmVgVeBeta (const gsl_vector *eval, const gsl_matrix *UtW, const gsl_v
 	return;
 }
 
+
+
+
+
+
+
+void LMM::AnalyzeBimbamGXE (const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *UtW, const gsl_vector *Uty, const gsl_matrix *W, const gsl_vector *y, const gsl_vector *env) 
+{
+	igzstream infile (file_geno.c_str(), igzstream::in);
+//	ifstream infile (file_geno.c_str(), ifstream::in);
+	if (!infile) {cout<<"error reading genotype file:"<<file_geno<<endl; return;}
+
+	clock_t time_start=clock();
+	
+	string line;
+	char *ch_ptr;
+	
+	double lambda_mle=0, lambda_remle=0, beta=0, se=0, p_wald=0, p_lrt=0, p_score=0;
+	double logl_H1=0.0, logl_H0=0.0;
+	int n_miss, c_phen;
+	double geno, x_mean;
+	
+	//Calculate basic quantities
+	size_t n_index=(n_cvt+2+2+1)*(n_cvt+2+2)/2;
+
+	gsl_vector *x=gsl_vector_alloc (U->size1);
+	gsl_vector *x_miss=gsl_vector_alloc (U->size1);
+	gsl_vector *Utx=gsl_vector_alloc (U->size2);
+	gsl_matrix *Uab=gsl_matrix_alloc (U->size2, n_index);
+	gsl_vector *ab=gsl_vector_alloc (n_index);	
+	
+	gsl_matrix *UtW_expand=gsl_matrix_alloc (U->size1, UtW->size2+2);
+	gsl_matrix_view UtW_expand_mat=gsl_matrix_submatrix(UtW_expand, 0, 0, U->size1, UtW->size2);
+	gsl_matrix_memcpy (&UtW_expand_mat.matrix, UtW);
+	gsl_vector_view UtW_expand_env=gsl_matrix_column(UtW_expand, UtW->size2);
+	gsl_blas_dgemv (CblasTrans, 1.0, U, env, 0.0, &UtW_expand_env.vector);
+	gsl_vector_view UtW_expand_x=gsl_matrix_column(UtW_expand, UtW->size2+1);
+
+	//gsl_matrix_set_zero (Uab);
+	//	CalcUab (UtW, Uty, Uab);
+//	if (e_mode!=0) {
+//		gsl_vector_set_zero (ab);
+//		Calcab (W, y, ab);
+//	}	
+	
+	//start reading genotypes and analyze	
+	for (size_t t=0; t<indicator_snp.size(); ++t) {
+//		if (t>1) {break;}
+		!safeGetline(infile, line).eof();
+		if (t%d_pace==0 || t==(ns_total-1)) {ProgressBar ("Reading SNPs  ", t, ns_total-1);}
+		if (indicator_snp[t]==0) {continue;}
+		
+		ch_ptr=strtok ((char *)line.c_str(), " , \t");
+		ch_ptr=strtok (NULL, " , \t");
+		ch_ptr=strtok (NULL, " , \t");		
+		
+		x_mean=0.0; c_phen=0; n_miss=0;
+		gsl_vector_set_zero(x_miss);
+		for (size_t i=0; i<ni_total; ++i) {
+			ch_ptr=strtok (NULL, " , \t");
+			if (indicator_idv[i]==0) {continue;}
+			
+			if (strcmp(ch_ptr, "NA")==0) {gsl_vector_set(x_miss, c_phen, 0.0); n_miss++;}
+			else {
+				geno=atof(ch_ptr); 				
+				
+				gsl_vector_set(x, c_phen, geno); 
+				gsl_vector_set(x_miss, c_phen, 1.0); 
+				x_mean+=geno;
+			}
+			c_phen++;
+		}	
+		
+		x_mean/=(double)(ni_test-n_miss);
+		
+		for (size_t i=0; i<ni_test; ++i) {
+			if (gsl_vector_get (x_miss, i)==0) {gsl_vector_set(x, i, x_mean);}
+			geno=gsl_vector_get(x, i);
+			if (x_mean>1) {
+				gsl_vector_set(x, i, 2-geno);
+			}
+		}
+		
+		
+		//calculate statistics
+		time_start=clock();
+		gsl_blas_dgemv (CblasTrans, 1.0, U, x, 0.0, &UtW_expand_x.vector);
+		gsl_vector_mul (x, env);
+		gsl_blas_dgemv (CblasTrans, 1.0, U, x, 0.0, Utx);
+		time_UtX+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
+		
+		gsl_matrix_set_zero (Uab);
+		CalcUab (UtW_expand, Uty, Uab);
+		
+		if (a_mode==2 || a_mode==4) {
+		  FUNC_PARAM param0={true, ni_test, n_cvt+2, eval, Uab, ab, 0};
+		  CalcLambda ('L', param0, l_min, l_max, n_region, lambda_mle, logl_H0);
+		}
+
+		CalcUab(UtW_expand, Uty, Utx, Uab);
+//		if (e_mode!=0) {
+//			Calcab (W, y, x, ab);
+//		}
+		
+		time_start=clock();
+		FUNC_PARAM param1={false, ni_test, n_cvt+2, eval, Uab, ab, 0};
+		
+		//3 is before 1
+		if (a_mode==3 || a_mode==4) {
+			CalcRLScore (l_mle_null, param1, beta, se, p_score);
+		}
+		
+		if (a_mode==1 || a_mode==4) {
+			CalcLambda ('R', param1, l_min, l_max, n_region, lambda_remle, logl_H1);	
+			CalcRLWald (lambda_remle, param1, beta, se, p_wald);
+		}
+		
+		if (a_mode==2 || a_mode==4) {
+			CalcLambda ('L', param1, l_min, l_max, n_region, lambda_mle, logl_H1);
+			p_lrt=gsl_cdf_chisq_Q (2.0*(logl_H1-logl_H0), 1);	
+		}			
+		
+		if (x_mean>1) {beta*=-1;}
+		
+		time_opt+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
+		
+		//store summary data
+		SUMSTAT SNPs={beta, se, lambda_remle, lambda_mle, p_wald, p_lrt, p_score};
+		sumStat.push_back(SNPs);
+    }	
+	cout<<endl;
+	
+	gsl_vector_free (x);
+	gsl_vector_free (x_miss);
+	gsl_vector_free (Utx);
+	gsl_matrix_free (Uab);
+	gsl_vector_free (ab);
+	
+	gsl_matrix_free (UtW_expand);
+
+	infile.close();
+	infile.clear();
+	
+	return;
+}
+
+
+
+
+
+
+
+void LMM::AnalyzePlinkGXE (const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *UtW, const gsl_vector *Uty, const gsl_matrix *W, const gsl_vector *y, const gsl_vector *env) 
+{
+	string file_bed=file_bfile+".bed";
+	ifstream infile (file_bed.c_str(), ios::binary);
+	if (!infile) {cout<<"error reading bed file:"<<file_bed<<endl; return;}
+	
+	clock_t time_start=clock();
+	
+	char ch[1];
+	bitset<8> b;	
+	
+	double lambda_mle=0, lambda_remle=0, beta=0, se=0, p_wald=0, p_lrt=0, p_score=0;
+	double logl_H1=0.0, logl_H0=0.0;
+	int n_bit, n_miss, ci_total, ci_test;
+	double geno, x_mean;
+		
+	//Calculate basic quantities
+	size_t n_index=(n_cvt+2+2+1)*(n_cvt+2+2)/2;
+
+	gsl_vector *x=gsl_vector_alloc (U->size1);
+	gsl_vector *Utx=gsl_vector_alloc (U->size2);
+	gsl_matrix *Uab=gsl_matrix_alloc (U->size2, n_index);	
+	gsl_vector *ab=gsl_vector_alloc (n_index);
+
+	gsl_matrix *UtW_expand=gsl_matrix_alloc (U->size1, UtW->size2+2);
+	gsl_matrix_view UtW_expand_mat=gsl_matrix_submatrix(UtW_expand, 0, 0, U->size1, UtW->size2);
+	gsl_matrix_memcpy (&UtW_expand_mat.matrix, UtW);
+	gsl_vector_view UtW_expand_env=gsl_matrix_column(UtW_expand, UtW->size2);
+	gsl_blas_dgemv (CblasTrans, 1.0, U, env, 0.0, &UtW_expand_env.vector);
+	gsl_vector_view UtW_expand_x=gsl_matrix_column(UtW_expand, UtW->size2+1);
+	
+	//gsl_matrix_set_zero (Uab);
+	//CalcUab (UtW, Uty, Uab);
+//	if (e_mode!=0) {
+//		gsl_vector_set_zero (ab);
+//		Calcab (W, y, ab);
+//	}
+		
+	//calculate n_bit and c, the number of bit for each snp
+	if (ni_total%4==0) {n_bit=ni_total/4;}
+	else {n_bit=ni_total/4+1; }
+
+	//print the first three majic numbers
+	for (int i=0; i<3; ++i) {
+		infile.read(ch,1);
+		b=ch[0];
+	}
+	
+	
+	for (vector<SNPINFO>::size_type t=0; t<snpInfo.size(); ++t) {
+		if (t%d_pace==0 || t==snpInfo.size()-1) {ProgressBar ("Reading SNPs  ", t, snpInfo.size()-1);}
+		if (indicator_snp[t]==0) {continue;}
+		
+		infile.seekg(t*n_bit+3);		//n_bit, and 3 is the number of magic numbers
+		
+		//read genotypes
+		x_mean=0.0;	n_miss=0; ci_total=0; ci_test=0; 
+		for (int i=0; i<n_bit; ++i) {
+			infile.read(ch,1);
+			b=ch[0];
+			for (size_t j=0; j<4; ++j) {                //minor allele homozygous: 2.0; major: 0.0;
+				if ((i==(n_bit-1)) && ci_total==(int)ni_total) {break;}
+				if (indicator_idv[ci_total]==0) {ci_total++; continue;}
+
+				if (b[2*j]==0) {
+					if (b[2*j+1]==0) {gsl_vector_set(x, ci_test, 2); x_mean+=2.0; }
+					else {gsl_vector_set(x, ci_test, 1); x_mean+=1.0; }
+				}
+				else {
+					if (b[2*j+1]==1) {gsl_vector_set(x, ci_test, 0); }                                  
+					else {gsl_vector_set(x, ci_test, -9); n_miss++; }
+				}
+
+				ci_total++;
+				ci_test++;
+			}
+		}
+		
+		x_mean/=(double)(ni_test-n_miss);
+				
+		for (size_t i=0; i<ni_test; ++i) {			
+			geno=gsl_vector_get(x,i);
+			if (geno==-9) {gsl_vector_set(x, i, x_mean); geno=x_mean;}
+			if (x_mean>1) {
+				gsl_vector_set(x, i, 2-geno);
+			}
+		}
+		
+		//calculate statistics
+		time_start=clock();
+		gsl_blas_dgemv (CblasTrans, 1.0, U, x, 0.0, &UtW_expand_x.vector);
+		gsl_vector_mul (x, env);
+		gsl_blas_dgemv (CblasTrans, 1.0, U, x, 0.0, Utx);
+		time_UtX+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
+		
+		gsl_matrix_set_zero (Uab);
+		CalcUab (UtW_expand, Uty, Uab);
+		
+		if (a_mode==2 || a_mode==4) {
+		  FUNC_PARAM param0={true, ni_test, n_cvt+2, eval, Uab, ab, 0};
+		  CalcLambda ('L', param0, l_min, l_max, n_region, lambda_mle, logl_H0);
+		}
+
+		CalcUab(UtW_expand, Uty, Utx, Uab);
+
+//		if (e_mode!=0) {
+//			Calcab (W, y, x, ab);
+//		}
+		
+		time_start=clock();
+		FUNC_PARAM param1={false, ni_test, n_cvt+2, eval, Uab, ab, 0};
+		
+		//3 is before 1, for beta
+		if (a_mode==3 || a_mode==4) {
+			CalcRLScore (l_mle_null, param1, beta, se, p_score);
+		}
+		
+		if (a_mode==1 || a_mode==4) {
+			CalcLambda ('R', param1, l_min, l_max, n_region, lambda_remle, logl_H1);	
+			CalcRLWald (lambda_remle, param1, beta, se, p_wald);
+		}
+		
+		if (a_mode==2 || a_mode==4) {
+			CalcLambda ('L', param1, l_min, l_max, n_region, lambda_mle, logl_H1);
+			p_lrt=gsl_cdf_chisq_Q (2.0*(logl_H1-logl_H0), 1);	
+		}		
+		
+		if (x_mean>1) {beta*=-1;}		
+		
+		time_opt+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
+		
+		//store summary data
+		SUMSTAT SNPs={beta, se, lambda_remle, lambda_mle, p_wald, p_lrt, p_score};
+		sumStat.push_back(SNPs);
+    }	
+	cout<<endl;
+	
+	gsl_vector_free (x);
+	gsl_vector_free (Utx);
+	gsl_matrix_free (Uab);
+	gsl_vector_free (ab);
+
+	gsl_matrix_free (UtW_expand);
+	
+	infile.close();
+	infile.clear();	
+	
+	return;
+}
