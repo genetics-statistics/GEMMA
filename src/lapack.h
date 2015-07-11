@@ -19,7 +19,7 @@
 #ifndef __LAPACK_H__                
 #define __LAPACK_H__
 
-
+#include <vector>
 
 using namespace std;
 
@@ -47,7 +47,7 @@ double LULndet (gsl_matrix *LU);
 double LULndet (gsl_matrix_float *LU);
 void LUSolve (const gsl_matrix *LU, const gsl_permutation *p, const gsl_vector *b, gsl_vector *x);
 void LUSolve (const gsl_matrix_float *LU, const gsl_permutation *p, const gsl_vector_float *b, gsl_vector_float *x);
+
+bool lapack_ddot(vector<double> &x, vector<double> &y, double &v);
+bool lapack_sdot(vector<float> &x, vector<float> &y, double &v);
 #endif
-
-
-

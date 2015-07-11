@@ -18,6 +18,7 @@
 
 #include <iostream>
 #include <cmath>
+#include <vector>
 #include "gsl/gsl_vector.h"
 #include "gsl/gsl_matrix.h"
 #include "gsl/gsl_linalg.h"
@@ -29,12 +30,14 @@ extern "C" void spotrf_(char *UPLO, int *N, float *A, int *LDA, int *INFO);
 extern "C" void spotrs_(char *UPLO, int *N, int *NRHS, float *A, int *LDA, float *B, int *LDB, int *INFO);
 extern "C" void ssyev_(char* JOBZ, char* UPLO, int *N, float *A, int *LDA, float *W, float *WORK, int *LWORK, int *INFO);
 extern "C" void ssyevr_(char* JOBZ, char *RANGE, char* UPLO, int *N, float *A, int *LDA, float *VL, float *VU, int *IL, int *IU, float *ABSTOL, int *M, float *W, float *Z, int *LDZ, int *ISUPPZ, float *WORK, int *LWORK, int *IWORK, int *LIWORK, int *INFO);
+extern "C" double sdot_(int *N, float *DX, int *INCX, float *DY, int *INCY);
 
 extern "C" void dgemm_(char *TRANSA, char *TRANSB, int *M, int *N, int *K, double *ALPHA, double *A, int *LDA, double *B, int *LDB, double *BETA, double *C, int *LDC);
 extern "C" void dpotrf_(char *UPLO, int *N, double *A, int *LDA, int *INFO);
 extern "C" void dpotrs_(char *UPLO, int *N, int *NRHS, double *A, int *LDA, double *B, int *LDB, int *INFO);
 extern "C" void dsyev_(char* JOBZ, char* UPLO, int *N, double *A, int *LDA, double *W, double *WORK, int *LWORK, int *INFO);
 extern "C" void dsyevr_(char* JOBZ, char *RANGE, char* UPLO, int *N, double *A, int *LDA, double *VL, double *VU, int *IL, int *IU, double *ABSTOL, int *M, double *W, double *Z, int *LDZ, int *ISUPPZ, double *WORK, int *LWORK, int *IWORK, int *LIWORK, int *INFO);
+extern "C" double ddot_(int *N, double *DX, int *INCX, double *DY, int *INCY);
 
 
 //cholesky decomposition, A is distroyed
@@ -607,3 +610,31 @@ void LUSolve (const gsl_matrix_float *LU, const gsl_permutation *p, const gsl_ve
 }
 
 
+bool lapack_ddot(vector<double> &x, vector<double> &y, double &v)
+{
+  bool flag=false;
+  int incx=1;
+  int incy=1;
+  int n=(int)x.size();
+  if (x.size()==y.size()) {
+    v=ddot_(&n, &x[0], &incx, &y[0], &incy);
+    flag=true;
+  }
+
+  return flag;
+}
+
+
+bool lapack_sdot(vector<float> &x, vector<float> &y, double &v)
+{
+  bool flag=false;
+  int incx=1;
+  int incy=1;
+  int n=(int)x.size();
+  if (x.size()==y.size()) {
+    v=sdot_(&n, &x[0], &incx, &y[0], &incy);
+    flag=true;
+  }
+
+  return flag;
+}
