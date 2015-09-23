@@ -1679,8 +1679,8 @@ void GEMMA::WriteLog (int argc, char ** argv, PARAM &cPar)
 		outfile<<"## REMLE log-likelihood in the null model = "<<cPar.logl_remle_H0<<endl;
 		outfile<<"## MLE log-likelihood in the null model = "<<cPar.logl_mle_H0<<endl;
 		if (cPar.n_ph==1) {
-			//outfile<<"## lambda REMLE estimate in the null (linear mixed) model = "<<cPar.l_remle_null<<endl;
-			//outfile<<"## lambda MLE estimate in the null (linear mixed) model = "<<cPar.l_mle_null<<endl;	
+			outfile<<"## lambda REMLE estimate in the null (linear mixed) model = "<<cPar.l_remle_null<<endl;
+			outfile<<"## lambda MLE estimate in the null (linear mixed) model = "<<cPar.l_mle_null<<endl;	
 			outfile<<"## pve estimate in the null model = "<<cPar.pve_null<<endl;
 			outfile<<"## se(pve) in the null model = "<<cPar.pve_se_null<<endl;	
 			outfile<<"## vg estimate in the null model = "<<cPar.vg_remle_null<<endl;
