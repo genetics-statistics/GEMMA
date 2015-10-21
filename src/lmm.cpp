@@ -124,11 +124,15 @@ void LMM::WriteFiles ()
 		if (a_mode==1) {
 			outfile<<"beta"<<"\t"<<"se"<<"\t"<<"l_remle"<<"\t"<<"p_wald"<<endl;
 		} else if (a_mode==2) {
-			outfile<<"l_mle"<<"\t"<<"p_lrt"<<endl;
+			outfile<<"l_mle"<<"\t"<<"p_lrt"
+            <<"\t"<<"logl_H1"
+            <<endl;
 		} else if (a_mode==3) {
 			outfile<<"beta"<<"\t"<<"se"<<"\t"<<"p_score"<<endl;
 		} else if (a_mode==4) {
-			outfile<<"beta"<<"\t"<<"se"<<"\t"<<"l_remle"<<"\t"<<"l_mle"<<"\t"<<"p_wald"<<"\t"<<"p_lrt"<<"\t"<<"p_score"<<endl;
+			outfile<<"beta"<<"\t"<<"se"<<"\t"<<"l_remle"<<"\t"<<"l_mle"<<"\t"<<"p_wald"<<"\t"<<"p_lrt"<<"\t"<<"p_score"
+			<<"\t"<<"logl_H1"
+			<<endl;
 		} else {}
 
 		for (vector<SUMSTAT>::size_type t=0; t<sumStat.size(); ++t) {
@@ -137,11 +141,15 @@ void LMM::WriteFiles ()
 			if (a_mode==1) {
 				outfile<<scientific<<setprecision(6)<<sumStat[t].beta<<"\t"<<sumStat[t].se<<"\t"<<sumStat[t].lambda_remle<<"\t"<<sumStat[t].p_wald <<endl;
 			} else if (a_mode==2) {
-				outfile<<scientific<<setprecision(6)<<sumStat[t].lambda_mle<<"\t"<<sumStat[t].p_lrt<<endl;
+				outfile<<scientific<<setprecision(6)<<sumStat[t].lambda_mle<<"\t"<<sumStat[t].p_lrt
+				<<"\t"<<sumStat[t].logl_H1
+				<<endl;
 			} else if (a_mode==3) {
 				outfile<<scientific<<setprecision(6)<<sumStat[t].beta<<"\t"<<sumStat[t].se<<"\t"<<sumStat[t].p_score<<endl;
 			} else if (a_mode==4) {
-				outfile<<scientific<<setprecision(6)<<sumStat[t].beta<<"\t"<<sumStat[t].se<<"\t"<<sumStat[t].lambda_remle<<"\t"<<sumStat[t].lambda_mle<<"\t"<<sumStat[t].p_wald <<"\t"<<sumStat[t].p_lrt<<"\t"<<sumStat[t].p_score<<endl;
+				outfile<<scientific<<setprecision(6)<<sumStat[t].beta<<"\t"<<sumStat[t].se<<"\t"<<sumStat[t].lambda_remle<<"\t"<<sumStat[t].lambda_mle<<"\t"<<sumStat[t].p_wald <<"\t"<<sumStat[t].p_lrt<<"\t"<<sumStat[t].p_score
+                <<"\t"<<sumStat[t].logl_H1
+                <<endl;
 			} else {}
 		}
 	}  else {
@@ -150,11 +158,15 @@ void LMM::WriteFiles ()
 		if (a_mode==1) {
 			outfile<<"beta"<<"\t"<<"se"<<"\t"<<"l_remle"<<"\t"<<"p_wald"<<endl;
 		} else if (a_mode==2) {
-			outfile<<"l_mle"<<"\t"<<"p_lrt"<<endl;
+			outfile<<"l_mle"<<"\t"<<"p_lrt"
+			<<"\t"<<"logl_H1"
+			<<endl;
 		} else if (a_mode==3) {
 			outfile<<"beta"<<"\t"<<"se"<<"\t"<<"p_score"<<endl;
 		} else if (a_mode==4) {
-			outfile<<"beta"<<"\t"<<"se"<<"\t"<<"l_remle"<<"\t"<<"l_mle"<<"\t"<<"p_wald"<<"\t"<<"p_lrt"<<"\t"<<"p_score"<<endl;
+			outfile<<"beta"<<"\t"<<"se"<<"\t"<<"l_remle"<<"\t"<<"l_mle"<<"\t"<<"p_wald"<<"\t"<<"p_lrt"<<"\t"<<"p_score"
+			<<"\t"<<"logl_H1"
+			<<endl;
 		} else {}
 
 		size_t t=0;
@@ -166,11 +178,15 @@ void LMM::WriteFiles ()
 			if (a_mode==1) {
 				outfile<<scientific<<setprecision(6)<<sumStat[t].beta<<"\t"<<sumStat[t].se<<"\t"<<sumStat[t].lambda_remle<<"\t"<<sumStat[t].p_wald <<endl;
 			} else if (a_mode==2) {
-				outfile<<scientific<<setprecision(6)<<sumStat[t].lambda_mle<<"\t"<<sumStat[t].p_lrt<<endl;
+				outfile<<scientific<<setprecision(6)<<sumStat[t].lambda_mle<<"\t"<<sumStat[t].p_lrt
+				<<"\t"<<sumStat[t].logl_H1
+				<<endl;
 			} else if (a_mode==3) {
 				outfile<<scientific<<setprecision(6)<<sumStat[t].beta<<"\t"<<sumStat[t].se<<"\t"<<sumStat[t].p_score<<endl;
 			} else if (a_mode==4) {
-				outfile<<scientific<<setprecision(6)<<sumStat[t].beta<<"\t"<<sumStat[t].se<<"\t"<<sumStat[t].lambda_remle<<"\t"<<sumStat[t].lambda_mle<<"\t"<<sumStat[t].p_wald <<"\t"<<sumStat[t].p_lrt<<"\t"<<sumStat[t].p_score<<endl;
+				outfile<<scientific<<setprecision(6)<<sumStat[t].beta<<"\t"<<sumStat[t].se<<"\t"<<sumStat[t].lambda_remle<<"\t"<<sumStat[t].lambda_mle<<"\t"<<sumStat[t].p_wald <<"\t"<<sumStat[t].p_lrt<<"\t"<<sumStat[t].p_score
+                <<"\t"<<sumStat[t].logl_H1
+                <<endl;
 			} else {}
 			t++;
 		}
@@ -1113,6 +1129,7 @@ void LMM::AnalyzeGene (const gsl_matrix *U, const gsl_vector *eval, const gsl_ma
 
 	double lambda_mle=0, lambda_remle=0, beta=0, se=0, p_wald=0, p_lrt=0, p_score=0;
 	double logl_H1=0.0, logl_H0=0.0, l_H0;
+	double logl_ML_H1=0.0;
 	int c_phen;
 	string rs; //gene id
 	double d;
@@ -1178,12 +1195,13 @@ void LMM::AnalyzeGene (const gsl_matrix *U, const gsl_vector *eval, const gsl_ma
 		if (a_mode==2 || a_mode==4) {
 			CalcLambda ('L', param1, l_min, l_max, n_region, lambda_mle, logl_H1);
 			p_lrt=gsl_cdf_chisq_Q (2.0*(logl_H1-logl_H0), 1);
+			logl_ML_H1 = logl_H1;
 		}
 
 		time_opt+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
 
 		//store summary data
-		SUMSTAT SNPs={beta, se, lambda_remle, lambda_mle, p_wald, p_lrt, p_score};
+		SUMSTAT SNPs={beta, se, lambda_remle, lambda_mle, p_wald, p_lrt, p_score, logl_ML_H1};
 		sumStat.push_back(SNPs);
     }
 	cout<<endl;
@@ -1216,6 +1234,7 @@ void LMM::AnalyzeBimbam (const gsl_matrix *U, const gsl_vector *eval, const gsl_
 
 	double lambda_mle=0, lambda_remle=0, beta=0, se=0, p_wald=0, p_lrt=0, p_score=0;
 	double logl_H1=0.0;
+	double logl_ML_H1=0.0;
 	int n_miss, c_phen;
 	double geno, x_mean;
 
@@ -1300,6 +1319,7 @@ void LMM::AnalyzeBimbam (const gsl_matrix *U, const gsl_vector *eval, const gsl_
 		if (a_mode==2 || a_mode==4) {
 			CalcLambda ('L', param1, l_min, l_max, n_region, lambda_mle, logl_H1);
 			p_lrt=gsl_cdf_chisq_Q (2.0*(logl_H1-logl_mle_H0), 1);
+			logl_ML_H1 = logl_H1;
 		}
 
 		if (x_mean>1) {beta*=-1;}
@@ -1307,7 +1327,7 @@ void LMM::AnalyzeBimbam (const gsl_matrix *U, const gsl_vector *eval, const gsl_
 		time_opt+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
 
 		//store summary data
-		SUMSTAT SNPs={beta, se, lambda_remle, lambda_mle, p_wald, p_lrt, p_score};
+		SUMSTAT SNPs={beta, se, lambda_remle, lambda_mle, p_wald, p_lrt, p_score, logl_ML_H1};
 		sumStat.push_back(SNPs);
     }
 	cout<<endl;
@@ -1343,6 +1363,7 @@ void LMM::AnalyzePlink (const gsl_matrix *U, const gsl_vector *eval, const gsl_m
 
 	double lambda_mle=0, lambda_remle=0, beta=0, se=0, p_wald=0, p_lrt=0, p_score=0;
 	double logl_H1=0.0;
+	double logl_ML_H1=0.0;
 	int n_bit, n_miss, ci_total, ci_test;
 	double geno, x_mean;
 
@@ -1437,6 +1458,7 @@ void LMM::AnalyzePlink (const gsl_matrix *U, const gsl_vector *eval, const gsl_m
 		if (a_mode==2 || a_mode==4) {
 			CalcLambda ('L', param1, l_min, l_max, n_region, lambda_mle, logl_H1);
 			p_lrt=gsl_cdf_chisq_Q (2.0*(logl_H1-logl_mle_H0), 1);
+			logl_ML_H1 = logl_H1;
 		}
 
 		if (x_mean>1) {beta*=-1;}
@@ -1444,7 +1466,7 @@ void LMM::AnalyzePlink (const gsl_matrix *U, const gsl_vector *eval, const gsl_m
 		time_opt+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
 
 		//store summary data
-		SUMSTAT SNPs={beta, se, lambda_remle, lambda_mle, p_wald, p_lrt, p_score};
+		SUMSTAT SNPs={beta, se, lambda_remle, lambda_mle, p_wald, p_lrt, p_score, logl_ML_H1};
 		sumStat.push_back(SNPs);
     }
 	cout<<endl;
