@@ -824,7 +824,7 @@ void compKtoS (const gsl_matrix *G, gsl_matrix *S) {
 
 //copied from lmm.cpp; is used in the following function compKtoQ
 //map a number 1-(n_cvt+2) to an index between 0 and [(n_c+2)^2+(n_c+2)]/2-1
-size_t GetabIndex (const size_t a, const size_t b, const size_t n_cvt) {
+static size_t GetabIndex (const size_t a, const size_t b, const size_t n_cvt) {
 	if (a>n_cvt+2 || b>n_cvt+2 || a<=0 || b<=0) {cout<<"error in GetabIndex."<<endl; return 0;}
 	size_t index;
 	size_t l, h;
