@@ -64,7 +64,7 @@ n_accept(0),
 n_mh(10),
 geo_mean(2000.0),
 randseed(-1),
-window_cm(0), window_bp(0), window_ns(0),
+window_cm(0), window_bp(0), window_ns(0), n_block(200),
 error(false),
 ni_subsample(0), n_cvt(1), n_vc(1),
 time_total(0.0), time_G(0.0), time_eigen(0.0), time_UtX(0.0), time_UtZ(0.0), time_opt(0.0), time_Omega(0.0)
@@ -77,19 +77,27 @@ void PARAM::ReadFiles (void)
 {
 	string file_str;
 
-
-	if (!file_cat.empty()) {
+	//read cat file
+	if (!file_mcat.empty()) {
+	  if (ReadFile_mcat (file_mcat, mapRS2cat, n_vc)==false) {error=true;}
+	} else if (!file_cat.empty()) {
 	  if (ReadFile_cat (file_cat, mapRS2cat, n_vc)==false) {error=true;}
 	}
 
-	if (!file_var.empty()) {
-	  if (ReadFile_var (file_var, mapRS2var)==false) {error=true;}
+	//read snp weight files
+	if (!file_wcat.empty()) {
+	  if (ReadFile_wsnp (file_wcat, n_vc, mapRS2wcat)==false) {error=true;}
+	}
+	if (!file_wsnp.empty()) {
+	  if (ReadFile_wsnp (file_wsnp, mapRS2wsnp)==false) {error=true;}
 	}
 
+	//count number of kinship files
 	if (!file_mk.empty()) {
 	  if (CountFileLines (file_mk, n_vc)==false) {error=true;}
 	}
 
+	//read snp set
 	if (!file_snps.empty()) {
 		if (ReadFile_snps (file_snps, setSnps)==false) {error=true;}
 	} else {
@@ -184,10 +192,17 @@ void PARAM::ReadFiles (void)
 	//read genotype and phenotype file for plink format
 	if (!file_bfile.empty()) {
 		file_str=file_bfile+".bim";
+		snpInfo.clear();
 		if (ReadFile_bim (file_str, snpInfo)==false) {error=true;}
 
-		file_str=file_bfile+".fam";
-		if (ReadFile_fam (file_str, indicator_pheno, pheno, mapID2num, p_column)==false) {error=true;}
+		//if both fam file and pheno files are used, use phenotypes inside the pheno file
+		if (!file_pheno.empty()) {
+		  //phenotype file before genotype file
+		  if (ReadFile_pheno (file_pheno, indicator_pheno, pheno, p_column)==false) {error=true;}
+		} else {
+		  file_str=file_bfile+".fam";
+		  if (ReadFile_fam (file_str, indicator_pheno, pheno, mapID2num, p_column)==false) {error=true;}
+		}
 
 		//post-process covariates and phenotypes, obtain ni_test, save all useful covariates
 		ProcessCvtPhen();
@@ -227,6 +242,97 @@ void PARAM::ReadFiles (void)
 
 		ns_total=indicator_snp.size();
 	}
+
+
+	//read genotype file for multiple plink files
+	if (!file_mbfile.empty()) {
+	  igzstream infile (file_mbfile.c_str(), igzstream::in);
+	  if (!infile) {cout<<"error! fail to open mbfile file: "<<file_mbfile<<endl; return;}
+
+	  string file_name;
+
+	  size_t t=0, ns_test_tmp=0;
+
+	  gsl_matrix *W;
+	  while (!safeGetline(infile, file_name).eof()) {
+		file_str=file_name+".bim";
+
+		if (ReadFile_bim (file_str, snpInfo)==false) {error=true;}
+
+		if (t==0) {
+		  //if both fam file and pheno files are used, use phenotypes inside the pheno file
+		  if (!file_pheno.empty()) {
+		    //phenotype file before genotype file
+		    if (ReadFile_pheno (file_pheno, indicator_pheno, pheno, p_column)==false) {error=true;}
+		  } else {
+		    file_str=file_name+".fam";
+		    if (ReadFile_fam (file_str, indicator_pheno, pheno, mapID2num, p_column)==false) {error=true;}
+		  }
+
+		  //post-process covariates and phenotypes, obtain ni_test, save all useful covariates
+		  ProcessCvtPhen();
+
+		  //obtain covariate matrix
+		  W=gsl_matrix_alloc (ni_test, n_cvt);
+		  CopyCvt (W);
+		}
+
+		file_str=file_name+".bed";
+		if (ReadFile_bed (file_str, setSnps, W, indicator_idv, indicator_snp, snpInfo, maf_level, miss_level, hwe_level, r2_level, ns_test_tmp)==false) {error=true;}
+		mindicator_snp.push_back(indicator_snp);
+		msnpInfo.push_back(snpInfo);
+		ns_test+=ns_test_tmp;
+		ns_total+=indicator_snp.size();
+
+		t++;
+	  }
+
+	  gsl_matrix_free(W);
+
+	  infile.close();
+	  infile.clear();
+	}
+
+
+
+	//read genotype and phenotype file for multiple bimbam files
+	if (!file_mgeno.empty()) {
+	  //annotation file before genotype file
+	  if (!file_anno.empty() ) {
+	    if (ReadFile_anno (file_anno, mapRS2chr, mapRS2bp, mapRS2cM)==false) {error=true;}
+	  }
+
+	  //phenotype file before genotype file
+	  if (ReadFile_pheno (file_pheno, indicator_pheno, pheno, p_column)==false) {error=true;}
+
+	  //post-process covariates and phenotypes, obtain ni_test, save all useful covariates
+	  ProcessCvtPhen();
+
+	  //obtain covariate matrix
+	  gsl_matrix *W=gsl_matrix_alloc (ni_test, n_cvt);
+	  CopyCvt (W);
+
+	  igzstream infile (file_mgeno.c_str(), igzstream::in);
+	  if (!infile) {cout<<"error! fail to open mgeno file: "<<file_mgeno<<endl; return;}
+
+	  string file_name;
+	  size_t ns_test_tmp;
+	  while (!safeGetline(infile, file_name).eof()) {
+	    if (ReadFile_geno (file_name, setSnps, W, indicator_idv, indicator_snp, maf_level, miss_level, hwe_level, r2_level, mapRS2chr, mapRS2bp, mapRS2cM, snpInfo, ns_test_tmp)==false) {error=true;}
+
+	    mindicator_snp.push_back(indicator_snp);
+	    msnpInfo.push_back(snpInfo);
+	    ns_test+=ns_test_tmp;
+	    ns_total+=indicator_snp.size();
+	  }
+
+	  gsl_matrix_free(W);
+
+	  infile.close();
+	  infile.clear();
+	}
+
+
 
 	if (!file_gene.empty()) {
 		if (ReadFile_pheno (file_pheno, indicator_pheno, pheno, p_column)==false) {error=true;}
@@ -292,7 +398,7 @@ void PARAM::CheckParam (void)
 
 	//check parameters
 	if (k_mode!=1 && k_mode!=2) {cout<<"error! unknown kinship/relatedness input mode: "<<k_mode<<endl; error=true;}
-	if (a_mode!=1 && a_mode!=2 && a_mode!=3 && a_mode!=4 && a_mode!=5 && a_mode!=11 && a_mode!=12 && a_mode!=13 && a_mode!=14 && a_mode!=21 && a_mode!=22 && a_mode!=25 && a_mode!=26 && a_mode!=27 && a_mode!=28 && a_mode!=31 && a_mode!=41 && a_mode!=42 && a_mode!=43 && a_mode!=51 && a_mode!=52 && a_mode!=53 && a_mode!=54 && a_mode!=61 && a_mode!=62 && a_mode!=71)
+	if (a_mode!=1 && a_mode!=2 && a_mode!=3 && a_mode!=4 && a_mode!=5 && a_mode!=11 && a_mode!=12 && a_mode!=13 && a_mode!=14 && a_mode!=21 && a_mode!=22 && a_mode!=25 && a_mode!=26 && a_mode!=27 && a_mode!=28 && a_mode!=31 && a_mode!=41 && a_mode!=42 && a_mode!=43 && a_mode!=51 && a_mode!=52 && a_mode!=53 && a_mode!=54 && a_mode!=61 && a_mode!=62 && a_mode!=66 && a_mode!=67 && a_mode!=71)
 	{cout<<"error! unknown analysis mode: "<<a_mode<<". make sure -gk or -eigen or -lmm or -bslmm -predict or -calccov is sepcified correctly."<<endl; error=true;}
 	if (miss_level>1) {cout<<"error! missing level needs to be between 0 and 1. current value = "<<miss_level<<endl; error=true;}
 	if (maf_level>0.5) {cout<<"error! maf level needs to be between 0 and 0.5. current value = "<<maf_level<<endl; error=true;}
@@ -400,8 +506,8 @@ void PARAM::CheckParam (void)
 	str=file_cat;
 	if (!str.empty() && stat(str.c_str(),&fileInfo)==-1 ) {cout<<"error! fail to open category file: "<<str<<endl; error=true;}
 
-	str=file_var;
-	if (!str.empty() && stat(str.c_str(),&fileInfo)==-1 ) {cout<<"error! fail to open category file: "<<str<<endl; error=true;}
+	str=file_mcat;
+	if (!str.empty() && stat(str.c_str(),&fileInfo)==-1 ) {cout<<"error! fail to open mcategory file: "<<str<<endl; error=true;}
 
 	str=file_beta;
 	if (!str.empty() && stat(str.c_str(),&fileInfo)==-1 ) {cout<<"error! fail to open beta file: "<<str<<endl; error=true;}
@@ -409,23 +515,33 @@ void PARAM::CheckParam (void)
 	str=file_cor;
 	if (!str.empty() && stat(str.c_str(),&fileInfo)==-1 ) {cout<<"error! fail to open correlation file: "<<str<<endl; error=true;}
 
-	str=file_q;
-	if (!str.empty() && stat(str.c_str(),&fileInfo)==-1 ) {cout<<"error! fail to open q file: "<<str<<endl; error=true;}
+	if (!file_study.empty()) {
+	  str=file_study+".Vq.txt";
+		if (stat(str.c_str(),&fileInfo)==-1) {cout<<"error! fail to open .Vq.txt file: "<<str<<endl; error=true;}
+		str=file_study+".q.txt";
+		if (stat(str.c_str(),&fileInfo)==-1) {cout<<"error! fail to open .q.txt file: "<<str<<endl; error=true;}
+		str=file_study+".size.txt";
+		if (stat(str.c_str(),&fileInfo)==-1) {cout<<"error! fail to open .size.txt file: "<<str<<endl; error=true;}
+	}
 
-	str=file_s;
-	if (!str.empty() && stat(str.c_str(),&fileInfo)==-1 ) {cout<<"error! fail to open s file: "<<str<<endl; error=true;}
+	if (!file_ref.empty()) {
+		str=file_ref+".S.txt";
+		if (stat(str.c_str(),&fileInfo)==-1) {cout<<"error! fail to open .S.txt file: "<<str<<endl; error=true;}
+		str=file_ref+".size.txt";
+		if (stat(str.c_str(),&fileInfo)==-1) {cout<<"error! fail to open .size.txt file: "<<str<<endl; error=true;}
+	}
 
-	str=file_v;
-	if (!str.empty() && stat(str.c_str(),&fileInfo)==-1 ) {cout<<"error! fail to open v file: "<<str<<endl; error=true;}
+	str=file_mstudy;
+	if (!str.empty() && stat(str.c_str(),&fileInfo)==-1 ) {cout<<"error! fail to open mstudy file: "<<str<<endl; error=true;}
 
-	str=file_mq;
-	if (!str.empty() && stat(str.c_str(),&fileInfo)==-1 ) {cout<<"error! fail to open mq file: "<<str<<endl; error=true;}
+	str=file_mref;
+	if (!str.empty() && stat(str.c_str(),&fileInfo)==-1 ) {cout<<"error! fail to open mref file: "<<str<<endl; error=true;}
 
-	str=file_ms;
-	if (!str.empty() && stat(str.c_str(),&fileInfo)==-1 ) {cout<<"error! fail to open ms file: "<<str<<endl; error=true;}
+	str=file_mgeno;
+	if (!str.empty() && stat(str.c_str(),&fileInfo)==-1 ) {cout<<"error! fail to open mgeno file: "<<str<<endl; error=true;}
 
-	str=file_mv;
-	if (!str.empty() && stat(str.c_str(),&fileInfo)==-1 ) {cout<<"error! fail to open mv file: "<<str<<endl; error=true;}
+	str=file_mbfile;
+	if (!str.empty() && stat(str.c_str(),&fileInfo)==-1 ) {cout<<"error! fail to open mbfile file: "<<str<<endl; error=true;}
 
 	size_t flag=0;
 	if (!file_bfile.empty()) {flag++;}
@@ -434,7 +550,7 @@ void PARAM::CheckParam (void)
 	// WJA added
 	if (!file_oxford.empty()) {flag++;}
 
-	if (flag!=1 && a_mode!=27 && a_mode!=28 && a_mode!=43 && a_mode!=5 && a_mode!=61 && a_mode!=62) {
+	if (flag!=1 && a_mode!=27 && a_mode!=28 && a_mode!=43 && a_mode!=5 && a_mode!=61 && a_mode!=62 && a_mode!=66 && a_mode!=67) {
 		cout<<"error! either plink binary files, or bimbam mean genotype files, or gene expression files are required."<<endl; error=true;
 	}
 
@@ -443,21 +559,30 @@ void PARAM::CheckParam (void)
 	}
 
 	if (a_mode==61 || a_mode==62) {
-	  if (!file_pheno.empty()) {
+	  if (!file_beta.empty()) {
+	    if ( file_mbfile.empty() && file_bfile.empty() && file_mgeno.empty() && file_geno.empty() && file_mref.empty() && file_ref.empty() ) {
+	      cout<<"error! missing genotype file or ref/mref file."<<endl; error=true;
+	    }
+	  } else if (!file_pheno.empty()) {
 	    if (file_kin.empty() && (file_ku.empty()||file_kd.empty()) && file_mk.empty() ) {
 	      cout<<"error! missing relatedness file. "<<endl;  error=true;
 	    }
+	    /*
 	  } else if (!file_cor.empty()) {
 	    if (file_beta.empty() ) {
 	      cout<<"error! missing cor file."<<endl; error=true;
 	    }
-	  } else {
-	    if ( (file_mq.empty() || file_ms.empty() || file_mv.empty() ) && (file_q.empty() || file_s.empty() || file_v.empty() )  ) {
-	      cout<<"error! either phenotype/kinship files or ms/mq/mv s/q/v files are required."<<endl; error=true;
-	    }
+	    */
+	  } else if ( (file_mstudy.empty() && file_study.empty()) || (file_mref.empty() && file_ref.empty() )  ) {
+	      cout<<"error! either beta file, or phenotype files or study/ref mstudy/mref files are required."<<endl; error=true;
 	  }
 	}
 
+	if (a_mode==66 || a_mode==67) {
+	  if (file_beta.empty() || ( file_mbfile.empty() && file_bfile.empty() && file_mgeno.empty() && file_geno.empty()) ) {
+	    cout<<"error! missing beta file or genotype file."<<endl; error=true;
+	  }
+	}
 
 
 	if (!file_epm.empty() && file_bfile.empty() && file_geno.empty() ) {cout<<"error! estimated parameter file also requires genotype file."<<endl; error=true;}
@@ -525,11 +650,14 @@ void PARAM::CheckParam (void)
 
 void PARAM::CheckData (void) {
   if(file_oxford.empty())	// WJA NOTE: I added this condition so that covariates can be added through sample, probably not exactly what is wanted
-
 	{
  	if ((file_cvt).empty() || (indicator_cvt).size()==0) {
  		n_cvt=1;
  	}
+	}
+
+  if ( (a_mode==66 || a_mode==67) && (v_pve.size()!=n_vc))  {
+	    cout<<"error! the number of pve estimates does not equal to the number of categories in the cat file:"<<v_pve.size()<<" "<<n_vc<<endl; error=true;
 	}
 
 	if ( (indicator_cvt).size()!=0 && (indicator_cvt).size()!=(indicator_idv).size()) {
@@ -610,7 +738,7 @@ void PARAM::CheckData (void) {
 		}
 	}
 	*/
-	if (ni_test==0 && file_cor.empty() && file_mq.empty() && file_q.empty() && file_beta.empty() ) {
+	if (ni_test==0 && file_cor.empty() && file_mstudy.empty() && file_study.empty() && file_beta.empty() ) {
 		error=true;
 		cout<<"error! number of analyzed individuals equals 0. "<<endl;
 		return;
@@ -631,7 +759,7 @@ void PARAM::CheckData (void) {
 	}
 
 	//output some information
-	if (file_cor.empty() && file_mq.empty() && file_q.empty() ) {
+	if (file_cor.empty() && file_mstudy.empty() && file_study.empty() && a_mode!=27 && a_mode!=28) {
 	  cout<<"## number of total individuals = "<<ni_total<<endl;
 	  if (a_mode==43) {
 	    cout<<"## number of analyzed individuals = "<<ni_cvt<<endl;
@@ -709,6 +837,9 @@ void PARAM::CheckData (void) {
 		}
 	}
 
+	if (a_mode==62 && !file_beta.empty() && mapRS2wcat.size()==0) {cout<<"vc analysis with beta files requires -wcat file."<<endl; error=true;}
+	if (a_mode==67 && mapRS2wcat.size()==0) {cout<<"ci analysis with beta files requires -wcat file."<<endl; error=true;}
+
 	//file_mk needs to contain more than one line
 	if (n_vc==1 && !file_mk.empty()) {cout<<"error! -mk file should contain more than one line."<<endl; error=true;}
 
@@ -783,46 +914,52 @@ void PARAM::CalcKin (gsl_matrix *matrix_kin)  {
 
 
 
-//from an existing n by nd G matrix, compute the d by d S matrix
-void compKtoS (const gsl_matrix *G, gsl_matrix *S) {
-  size_t n_vc=S->size1, ni_test=G->size1;
-  double di, dj, tr_KiKj, sum_Ki, sum_Kj, s_Ki, s_Kj, s_KiKj, si, sj, d;
+//from an existing n by nd A and K matrices, compute the d by d S matrix (which is not necessary symmetric)
+void compAKtoS (const gsl_matrix *A, const gsl_matrix *K, const size_t n_cvt, gsl_matrix *S) {
+  size_t n_vc=S->size1, ni_test=A->size1;
+  double di, dj, tr_AK, sum_A, sum_K, s_A, s_K, sum_AK, tr_A, tr_K, d;
 
   for (size_t i=0; i<n_vc; i++) {
-    for (size_t j=i; j<n_vc; j++) {
-      tr_KiKj=0; sum_Ki=0; sum_Kj=0; s_KiKj=0; si=0; sj=0;
+    for (size_t j=0; j<n_vc; j++) {
+      tr_AK=0; sum_A=0; sum_K=0; sum_AK=0; tr_A=0; tr_K=0;
       for (size_t l=0; l<ni_test; l++) {
-	s_Ki=0; s_Kj=0;
+	s_A=0; s_K=0;
 	for (size_t k=0; k<ni_test; k++) {
-	  di=gsl_matrix_get(G, l, k+ni_test*i);
-	  dj=gsl_matrix_get(G, l, k+ni_test*j);
-	  s_Ki+=di; s_Kj+=dj;
+	  di=gsl_matrix_get(A, l, k+ni_test*i);
+	  dj=gsl_matrix_get(K, l, k+ni_test*j);
+	  s_A+=di; s_K+=dj;
 
-	  tr_KiKj+=di*dj; sum_Ki+=di; sum_Kj+=dj;
-	  if (l==k) {si+=di; sj+=dj;}
+	  tr_AK+=di*dj; sum_A+=di; sum_K+=dj;
+	  if (l==k) {tr_A+=di; tr_K+=dj;}
 	}
-	s_KiKj+=s_Ki*s_Kj;
+	sum_AK+=s_A*s_K;
       }
 
-      sum_Ki/=(double)ni_test;
-      sum_Kj/=(double)ni_test;
-      s_KiKj/=(double)ni_test;
-      si-=sum_Ki;
-      sj-=sum_Kj;
-      d=tr_KiKj-2*s_KiKj+sum_Ki*sum_Kj;
-      d=d/(si*sj)-1/(double)(ni_test-1);
+      sum_A/=(double)ni_test;
+      sum_K/=(double)ni_test;
+      sum_AK/=(double)ni_test;
+      tr_A-=sum_A;
+      tr_K-=sum_K;
+      d=tr_AK-2*sum_AK+sum_A*sum_K;
+
+      if (tr_A==0 || tr_K==0) {
+	d=0;
+      } else {
+	d=d/(tr_A*tr_K)-1/(double)(ni_test-n_cvt);
+      }
 
       gsl_matrix_set (S, i, j, d);
-      if (i!=j) {gsl_matrix_set (S, j, i, d);}
     }
   }
+
+  //eigenlib_invert(Si);
   //cout<<tr_KiKj<<" "<<s_KiKj<<" "<<sum_Ki<<" "<<sum_Kj<<" "<<si<<" "<<sj<<" "<<d*1000000<<endl;
   return;
 }
 
 
 
-//copied from lmm.cpp; is used in the following function compKtoQ
+//copied from lmm.cpp; is used in the following function compKtoV
 //map a number 1-(n_cvt+2) to an index between 0 and [(n_c+2)^2+(n_c+2)]/2-1
 size_t GetabIndex (const size_t a, const size_t b, const size_t n_cvt) {
 	if (a>n_cvt+2 || b>n_cvt+2 || a<=0 || b<=0) {cout<<"error in GetabIndex."<<endl; return 0;}
@@ -836,20 +973,19 @@ size_t GetabIndex (const size_t a, const size_t b, const size_t n_cvt) {
 	return index;
 }
 
-//from an existing n by nd (centered) G matrix, compute the d+1 by d*(d+1) Q matrix
-//where inside i'th d+1 by d+1 matrix, each element is tr(KiKjKiKl)-r*tr(KjKiKl)-r*tr(KlKiKj)+r^2*tr(KjKl), where r=n/(n-1)
-void compKtoQ (const gsl_matrix *G, gsl_matrix *Q) {
+//from an existing n by nd (centered) G matrix, compute the d+1 by d*(d-1)/2*(d+1) Q matrix
+//where inside i'th d+1 by d+1 matrix, each element is tr(KiKlKjKm)-r*tr(KmKiKl)-r*tr(KlKjKm)+r^2*tr(KlKm), where r=n/(n-1)
+void compKtoV (const gsl_matrix *G, gsl_matrix *V) {
   size_t n_vc=G->size2/G->size1, ni_test=G->size1;
 
-  gsl_matrix *KiKj=gsl_matrix_alloc(ni_test, n_vc*(n_vc+1)/2*ni_test);
-  gsl_vector *trKiKjKi=gsl_vector_alloc ( n_vc*n_vc );
+  gsl_matrix *KiKj=gsl_matrix_alloc(ni_test, (n_vc*(n_vc+1))/2*ni_test);
   gsl_vector *trKiKj=gsl_vector_alloc( n_vc*(n_vc+1)/2 );
   gsl_vector *trKi=gsl_vector_alloc(n_vc);
 
   double d, tr, r=(double)ni_test/(double)(ni_test-1);
-  size_t t, t_ij, t_il, t_jl, t_ii;
+  size_t t, t_il, t_jm, t_lm, t_im, t_jl, t_ij;
 
-  //compute KiKj for all pairs of i and j (including the identity matrix)
+  //compute KiKj for all pairs of i and j (not including the identity matrix)
   t=0;
   for (size_t i=0; i<n_vc; i++) {
     gsl_matrix_const_view Ki=gsl_matrix_const_submatrix(G, 0, i*ni_test, ni_test, ni_test);
@@ -889,99 +1025,108 @@ void compKtoQ (const gsl_matrix *G, gsl_matrix *Q) {
     gsl_vector_set (trKi, i, tr);
   }
 
-  //compute trKiKjKi (it is not symmetric w.r.t. i and j)
+  //compute V
   for (size_t i=0; i<n_vc; i++) {
-    for (size_t j=0; j<n_vc; j++) {
-      tr=0;
-      t=GetabIndex (i+1, j+1, n_vc-2);
-      for (size_t k=0; k<ni_test; k++) {
-	gsl_vector_const_view KiKj_row=gsl_matrix_const_subrow (KiKj, k, t*ni_test, ni_test);
-	gsl_vector_const_view KiKj_col=gsl_matrix_const_column (KiKj, t*ni_test+k);
+    for (size_t j=i; j<n_vc; j++) {
+      t_ij=GetabIndex (i+1, j+1, n_vc-2);
+      for (size_t l=0; l<n_vc+1; l++) {
+	for (size_t m=0; m<n_vc+1; m++) {
+	  if (l!=n_vc && m!=n_vc) {
+	    t_il=GetabIndex (i+1, l+1, n_vc-2);
+	    t_jm=GetabIndex (j+1, m+1, n_vc-2);
+	    t_lm=GetabIndex (l+1, m+1, n_vc-2);
+	    //cout<<ni_test<<" "<<r<<t_ij<<" "<<t_il<<" "<<t_jl<<" "<<endl;
+	    tr=0;
+	    for (size_t k=0; k<ni_test; k++) {
+	      gsl_vector_const_view KiKl_row=gsl_matrix_const_subrow (KiKj, k, t_il*ni_test, ni_test);
+	      gsl_vector_const_view KiKl_col=gsl_matrix_const_column (KiKj, t_il*ni_test+k);
+	      gsl_vector_const_view KjKm_row=gsl_matrix_const_subrow (KiKj, k, t_jm*ni_test, ni_test);
+	      gsl_vector_const_view KjKm_col=gsl_matrix_const_column (KiKj, t_jm*ni_test+k);
 
-	gsl_vector_const_view Ki_col=gsl_matrix_const_column (G, i*ni_test+k);
+	      gsl_vector_const_view Kl_row=gsl_matrix_const_subrow (G, k, l*ni_test, ni_test);
+	      gsl_vector_const_view Km_row=gsl_matrix_const_subrow (G, k, m*ni_test, ni_test);
 
-	if (i<=j) {
-	  gsl_blas_ddot (&KiKj_row.vector, &Ki_col.vector, &d);
-	  tr+=d;
-	} else {
-	  gsl_blas_ddot (&KiKj_col.vector, &Ki_col.vector, &d);
-	  tr+=d;
-	}
-      }
-      gsl_vector_set (trKiKjKi, i*n_vc+j, tr);
-    }
-  }
-
-  //compute Q
-  for (size_t i=0; i<n_vc; i++) {
-    for (size_t j=0; j<n_vc+1; j++) {
-      for (size_t l=j; l<n_vc+1; l++) {
-	if (j!=n_vc && l!=n_vc) {
-	  t_ij=GetabIndex (i+1, j+1, n_vc-2);
-	  t_il=GetabIndex (i+1, l+1, n_vc-2);
-	  t_jl=GetabIndex (j+1, l+1, n_vc-2);
-
-	  //cout<<ni_test<<" "<<r<<t_ij<<" "<<t_il<<" "<<t_jl<<" "<<endl;
-	  tr=0;
-	  for (size_t k=0; k<ni_test; k++) {
-	    gsl_vector_const_view KiKj_row=gsl_matrix_const_subrow (KiKj, k, t_ij*ni_test, ni_test);
-	    gsl_vector_const_view KiKj_col=gsl_matrix_const_column (KiKj, t_ij*ni_test+k);
-	    gsl_vector_const_view KiKl_row=gsl_matrix_const_subrow (KiKj, k, t_il*ni_test, ni_test);
-	    gsl_vector_const_view KiKl_col=gsl_matrix_const_column (KiKj, t_il*ni_test+k);
-
-	    gsl_vector_const_view Kj_row=gsl_matrix_const_subrow (G, k, j*ni_test, ni_test);
-	    gsl_vector_const_view Kl_row=gsl_matrix_const_subrow (G, k, l*ni_test, ni_test);
-
-	    if (i<=j && i<=l) {
-	      gsl_blas_ddot (&KiKj_row.vector, &KiKl_col.vector, &d);
-	      tr+=d;
-	      gsl_blas_ddot (&Kj_row.vector, &KiKl_col.vector, &d);
-	      tr-=r*d;
-	      gsl_blas_ddot (&Kl_row.vector, &KiKj_col.vector, &d);
-	      tr-=r*d;
-	    } else if (i<=j && i>l) {
-	      gsl_blas_ddot (&KiKj_row.vector, &KiKl_row.vector, &d);
-	      tr+=d;
-	      gsl_blas_ddot (&Kj_row.vector, &KiKl_row.vector, &d);
-	      tr-=r*d;
-	      gsl_blas_ddot (&Kl_row.vector, &KiKj_col.vector, &d);
-	      tr-=r*d;
-	    } else if (i>j && i<=l) {
-	      gsl_blas_ddot (&KiKj_col.vector, &KiKl_col.vector, &d);
-	      tr+=d;
-	      gsl_blas_ddot (&Kj_row.vector, &KiKl_col.vector, &d);
-	      tr-=r*d;
-	      gsl_blas_ddot (&Kl_row.vector, &KiKj_row.vector, &d);
-	      tr-=r*d;
-	    } else {
-	      gsl_blas_ddot (&KiKj_col.vector, &KiKl_row.vector, &d);
-	      tr+=d;
-	      gsl_blas_ddot (&Kj_row.vector, &KiKl_row.vector, &d);
-	      tr-=r*d;
-	      gsl_blas_ddot (&Kl_row.vector, &KiKj_row.vector, &d);
-	      tr-=r*d;
+	      if (i<=l && j<=m) {
+		gsl_blas_ddot (&KiKl_row.vector, &KjKm_col.vector, &d);
+		tr+=d;
+		gsl_blas_ddot (&Km_row.vector, &KiKl_col.vector, &d);
+		tr-=r*d;
+		gsl_blas_ddot (&Kl_row.vector, &KjKm_col.vector, &d);
+		tr-=r*d;
+	      } else if (i<=l && j>m) {
+		gsl_blas_ddot (&KiKl_row.vector, &KjKm_row.vector, &d);
+		tr+=d;
+		gsl_blas_ddot (&Km_row.vector, &KiKl_col.vector, &d);
+		tr-=r*d;
+		gsl_blas_ddot (&Kl_row.vector, &KjKm_row.vector, &d);
+		tr-=r*d;
+	      } else if (i>l && j<=m) {
+		gsl_blas_ddot (&KiKl_col.vector, &KjKm_col.vector, &d);
+		tr+=d;
+		gsl_blas_ddot (&Km_row.vector, &KiKl_row.vector, &d);
+		tr-=r*d;
+		gsl_blas_ddot (&Kl_row.vector, &KjKm_col.vector, &d);
+		tr-=r*d;
+	      } else {
+		gsl_blas_ddot (&KiKl_col.vector, &KjKm_row.vector, &d);
+		tr+=d;
+		gsl_blas_ddot (&Km_row.vector, &KiKl_row.vector, &d);
+		tr-=r*d;
+		gsl_blas_ddot (&Kl_row.vector, &KjKm_row.vector, &d);
+		tr-=r*d;
+	      }
 	    }
+
+	    tr+=r*r*gsl_vector_get (trKiKj, t_lm);
+	  } else if (l!=n_vc && m==n_vc) {
+	    t_il=GetabIndex (i+1, l+1, n_vc-2);
+	    t_jl=GetabIndex (j+1, l+1, n_vc-2);
+	    tr=0;
+	    for (size_t k=0; k<ni_test; k++) {
+	      gsl_vector_const_view KiKl_row=gsl_matrix_const_subrow (KiKj, k, t_il*ni_test, ni_test);
+	      gsl_vector_const_view KiKl_col=gsl_matrix_const_column (KiKj, t_il*ni_test+k);
+	      gsl_vector_const_view Kj_row=gsl_matrix_const_subrow (G, k, j*ni_test, ni_test);
+
+	      if (i<=l) {
+		gsl_blas_ddot (&KiKl_row.vector, &Kj_row.vector, &d);
+		tr+=d;
+	      } else {
+		gsl_blas_ddot (&KiKl_col.vector, &Kj_row.vector, &d);
+		tr+=d;
+	      }
+	    }
+	    tr+=-r*gsl_vector_get (trKiKj, t_il)-r*gsl_vector_get (trKiKj, t_jl)+r*r*gsl_vector_get (trKi, l);
+	  } else if (l==n_vc && m!=n_vc) {
+	    t_jm=GetabIndex (j+1, m+1, n_vc-2);
+	    t_im=GetabIndex (i+1, m+1, n_vc-2);
+	    tr=0;
+	    for (size_t k=0; k<ni_test; k++) {
+	      gsl_vector_const_view KjKm_row=gsl_matrix_const_subrow (KiKj, k, t_jm*ni_test, ni_test);
+	      gsl_vector_const_view KjKm_col=gsl_matrix_const_column (KiKj, t_jm*ni_test+k);
+	      gsl_vector_const_view Ki_row=gsl_matrix_const_subrow (G, k, i*ni_test, ni_test);
+
+	      if (j<=m) {
+		gsl_blas_ddot (&KjKm_row.vector, &Ki_row.vector, &d);
+		tr+=d;
+	      } else {
+		gsl_blas_ddot (&KjKm_col.vector, &Ki_row.vector, &d);
+		tr+=d;
+	      }
+	    }
+	    tr+=-r*gsl_vector_get (trKiKj, t_im)-r*gsl_vector_get (trKiKj, t_jm)+r*r*gsl_vector_get (trKi, m);
+	  } else {
+	    tr=gsl_vector_get (trKiKj, t_ij)-r*gsl_vector_get (trKi, i)-r*gsl_vector_get (trKi, j)+r*r*(double)(ni_test-1);
 	  }
 
-	  tr+=r*r*gsl_vector_get (trKiKj, t_jl);
-	} else if (j!=n_vc && l==n_vc) {
-	  t_ij=GetabIndex (i+1, j+1, n_vc-2);
-	  tr=gsl_vector_get (trKiKjKi, i*n_vc+j)-2*r*gsl_vector_get (trKiKj, t_ij)+r*r*gsl_vector_get (trKi, j);
-	} else if (j==n_vc && l==n_vc) {
-	  t_ii=GetabIndex (i+1, i+1, n_vc-2);
-	  tr=gsl_vector_get (trKiKj, t_ii)-2*r*gsl_vector_get (trKi, i)+r*r*(double)(ni_test-1);
+	  gsl_matrix_set (V, l, t_ij*(n_vc+1)+m, tr);
 	}
-
-	gsl_matrix_set (Q, j, i*(n_vc+1)+l, tr);
-	if (l!=j) {gsl_matrix_set (Q, l, i*(n_vc+1)+j, tr);}
       }
     }
   }
 
-  gsl_matrix_scale (Q, 1.0/pow((double)ni_test, 2) );
+  gsl_matrix_scale (V, 1.0/pow((double)ni_test, 2) );
 
   gsl_matrix_free(KiKj);
-  gsl_vector_free(trKiKjKi);
   gsl_vector_free(trKiKj);
   gsl_vector_free(trKi);
 
@@ -991,12 +1136,16 @@ void compKtoQ (const gsl_matrix *G, gsl_matrix *Q) {
 
 
 //perform Jacknife sampling for variance of S
-void JacknifeGtoS (const gsl_matrix *G, gsl_matrix *S, gsl_matrix *Svar) {
-  size_t n_vc=Svar->size1, ni_test=G->size1;
-  vector<vector<vector<double> > > tr_KiKj, s_KiKj;
-  vector<vector<double> > sum_Ki, s_Ki, si;
+void JackknifeAKtoS (const gsl_matrix *W, const gsl_matrix *A, const gsl_matrix *K, gsl_matrix *S, gsl_matrix *Svar) {
+  size_t n_vc=Svar->size1, ni_test=A->size1, n_cvt=W->size2;
+
+  vector<vector<vector<double> > > trAK, sumAK;
+  vector<vector<double> > sumA, sumK, trA, trK, sA, sK;
   vector<double> vec_tmp;
   double di, dj, d, m, v;
+
+  //gsl_matrix *Stmp=gsl_matrix_alloc (n_vc, ni_test*n_vc);
+  //gsl_matrix *Stmp_sub=gsl_matrix_alloc (n_vc, n_vc);
 
   //initialize and set all elements to zero
   for (size_t i=0; i<ni_test; i++) {
@@ -1004,70 +1153,111 @@ void JacknifeGtoS (const gsl_matrix *G, gsl_matrix *S, gsl_matrix *Svar) {
   }
 
   for (size_t i=0; i<n_vc; i++) {
-    sum_Ki.push_back(vec_tmp);
-    s_Ki.push_back(vec_tmp);
-    si.push_back(vec_tmp);
+    sumA.push_back(vec_tmp);
+    sumK.push_back(vec_tmp);
+    trA.push_back(vec_tmp);
+    trK.push_back(vec_tmp);
+    sA.push_back(vec_tmp);
+    sK.push_back(vec_tmp);
   }
 
   for (size_t i=0; i<n_vc; i++) {
-    tr_KiKj.push_back(sum_Ki);
-    s_KiKj.push_back(sum_Ki);
+    trAK.push_back(sumK);
+    sumAK.push_back(sumK);
   }
 
-  //run jacknife
+  //run jackknife
   for (size_t i=0; i<n_vc; i++) {
     for (size_t l=0; l<ni_test; l++) {
       for (size_t k=0; k<ni_test; k++) {
-	di=gsl_matrix_get(G, l, k+ni_test*i);
+	di=gsl_matrix_get(A, l, k+ni_test*i);
+	dj=gsl_matrix_get(K, l, k+ni_test*i);
 
 	for (size_t t=0; t<ni_test; t++) {
 	  if (t==l || t==k) {continue;}
-	  sum_Ki[i][t]+=di;
-	  if (l==k) {si[i][t]+=di;}
+	  sumA[i][t]+=di;
+	  sumK[i][t]+=dj;
+	  if (l==k) {trA[i][t]+=di; trK[i][t]+=dj;}
 	}
-	s_Ki[i][l]+=di;
+	sA[i][l]+=di;
+	sK[i][l]+=dj;
       }
     }
 
     for (size_t t=0; t<ni_test; t++) {
-      sum_Ki[i][t]/=(double)(ni_test-1);
+      sumA[i][t]/=(double)(ni_test-1);
+      sumK[i][t]/=(double)(ni_test-1);
     }
   }
 
   for (size_t i=0; i<n_vc; i++) {
-    for (size_t j=i; j<n_vc; j++) {
+    for (size_t j=0; j<n_vc; j++) {
       for (size_t l=0; l<ni_test; l++) {
 	for (size_t k=0; k<ni_test; k++) {
-	  di=gsl_matrix_get(G, l, k+ni_test*i);
-	  dj=gsl_matrix_get(G, l, k+ni_test*j);
+	  di=gsl_matrix_get(A, l, k+ni_test*i);
+	  dj=gsl_matrix_get(K, l, k+ni_test*j);
 	  d=di*dj;
 
 	  for (size_t t=0; t<ni_test; t++) {
 	    if (t==l || t==k) {continue;}
-	    tr_KiKj[i][j][t]+=d;
+	    trAK[i][j][t]+=d;
           }
 	}
 
 	for (size_t t=0; t<ni_test; t++) {
 	  if (t==l) {continue;}
-	  di=gsl_matrix_get(G, l, t+ni_test*i);
-	  dj=gsl_matrix_get(G, l, t+ni_test*j);
+	  di=gsl_matrix_get(A, l, t+ni_test*i);
+	  dj=gsl_matrix_get(K, l, t+ni_test*j);
 
-	  s_KiKj[i][j][t]+=(s_Ki[i][l]-di)*(s_Ki[j][l]-dj);
+	  sumAK[i][j][t]+=(sA[i][l]-di)*(sK[j][l]-dj);
 	}
       }
 
       for (size_t t=0; t<ni_test; t++) {
-	s_KiKj[i][j][t]/=(double)(ni_test-1);
+	sumAK[i][j][t]/=(double)(ni_test-1);
       }
 
       m=0; v=0;
       for (size_t t=0; t<ni_test; t++) {
-	d=tr_KiKj[i][j][t]-2*s_KiKj[i][j][t]+sum_Ki[i][t]*sum_Ki[j][t];
-	d/=(si[i][t]-sum_Ki[i][t])*(si[j][t]-sum_Ki[j][t]);
-	d-=1/(double)(ni_test-2);
-
+	d=trAK[i][j][t]-2*sumAK[i][j][t]+sumA[i][t]*sumK[j][t];
+	if ( (trA[i][t]-sumA[i][t])==0 || (trK[j][t]-sumK[j][t])==0) {
+	  d=0;
+	} else {
+	  d/=(trA[i][t]-sumA[i][t])*(trK[j][t]-sumK[j][t]);
+	  d-=1/(double)(ni_test-n_cvt-1);
+	}
+	//gsl_matrix_set (Stmp, i, t*n_vc+j, d);
+	//gsl_matrix_set (Stmp, j, t*n_vc+i, d);
 	m+=d; v+=d*d;
+      }
+      m/=(double)ni_test;
+      v/=(double)ni_test;
+      v-=m*m;
+      v*=(double)(ni_test-1);
+      gsl_matrix_set (Svar, i, j, v);
+      if (n_cvt==1) {
+	d=gsl_matrix_get (S, i, j);
+      	d=(double)ni_test*d-(double)(ni_test-1)*m;
+	gsl_matrix_set (S, i, j, d);
+      }
+    }
+  }
+
+  /*
+  for (size_t t=0; t<ni_test; t++) {
+    gsl_matrix_view Stmp_view=gsl_matrix_submatrix(Stmp, 0, t*n_vc, n_vc, n_vc);
+    gsl_matrix_memcpy (Stmp_sub, &Stmp_view.matrix);
+    eigenlib_invert(Stmp_sub);
+    gsl_matrix_memcpy (&Stmp_view.matrix, Stmp_sub);
+  }
+
+  for (size_t i=0; i<n_vc; i++) {
+    for (size_t j=i; j<n_vc; j++) {
+      m=0; v=0;
+      for (size_t t=0; t<ni_test; t++) {
+	d=gsl_matrix_get (Stmp, i, t*n_vc+j);
+	m+=d;
+	v+=d*d;
       }
       m/=(double)ni_test;
       v/=(double)ni_test;
@@ -1075,106 +1265,81 @@ void JacknifeGtoS (const gsl_matrix *G, gsl_matrix *S, gsl_matrix *Svar) {
       v*=(double)(ni_test-1);
 
       gsl_matrix_set (Svar, i, j, v);
-      d=gsl_matrix_get (S, i, j);
+      d=gsl_matrix_get (Si, i, j);
       d=(double)ni_test*d-(double)(ni_test-1)*m;
-      gsl_matrix_set (S, i, j, d);
-      if (i!=j) {gsl_matrix_set (Svar, j, i, v); gsl_matrix_set (S, j, i, d);}
+      gsl_matrix_set (Si, i, j, d);
+      if (i!=j) {gsl_matrix_set (Svar, j, i, v); gsl_matrix_set (Si, j, i, d);}
     }
   }
 
+  gsl_matrix_free (Stmp);
+  */
   return;
 }
 
 
 
 //compute the d by d S matrix with its d by d variance matrix of Svar, and the d+1 by d(d+1) matrix of Q for V(q)
-void PARAM::CalcS (gsl_matrix *S, gsl_matrix *Svar, gsl_matrix *Q)  {
+void PARAM::CalcS (const map<string, double> &mapRS2wA, const map<string, double> &mapRS2wK, const gsl_matrix *W, gsl_matrix *A, gsl_matrix *K, gsl_matrix *S, gsl_matrix *Svar, gsl_vector *ns)  {
   string file_str;
 
   gsl_matrix_set_zero (S);
   gsl_matrix_set_zero (Svar);
-  gsl_matrix_set_zero (Q);
+  gsl_vector_set_zero (ns);
 
   //compute the kinship matrix G for multiple categories; these matrices are not centered, for convienence of Jacknife sampling
-  gsl_matrix *G=gsl_matrix_alloc (ni_test, n_vc*ni_test);
-  gsl_matrix_set_zero (G);
-
   if (!file_bfile.empty() ) {
     file_str=file_bfile+".bed";
-    if (PlinkKin (file_str, indicator_idv, indicator_snp, a_mode-24, d_pace, mapRS2cat, mapRS2var, snpInfo, G)==false) {error=true;}
-  } else {
+    if (mapRS2wA.size()==0) {
+      if (PlinkKin (file_str, d_pace, indicator_idv, indicator_snp, mapRS2wK, mapRS2cat, snpInfo, W, K, ns)==false) {error=true;}
+    } else {
+      if (PlinkKin (file_str, d_pace, indicator_idv, indicator_snp, mapRS2wA, mapRS2cat, snpInfo, W, A, ns)==false) {error=true;}
+    }
+  } else if (!file_geno.empty()) {
     file_str=file_geno;
-    if (BimbamKin (file_str, indicator_idv, indicator_snp, a_mode-24, d_pace, mapRS2cat, mapRS2var, snpInfo, G)==false) {error=true;}
+    if (mapRS2wA.size()==0) {
+      if (BimbamKin (file_str, d_pace, indicator_idv, indicator_snp, mapRS2wK, mapRS2cat, snpInfo, W, K, ns)==false) {error=true;}
+    } else {
+      if (BimbamKin (file_str, d_pace, indicator_idv, indicator_snp, mapRS2wA, mapRS2cat, snpInfo, W, A, ns)==false) {error=true;}
+    }
+  } else if (!file_mbfile.empty() ){
+    if (mapRS2wA.size()==0) {
+      if (MFILEKin (1, file_mbfile, d_pace, indicator_idv, mindicator_snp, mapRS2wK, mapRS2cat, msnpInfo, W, K, ns)==false) {error=true;}
+    } else {
+      if (MFILEKin (1, file_mbfile, d_pace, indicator_idv, mindicator_snp, mapRS2wA, mapRS2cat, msnpInfo, W, A, ns)==false) {error=true;}
+    }
+  } else if (!file_mgeno.empty()) {
+    if (mapRS2wA.size()==0) {
+      if (MFILEKin (0, file_mgeno, d_pace, indicator_idv, mindicator_snp, mapRS2wK, mapRS2cat, msnpInfo, W, K, ns)==false) {error=true;}
+    } else {
+      if (MFILEKin (0, file_mgeno, d_pace, indicator_idv, mindicator_snp, mapRS2wA, mapRS2cat, msnpInfo, W, A, ns)==false) {error=true;}
+    }
+  }
+
+  if (mapRS2wA.size()==0) {
+    gsl_matrix_memcpy (A, K);
   }
 
   //center and scale every kinship matrix inside G
-  double d;
   for (size_t i=0; i<n_vc; i++) {
-    gsl_matrix_view K=gsl_matrix_submatrix(G, 0, i*ni_test, ni_test, ni_test);
-    CenterMatrix(&K.matrix);
-    d=ScaleMatrix(&K.matrix);
+    gsl_matrix_view Ksub=gsl_matrix_submatrix(K, 0, i*ni_test, ni_test, ni_test);
+    CenterMatrix(&Ksub.matrix);
+    ScaleMatrix(&Ksub.matrix);
+
+    gsl_matrix_view Asub=gsl_matrix_submatrix(A, 0, i*ni_test, ni_test, ni_test);
+    CenterMatrix(&Asub.matrix);
+    ScaleMatrix(&Asub.matrix);
   }
 
   //based on G, compute S
-  compKtoS (G, S);
-
-  //based on G, compute a matrix Q that can be used to calculate the variance of q
-  compKtoQ (G, Q);
-
-  /*
-  //set up random environment
-  gsl_rng_env_setup();
-  gsl_rng *gsl_r;
-  const gsl_rng_type * gslType;
-  gslType = gsl_rng_default;
-  if (randseed<0) {
-    time_t rawtime;
-    time (&rawtime);
-    tm * ptm = gmtime (&rawtime);
-
-    randseed = (unsigned) (ptm->tm_hour%24*3600+ptm->tm_min*60+ptm->tm_sec);
-  }
-  gsl_r = gsl_rng_alloc(gslType);
-  gsl_rng_set(gsl_r, randseed);
-
-  //bootstrap: in each iteration, sample individuals and compute S_pmt
-  size_t n_pmt=100;
-  vector<size_t> idv_order, idv_remove;
-  for (size_t i=0; i<ni_test; i++) {
-    idv_order.push_back(i);
-  }
-  for (size_t i=0; i<n_pmt; i++) {
-    idv_remove.push_back(0);
-  }
-  gsl_ran_choose (gsl_r, static_cast<void*>(&idv_remove[0]), n_pmt, static_cast<void*>(&idv_order[0]), ni_test, sizeof(size_t));
-
-  gsl_matrix *S_pmt=gsl_matrix_alloc(n_vc, n_vc*n_pmt);
-  for (size_t i=0; i<n_pmt; i++) {
-    gsl_matrix_view S_sub=gsl_matrix_submatrix (S_pmt, 0, n_vc*i, n_vc, n_vc);
-    compKtoS (G, idv_remove[i], &S_sub.matrix);
-  }
-
-  //based on S_pmt, compute Svar
-  double m, v, d;
-  for (size_t i=0; i<n_vc; i++) {
-    for (size_t j=i; j<n_vc; j++) {
-      m=0; v=0;
-      for (size_t t=0; t<n_pmt; t++) {
-	d=gsl_matrix_get(S_pmt, i, j);
-	m+=d; v+=d*d;
-      }
-      m/=(double)n_pmt; v/=(double)n_pmt;
-      v=v-m*m;
-      gsl_matrix_set(Svar, i, j, v);
-      if (i!=j) {gsl_matrix_set(Svar, j, i, v);}
-    }
-  }
-  */
+  compAKtoS (A, K, W->size2, S);
 
   //compute Svar and update S with Jacknife
-  JacknifeGtoS (G, S, Svar);
+  JackknifeAKtoS (W, A, K, S, Svar);
 
-  gsl_matrix_free(G);
+  //based on G, compute a matrix Q that can be used to calculate the variance of q
+  //compKtoV (G, V);
+
   return;
 }
 
@@ -1223,11 +1388,20 @@ void PARAM::WriteVar (const string suffix)
 
 	outfile.precision(10);
 
-	for (size_t i=0; i<indicator_snp.size(); i++) {
-	  if (indicator_snp[i]==0) {continue;}
-	  rs=snpInfo[i].rs_number;
-	  if (mapRS2var.count(rs)!=0) {
-	    outfile<<rs<<"\t"<<mapRS2var.at(rs)<<endl;
+	if (mindicator_snp.size()!=0) {
+	  for (size_t t=0; t<mindicator_snp.size(); t++) {
+	    indicator_snp=mindicator_snp[t];
+	    for (size_t i=0; i<indicator_snp.size(); i++) {
+	      if (indicator_snp[i]==0) {continue;}
+	      rs=snpInfo[i].rs_number;
+	      outfile<<rs<<endl;
+	    }
+	  }
+	} else {
+	  for (size_t i=0; i<indicator_snp.size(); i++) {
+	    if (indicator_snp[i]==0) {continue;}
+	    rs=snpInfo[i].rs_number;
+	    outfile<<rs<<endl;
 	  }
 	}
 
@@ -1564,3 +1738,219 @@ void PARAM::CopyRead (gsl_vector *log_N)
 
 
 
+void PARAM::ObtainWeight (const set<string> &setSnps_beta, map<string, double> &mapRS2wK)
+{
+  mapRS2wK.clear();
+
+  vector<double> wsum, wcount;
+
+  for (size_t i=0; i<n_vc; i++) {
+    wsum.push_back(0.0);
+    wcount.push_back(0.0);
+  }
+
+  string rs;
+  if (msnpInfo.size()==0) {
+    for (size_t i=0; i<snpInfo.size(); i++) {
+      if (indicator_snp[i]==0) {continue;}
+
+      rs=snpInfo[i].rs_number;
+      if ( (setSnps_beta.size()==0 || setSnps_beta.count(rs)!=0) && (mapRS2wsnp.size()==0 || mapRS2wsnp.count(rs)!=0) && (mapRS2wcat.size()==0 || mapRS2wcat.count(rs)!=0) && (mapRS2cat.size()==0 || mapRS2cat.count(rs)!=0) ) {
+	if (mapRS2wsnp.size()!=0) {
+	  mapRS2wK[rs]=mapRS2wsnp[rs];
+	  if (mapRS2cat.size()==0) {
+	    wsum[0]+=mapRS2wsnp[rs];
+	  } else {
+	    wsum[mapRS2cat[rs]]+=mapRS2wsnp[rs];
+	  }
+	  wcount[0]++;
+	} else {
+	  mapRS2wK[rs]=1;
+	}
+      }
+
+    }
+  } else {
+    for (size_t t=0; t<msnpInfo.size(); t++) {
+      snpInfo=msnpInfo[t];
+      indicator_snp=mindicator_snp[t];
+
+      for (size_t i=0; i<snpInfo.size(); i++) {
+	if (indicator_snp[i]==0) {continue;}
+
+	rs=snpInfo[i].rs_number;
+	if ( (setSnps_beta.size()==0 || setSnps_beta.count(rs)!=0) && (mapRS2wsnp.size()==0 || mapRS2wsnp.count(rs)!=0) && (mapRS2wcat.size()==0 || mapRS2wcat.count(rs)!=0) && (mapRS2cat.size()==0 || mapRS2cat.count(rs)!=0) ) {
+	  if (mapRS2wsnp.size()!=0) {
+	    mapRS2wK[rs]=mapRS2wsnp[rs];
+	    if (mapRS2cat.size()==0) {
+	      wsum[0]+=mapRS2wsnp[rs];
+	    } else {
+	      wsum[mapRS2cat[rs]]+=mapRS2wsnp[rs];
+	    }
+	    wcount[0]++;
+	  } else {
+	    mapRS2wK[rs]=1;
+	  }
+	}
+      }
+    }
+  }
+
+  if (mapRS2wsnp.size()!=0) {
+    for (size_t i=0; i<n_vc; i++) {
+      wsum[i]/=wcount[i];
+    }
+
+    for (map<string, double>::iterator it=mapRS2wK.begin(); it!=mapRS2wK.end(); ++it) {
+      if (mapRS2cat.size()==0) {
+	it->second/=wsum[0];
+      } else {
+	it->second/=wsum[mapRS2cat[it->first]];
+      }
+    }
+  }
+  return;
+}
+
+
+//pve_flag=0 then do not change pve; pve_flag==1, then change pve to 0 if pve < 0 and pve to 1 if pve > 1
+void PARAM::UpdateWeight (const size_t pve_flag, const map<string, double> &mapRS2wK, const size_t ni_test, const gsl_vector *ns, map<string, double> &mapRS2wA)
+{
+  double d;
+  vector<double> wsum, wcount;
+
+  for (size_t i=0; i<n_vc; i++) {
+    wsum.push_back(0.0);
+    wcount.push_back(0.0);
+  }
+
+  for (map<string, double>::const_iterator it=mapRS2wK.begin(); it!=mapRS2wK.end(); ++it) {
+    d=1;
+    for (size_t i=0; i<n_vc; i++) {
+      if (v_pve[i]>=1 && pve_flag==1) {
+	d+=(double)ni_test/gsl_vector_get(ns, i)*mapRS2wcat[it->first][i];
+      } else if (v_pve[i]<=0 && pve_flag==1) {
+	d+=0;
+      } else {
+	d+=(double)ni_test/gsl_vector_get(ns, i)*mapRS2wcat[it->first][i]*v_pve[i];
+      }
+    }
+    mapRS2wA[it->first]=1/(d*d);
+
+    if (mapRS2cat.size()==0) {
+      wsum[0]+=mapRS2wA[it->first];
+      wcount[0]++;
+    } else {
+      wsum[mapRS2cat[it->first]]+=mapRS2wA[it->first];
+      wcount[mapRS2cat[it->first]]++;
+    }
+  }
+
+  for (size_t i=0; i<n_vc; i++) {
+    wsum[i]/=wcount[i];
+  }
+
+  for (map<string, double>::iterator it=mapRS2wA.begin(); it!=mapRS2wA.end(); ++it) {
+    if (mapRS2cat.size()==0) {
+      it->second/=wsum[0];
+    } else {
+      it->second/=wsum[mapRS2cat[it->first]];
+    }
+  }
+  return;
+}
+
+// this function updates indicator_snp, and save z-scores and other values into vectors
+void PARAM::UpdateSNPnZ (const map<string, double> &mapRS2wA, const map<string, string> &mapRS2A1, const map<string, double> &mapRS2z, gsl_vector *w, gsl_vector *z, vector<size_t> &vec_cat)
+{
+  gsl_vector_set_zero (w);
+  gsl_vector_set_zero (z);
+  vec_cat.clear();
+
+  string rs, a1;
+  size_t c=0;
+  if (msnpInfo.size()==0) {
+    for (size_t i=0; i<snpInfo.size(); i++) {
+      if (indicator_snp[i]==0) {continue;}
+
+      rs=snpInfo[i].rs_number;
+      a1=snpInfo[i].a_minor;
+
+      if (mapRS2wA.count(rs)!=0) {
+	if (a1==mapRS2A1.at(rs)) {
+	  gsl_vector_set (z, c, mapRS2z.at(rs) );
+	} else {
+	  gsl_vector_set (z, c, -1*mapRS2z.at(rs) );
+	}
+	vec_cat.push_back(mapRS2cat.at(rs) );
+	gsl_vector_set (w, c, mapRS2wA.at(rs) );
+
+	c++;
+      } else {
+	indicator_snp[i]=0;
+      }
+    }
+  } else {
+    for (size_t t=0; t<msnpInfo.size(); t++) {
+      snpInfo=msnpInfo[t];
+
+      for (size_t i=0; i<snpInfo.size(); i++) {
+	if (mindicator_snp[t][i]==0) {continue;}
+
+	rs=snpInfo[i].rs_number;
+	a1=snpInfo[i].a_minor;
+
+	if (mapRS2wA.count(rs)!=0) {
+	  if (a1==mapRS2A1.at(rs)) {
+	    gsl_vector_set (z, c, mapRS2z.at(rs) );
+	  } else {
+	    gsl_vector_set (z, c, -1*mapRS2z.at(rs) );
+	  }
+	  vec_cat.push_back(mapRS2cat.at(rs) );
+	  gsl_vector_set (w, c, mapRS2wA.at(rs) );
+
+	  c++;
+	} else {
+	  mindicator_snp[t][i]=0;
+	}
+      }
+    }
+  }
+
+  return;
+}
+
+
+
+// this function updates indicator_snp, and save z-scores and other values into vectors
+void PARAM::UpdateSNP (const map<string, double> &mapRS2wA)
+{
+  string rs;
+  if (msnpInfo.size()==0) {
+    for (size_t i=0; i<snpInfo.size(); i++) {
+      if (indicator_snp[i]==0) {continue;}
+
+      rs=snpInfo[i].rs_number;
+
+      if (mapRS2wA.count(rs)==0) {
+	indicator_snp[i]=0;
+      }
+    }
+  } else {
+    for (size_t t=0; t<msnpInfo.size(); t++) {
+      snpInfo=msnpInfo[t];
+
+      for (size_t i=0; i<mindicator_snp[t].size(); i++) {
+	if (mindicator_snp[t][i]==0) {continue;}
+
+	rs=snpInfo[i].rs_number;
+
+	if (mapRS2wA.count(rs)==0) {
+	  mindicator_snp[t][i]=0;
+	}
+      }
+    }
+  }
+
+  return;
+}

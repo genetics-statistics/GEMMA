@@ -41,6 +41,7 @@
 #include "gsl/gsl_min.h"
 #include "gsl/gsl_integration.h"
 
+#include "eigenlib.h"
 #include "gzstream.h"
 #include "lapack.h"
 
@@ -519,9 +520,9 @@ void LM::Analyzebgen (const gsl_matrix *W, const gsl_vector *y)
 		for (size_t i=0; i<ni_test; ++i) {
 			if (gsl_vector_get (x_miss, i)==0) {gsl_vector_set(x, i, x_mean);}
 			geno=gsl_vector_get(x, i);
-			if (x_mean>1) {
-				gsl_vector_set(x, i, 2-geno);
-			}
+			//if (x_mean>1) {
+			//gsl_vector_set(x, i, 2-geno);
+			//}
 		}
 
 
@@ -626,9 +627,9 @@ void LM::AnalyzeBimbam (const gsl_matrix *W, const gsl_vector *y)
 		for (size_t i=0; i<ni_test; ++i) {
 			if (gsl_vector_get (x_miss, i)==0) {gsl_vector_set(x, i, x_mean);}
 			geno=gsl_vector_get(x, i);
-			if (x_mean>1) {
-				gsl_vector_set(x, i, 2-geno);
-			}
+			//if (x_mean>1) {
+			//gsl_vector_set(x, i, 2-geno);
+			//}
 		}
 
 		//calculate statistics
@@ -712,7 +713,6 @@ void LM::AnalyzePlink (const gsl_matrix *W, const gsl_vector *y)
 		b=ch[0];
 	}
 
-
 	for (vector<SNPINFO>::size_type t=0; t<snpInfo.size(); ++t) {
 		if (t%d_pace==0 || t==snpInfo.size()-1) {ProgressBar ("Reading SNPs  ", t, snpInfo.size()-1);}
 		if (indicator_snp[t]==0) {continue;}
@@ -747,9 +747,9 @@ void LM::AnalyzePlink (const gsl_matrix *W, const gsl_vector *y)
 		for (size_t i=0; i<ni_test; ++i) {
 			geno=gsl_vector_get(x,i);
 			if (geno==-9) {gsl_vector_set(x, i, x_mean); geno=x_mean;}
-			if (x_mean>1) {
-				gsl_vector_set(x, i, 2-geno);
-			}
+			//if (x_mean>1) {
+			//gsl_vector_set(x, i, 2-geno);
+			//}
 		}
 
 		//calculate statistics
@@ -759,11 +759,11 @@ void LM::AnalyzePlink (const gsl_matrix *W, const gsl_vector *y)
 		CalcvPv(WtWi, Wty, Wtx, y, x, xPwy, xPwx);
 		LmCalcP (a_mode-50, yPwy, xPwy, xPwx, df, W->size1, beta, se, p_wald, p_lrt, p_score);
 
-		time_opt+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
-
 		//store summary data
 		SUMSTAT SNPs={beta, se, 0.0, 0.0, p_wald, p_lrt, p_score};
 		sumStat.push_back(SNPs);
+
+		time_opt+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
 	}
 	cout<<endl;
 

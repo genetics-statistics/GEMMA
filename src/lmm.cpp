@@ -42,6 +42,7 @@
 #include "gsl/gsl_integration.h"
 
 #include "io.h"
+#include "eigenlib.h"
 #include "lapack.h"
 #include "gzstream.h"
 
@@ -1228,6 +1229,12 @@ void LMM::AnalyzeBimbam (const gsl_matrix *U, const gsl_vector *eval, const gsl_
 	gsl_matrix *Uab=gsl_matrix_alloc (U->size2, n_index);
 	gsl_vector *ab=gsl_vector_alloc (n_index);
 
+	//create a large matrix
+	size_t msize=10000;
+	gsl_matrix *Xlarge=gsl_matrix_alloc (U->size1, msize);
+	gsl_matrix *UtXlarge=gsl_matrix_alloc (U->size1, msize);
+	gsl_matrix_set_zero(Xlarge);
+
 	gsl_matrix_set_zero (Uab);
 	CalcUab (UtW, Uty, Uab);
 //	if (e_mode!=0) {
@@ -1236,6 +1243,7 @@ void LMM::AnalyzeBimbam (const gsl_matrix *U, const gsl_vector *eval, const gsl_
 //	}
 
 	//start reading genotypes and analyze
+	size_t c=0;
 	for (size_t t=0; t<indicator_snp.size(); ++t) {
 //		if (t>1) {break;}
 		!safeGetline(infile, line).eof();
@@ -1268,48 +1276,72 @@ void LMM::AnalyzeBimbam (const gsl_matrix *U, const gsl_vector *eval, const gsl_
 		for (size_t i=0; i<ni_test; ++i) {
 			if (gsl_vector_get (x_miss, i)==0) {gsl_vector_set(x, i, x_mean);}
 			geno=gsl_vector_get(x, i);
-			if (x_mean>1) {
-				gsl_vector_set(x, i, 2-geno);
-			}
+			//if (x_mean>1) {
+			//	gsl_vector_set(x, i, 2-geno);
+			//}
 		}
 
-
+		/*
 		//calculate statistics
 		time_start=clock();
 		gsl_blas_dgemv (CblasTrans, 1.0, U, x, 0.0, Utx);
 		time_UtX+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
+		*/
 
-		CalcUab(UtW, Uty, Utx, Uab);
-//		if (e_mode!=0) {
-//			Calcab (W, y, x, ab);
-//		}
+		gsl_vector_view Xlarge_col=gsl_matrix_column (Xlarge, c%msize);
+		gsl_vector_memcpy (&Xlarge_col.vector, x);
+		c++;
 
-		time_start=clock();
-		FUNC_PARAM param1={false, ni_test, n_cvt, eval, Uab, ab, 0};
+		if (c%msize==0 || t==indicator_snp.size()-1 ) {
+		  size_t l=0;
+		  if (c%msize==0) {l=msize;} else {l=c%msize;}
 
-		//3 is before 1
-		if (a_mode==3 || a_mode==4) {
-			CalcRLScore (l_mle_null, param1, beta, se, p_score);
+		  gsl_matrix_view Xlarge_sub=gsl_matrix_submatrix(Xlarge, 0, 0, Xlarge->size1, l);
+		  gsl_matrix_view UtXlarge_sub=gsl_matrix_submatrix(UtXlarge, 0, 0, UtXlarge->size1, l);
+
+		  time_start=clock();
+		  eigenlib_dgemm ("T", "N", 1.0, U, &Xlarge_sub.matrix, 0.0, &UtXlarge_sub.matrix);
+		  time_UtX+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
+
+		  gsl_matrix_set_zero (Xlarge);
+
+		  for (size_t i=0; i<l; i++) {
+		    gsl_vector_view UtXlarge_col=gsl_matrix_column (UtXlarge, i);
+		    gsl_vector_memcpy (Utx, &UtXlarge_col.vector);
+
+		    CalcUab(UtW, Uty, Utx, Uab);
+		    //		if (e_mode!=0) {
+		    //			Calcab (W, y, x, ab);
+		    //		}
+
+		    time_start=clock();
+		    FUNC_PARAM param1={false, ni_test, n_cvt, eval, Uab, ab, 0};
+
+		    //3 is before 1
+		    if (a_mode==3 || a_mode==4) {
+		      CalcRLScore (l_mle_null, param1, beta, se, p_score);
+		    }
+
+		    if (a_mode==1 || a_mode==4) {
+		      CalcLambda ('R', param1, l_min, l_max, n_region, lambda_remle, logl_H1);
+		      CalcRLWald (lambda_remle, param1, beta, se, p_wald);
+		    }
+
+		    if (a_mode==2 || a_mode==4) {
+		      CalcLambda ('L', param1, l_min, l_max, n_region, lambda_mle, logl_H1);
+		      p_lrt=gsl_cdf_chisq_Q (2.0*(logl_H1-logl_mle_H0), 1);
+		    }
+
+		    //if (x_mean>1) {beta*=-1;}
+
+		    time_opt+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
+
+		    //store summary data
+		    SUMSTAT SNPs={beta, se, lambda_remle, lambda_mle, p_wald, p_lrt, p_score};
+		    sumStat.push_back(SNPs);
+		  }
 		}
-
-		if (a_mode==1 || a_mode==4) {
-			CalcLambda ('R', param1, l_min, l_max, n_region, lambda_remle, logl_H1);
-			CalcRLWald (lambda_remle, param1, beta, se, p_wald);
-		}
-
-		if (a_mode==2 || a_mode==4) {
-			CalcLambda ('L', param1, l_min, l_max, n_region, lambda_mle, logl_H1);
-			p_lrt=gsl_cdf_chisq_Q (2.0*(logl_H1-logl_mle_H0), 1);
-		}
-
-		if (x_mean>1) {beta*=-1;}
-
-		time_opt+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
-
-		//store summary data
-		SUMSTAT SNPs={beta, se, lambda_remle, lambda_mle, p_wald, p_lrt, p_score};
-		sumStat.push_back(SNPs);
-    }
+	}
 	cout<<endl;
 
 	gsl_vector_free (x);
@@ -1317,6 +1349,9 @@ void LMM::AnalyzeBimbam (const gsl_matrix *U, const gsl_vector *eval, const gsl_
 	gsl_vector_free (Utx);
 	gsl_matrix_free (Uab);
 	gsl_vector_free (ab);
+
+	gsl_matrix_free (Xlarge);
+	gsl_matrix_free (UtXlarge);
 
 	infile.close();
 	infile.clear();
@@ -1354,6 +1389,12 @@ void LMM::AnalyzePlink (const gsl_matrix *U, const gsl_vector *eval, const gsl_m
 	gsl_matrix *Uab=gsl_matrix_alloc (U->size2, n_index);
 	gsl_vector *ab=gsl_vector_alloc (n_index);
 
+	//create a large matrix
+	size_t msize=10000;
+	gsl_matrix *Xlarge=gsl_matrix_alloc (U->size1, msize);
+	gsl_matrix *UtXlarge=gsl_matrix_alloc (U->size1, msize);
+	gsl_matrix_set_zero(Xlarge);
+
 	gsl_matrix_set_zero (Uab);
 	CalcUab (UtW, Uty, Uab);
 //	if (e_mode!=0) {
@@ -1371,7 +1412,7 @@ void LMM::AnalyzePlink (const gsl_matrix *U, const gsl_vector *eval, const gsl_m
 		b=ch[0];
 	}
 
-
+	size_t c=0;
 	for (vector<SNPINFO>::size_type t=0; t<snpInfo.size(); ++t) {
 		if (t%d_pace==0 || t==snpInfo.size()-1) {ProgressBar ("Reading SNPs  ", t, snpInfo.size()-1);}
 		if (indicator_snp[t]==0) {continue;}
@@ -1406,46 +1447,71 @@ void LMM::AnalyzePlink (const gsl_matrix *U, const gsl_vector *eval, const gsl_m
 		for (size_t i=0; i<ni_test; ++i) {
 			geno=gsl_vector_get(x,i);
 			if (geno==-9) {gsl_vector_set(x, i, x_mean); geno=x_mean;}
-			if (x_mean>1) {
-				gsl_vector_set(x, i, 2-geno);
-			}
+			//if (x_mean>1) {
+			//gsl_vector_set(x, i, 2-geno);
+			//}
 		}
 
+		/*
 		//calculate statistics
 		time_start=clock();
 		gsl_blas_dgemv (CblasTrans, 1.0, U, x, 0.0, Utx);
 		time_UtX+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
+		*/
 
-		CalcUab(UtW, Uty, Utx, Uab);
-//		if (e_mode!=0) {
-//			Calcab (W, y, x, ab);
-//		}
+		gsl_vector_view Xlarge_col=gsl_matrix_column (Xlarge, c%msize);
+		gsl_vector_memcpy (&Xlarge_col.vector, x);
+		c++;
 
-		time_start=clock();
-		FUNC_PARAM param1={false, ni_test, n_cvt, eval, Uab, ab, 0};
+		if (c%msize==0 || t==indicator_snp.size()-1 ) {
+		  size_t l=0;
+		  if (c%msize==0) {l=msize;} else {l=c%msize;}
 
-		//3 is before 1, for beta
-		if (a_mode==3 || a_mode==4) {
-			CalcRLScore (l_mle_null, param1, beta, se, p_score);
+		  gsl_matrix_view Xlarge_sub=gsl_matrix_submatrix(Xlarge, 0, 0, Xlarge->size1, l);
+		  gsl_matrix_view UtXlarge_sub=gsl_matrix_submatrix(UtXlarge, 0, 0, UtXlarge->size1, l);
+
+		  time_start=clock();
+		  eigenlib_dgemm ("T", "N", 1.0, U, &Xlarge_sub.matrix, 0.0, &UtXlarge_sub.matrix);
+		  time_UtX+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
+
+		  gsl_matrix_set_zero (Xlarge);
+
+		  for (size_t i=0; i<l; i++) {
+		    gsl_vector_view UtXlarge_col=gsl_matrix_column (UtXlarge, i);
+		    gsl_vector_memcpy (Utx, &UtXlarge_col.vector);
+
+		    CalcUab(UtW, Uty, Utx, Uab);
+		    //		if (e_mode!=0) {
+		    //			Calcab (W, y, x, ab);
+		    //		}
+
+		    time_start=clock();
+		    FUNC_PARAM param1={false, ni_test, n_cvt, eval, Uab, ab, 0};
+
+		    //3 is before 1, for beta
+		    if (a_mode==3 || a_mode==4) {
+		      CalcRLScore (l_mle_null, param1, beta, se, p_score);
+		    }
+
+		    if (a_mode==1 || a_mode==4) {
+		      CalcLambda ('R', param1, l_min, l_max, n_region, lambda_remle, logl_H1);
+		      CalcRLWald (lambda_remle, param1, beta, se, p_wald);
+		    }
+
+		    if (a_mode==2 || a_mode==4) {
+		      CalcLambda ('L', param1, l_min, l_max, n_region, lambda_mle, logl_H1);
+		      p_lrt=gsl_cdf_chisq_Q (2.0*(logl_H1-logl_mle_H0), 1);
+		    }
+
+		    //if (x_mean>1) {beta*=-1;}
+
+		    time_opt+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
+
+		    //store summary data
+		    SUMSTAT SNPs={beta, se, lambda_remle, lambda_mle, p_wald, p_lrt, p_score};
+		    sumStat.push_back(SNPs);
+		  }
 		}
-
-		if (a_mode==1 || a_mode==4) {
-			CalcLambda ('R', param1, l_min, l_max, n_region, lambda_remle, logl_H1);
-			CalcRLWald (lambda_remle, param1, beta, se, p_wald);
-		}
-
-		if (a_mode==2 || a_mode==4) {
-			CalcLambda ('L', param1, l_min, l_max, n_region, lambda_mle, logl_H1);
-			p_lrt=gsl_cdf_chisq_Q (2.0*(logl_H1-logl_mle_H0), 1);
-		}
-
-		if (x_mean>1) {beta*=-1;}
-
-		time_opt+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
-
-		//store summary data
-		SUMSTAT SNPs={beta, se, lambda_remle, lambda_mle, p_wald, p_lrt, p_score};
-		sumStat.push_back(SNPs);
     }
 	cout<<endl;
 
@@ -1453,6 +1519,9 @@ void LMM::AnalyzePlink (const gsl_matrix *U, const gsl_vector *eval, const gsl_m
 	gsl_vector_free (Utx);
 	gsl_matrix_free (Uab);
 	gsl_vector_free (ab);
+
+	gsl_matrix_free(Xlarge);
+	gsl_matrix_free(UtXlarge);
 
 	infile.close();
 	infile.clear();
@@ -1486,6 +1555,12 @@ void LMM::Analyzebgen (const gsl_matrix *U, const gsl_vector *eval, const gsl_ma
 	gsl_vector *Utx=gsl_vector_alloc (U->size2);
 	gsl_matrix *Uab=gsl_matrix_alloc (U->size2, n_index);
 	gsl_vector *ab=gsl_vector_alloc (n_index);
+
+	//create a large matrix
+	size_t msize=10000;
+	gsl_matrix *Xlarge=gsl_matrix_alloc (U->size1, msize);
+	gsl_matrix *UtXlarge=gsl_matrix_alloc (U->size1, msize);
+	gsl_matrix_set_zero(Xlarge);
 
 	gsl_matrix_set_zero (Uab);
 	CalcUab (UtW, Uty, Uab);
@@ -1537,6 +1612,7 @@ void LMM::Analyzebgen (const gsl_matrix *U, const gsl_vector *eval, const gsl_ma
 
 
 	//start reading genotypes and analyze
+	size_t c=0;
 	for (size_t t=0; t<indicator_snp.size(); ++t)
 	{
 
@@ -1645,47 +1721,71 @@ void LMM::Analyzebgen (const gsl_matrix *U, const gsl_vector *eval, const gsl_ma
 		for (size_t i=0; i<ni_test; ++i) {
 			if (gsl_vector_get (x_miss, i)==0) {gsl_vector_set(x, i, x_mean);}
 			geno=gsl_vector_get(x, i);
-			if (x_mean>1) {
-				gsl_vector_set(x, i, 2-geno);
-			}
+			//if (x_mean>1) {
+			//gsl_vector_set(x, i, 2-geno);
+			//}
 		}
 
-
+		/*
 		//calculate statistics
 		time_start=clock();
 		gsl_blas_dgemv (CblasTrans, 1.0, U, x, 0.0, Utx);
 		time_UtX+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
+		*/
 
-		CalcUab(UtW, Uty, Utx, Uab);
-//		if (e_mode!=0) {
-//			Calcab (W, y, x, ab);
-//		}
+		gsl_vector_view Xlarge_col=gsl_matrix_column (Xlarge, c%msize);
+		gsl_vector_memcpy (&Xlarge_col.vector, x);
+		c++;
 
-		time_start=clock();
-		FUNC_PARAM param1={false, ni_test, n_cvt, eval, Uab, ab, 0};
+		if (c%msize==0 || t==indicator_snp.size()-1 ) {
+		  size_t l=0;
+		  if (c%msize==0) {l=msize;} else {l=c%msize;}
 
-		//3 is before 1
-		if (a_mode==3 || a_mode==4) {
-			CalcRLScore (l_mle_null, param1, beta, se, p_score);
+		  gsl_matrix_view Xlarge_sub=gsl_matrix_submatrix(Xlarge, 0, 0, Xlarge->size1, l);
+		  gsl_matrix_view UtXlarge_sub=gsl_matrix_submatrix(UtXlarge, 0, 0, UtXlarge->size1, l);
+
+		  time_start=clock();
+		  eigenlib_dgemm ("T", "N", 1.0, U, &Xlarge_sub.matrix, 0.0, &UtXlarge_sub.matrix);
+		  time_UtX+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
+
+		  gsl_matrix_set_zero (Xlarge);
+
+		  for (size_t i=0; i<l; i++) {
+		    gsl_vector_view UtXlarge_col=gsl_matrix_column (UtXlarge, i);
+		    gsl_vector_memcpy (Utx, &UtXlarge_col.vector);
+
+		    CalcUab(UtW, Uty, Utx, Uab);
+		    //		if (e_mode!=0) {
+		    //			Calcab (W, y, x, ab);
+		    //		}
+
+		    time_start=clock();
+		    FUNC_PARAM param1={false, ni_test, n_cvt, eval, Uab, ab, 0};
+
+		    //3 is before 1
+		    if (a_mode==3 || a_mode==4) {
+		      CalcRLScore (l_mle_null, param1, beta, se, p_score);
+		    }
+
+		    if (a_mode==1 || a_mode==4) {
+		      CalcLambda ('R', param1, l_min, l_max, n_region, lambda_remle, logl_H1);
+		      CalcRLWald (lambda_remle, param1, beta, se, p_wald);
+		    }
+
+		    if (a_mode==2 || a_mode==4) {
+		      CalcLambda ('L', param1, l_min, l_max, n_region, lambda_mle, logl_H1);
+		      p_lrt=gsl_cdf_chisq_Q (2.0*(logl_H1-logl_mle_H0), 1);
+		    }
+
+		    //if (x_mean>1) {beta*=-1;}
+
+		    time_opt+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
+
+		    //store summary data
+		    SUMSTAT SNPs={beta, se, lambda_remle, lambda_mle, p_wald, p_lrt, p_score};
+		    sumStat.push_back(SNPs);
+		  }
 		}
-
-		if (a_mode==1 || a_mode==4) {
-			CalcLambda ('R', param1, l_min, l_max, n_region, lambda_remle, logl_H1);
-			CalcRLWald (lambda_remle, param1, beta, se, p_wald);
-		}
-
-		if (a_mode==2 || a_mode==4) {
-			CalcLambda ('L', param1, l_min, l_max, n_region, lambda_mle, logl_H1);
-			p_lrt=gsl_cdf_chisq_Q (2.0*(logl_H1-logl_mle_H0), 1);
-		}
-
-		if (x_mean>1) {beta*=-1;}
-
-		time_opt+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
-
-		//store summary data
-		SUMSTAT SNPs={beta, se, lambda_remle, lambda_mle, p_wald, p_lrt, p_score};
-		sumStat.push_back(SNPs);
     }
 	cout<<endl;
 
@@ -1694,6 +1794,9 @@ void LMM::Analyzebgen (const gsl_matrix *U, const gsl_vector *eval, const gsl_ma
 	gsl_vector_free (Utx);
 	gsl_matrix_free (Uab);
 	gsl_vector_free (ab);
+
+	gsl_matrix_free(Xlarge);
+	gsl_matrix_free(UtXlarge);
 
 	infile.close();
 	infile.clear();

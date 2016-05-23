@@ -102,6 +102,8 @@ public:
     size_t n_col;
     size_t nmis_col;
     size_t nobs_col;
+    size_t ncase_col;
+    size_t ncontrol_col;
     size_t af_col;
     size_t var_col;
     size_t ws_col;
@@ -120,23 +122,21 @@ public:
 	vector<size_t> p_column;			//which phenotype column needs analysis
 	size_t d_pace;		//display pace
 
-	string file_bfile;
-	string file_geno;
+	string file_bfile, file_mbfile;
+	string file_geno, file_mgeno;
 	string file_pheno;
 	string file_anno;		//optional
 	string file_gxe;		//optional
 	string file_cvt;		//optional
-	string file_cat;
+	string file_cat, file_mcat;
 	string file_var;
 	string file_beta;
 	string file_cor;
-	string file_kin;
+	string file_kin, file_mk;
 	string file_ku, file_kd;
-	string file_mk;
-	string file_q, file_mq;
-	string file_s, file_ms;
-	string file_v, file_mv;
-	string file_weight;
+	string file_study, file_mstudy;
+	string file_ref, file_mref;
+	string file_weight, file_wsnp, file_wcat;
 	string file_out;
 	string path_out;
 
@@ -165,7 +165,7 @@ public:
 	size_t n_region;
 	double l_mle_null, l_remle_null;
 	double logl_mle_H0, logl_remle_H0;
-	double pve_null, pve_se_null;
+	double pve_null, pve_se_null, pve_total, se_pve_total;
 	double vg_remle_null, ve_remle_null, vg_mle_null, ve_mle_null;
 	vector<double> Vg_remle_null, Ve_remle_null, Vg_mle_null, Ve_mle_null;
 	vector<double> VVg_remle_null, VVe_remle_null, VVg_mle_null, VVe_mle_null;
@@ -185,6 +185,8 @@ public:
 
 	vector<double> v_sigma2;
 	vector<double> v_se_sigma2;
+	vector<double> v_enrich;
+	vector<double> v_se_enrich;
 	vector<double> v_beta;
 	vector<double> v_se_beta;
 
@@ -210,15 +212,18 @@ public:
 	size_t window_bp;
 	size_t window_ns;
 
+	//vc related parameters
+	size_t n_block;
+
 	// Summary statistics
 	bool error;
-	size_t ni_total, ni_test, ni_cvt;	//number of individuals
+	size_t ni_total, ni_test, ni_cvt, ni_study, ni_ref;	//number of individuals
 	size_t np_obs, np_miss;		//number of observed and missing phenotypes
-	size_t ns_total, ns_test;	//number of snps
+	size_t ns_total, ns_test, ns_study, ns_ref;	//number of snps
 	size_t ng_total, ng_test;	//number of genes
 	size_t ni_control, ni_case;	//number of controls and number of cases
 	size_t ni_subsample;            //number of subsampled individuals
-	size_t ni_total_ref, ns_total_ref, ns_pair;//max number of individuals, number of snps and number of snp pairs in the reference panel
+	//size_t ni_total_ref, ns_total_ref, ns_pair;//max number of individuals, number of snps and number of snp pairs in the reference panel
 	size_t n_cvt;			//number of covariates
 	size_t n_ph;			//number of phenotypes
 	size_t n_vc;			//number of variance components (including the diagonal matrix)
@@ -240,6 +245,7 @@ public:
 	vector<vector<int> > indicator_pheno;			//a matrix record when a phenotype is missing for an individual; 0 missing, 1 available
 	vector<int> indicator_idv;				//indicator for individuals (phenotypes), 0 missing, 1 available for analysis
 	vector<int> indicator_snp;				//sequence indicator for SNPs: 0 ignored because of (a) maf, (b) miss, (c) non-poly; 1 available for analysis
+	vector< vector<int> >  mindicator_snp;				//sequence indicator for SNPs: 0 ignored because of (a) maf, (b) miss, (c) non-poly; 1 available for analysis
 	vector<int> indicator_cvt;				//indicator for covariates, 0 missing, 1 available for analysis
 	vector<int> indicator_gxe;				//indicator for gxe, 0 missing, 1 available for analysis
 	vector<int> indicator_weight;                           //indicator for weight, 0 missing, 1 available for analysis
@@ -256,9 +262,11 @@ public:
 	map<string, double> mapRS2cM;		//map rs# to cM
 	map<string, double> mapRS2est;			//map rs# to parameters
 	map<string, size_t> mapRS2cat;          //map rs# to category number
-	map<string, double> mapRS2var;          //map rs# to category number
+	map<string, double> mapRS2wsnp;          //map rs# to snp weights
+	map<string, vector<double> > mapRS2wcat;          //map rs# to snp cat weights
 
 	vector<SNPINFO> snpInfo;		//record SNP information
+	vector< vector<SNPINFO> > msnpInfo;		//record SNP information
 	set<string> setSnps;			//a set of snps for analysis
 
 	//constructor
@@ -279,12 +287,16 @@ public:
 	void CopyCvtPhen (gsl_matrix *W, gsl_vector *y, size_t flag);
 	void CopyCvtPhen (gsl_matrix *W, gsl_matrix *Y, size_t flag);
 	void CalcKin (gsl_matrix *matrix_kin);
-	void CalcS (gsl_matrix *S, gsl_matrix *Svar, gsl_matrix *Q);
+	void CalcS (const map<string, double> &mapRS2wA, const map<string, double> &mapRS2wK, const gsl_matrix *W, gsl_matrix *A, gsl_matrix *K, gsl_matrix *S, gsl_matrix *Svar, gsl_vector *ns);
 	void WriteVector (const gsl_vector *q, const gsl_vector *s, const size_t n_total, const string suffix);
 	void WriteVar (const string suffix);
 	void WriteMatrix (const gsl_matrix *matrix_U, const string suffix);
 	void WriteVector (const gsl_vector *vector_D, const string suffix);
 	void CopyRead (gsl_vector *log_N);
+	void ObtainWeight (const set<string> &setSnps_beta, map<string, double> &mapRS2wK);
+	void UpdateWeight (const size_t pve_flag, const map<string, double> &mapRS2wK, const size_t ni_test, const gsl_vector *ns, map<string, double> &mapRS2wA);
+	void UpdateSNPnZ (const map<string, double> &mapRS2wA, const map<string, string> &mapRS2A1, const map<string, double> &mapRS2z, gsl_vector *w, gsl_vector *z, vector<size_t> &vec_cat);
+	void UpdateSNP (const map<string, double> &mapRS2wA);
 };
 
 

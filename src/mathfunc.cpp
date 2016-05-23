@@ -40,6 +40,7 @@
 #include "Eigen/Dense"
 
 #include "lapack.h"
+#include "eigenlib.h"
 
 #ifdef FORCE_FLOAT
 #include "mathfunc_float.h"
@@ -247,6 +248,7 @@ void StandardizeVector (gsl_vector *y)
 //calculate UtX
 void CalcUtX (const gsl_matrix *U, gsl_matrix *UtX)
 {
+  /*
 	gsl_vector *Utx_vec=gsl_vector_alloc (UtX->size1);
 	for (size_t i=0; i<UtX->size2; ++i) {
 		gsl_vector_view UtX_col=gsl_matrix_column (UtX, i);
@@ -254,17 +256,28 @@ void CalcUtX (const gsl_matrix *U, gsl_matrix *UtX)
 		gsl_vector_memcpy (&UtX_col.vector, Utx_vec);
 	}
 	gsl_vector_free (Utx_vec);
+  */
+
+	gsl_matrix *X=gsl_matrix_alloc (UtX->size1, UtX->size2);
+	gsl_matrix_memcpy (X, UtX);
+	eigenlib_dgemm ("T", "N", 1.0, U, X, 0.0, UtX);
+	gsl_matrix_free (X);
+
 	return;
 }
 
 
 void CalcUtX (const gsl_matrix *U, const gsl_matrix *X, gsl_matrix *UtX)
 {
+  /*
 	for (size_t i=0; i<X->size2; ++i) {
 		gsl_vector_const_view X_col=gsl_matrix_const_column (X, i);
 		gsl_vector_view UtX_col=gsl_matrix_column (UtX, i);
 		gsl_blas_dgemv (CblasTrans, 1.0, U, &X_col.vector, 0.0, &UtX_col.vector);
 	}
+  */
+	eigenlib_dgemm ("T", "N", 1.0, U, X, 0.0, UtX);
+
 	return;
 }
 
@@ -329,7 +342,8 @@ double CalcHWE (const size_t n_hom1, const size_t n_hom2, const size_t n_ab)
 		het_probs[i] = 0.0;
 
 	/* start at midpoint */
-		int mid = rare_copies * (2 * genotypes - rare_copies) / (2 * genotypes);
+	//XZ modified to add (long int)
+	int mid = ((long int)rare_copies * (2 * (long int)genotypes - (long int)rare_copies)) / (2 * (long int)genotypes);
 
 	/* check to ensure that midpoint and rare alleles have same parity */
 		if ((rare_copies & 1) ^ (mid & 1))
@@ -390,7 +404,7 @@ double CalcHWE (const size_t n_hom1, const size_t n_hom2, const size_t n_ab)
 			p_hwe += het_probs[i];
 		}
 
-	p_hwe = p_hwe > 1.0 ? 1.0 : p_hwe;
+		p_hwe = p_hwe > 1.0 ? 1.0 : p_hwe;
 
 	free(het_probs);
 
