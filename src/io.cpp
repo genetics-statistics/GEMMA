@@ -36,6 +36,7 @@
 #include "gsl/gsl_blas.h"
 #include "gsl/gsl_cdf.h"
 
+#include "utils.h"
 #include "lapack.h"
 #include "gzstream.h"
 #include "mathfunc.h"
@@ -3846,20 +3847,6 @@ void ReadFile_mstudy (const string &file_mstudy, gsl_matrix *Vq_mat, gsl_vector 
   return;
 }
 
-
-//copied from lmm.cpp; is used in the following function compKtoV
-//map a number 1-(n_cvt+2) to an index between 0 and [(n_c+2)^2+(n_c+2)]/2-1
-size_t GetabIndex (const size_t a, const size_t b, const size_t n_cvt) {
-	if (a>n_cvt+2 || b>n_cvt+2 || a<=0 || b<=0) {cout<<"error in GetabIndex."<<endl; return 0;}
-	size_t index;
-	size_t l, h;
-	if (b>a) {l=a; h=b;} else {l=b; h=a;}
-
-	size_t n=n_cvt+2;
-	index=(2*n-l+2)*(l-1)/2+h-l;
-
-	return index;
-}
 
 //read reference file
 void ReadFile_mref (const string &file_mref, gsl_matrix *S_mat, gsl_matrix *Svar_mat, gsl_vector *s_vec, size_t &ni)
