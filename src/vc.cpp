@@ -454,7 +454,7 @@ int LogRL_dev12 (const gsl_vector *log_sigma2, void *params, gsl_vector *dev1, g
 
 
 //read header to determine which column contains which item
-bool ReadHeader (const string &line, HEADER &header)
+bool ReadHeader_vc (const string &line, HEADER &header)
 {
   string rs_ptr[]={"rs","RS","snp","SNP","snps","SNPS","snpid","SNPID","rsid","RSID"};
   set<string> rs_set(rs_ptr, rs_ptr+10);
@@ -587,7 +587,7 @@ void ReadFile_cor (const string &file_cor, const set<string> &setSnps, vector<st
 
   //header
   !safeGetline(infile, line).eof();
-  ReadHeader (line, header);
+  ReadHeader_vc (line, header);
 
   if (header.n_col==0 ) {
     if (header.nobs_col==0 && header.nmis_col==0) {
@@ -701,7 +701,7 @@ void ReadFile_beta (const bool flag_priorscale, const string &file_beta, const m
   //read header
   HEADER header;
   !safeGetline(infile, line).eof();
-  ReadHeader (line, header);
+  ReadHeader_vc (line, header);
 
   if (header.n_col==0 ) {
     if (header.nobs_col==0 && header.nmis_col==0) {
@@ -870,7 +870,7 @@ void ReadFile_cor (const string &file_cor, const vector<string> &vec_rs, const v
   HEADER header;
 
   !safeGetline(infile, line).eof();
-  ReadHeader (line, header);
+  ReadHeader_vc (line, header);
 
   while (!safeGetline(infile, line).eof()) {
     //do not read cor values this time; upto col_n-1
