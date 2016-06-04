@@ -88,9 +88,11 @@ else
   CPPFLAGS += -m64
 endif
 
+ifneq ($(SYS), MAC)
 ifdef FORCE_DYNAMIC
 else
   CPPFLAGS += -static
+endif
 endif
 
 
