@@ -1243,7 +1243,11 @@ void LMM::AnalyzeBimbam (const gsl_matrix *U, const gsl_vector *eval, const gsl_
 //	}
 
 	//start reading genotypes and analyze
-	size_t c=0;
+	size_t c=0, t_last=0;
+	for (size_t t=0; t<indicator_snp.size(); ++t) {
+	  if (indicator_snp[t]==0) {continue;}
+	  t_last++;
+	}
 	for (size_t t=0; t<indicator_snp.size(); ++t) {
 //		if (t>1) {break;}
 		!safeGetline(infile, line).eof();
@@ -1275,7 +1279,7 @@ void LMM::AnalyzeBimbam (const gsl_matrix *U, const gsl_vector *eval, const gsl_
 
 		for (size_t i=0; i<ni_test; ++i) {
 			if (gsl_vector_get (x_miss, i)==0) {gsl_vector_set(x, i, x_mean);}
-			geno=gsl_vector_get(x, i);
+			//geno=gsl_vector_get(x, i);
 			//if (x_mean>1) {
 			//	gsl_vector_set(x, i, 2-geno);
 			//}
@@ -1292,7 +1296,7 @@ void LMM::AnalyzeBimbam (const gsl_matrix *U, const gsl_vector *eval, const gsl_
 		gsl_vector_memcpy (&Xlarge_col.vector, x);
 		c++;
 
-		if (c%msize==0 || t==indicator_snp.size()-1 ) {
+		if (c%msize==0 || c==t_last) {
 		  size_t l=0;
 		  if (c%msize==0) {l=msize;} else {l=c%msize;}
 
@@ -1332,12 +1336,14 @@ void LMM::AnalyzeBimbam (const gsl_matrix *U, const gsl_vector *eval, const gsl_
 		      p_lrt=gsl_cdf_chisq_Q (2.0*(logl_H1-logl_mle_H0), 1);
 		    }
 
+		    //if (p_wald<0) {cout<<t<<"\t"<<i<<"\t"<<l<<endl;}
 		    //if (x_mean>1) {beta*=-1;}
 
 		    time_opt+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
 
 		    //store summary data
 		    SUMSTAT SNPs={beta, se, lambda_remle, lambda_mle, p_wald, p_lrt, p_score};
+
 		    sumStat.push_back(SNPs);
 		  }
 		}
@@ -1412,7 +1418,11 @@ void LMM::AnalyzePlink (const gsl_matrix *U, const gsl_vector *eval, const gsl_m
 		b=ch[0];
 	}
 
-	size_t c=0;
+	size_t c=0, t_last=0;
+	for (size_t t=0; t<snpInfo.size(); ++t) {
+	  if (indicator_snp[t]==0) {continue;}
+	  t_last++;
+	}
 	for (vector<SNPINFO>::size_type t=0; t<snpInfo.size(); ++t) {
 		if (t%d_pace==0 || t==snpInfo.size()-1) {ProgressBar ("Reading SNPs  ", t, snpInfo.size()-1);}
 		if (indicator_snp[t]==0) {continue;}
@@ -1463,7 +1473,7 @@ void LMM::AnalyzePlink (const gsl_matrix *U, const gsl_vector *eval, const gsl_m
 		gsl_vector_memcpy (&Xlarge_col.vector, x);
 		c++;
 
-		if (c%msize==0 || t==indicator_snp.size()-1 ) {
+		if (c%msize==0 || c==t_last) {
 		  size_t l=0;
 		  if (c%msize==0) {l=msize;} else {l=c%msize;}
 
@@ -1612,12 +1622,17 @@ void LMM::Analyzebgen (const gsl_matrix *U, const gsl_vector *eval, const gsl_ma
 
 
 	//start reading genotypes and analyze
-	size_t c=0;
+	size_t c=0, t_last=0;
+	for (size_t t=0; t<indicator_snp.size(); ++t) {
+	  if (indicator_snp[t]==0) {continue;}
+	  t_last++;
+	}
 	for (size_t t=0; t<indicator_snp.size(); ++t)
 	{
 
 //		if (t>1) {break;}
 		if (t%d_pace==0 || t==(ns_total-1)) {ProgressBar ("Reading SNPs  ", t, ns_total-1);}
+		if (indicator_snp[t]==0) {continue;}
 		// read SNP header
 		id.clear();
 		rs.clear();
@@ -1737,7 +1752,7 @@ void LMM::Analyzebgen (const gsl_matrix *U, const gsl_vector *eval, const gsl_ma
 		gsl_vector_memcpy (&Xlarge_col.vector, x);
 		c++;
 
-		if (c%msize==0 || t==indicator_snp.size()-1 ) {
+		if (c%msize==0 || c==t_last ) {
 		  size_t l=0;
 		  if (c%msize==0) {l=msize;} else {l=c%msize;}
 

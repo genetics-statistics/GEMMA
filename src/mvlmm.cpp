@@ -3185,12 +3185,17 @@ void MVLMM::Analyzebgen (const gsl_matrix *U, const gsl_vector *eval, const gsl_
 
 
 	//start reading genotypes and analyze
-	size_t csnp=0;
+	size_t csnp=0, t_last=0;
+	for (size_t t=0; t<indicator_snp.size(); ++t) {
+	  if (indicator_snp[t]==0) {continue;}
+	  t_last++;
+	}
 	for (size_t t=0; t<indicator_snp.size(); ++t) {
 
 
 //		if (t>1) {break;}
 		if (t%d_pace==0 || t==(ns_total-1)) {ProgressBar ("Reading SNPs  ", t, ns_total-1);}
+		if (indicator_snp[t]==0) {continue;}
 		// read SNP header
 		id.clear();
 		rs.clear();
@@ -3293,7 +3298,7 @@ void MVLMM::Analyzebgen (const gsl_matrix *U, const gsl_vector *eval, const gsl_
 
 		for (size_t i=0; i<ni_test; ++i) {
 			if (gsl_vector_get (x_miss, i)==0) {gsl_vector_set(x, i, x_mean);}
-			geno=gsl_vector_get(x, i);
+			//geno=gsl_vector_get(x, i);
 			//if (x_mean>1) {
 			//gsl_vector_set(x, i, 2-geno);
 			//}
@@ -3310,7 +3315,7 @@ void MVLMM::Analyzebgen (const gsl_matrix *U, const gsl_vector *eval, const gsl_
 		gsl_vector_memcpy (&Xlarge_col.vector, x);
 		csnp++;
 
-		if (csnp%msize==0 || t==indicator_snp.size()-1 ) {
+		if (csnp%msize==0 || c==t_last ) {
 		  size_t l=0;
 		  if (csnp%msize==0) {l=msize;} else {l=csnp%msize;}
 
@@ -3656,7 +3661,11 @@ void MVLMM::AnalyzeBimbam (const gsl_matrix *U, const gsl_vector *eval, const gs
 	gsl_matrix_memcpy (B_null, B);
 
 	//start reading genotypes and analyze
-	size_t csnp=0;
+	size_t csnp=0, t_last=0;
+	for (size_t t=0; t<indicator_snp.size(); ++t) {
+	  if (indicator_snp[t]==0) {continue;}
+	  t_last++;
+	}
 	for (size_t t=0; t<indicator_snp.size(); ++t) {
 		//if (t>=1) {break;}
 		!safeGetline(infile, line).eof();
@@ -3705,7 +3714,7 @@ void MVLMM::AnalyzeBimbam (const gsl_matrix *U, const gsl_vector *eval, const gs
 		gsl_vector_memcpy (&Xlarge_col.vector, x);
 		csnp++;
 
-		if (csnp%msize==0 || t==indicator_snp.size()-1 ) {
+		if (csnp%msize==0 || c==t_last ) {
 		  size_t l=0;
 		  if (csnp%msize==0) {l=msize;} else {l=csnp%msize;}
 
@@ -4068,7 +4077,11 @@ void MVLMM::AnalyzePlink (const gsl_matrix *U, const gsl_vector *eval, const gsl
 		b=ch[0];
 	}
 
-	size_t csnp=0;
+	size_t csnp=0, t_last=0;
+	for (size_t t=0; t<indicator_snp.size(); ++t) {
+	  if (indicator_snp[t]==0) {continue;}
+	  t_last++;
+	}
 	for (vector<SNPINFO>::size_type t=0; t<snpInfo.size(); ++t) {
 		if (t%d_pace==0 || t==snpInfo.size()-1) {ProgressBar ("Reading SNPs  ", t, snpInfo.size()-1);}
 		if (indicator_snp[t]==0) {continue;}
@@ -4135,7 +4148,7 @@ void MVLMM::AnalyzePlink (const gsl_matrix *U, const gsl_vector *eval, const gsl
 		gsl_vector_memcpy (&Xlarge_col.vector, x);
 		csnp++;
 
-		if (csnp%msize==0 || t==indicator_snp.size()-1 ) {
+		if (csnp%msize==0 || c==t_last ) {
 		  size_t l=0;
 		  if (csnp%msize==0) {l=msize;} else {l=csnp%msize;}
 
