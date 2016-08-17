@@ -42,7 +42,6 @@
 #include "lmm_float.h"  //for LMM class, and functions CalcLambda, CalcPve, CalcVgVe
 #include "mvlmm_float.h"  //for MVLMM class
 #include "prdt_float.h"	//for PRDT class
-#include "varcov_float.h"  //for MVLMM class
 #include "mathfunc_float.h"	//for a few functions
 #else
 #include "io.h"
@@ -53,7 +52,6 @@
 #include "lmm.h"
 #include "mvlmm.h"
 #include "prdt.h"
-#include "varcov.h"
 #include "mathfunc.h"
 #endif
 
@@ -1349,6 +1347,7 @@ void GEMMA::BatchRun (PARAM &cPar)
 		gsl_matrix_free (G);
 	}
 
+	/*
 	//Compute the LDSC weights (not implemented yet)
 	if (cPar.a_mode==72) {
 		cout<<"Calculating Weights ... "<<endl;
@@ -1364,7 +1363,7 @@ void GEMMA::BatchRun (PARAM &cPar)
 
 		cVarcov.CopyToParam(cPar);
 	}
-
+	*/
 
 	//Compute the S matrix (and its variance), that is used for variance component estimation using summary statistics
 	if (cPar.a_mode==25 || cPar.a_mode==26) {
@@ -1472,7 +1471,7 @@ void GEMMA::BatchRun (PARAM &cPar)
 	  gsl_vector_free (s);
 	}
 
-
+	/*
     //Calculate SNP covariance
 	if (cPar.a_mode==71) {
 	  VARCOV cVarcov;
@@ -1486,7 +1485,7 @@ void GEMMA::BatchRun (PARAM &cPar)
 
 	  cVarcov.CopyToParam(cPar);
 	}
-
+	*/
 
 	//LM
 	if (cPar.a_mode==51 || cPar.a_mode==52 || cPar.a_mode==53 || cPar.a_mode==54) {  //Fit LM
@@ -2400,7 +2399,7 @@ void GEMMA::BatchRun (PARAM &cPar)
 	}
 
 
-
+	/*
 	//LDR
 	if (cPar.a_mode==14) {
 		gsl_vector *y=gsl_vector_alloc (cPar.ni_test);
@@ -2428,7 +2427,7 @@ void GEMMA::BatchRun (PARAM &cPar)
 		gsl_matrix_free (W);
 		gsl_matrix_free (G);
 	}
-
+	*/
 	cPar.time_total=(clock()-time_begin)/(double(CLOCKS_PER_SEC)*60.0);
 
 	return;
