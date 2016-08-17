@@ -39,7 +39,6 @@
 #include "vc_float.h"
 #include "lm_float.h"  //for LM class
 #include "bslmm_float.h"  //for BSLMM class
-#include "ldr_float.h"  //for LDR class
 #include "lmm_float.h"  //for LMM class, and functions CalcLambda, CalcPve, CalcVgVe
 #include "mvlmm_float.h"  //for MVLMM class
 #include "prdt_float.h"	//for PRDT class
@@ -51,7 +50,6 @@
 #include "vc.h"
 #include "lm.h"
 #include "bslmm.h"
-#include "ldr.h"
 #include "lmm.h"
 #include "mvlmm.h"
 #include "prdt.h"
