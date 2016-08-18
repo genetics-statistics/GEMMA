@@ -31,6 +31,7 @@
 #include "gsl/gsl_linalg.h"
 #include "gsl/gsl_blas.h"
 
+#include "utils.h"
 #include "eigenlib.h"
 #include "mathfunc.h"
 
@@ -958,20 +959,6 @@ void compAKtoS (const gsl_matrix *A, const gsl_matrix *K, const size_t n_cvt, gs
 }
 
 
-
-//copied from lmm.cpp; is used in the following function compKtoV
-//map a number 1-(n_cvt+2) to an index between 0 and [(n_c+2)^2+(n_c+2)]/2-1
-size_t GetabIndex (const size_t a, const size_t b, const size_t n_cvt) {
-	if (a>n_cvt+2 || b>n_cvt+2 || a<=0 || b<=0) {cout<<"error in GetabIndex."<<endl; return 0;}
-	size_t index;
-	size_t l, h;
-	if (b>a) {l=a; h=b;} else {l=b; h=a;}
-
-	size_t n=n_cvt+2;
-	index=(2*n-l+2)*(l-1)/2+h-l;
-
-	return index;
-}
 
 //from an existing n by nd (centered) G matrix, compute the d+1 by d*(d-1)/2*(d+1) Q matrix
 //where inside i'th d+1 by d+1 matrix, each element is tr(KiKlKjKm)-r*tr(KmKiKl)-r*tr(KlKjKm)+r^2*tr(KlKm), where r=n/(n-1)
