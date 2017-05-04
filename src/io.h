@@ -79,7 +79,7 @@ bool CountFileLines (const string &file_input, size_t &n_lines);
 
 bool ReadFile_gene (const string &file_gene, vector<double> &vec_read, vector<SNPINFO> &snpInfo, size_t &ng_total);
 
-bool ReadHeader (const string &line, HEADER &header);
+bool ReadHeader_io (const string &line, HEADER &header);
 bool ReadFile_cat (const string &file_cat, map<string, size_t> &mapRS2cat, size_t &n_vc);
 bool ReadFile_mcat (const string &file_mcat, map<string, size_t> &mapRS2cat, size_t &n_vc);
 

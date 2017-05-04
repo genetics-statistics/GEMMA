@@ -42,6 +42,7 @@
 
 #include "logistic.h"
 #include "lapack.h"
+#include "io.h"
 
 #ifdef FORCE_FLOAT
 #include "param_float.h"
@@ -221,7 +222,7 @@ void ReadFile_cat (const string &file_cat, const vector<string> &vec_rs, gsl_mat
   //read header
   HEADER header;
   !safeGetline(infile, line).eof();
-  ReadHeader (line, header);
+  ReadHeader_io (line, header);
 
   //use the header to determine the number of categories
   kc=header.catc_col.size(); kd=header.catd_col.size();

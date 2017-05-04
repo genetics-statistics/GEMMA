@@ -32,7 +32,8 @@ CPP = g++
 CPPFLAGS = -F /System/Library/Frameworks -Wall -O3 \
   -I/usr/local/opt/gsl@1/include
 
-LIBS = -lgsl -lgslcblas -lz -L/usr/local/opt/gsl@1/lib
+LIBS = /usr/local/opt/gsl@1/lib/libgsl.a \
+       /usr/local/opt/gsl@1/lib/libgslcblas.a -lz
 
 OUTPUT = $(BIN_DIR)/gemma
 
@@ -57,8 +58,8 @@ ifdef FORCE_FLOAT
   SOURCES += $(SRC_DIR)/param_float.cpp $(SRC_DIR)/gemma_float.cpp $(SRC_DIR)/io_float.cpp $(SRC_DIR)/lm_float.cpp $(SRC_DIR)/vc_float.cpp $(SRC_DIR)/lmm_float.cpp $(SRC_DIR)/mvlmm_float.cpp $(SRC_DIR)/bslmm_float.cpp $(SRC_DIR)/prdt_float.cpp $(SRC_DIR)/mathfunc_float.cpp $(SRC_DIR)/gzstream.cpp $(SRC_DIR)/eigenlib.cpp
   HDR += $(SRC_DIR)/param_float.h $(SRC_DIR)/gemma_float.h $(SRC_DIR)/io_float.h $(SRC_DIR)/lm_float.h $(SRC_DIR)/lmm_float.h $(SRC_DIR)/vc_float.h $(SRC_DIR)/mvlmm_float.h $(SRC_DIR)/bslmm_float.h $(SRC_DIR)/prdt_float.h $(SRC_DIR)/mathfunc_float.h $(SRC_DIR)/gzstream.h $(SRC_DIR)/eigenlib.h
 else
-  SOURCES += $(SRC_DIR)/param.cpp $(SRC_DIR)/gemma.cpp $(SRC_DIR)/io.cpp $(SRC_DIR)/lm.cpp $(SRC_DIR)/lmm.cpp $(SRC_DIR)/vc.cpp $(SRC_DIR)/mvlmm.cpp $(SRC_DIR)/bslmm.cpp $(SRC_DIR)/prdt.cpp $(SRC_DIR)/mathfunc.cpp $(SRC_DIR)/gzstream.cpp $(SRC_DIR)/eigenlib.cpp
-  # HDR += $(SRC_DIR)/param.h $(SRC_DIR)/gemma.h $(SRC_DIR)/io.h $(SRC_DIR)/lm.h $(SRC_DIR)/lmm.h $(SRC_DIR)/vc.h $(SRC_DIR)/mvlmm.h $(SRC_DIR)/bslmm.h $(SRC_DIR)/prdt.h $(SRC_DIR)/mathfunc.h $(SRC_DIR)/gzstream.h $(SRC_DIR)/eigenlib.h
+  SOURCES += $(SRC_DIR)/param.cpp $(SRC_DIR)/gemma.cpp $(SRC_DIR)/io.cpp $(SRC_DIR)/lm.cpp $(SRC_DIR)/lmm.cpp $(SRC_DIR)/vc.cpp $(SRC_DIR)/mvlmm.cpp $(SRC_DIR)/bslmm.cpp $(SRC_DIR)/prdt.cpp $(SRC_DIR)/mathfunc.cpp $(SRC_DIR)/gzstream.cpp $(SRC_DIR)/eigenlib.cpp $(SRC_DIR)/ldr.cpp $(SRC_DIR)/bslmmdap.cpp $(SRC_DIR)/logistic.cpp $(SRC_DIR)/varcov.cpp
+  HDR += $(SRC_DIR)/param.h $(SRC_DIR)/gemma.h $(SRC_DIR)/io.h $(SRC_DIR)/lm.h $(SRC_DIR)/lmm.h $(SRC_DIR)/vc.h $(SRC_DIR)/mvlmm.h $(SRC_DIR)/bslmm.h $(SRC_DIR)/prdt.h $(SRC_DIR)/mathfunc.h $(SRC_DIR)/gzstream.h $(SRC_DIR)/eigenlib.h
 endif
 
 ifdef WITH_LAPACK
@@ -82,12 +83,6 @@ ifdef FORCE_32BIT
 else
   CPPFLAGS += -m64
 endif
-
-ifdef FORCE_DYNAMIC
-else
-  CPPFLAGS += -static
-endif
-
 
 # all
 OBJS = $(SOURCES:.cpp=.o)
