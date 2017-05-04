@@ -183,6 +183,30 @@ void LMM::WriteFiles ()
 	return;
 }
 
+
+
+
+
+
+
+
+
+
+
+//map a number 1-(n_cvt+2) to an index between 0 and [(n_c+2)^2+(n_c+2)]/2-1
+size_t GetabIndex (const size_t a, const size_t b, const size_t n_cvt) {
+	if (a>n_cvt+2 || b>n_cvt+2 || a<=0 || b<=0) {cout<<"error in GetabIndex."<<endl; return 0;}
+	size_t index;
+	size_t l, h;
+	if (b>a) {l=a; h=b;} else {l=b; h=a;}
+
+	size_t n=n_cvt+2;
+	index=(2*n-l+2)*(l-1)/2+h-l;
+
+	return index;
+}
+
+
 void CalcPab (const size_t n_cvt, const size_t e_mode, const gsl_vector *Hi_eval, const gsl_matrix *Uab, const gsl_vector *ab, gsl_matrix *Pab)
 {
 	size_t index_ab, index_aw, index_bw, index_ww;

@@ -39,9 +39,12 @@
 #include "vc_float.h"
 #include "lm_float.h"  //for LM class
 #include "bslmm_float.h"  //for BSLMM class
+#include "bslmmdap_float.h"  //for BSLMMDAP class
+#include "ldr_float.h"  //for LDR class
 #include "lmm_float.h"  //for LMM class, and functions CalcLambda, CalcPve, CalcVgVe
 #include "mvlmm_float.h"  //for MVLMM class
 #include "prdt_float.h"	//for PRDT class
+#include "varcov_float.h"  //for MVLMM class
 #include "mathfunc_float.h"	//for a few functions
 #else
 #include "io.h"
@@ -49,9 +52,12 @@
 #include "vc.h"
 #include "lm.h"
 #include "bslmm.h"
+#include "bslmmdap.h"
+#include "ldr.h"
 #include "lmm.h"
 #include "mvlmm.h"
 #include "prdt.h"
+#include "varcov.h"
 #include "mathfunc.h"
 #endif
 
@@ -365,6 +371,8 @@ void GEMMA::PrintHelp(size_t option)
 		cout<<"          options: 1: BSLMM"<<endl;
 		cout<<"                   2: standard ridge regression/GBLUP (no mcmc)"<<endl;
 		cout<<"                   3: probit BSLMM (requires 0/1 phenotypes)"<<endl;
+		cout<<"                   4: BSLMM with DAP for Hyper Parameter Estimation"<<endl;
+		cout<<"                   5: BSLMM with DAP for Fine Mapping"<<endl;
 
 		cout<<" -ldr	  [num]			 "<<" specify analysis options (default 1)."<<endl;
 		cout<<"          options: 1: LDR"<<endl;
@@ -433,7 +441,7 @@ void GEMMA::PrintHelp(size_t option)
 //gq: 27-28
 //eigen: 31-32
 //lmm: 1-5
-//bslmm: 11-13
+//bslmm: 11-15
 //predict: 41-43
 //lm: 51
 //vc: 61
@@ -576,12 +584,40 @@ void GEMMA::Assign(int argc, char ** argv, PARAM &cPar)
 			str.assign(argv[i]);
 			cPar.file_mcat=str;
 		}
+		else if (strcmp(argv[i], "-catc")==0) {
+			if(argv[i+1] == NULL || argv[i+1][0] == '-') {continue;}
+			++i;
+			str.clear();
+			str.assign(argv[i]);
+			cPar.file_catc=str;
+		}
+		else if (strcmp(argv[i], "-mcatc")==0) {
+			if(argv[i+1] == NULL || argv[i+1][0] == '-') {continue;}
+			++i;
+			str.clear();
+			str.assign(argv[i]);
+			cPar.file_mcatc=str;
+		}
 		else if (strcmp(argv[i], "-beta")==0) {
 			if(argv[i+1] == NULL || argv[i+1][0] == '-') {continue;}
 			++i;
 			str.clear();
 			str.assign(argv[i]);
 			cPar.file_beta=str;
+		}
+		else if (strcmp(argv[i], "-bf")==0) {
+			if(argv[i+1] == NULL || argv[i+1][0] == '-') {continue;}
+			++i;
+			str.clear();
+			str.assign(argv[i]);
+			cPar.file_bf=str;
+		}
+		else if (strcmp(argv[i], "-hyp")==0) {
+			if(argv[i+1] == NULL || argv[i+1][0] == '-') {continue;}
+			++i;
+			str.clear();
+			str.assign(argv[i]);
+			cPar.file_hyp=str;
 		}
 		else if (strcmp(argv[i], "-cor")==0) {
 			if(argv[i+1] == NULL || argv[i+1][0] == '-') {continue;}
@@ -920,6 +956,7 @@ void GEMMA::Assign(int argc, char ** argv, PARAM &cPar)
 			str.assign(argv[i]);
 			cPar.a_mode=10+atoi(str.c_str());
 		}
+		/*
 		else if (strcmp(argv[i], "-ldr")==0) {
 			if (cPar.a_mode!=0) {cPar.error=true; cout<<"error! only one of -gk -gs -eigen -vc -lm -lmm -bslmm -predict -calccor options is allowed."<<endl; break;}
 			if(argv[i+1] == NULL || argv[i+1][0] == '-') {cPar.a_mode=14; continue;}
@@ -928,6 +965,7 @@ void GEMMA::Assign(int argc, char ** argv, PARAM &cPar)
 			str.assign(argv[i]);
 			cPar.a_mode=13+atoi(str.c_str());
 		}
+		*/
 		else if (strcmp(argv[i], "-hmin")==0) {
 			if(argv[i+1] == NULL || argv[i+1][0] == '-') {continue;}
 			++i;
@@ -1347,7 +1385,6 @@ void GEMMA::BatchRun (PARAM &cPar)
 		gsl_matrix_free (G);
 	}
 
-	/*
 	//Compute the LDSC weights (not implemented yet)
 	if (cPar.a_mode==72) {
 		cout<<"Calculating Weights ... "<<endl;
@@ -1363,7 +1400,7 @@ void GEMMA::BatchRun (PARAM &cPar)
 
 		cVarcov.CopyToParam(cPar);
 	}
-	*/
+
 
 	//Compute the S matrix (and its variance), that is used for variance component estimation using summary statistics
 	if (cPar.a_mode==25 || cPar.a_mode==26) {
@@ -1471,7 +1508,7 @@ void GEMMA::BatchRun (PARAM &cPar)
 	  gsl_vector_free (s);
 	}
 
-	/*
+
     //Calculate SNP covariance
 	if (cPar.a_mode==71) {
 	  VARCOV cVarcov;
@@ -1485,7 +1522,7 @@ void GEMMA::BatchRun (PARAM &cPar)
 
 	  cVarcov.CopyToParam(cPar);
 	}
-	*/
+
 
 	//LM
 	if (cPar.a_mode==51 || cPar.a_mode==52 || cPar.a_mode==53 || cPar.a_mode==54) {  //Fit LM
@@ -1541,7 +1578,7 @@ void GEMMA::BatchRun (PARAM &cPar)
 	//REML approach only
 	//if file_kin or file_ku/kd is provided, then a_mode is changed to 5 already, in param.cpp
 	//for one phenotype only;
-	if (cPar.a_mode==61 || cPar.a_mode==62) {
+	if (cPar.a_mode==61 || cPar.a_mode==62 || cPar.a_mode==63) {
 	  if (!cPar.file_beta.empty() ) {
 	    //need to obtain a common set of SNPs between beta file and the genotype file; these are saved in mapRS2wA and mapRS2wK
 	    //normalize the weight in mapRS2wK to have an average of one; each element of mapRS2wA is 1
@@ -1866,8 +1903,10 @@ void GEMMA::BatchRun (PARAM &cPar)
 		    cVc.CopyFromParam(cPar);
 		    if (cPar.a_mode==61) {
 		      cVc.CalcVChe (G, W, &Y_col.vector);
-		    } else {
+		    } else if (cPar.a_mode==62) {
 		      cVc.CalcVCreml (cPar.noconstrain, G, W, &Y_col.vector);
+		    } else {
+		      cVc.CalcVCacl (G, W, &Y_col.vector);
 		    }
 		    cVc.CopyToParam(cPar);
 		    //obtain pve from sigma2
@@ -2310,7 +2349,7 @@ void GEMMA::BatchRun (PARAM &cPar)
 		//center y, even for case/control data
 		cPar.pheno_mean=CenterVector(y);
 
-		//run bslmm if rho==1
+		//run bvsr if rho==1
 		if (cPar.rho_min==1 && cPar.rho_max==1) {
 		  //read genotypes X (not UtX)
 		  cPar.ReadGenotypes (UtX, G, false);
@@ -2328,7 +2367,6 @@ void GEMMA::BatchRun (PARAM &cPar)
 		gsl_vector *eval=gsl_vector_alloc (y->size);
 		gsl_matrix *UtW=gsl_matrix_alloc (y->size, W->size2);
 		gsl_vector *Uty=gsl_vector_alloc (y->size);
-
 
 		//read relatedness matrix G
 		if (!(cPar.file_kin).empty()) {
@@ -2373,17 +2411,20 @@ void GEMMA::BatchRun (PARAM &cPar)
 		CalcUtX (U, UtX);
 		cPar.time_UtX=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
 
-		//perform BSLMM analysis
-		BSLMM cBslmm;
-		cBslmm.CopyFromParam(cPar);
-		time_start=clock();
-		if (cPar.a_mode==12) {  //ridge regression
-			cBslmm.RidgeR(U, UtX, Uty, eval, cPar.l_remle_null);
-		} else {	//Run MCMC
-			cBslmm.MCMC(U, UtX, Uty, eval, y);
+		//perform BSLMM or BSLMMDAP analysis
+		if (cPar.a_mode==11 || cPar.a_mode==12 || cPar.a_mode==13) {
+		  BSLMM cBslmm;
+		  cBslmm.CopyFromParam(cPar);
+		  time_start=clock();
+		  if (cPar.a_mode==12) {  //ridge regression
+		    cBslmm.RidgeR(U, UtX, Uty, eval, cPar.l_remle_null);
+		  } else {	//Run MCMC
+		    cBslmm.MCMC(U, UtX, Uty, eval, y);
+		  }
+		  cPar.time_opt=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
+		  cBslmm.CopyToParam(cPar);
+		} else {
 		}
-		cPar.time_opt=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
-		cBslmm.CopyToParam(cPar);
 
 		//release all matrices and vectors
 		gsl_matrix_free (G);
@@ -2399,8 +2440,157 @@ void GEMMA::BatchRun (PARAM &cPar)
 	}
 
 
+
+	//BSLMM-DAP
+	if (cPar.a_mode==14 || cPar.a_mode==15 || cPar.a_mode==16) {
+	  if (cPar.a_mode==14) {
+	    gsl_vector *y=gsl_vector_alloc (cPar.ni_test);
+	    gsl_matrix *W=gsl_matrix_alloc (y->size, cPar.n_cvt);
+	    gsl_matrix *G=gsl_matrix_alloc (y->size, y->size);
+	    gsl_matrix *UtX=gsl_matrix_alloc (y->size, cPar.ns_test);
+
+	    //set covariates matrix W and phenotype vector y
+	    //an intercept should be included in W,
+	    cPar.CopyCvtPhen (W, y, 0);
+
+	    //center y, even for case/control data
+	    cPar.pheno_mean=CenterVector(y);
+
+	    //run bvsr if rho==1
+	    if (cPar.rho_min==1 && cPar.rho_max==1) {
+	      //read genotypes X (not UtX)
+	      cPar.ReadGenotypes (UtX, G, false);
+
+	      //perform BSLMM analysis
+	      BSLMM cBslmm;
+	      cBslmm.CopyFromParam(cPar);
+	      time_start=clock();
+	      cBslmm.MCMC(UtX, y);
+	      cPar.time_opt=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
+	      cBslmm.CopyToParam(cPar);
+	      //else, if rho!=1
+	    } else {
+	      gsl_matrix *U=gsl_matrix_alloc (y->size, y->size);
+	      gsl_vector *eval=gsl_vector_alloc (y->size);
+	      gsl_matrix *UtW=gsl_matrix_alloc (y->size, W->size2);
+	      gsl_vector *Uty=gsl_vector_alloc (y->size);
+
+	      //read relatedness matrix G
+	      if (!(cPar.file_kin).empty()) {
+		cPar.ReadGenotypes (UtX, G, false);
+
+		//read relatedness matrix G
+		ReadFile_kin (cPar.file_kin, cPar.indicator_idv, cPar.mapID2num, cPar.k_mode, cPar.error, G);
+		if (cPar.error==true) {cout<<"error! fail to read kinship/relatedness file. "<<endl; return;}
+
+		//center matrix G
+		CenterMatrix (G);
+	      } else {
+		cPar.ReadGenotypes (UtX, G, true);
+	      }
+
+	      //eigen-decomposition and calculate trace_G
+	      cout<<"Start Eigen-Decomposition..."<<endl;
+	      time_start=clock();
+	      cPar.trace_G=EigenDecomp (G, U, eval, 0);
+	      cPar.trace_G=0.0;
+	      for (size_t i=0; i<eval->size; i++) {
+		if (gsl_vector_get (eval, i)<1e-10) {gsl_vector_set (eval, i, 0);}
+		cPar.trace_G+=gsl_vector_get (eval, i);
+	      }
+	      cPar.trace_G/=(double)eval->size;
+	      cPar.time_eigen=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
+
+	      //calculate UtW and Uty
+	      CalcUtX (U, W, UtW);
+	      CalcUtX (U, y, Uty);
+
+	      //calculate REMLE/MLE estimate and pve
+	      CalcLambda ('L', eval, UtW, Uty, cPar.l_min, cPar.l_max, cPar.n_region, cPar.l_mle_null, cPar.logl_mle_H0);
+	      CalcLambda ('R', eval, UtW, Uty, cPar.l_min, cPar.l_max, cPar.n_region, cPar.l_remle_null, cPar.logl_remle_H0);
+	      CalcPve (eval, UtW, Uty, cPar.l_remle_null, cPar.trace_G, cPar.pve_null, cPar.pve_se_null);
+
+	      cPar.PrintSummary();
+
+	      //Creat and calcualte UtX, use a large memory
+	      cout<<"Calculating UtX..."<<endl;
+	      time_start=clock();
+	      CalcUtX (U, UtX);
+	      cPar.time_UtX=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
+
+	      //perform analysis; assume X and y are already centered
+	      BSLMMDAP cBslmmDap;
+	      cBslmmDap.CopyFromParam(cPar);
+	      time_start=clock();
+	      cBslmmDap.DAP_CalcBF (U, UtX, Uty, eval, y);
+	      cPar.time_opt=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
+	      cBslmmDap.CopyToParam(cPar);
+
+	      //release all matrices and vectors
+	      gsl_matrix_free (G);
+	      gsl_matrix_free (U);
+	      gsl_matrix_free (UtW);
+	      gsl_vector_free (eval);
+	      gsl_vector_free (Uty);
+	    }
+
+	    gsl_matrix_free (W);
+	    gsl_vector_free (y);
+	    gsl_matrix_free (UtX);
+	  } else if (cPar.a_mode==15) {
+	    //perform EM algorithm and estimate parameters
+	    vector<string> vec_rs;
+	    vector<double> vec_sa2, vec_sb2, wab;
+	    vector<vector<vector<double> > > BF;
+
+	    //read hyp and bf files (functions defined in BSLMMDAP)
+	    ReadFile_hyb (cPar.file_hyp, vec_sa2, vec_sb2, wab);
+	    ReadFile_bf (cPar.file_bf, vec_rs, BF);
+
+	    cPar.ns_test=vec_rs.size();
+	    if (wab.size()!=BF[0][0].size()) {cout<<"error! hyp and bf files dimension do not match"<<endl;}
+
+	    //load annotations
+	    gsl_matrix *Ac;
+	    gsl_matrix_int *Ad;
+	    gsl_vector_int *dlevel;
+	    size_t kc, kd;
+	    if (!cPar.file_cat.empty()) {
+	      ReadFile_cat (cPar.file_cat, vec_rs, Ac, Ad, dlevel, kc, kd);
+	    } else {
+	      kc=0; kd=0;
+	    }
+	    
+	    cout<<"## number of blocks = "<<BF.size()<<endl;
+	    cout<<"## number of analyzed SNPs = "<<vec_rs.size()<<endl;
+	    cout<<"## grid size for hyperparameters = "<<wab.size()<<endl;
+	    cout<<"## number of continuous annotations = "<<kc<<endl;
+	    cout<<"## number of discrete annotations = "<<kd<<endl;
+
+	    //DAP_EstimateHyper (const size_t kc, const size_t kd, const vector<string> &vec_rs, const vector<double> &vec_sa2, const vector<double> &vec_sb2, const vector<double> &wab, const vector<vector<vector<double> > > &BF, gsl_matrix *Ac, gsl_matrix_int *Ad, gsl_vector_int *dlevel);
+
+	    //perform analysis
+	    BSLMMDAP cBslmmDap;
+	    cBslmmDap.CopyFromParam(cPar);
+	    time_start=clock();
+	    cBslmmDap.DAP_EstimateHyper (kc, kd, vec_rs, vec_sa2, vec_sb2, wab, BF, Ac, Ad, dlevel);
+	    cPar.time_opt=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
+	    cBslmmDap.CopyToParam(cPar);
+
+	    gsl_matrix_free(Ac);
+	    gsl_matrix_int_free(Ad);
+	    gsl_vector_int_free(dlevel);
+	  } else {
+	    //
+	  }
+
+	}
+
+
+
+
 	/*
-	//LDR
+	//LDR (change 14 to 16?)
 	if (cPar.a_mode==14) {
 		gsl_vector *y=gsl_vector_alloc (cPar.ni_test);
 		gsl_matrix *W=gsl_matrix_alloc (y->size, cPar.n_cvt);
@@ -2428,6 +2618,7 @@ void GEMMA::BatchRun (PARAM &cPar)
 		gsl_matrix_free (G);
 	}
 	*/
+
 	cPar.time_total=(clock()-time_begin)/(double(CLOCKS_PER_SEC)*60.0);
 
 	return;
@@ -2584,7 +2775,7 @@ void GEMMA::WriteLog (int argc, char ** argv, PARAM &cPar)
 	    outfile<<"## number of observed data = "<<cPar.np_obs<<endl;
 	    outfile<<"## number of missing data = "<<cPar.np_miss<<endl;
 	  }
-	  if (cPar.a_mode==25 || cPar.a_mode==26 || cPar.a_mode==27 || cPar.a_mode==28 || cPar.a_mode==61 || cPar.a_mode==62 || cPar.a_mode==66 || cPar.a_mode==67) {
+	  if (cPar.a_mode==25 || cPar.a_mode==26 || cPar.a_mode==27 || cPar.a_mode==28 || cPar.a_mode==61 || cPar.a_mode==62 || cPar.a_mode==63 || cPar.a_mode==66 || cPar.a_mode==67) {
 	    outfile<<"## number of variance components = "<<cPar.n_vc<<endl;
 	  }
 
@@ -2604,7 +2795,7 @@ void GEMMA::WriteLog (int argc, char ** argv, PARAM &cPar)
 	  }
 	}
 
-	if ( (cPar.a_mode==61 || cPar.a_mode==62) && cPar.file_cor.empty() && cPar.file_study.empty() && cPar.file_mstudy.empty() ) {
+	if ( (cPar.a_mode==61 || cPar.a_mode==62 || cPar.a_mode==63) && cPar.file_cor.empty() && cPar.file_study.empty() && cPar.file_mstudy.empty() ) {
 	    //	        outfile<<"## REMLE log-likelihood in the null model = "<<cPar.logl_remle_H0<<endl;
 	  if (cPar.n_ph==1) {
 	    outfile<<"## pve estimates = ";
@@ -2799,7 +2990,7 @@ void GEMMA::WriteLog (int argc, char ** argv, PARAM &cPar)
 	 */
 
 
-	if (cPar.a_mode==11 || cPar.a_mode==12 || cPar.a_mode==13) {
+	if (cPar.a_mode==11 || cPar.a_mode==12 || cPar.a_mode==13 || cPar.a_mode==14 || cPar.a_mode==16) {
 	  outfile<<"## estimated mean = "<<cPar.pheno_mean<<endl;
 	}
 
@@ -2818,13 +3009,13 @@ void GEMMA::WriteLog (int argc, char ** argv, PARAM &cPar)
 	outfile<<"## Computation Time:"<<endl;
 	outfile<<"## total computation time = "<<cPar.time_total<<" min "<<endl;
 	outfile<<"## computation time break down: "<<endl;
-	if (cPar.a_mode==21 || cPar.a_mode==22 || cPar.a_mode==11 || cPar.a_mode==13) {
+	if (cPar.a_mode==21 || cPar.a_mode==22 || cPar.a_mode==11 || cPar.a_mode==13 || cPar.a_mode==14 || cPar.a_mode==16) {
 		outfile<<"##      time on calculating relatedness matrix = "<<cPar.time_G<<" min "<<endl;
 	}
 	if (cPar.a_mode==31) {
 		outfile<<"##      time on eigen-decomposition = "<<cPar.time_eigen<<" min "<<endl;
 	}
-	if (cPar.a_mode==1 || cPar.a_mode==2 || cPar.a_mode==3 || cPar.a_mode==4 || cPar.a_mode==5 || cPar.a_mode==11 || cPar.a_mode==12 || cPar.a_mode==13) {
+	if (cPar.a_mode==1 || cPar.a_mode==2 || cPar.a_mode==3 || cPar.a_mode==4 || cPar.a_mode==5 || cPar.a_mode==11 || cPar.a_mode==12 || cPar.a_mode==13 || cPar.a_mode==14 || cPar.a_mode==16) {
 		outfile<<"##      time on eigen-decomposition = "<<cPar.time_eigen<<" min "<<endl;
 		outfile<<"##      time on calculating UtX = "<<cPar.time_UtX<<" min "<<endl;
 	}

@@ -165,6 +165,33 @@ void CenterMatrix (gsl_matrix *G, const gsl_matrix *W)
 }
 
 
+//standardize the matrix G such that all diagonal elements = 1
+void StandardizeMatrix (gsl_matrix *G)
+{
+	double d=0.0;
+	vector<double> vec_d;
+
+	for (size_t i=0; i<G->size1; ++i) {
+	  vec_d.push_back(gsl_matrix_get(G, i, i));
+	}
+	for (size_t i=0; i<G->size1; ++i) {
+	  for (size_t j=i; j<G->size2; ++j) {
+	    if (j==i) {
+	      gsl_matrix_set(G, i, j, 1);
+	    } else {
+	      d=gsl_matrix_get(G, i, j);
+	      d/=sqrt(vec_d[i]*vec_d[j]);
+	      gsl_matrix_set(G, i, j, d);
+	      gsl_matrix_set(G, j, i, d);
+	    }
+	  }
+	}
+
+	return;
+}
+
+
+
 //scale the matrix G such that the mean diagonal = 1
 double ScaleMatrix (gsl_matrix *G)
 {

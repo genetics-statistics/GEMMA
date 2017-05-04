@@ -109,6 +109,8 @@ public:
     size_t ws_col;
     size_t cor_col;
     size_t coln;//number of columns
+    set<size_t> catc_col;
+    set<size_t> catd_col;
 };
 
 
@@ -129,6 +131,7 @@ public:
 	string file_gxe;		//optional
 	string file_cvt;		//optional
 	string file_cat, file_mcat;
+	string file_catc, file_mcatc;
 	string file_var;
 	string file_beta;
 	string file_cor;
@@ -138,6 +141,7 @@ public:
 	string file_ref, file_mref;
 	string file_weight, file_wsnp, file_wcat;
 	string file_out;
+	string file_bf, file_hyp;
 	string path_out;
 
 
@@ -194,6 +198,7 @@ public:
 	double h_min, h_max, h_scale;			//priors for h
 	double rho_min, rho_max, rho_scale;		//priors for rho
 	double logp_min, logp_max, logp_scale;		//priors for log(pi)
+	size_t h_ngrid, rho_ngrid;
 	size_t s_min, s_max;			//minimum and maximum number of gammas
 	size_t w_step;					//number of warm up/burn in iterations
 	size_t s_step;					//number of sampling iterations
@@ -225,6 +230,7 @@ public:
 	size_t ni_subsample;            //number of subsampled individuals
 	//size_t ni_total_ref, ns_total_ref, ns_pair;//max number of individuals, number of snps and number of snp pairs in the reference panel
 	size_t n_cvt;			//number of covariates
+	size_t n_cat;			//number of continuous categories
 	size_t n_ph;			//number of phenotypes
 	size_t n_vc;			//number of variance components (including the diagonal matrix)
 	double time_total;		//record total time
@@ -262,6 +268,7 @@ public:
 	map<string, double> mapRS2cM;		//map rs# to cM
 	map<string, double> mapRS2est;			//map rs# to parameters
 	map<string, size_t> mapRS2cat;          //map rs# to category number
+	map<string, vector<double> > mapRS2catc;          //map rs# to continuous categories
 	map<string, double> mapRS2wsnp;          //map rs# to snp weights
 	map<string, vector<double> > mapRS2wcat;          //map rs# to snp cat weights
 
@@ -281,6 +288,7 @@ public:
 	void ReadGenotypes (vector<vector<unsigned char> > &Xt, gsl_matrix *K, const bool calc_K);
 	void CheckCvt ();
 	void CopyCvt (gsl_matrix *W);
+	void CopyA (size_t flag, gsl_matrix *A);
 	void CopyGxe (gsl_vector *gxe);
 	void CopyWeight (gsl_vector *w);
 	void ProcessCvtPhen();
@@ -299,7 +307,6 @@ public:
 	void UpdateSNP (const map<string, double> &mapRS2wA);
 };
 
-size_t GetabIndex (const size_t a, const size_t b, const size_t n_cvt);
-  
+
 #endif
 

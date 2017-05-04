@@ -47,9 +47,10 @@
 #include "io.h"
 #endif
 
+
 using namespace std;
 
-bool ReadHeader_io (const string &line, HEADER &header);
+
 
 //Print process bar
 void ProgressBar (string str, double p, double total)
@@ -180,7 +181,7 @@ bool ReadFile_snps_header (const string &file_snps, set<string> &setSnps)
 	//read header
 	HEADER header;
 	!safeGetline(infile, line).eof();
-	ReadHeader_io (line, header);
+	ReadHeader (line, header);
 
 	if (header.rs_col==0 && (header.chr_col==0 || header.pos_col==0) ) {
 	  cout<<"missing rs id in the hearder"<<endl;
@@ -2500,7 +2501,7 @@ bool bgenKin (const string &file_oxford, vector<int> &indicator_snp, const int k
 
 
 //read header to determine which column contains which item
-bool ReadHeader_io (const string &line, HEADER &header)
+bool ReadHeader (const string &line, HEADER &header)
 {
   string rs_ptr[]={"rs","RS","snp","SNP","snps","SNPS","snpid","SNPID","rsid","RSID","MarkerName"};
   set<string> rs_set(rs_ptr, rs_ptr+11);
@@ -2594,8 +2595,17 @@ bool ReadHeader_io (const string &line, HEADER &header)
       if (header.af_col==0) {header.af_col=header.coln+1;} else {cout<<"error! more than two af columns in the file."<<endl; n_error++;}
     } else if (cor_set.count(type)!=0) {
       if (header.cor_col==0) {header.cor_col=header.coln+1;} else {cout<<"error! more than two cor columns in the file."<<endl; n_error++;}
-    } else {}
-
+    } else {
+      string str = ch_ptr;
+      string cat = str.substr(str.size()-2, 2);
+      // continuous
+      if(cat == "_c" || cat =="_C"){
+	header.catc_col.insert(header.coln+1);
+      } else { //discrete
+	header.catd_col.insert(header.coln+1);
+      }
+    }
+    
     ch_ptr=strtok (NULL, " , \t");
     header.coln++;
   }
@@ -2635,7 +2645,7 @@ bool ReadFile_cat (const string &file_cat, map<string, size_t> &mapRS2cat, size_
   //read header
   HEADER header;
   !safeGetline(infile, line).eof();
-  ReadHeader_io (line, header);
+  ReadHeader (line, header);
 
   //use the header to count the number of categories
   n_vc=header.coln;
@@ -2713,6 +2723,118 @@ bool ReadFile_mcat (const string &file_mcat, map<string, size_t> &mapRS2cat, siz
 
   return true;
 }
+
+
+
+
+
+/*
+//read the continuous category file, record mapR2catc
+bool ReadFile_catc (const string &file_cat, map<string, vector<double> > &mapRS2catc, size_t &n_cat)
+{
+  mapRS2catc.clear();
+
+  igzstream infile (file_cat.c_str(), igzstream::in);
+  if (!infile) {cout<<"error! fail to open category file: "<<file_cat<<endl; return false;}
+
+  string line;
+  char *ch_ptr;
+
+  string rs, chr, a1, a0, pos, cm;
+  size_t i_cat;// ns_vc=0;
+
+  //read header
+  HEADER header;
+  !safeGetline(infile, line).eof();
+  ReadHeader (line, header);
+
+  //use the header to count the number of categories
+  n_cat=header.coln;
+  if (header.rs_col!=0) {n_cat--;}
+  if (header.chr_col!=0) {n_cat--;}
+  if (header.pos_col!=0) {n_cat--;}
+  if (header.cm_col!=0) {n_cat--;}
+  if (header.a1_col!=0) {n_cat--;}
+  if (header.a0_col!=0) {n_cat--;}
+
+  //set up continous category
+  vector<double> catc;
+  for (size_t i=0; i<n_cat; i++) {
+    catc.push_back(0);
+  }
+
+  //read the following lines to record mapRS2cat
+  while (!safeGetline(infile, line).eof()) {
+    ch_ptr=strtok ((char *)line.c_str(), " , \t");
+
+    i_cat=0;
+    if (header.rs_col==0) {
+      rs=chr+":"+pos;
+    }
+
+    for (size_t i=0; i<header.coln; i++) {
+      if (header.rs_col!=0 && header.rs_col==i+1) {
+	rs=ch_ptr;
+      } else if (header.chr_col!=0 && header.chr_col==i+1) {
+	chr=ch_ptr;
+      } else if (header.pos_col!=0 && header.pos_col==i+1) {
+	pos=ch_ptr;
+      } else if (header.cm_col!=0 && header.cm_col==i+1) {
+	cm=ch_ptr;
+      } else if (header.a1_col!=0 && header.a1_col==i+1) {
+	a1=ch_ptr;
+      } else if (header.a0_col!=0 && header.a0_col==i+1) {
+	a0=ch_ptr;
+      } else {
+	catc[i_cat]=atof(ch_ptr);
+	i_cat++;
+      }
+
+      ch_ptr=strtok (NULL, " , \t");
+    }
+
+    if (mapRS2catc.count(rs)==0) {mapRS2catc[rs]=catc;}
+
+    //if (mapRS2cat.count(rs)==0) {mapRS2cat[rs]=n_vc+1; ns_vc++;}
+  }
+
+  //if (ns_vc>0) {n_vc++;}
+
+  infile.clear();
+  infile.close();
+
+  return true;
+}
+
+
+
+
+bool ReadFile_mcatc (const string &file_mcat, map<string, vector<double> > &mapRS2catc, size_t &n_cat)
+{
+  mapRS2catc.clear();
+
+  igzstream infile (file_mcat.c_str(), igzstream::in);
+  if (!infile) {cout<<"error! fail to open mcategory file: "<<file_mcat<<endl; return false;}
+
+  string file_name;
+  map<string, vector<double> > mapRS2catc_tmp;
+  size_t n_cat_tmp, t=0;
+
+  while (!safeGetline(infile, file_name).eof()) {
+    mapRS2catc_tmp.clear();
+    ReadFile_catc (file_name, mapRS2catc_tmp, n_cat_tmp);
+    mapRS2catc.insert(mapRS2catc_tmp.begin(), mapRS2catc_tmp.end());
+    if (t==0) {n_cat=n_cat_tmp;}
+    if (n_cat!=n_cat_tmp) {cout<<"number of category differs in different mcatc files."<<endl;;}
+
+    t++;
+  }
+
+  return true;
+}
+*/
+
+
 
 
 //read bimbam mean genotype file and calculate kinship matrix; this time, the kinship matrix is not centered, and can contain multiple K matrix
@@ -3208,7 +3330,7 @@ bool ReadFile_wsnp (const string &file_wcat, const size_t n_vc, map<string, vect
   //read header
   HEADER header;
   !safeGetline(infile, line).eof();
-  ReadHeader_io (line, header);
+  ReadHeader (line, header);
 
   while (!safeGetline(infile, line).eof()) {
     if (isBlankLine(line)) {continue;}
@@ -3281,7 +3403,7 @@ void ReadFile_beta (const string &file_beta, const map<string, size_t> &mapRS2ca
   //read header
   HEADER header;
   !safeGetline(infile, line).eof();
-  ReadHeader_io (line, header);
+  ReadHeader (line, header);
 
   if (header.n_col==0 ) {
     if ( (header.nobs_col==0 && header.nmis_col==0) && (header.ncase_col==0 && header.ncontrol_col==0) ) {
@@ -3412,7 +3534,7 @@ void ReadFile_beta (const string &file_beta, const map<string, double> &mapRS2wA
   //read header
   HEADER header;
   !safeGetline(infile, line).eof();
-  ReadHeader_io (line, header);
+  ReadHeader (line, header);
 
   if (header.n_col==0 ) {
     if ( (header.nobs_col==0 && header.nmis_col==0) && (header.ncase_col==0 && header.ncontrol_col==0) ) {
@@ -3500,7 +3622,6 @@ void ReadFile_beta (const string &file_beta, const map<string, double> &mapRS2wA
 
   return;
 }
-
 
 
 
@@ -3843,6 +3964,21 @@ void ReadFile_mstudy (const string &file_mstudy, gsl_matrix *Vq_mat, gsl_vector 
   gsl_vector_free(s);
 
   return;
+}
+
+
+//copied from lmm.cpp; is used in the following function compKtoV
+//map a number 1-(n_cvt+2) to an index between 0 and [(n_c+2)^2+(n_c+2)]/2-1
+size_t GetabIndex (const size_t a, const size_t b, const size_t n_cvt) {
+	if (a>n_cvt+2 || b>n_cvt+2 || a<=0 || b<=0) {cout<<"error in GetabIndex."<<endl; return 0;}
+	size_t index;
+	size_t l, h;
+	if (b>a) {l=a; h=b;} else {l=b; h=a;}
+
+	size_t n=n_cvt+2;
+	index=(2*n-l+2)*(l-1)/2+h-l;
+
+	return index;
 }
 
 //read reference file

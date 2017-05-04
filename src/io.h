@@ -83,6 +83,9 @@ bool ReadHeader (const string &line, HEADER &header);
 bool ReadFile_cat (const string &file_cat, map<string, size_t> &mapRS2cat, size_t &n_vc);
 bool ReadFile_mcat (const string &file_mcat, map<string, size_t> &mapRS2cat, size_t &n_vc);
 
+bool ReadFile_catc (const string &file_cat, map<string, vector<double> > &mapRS2catc, size_t &n_cat);
+bool ReadFile_mcatc (const string &file_mcat, map<string, vector<double> > &mapRS2catc, size_t &n_cat);
+
 bool BimbamKin (const string &file_geno, const int display_pace, const vector<int> &indicator_idv, const vector<int> &indicator_snp, const map<string, double> &mapRS2weight, const map<string, size_t> &mapRS2cat, const vector<SNPINFO> &snpInfo, const gsl_matrix *W, gsl_matrix *matrix_kin, gsl_vector *vector_ns);
 bool PlinkKin (const string &file_bed, const int display_pace, const vector<int> &indicator_idv, const vector<int> &indicator_snp, const map<string, double> &mapRS2weight, const map<string, size_t> &mapRS2cat, const vector<SNPINFO> &snpInfo, const gsl_matrix *W, gsl_matrix *matrix_kin, gsl_vector *vector_ns);
 bool MFILEKin (const size_t mfile_mode, const string &file_mfile, const int display_pace, const vector<int> &indicator_idv, const vector<vector<int> > &mindicator_snp, const map<string, double> &mapRS2weight, const map<string, size_t> &mapRS2cat, const vector<vector<SNPINFO> > &msnpInfo, const gsl_matrix *W, gsl_matrix *matrix_kin, gsl_vector *vector_ns);

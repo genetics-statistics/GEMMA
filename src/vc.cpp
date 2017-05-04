@@ -453,7 +453,7 @@ int LogRL_dev12 (const gsl_vector *log_sigma2, void *params, gsl_vector *dev1, g
 
 
 //read header to determine which column contains which item
-bool ReadHeader_vc (const string &line, HEADER &header)
+bool ReadHeader (const string &line, HEADER &header)
 {
   string rs_ptr[]={"rs","RS","snp","SNP","snps","SNPS","snpid","SNPID","rsid","RSID"};
   set<string> rs_set(rs_ptr, rs_ptr+10);
@@ -586,7 +586,7 @@ void ReadFile_cor (const string &file_cor, const set<string> &setSnps, vector<st
 
   //header
   !safeGetline(infile, line).eof();
-  ReadHeader_vc (line, header);
+  ReadHeader (line, header);
 
   if (header.n_col==0 ) {
     if (header.nobs_col==0 && header.nmis_col==0) {
@@ -700,7 +700,7 @@ void ReadFile_beta (const bool flag_priorscale, const string &file_beta, const m
   //read header
   HEADER header;
   !safeGetline(infile, line).eof();
-  ReadHeader_vc (line, header);
+  ReadHeader (line, header);
 
   if (header.n_col==0 ) {
     if (header.nobs_col==0 && header.nmis_col==0) {
@@ -869,7 +869,7 @@ void ReadFile_cor (const string &file_cor, const vector<string> &vec_rs, const v
   HEADER header;
 
   !safeGetline(infile, line).eof();
-  ReadHeader_vc (line, header);
+  ReadHeader (line, header);
 
   while (!safeGetline(infile, line).eof()) {
     //do not read cor values this time; upto col_n-1
@@ -1058,6 +1058,25 @@ void ReadFile_cor (const string &file_cor, const vector<string> &vec_rs, const v
 
   return;
 }
+
+
+
+
+
+//copied from lmm.cpp; is used in the following function VCss
+//map a number 1-(n_cvt+2) to an index between 0 and [(n_c+2)^2+(n_c+2)]/2-1
+size_t GetabIndex (const size_t a, const size_t b, const size_t n_cvt) {
+	if (a>n_cvt+2 || b>n_cvt+2 || a<=0 || b<=0) {cout<<"error in GetabIndex."<<endl; return 0;}
+	size_t index;
+	size_t l, h;
+	if (b>a) {l=a; h=b;} else {l=b; h=a;}
+
+	size_t n=n_cvt+2;
+	index=(2*n-l+2)*(l-1)/2+h-l;
+
+	return index;
+}
+
 
 //use the new method to calculate variance components with summary statistics
 //first, use a function CalcS to compute S matrix (where the diagonal elements are part of V(q) ), and then use bootstrap to compute the variance for S, use a set of genotypes, phenotypes, and individual ids, and snp category label
@@ -1336,7 +1355,7 @@ void VC::CalcVChe (const gsl_matrix *K, const gsl_matrix *W, const gsl_vector *y
     gsl_vector_set(q_vec, i, d);
   }
 
-  //compuate yKrKKry, which is used later for confidence interval
+  //compute yKrKKry, which is used later for confidence interval
   for (size_t i=0; i<n_vc; i++) {
     gsl_vector_const_view Kry_coli=gsl_matrix_const_column (Kry, i);
     for (size_t j=i; j<n_vc; j++) {
@@ -1836,6 +1855,277 @@ void VC::CalcVCreml (bool noconstrain, const gsl_matrix *K, const gsl_matrix *W,
 
   return;
 }
+
+
+
+
+
+
+//Ks are not scaled;
+void VC::CalcVCacl (const gsl_matrix *K, const gsl_matrix *W, const gsl_vector *y)
+{
+  size_t n1=K->size1, n2=K->size2;
+  size_t n_vc=n2/n1;
+
+  double d, y2_sum, tau_inv, se_tau_inv;
+
+  //new matrices/vectors
+  gsl_matrix *K_scale=gsl_matrix_alloc (n1, n2);
+  gsl_vector *y_scale=gsl_vector_alloc (n1);
+  gsl_vector *y2=gsl_vector_alloc (n1);
+  gsl_vector *n1_vec=gsl_vector_alloc (n1);
+  gsl_matrix *Ay=gsl_matrix_alloc (n1, n_vc);
+  gsl_matrix *K2=gsl_matrix_alloc (n1, n_vc*n_vc);
+  gsl_matrix *K_tmp=gsl_matrix_alloc (n1, n1);
+  gsl_matrix *V_mat=gsl_matrix_alloc (n1, n1);
+
+  //old matrices/vectors
+  gsl_vector *pve=gsl_vector_alloc (n_vc);
+  gsl_vector *se_pve=gsl_vector_alloc (n_vc);
+  gsl_vector *q_vec=gsl_vector_alloc (n_vc);
+  gsl_matrix *S1=gsl_matrix_alloc (n_vc, n_vc);
+  gsl_matrix *S2=gsl_matrix_alloc (n_vc, n_vc);
+  gsl_matrix *S_mat=gsl_matrix_alloc (n_vc, n_vc);
+  gsl_matrix *Si_mat=gsl_matrix_alloc (n_vc, n_vc);
+  gsl_matrix *J_mat=gsl_matrix_alloc (n_vc, n_vc);
+  gsl_matrix *Var_mat=gsl_matrix_alloc (n_vc, n_vc);
+
+  int sig;
+  gsl_permutation * pmt=gsl_permutation_alloc (n_vc);
+
+  //center and scale K by W
+  //and standardize K further so that all diagonal elements are 1
+  for (size_t i=0; i<n_vc; i++) {
+    gsl_matrix_view Kscale_sub = gsl_matrix_submatrix (K_scale, 0, n1*i, n1, n1);
+    gsl_matrix_const_view K_sub = gsl_matrix_const_submatrix (K, 0, n1*i, n1, n1);
+    gsl_matrix_memcpy (&Kscale_sub.matrix, &K_sub.matrix);
+
+    CenterMatrix (&Kscale_sub.matrix, W);
+    StandardizeMatrix (&Kscale_sub.matrix);
+  }
+
+  //center y by W, and standardize it to have variance 1 (t(y)%*%y/n=1)
+  gsl_vector_memcpy (y_scale, y);
+  CenterVector (y_scale, W);
+  //  StandardizeVector (y_scale);
+
+  //compute y^2 and sum(y^2), which is also the variance of y*n1
+  gsl_vector_memcpy (y2, y_scale);
+  gsl_vector_mul (y2, y_scale);
+
+  y2_sum=0;
+  for (size_t i=0; i<y2->size; i++) {
+    y2_sum+=gsl_vector_get(y2, i);
+  }
+
+  //compute the n_vc size q vector
+  for (size_t i=0; i<n_vc; i++) {
+    gsl_matrix_const_view Kscale_sub = gsl_matrix_const_submatrix (K_scale, 0, n1*i, n1, n1);
+
+    gsl_blas_dgemv(CblasNoTrans, 1.0, &Kscale_sub.matrix, y_scale, 0.0, n1_vec);
+
+    gsl_blas_ddot (n1_vec, y_scale, &d);
+    gsl_vector_set(q_vec, i, d-y2_sum);
+  }
+
+  //compute the n_vc by n_vc S1 and S2 matrix (and eventually S=S1-\tau^{-1}S2)
+  for (size_t i=0; i<n_vc; i++) {
+    gsl_matrix_const_view Kscale_sub1 = gsl_matrix_const_submatrix (K_scale, 0, n1*i, n1, n1);
+
+    for (size_t j=i; j<n_vc; j++) {
+      gsl_matrix_const_view Kscale_sub2 = gsl_matrix_const_submatrix (K_scale, 0, n1*j, n1, n1);
+
+      gsl_matrix_memcpy (K_tmp, &Kscale_sub1.matrix);
+      gsl_matrix_mul_elements (K_tmp, &Kscale_sub2.matrix);
+
+      gsl_vector_set_zero(n1_vec);
+      for (size_t t=0; t<K_tmp->size1; t++) {
+	gsl_vector_view Ktmp_col=gsl_matrix_column (K_tmp, t);
+	gsl_vector_add (n1_vec, &Ktmp_col.vector);
+      }
+      gsl_vector_add_constant (n1_vec, -1.0);
+
+      //compute S1
+      gsl_blas_ddot (n1_vec, y2, &d);
+      gsl_matrix_set (S1, i, j, 2*d);
+      if (i!=j) {gsl_matrix_set (S1, j, i, 2*d);}
+
+      //compute S2
+      d=0;
+      for (size_t t=0; t<n1_vec->size; t++) {
+	d+=gsl_vector_get (n1_vec, t);
+      }
+      gsl_matrix_set (S2, i, j, d);
+      if (i!=j) {gsl_matrix_set (S2, j, i, d);}
+
+      //save information to compute J
+      gsl_vector_view K2col1=gsl_matrix_column (K2, n_vc*i+j);
+      gsl_vector_view K2col2=gsl_matrix_column (K2, n_vc*j+i);
+
+      gsl_vector_memcpy(&K2col1.vector, n1_vec);
+      if (i!=j) {gsl_vector_memcpy(&K2col2.vector, n1_vec);}
+    }
+  }
+
+  //iterate to solve tau and h's
+  size_t it=0;
+  double s=1;
+  while (abs(s)>1e-3 && it<100) {
+    //update tau_inv
+    gsl_blas_ddot (q_vec, pve, &d);
+    if (it>0) {s=y2_sum/(double)n1-d/((double)n1*((double)n1-1))-tau_inv;}
+    tau_inv=y2_sum/(double)n1-d/((double)n1*((double)n1-1));
+    if (it>0) {s/=tau_inv;}
+
+    //update S
+    gsl_matrix_memcpy (S_mat, S2);
+    gsl_matrix_scale (S_mat, -1*tau_inv);
+    gsl_matrix_add (S_mat, S1);
+
+    //update h=S^{-1}q
+    int sig;
+    gsl_permutation * pmt=gsl_permutation_alloc (n_vc);
+    LUDecomp (S_mat, pmt, &sig);
+    LUInvert (S_mat, pmt, Si_mat);
+    gsl_blas_dgemv (CblasNoTrans, 1.0, Si_mat, q_vec, 0.0, pve);
+
+    //cout<<tau_inv<<endl;
+    it++;
+  }
+
+  //compute V matrix and A matrix (K_scale is destroyed, so need to compute V first)
+  gsl_matrix_set_zero (V_mat);
+  for (size_t i=0; i<n_vc; i++) {
+    gsl_matrix_view Kscale_sub = gsl_matrix_submatrix (K_scale, 0, n1*i, n1, n1);
+
+    //compute V
+    gsl_matrix_memcpy (K_tmp, &Kscale_sub.matrix);
+    gsl_matrix_scale (K_tmp, gsl_vector_get(pve, i));
+    gsl_matrix_add (V_mat, K_tmp);
+
+    //compute A; the corresponding Kscale is destroyed
+    gsl_matrix_const_view K2_sub = gsl_matrix_const_submatrix (K2, 0, n_vc*i, n1, n_vc);
+    gsl_blas_dgemv (CblasNoTrans, 1.0, &K2_sub.matrix, pve, 0.0, n1_vec);
+
+    for (size_t t=0; t<n1; t++) {
+      gsl_matrix_set (K_scale, t, n1*i+t, gsl_vector_get(n1_vec, t) );
+    }
+
+    //compute Ay
+    gsl_vector_view Ay_col=gsl_matrix_column (Ay, i);
+    gsl_blas_dgemv(CblasNoTrans, 1.0, &Kscale_sub.matrix, y_scale, 0.0, &Ay_col.vector);
+  }
+  gsl_matrix_scale (V_mat, tau_inv);
+
+  //compute J matrix
+  for (size_t i=0; i<n_vc; i++) {
+    gsl_vector_view Ay_col1=gsl_matrix_column (Ay, i);
+    gsl_blas_dgemv(CblasNoTrans, 1.0, V_mat, &Ay_col1.vector, 0.0, n1_vec);
+
+    for (size_t j=i; j<n_vc; j++) {
+      gsl_vector_view Ay_col2=gsl_matrix_column (Ay, j);
+
+      gsl_blas_ddot (&Ay_col2.vector, n1_vec, &d);
+      gsl_matrix_set (J_mat, i, j, 2.0*d);
+      if (i!=j) {gsl_matrix_set (J_mat, j, i, 2.0*d);}
+    }
+  }
+
+  //compute H^{-1}JH^{-1} as V(\hat h), where H=S2*tau_inv; this is stored in Var_mat
+  gsl_matrix_memcpy (S_mat, S2);
+  gsl_matrix_scale (S_mat, tau_inv);
+
+  LUDecomp (S_mat, pmt, &sig);
+  LUInvert (S_mat, pmt, Si_mat);
+
+  gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, Si_mat, J_mat, 0.0, S_mat);
+  gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, S_mat, Si_mat, 0.0, Var_mat);
+
+  //compute variance for tau_inv
+  gsl_blas_dgemv(CblasNoTrans, 1.0, V_mat, y_scale, 0.0, n1_vec);
+  gsl_blas_ddot (y_scale, n1_vec, &d);
+  se_tau_inv=sqrt(2*d)/(double)n1;
+
+  //transform pve back to the original scale and save data
+  v_pve.clear(); v_se_pve.clear();
+  v_sigma2.clear(); v_se_sigma2.clear();
+
+  pve_total=0, se_pve_total=0;
+  for (size_t i=0; i<n_vc; i++) {
+    d=gsl_vector_get (pve, i);
+    pve_total+=d;
+
+    v_pve.push_back(d);
+    v_sigma2.push_back(d*tau_inv/v_traceG[i] );
+
+    d=sqrt(gsl_matrix_get (Var_mat, i, i));
+    v_se_pve.push_back(d);
+    v_se_sigma2.push_back(d*tau_inv/v_traceG[i]);
+
+    //d*=sqrt(var_y/v_traceG[i]-v_sigma2[i]);
+    //v_se_pve.push_back(d/var_y);
+
+    for (size_t j=0; j<n_vc; j++) {
+      se_pve_total+=gsl_matrix_get(Var_mat, i, j);
+    }
+  }
+  v_sigma2.push_back( (1-pve_total)*tau_inv );
+  v_se_sigma2.push_back(sqrt(se_pve_total)*tau_inv );
+  se_pve_total=sqrt(se_pve_total);
+
+  cout<<"sigma2 = ";
+  for (size_t i=0; i<n_vc+1; i++) {
+    cout<<v_sigma2[i]<<" ";
+  }
+  cout<<endl;
+
+  cout<<"se(sigma2) = ";
+  for (size_t i=0; i<n_vc+1; i++) {
+    cout<<v_se_sigma2[i]<<" ";
+  }
+  cout<<endl;
+
+  cout<<"pve = ";
+  for (size_t i=0; i<n_vc; i++) {
+    cout<<v_pve[i]<<" ";
+  }
+  cout<<endl;
+
+  cout<<"se(pve) = ";
+  for (size_t i=0; i<n_vc; i++) {
+    cout<<v_se_pve[i]<<" ";
+  }
+  cout<<endl;
+
+  if (n_vc>1) {
+    cout<<"total pve = "<<pve_total<<endl;
+    cout<<"se(total pve) = "<<se_pve_total<<endl;
+  }
+
+  gsl_permutation_free(pmt);
+
+  gsl_matrix_free(K_scale);
+  gsl_vector_free(y_scale);
+  gsl_vector_free(y2);
+  gsl_vector_free(n1_vec);
+  gsl_matrix_free(Ay);
+  gsl_matrix_free(K2);
+  gsl_matrix_free(K_tmp);
+  gsl_matrix_free(V_mat);
+
+  gsl_vector_free(pve);
+  gsl_vector_free(se_pve);
+  gsl_vector_free(q_vec);
+  gsl_matrix_free(S1);
+  gsl_matrix_free(S2);
+  gsl_matrix_free(S_mat);
+  gsl_matrix_free(Si_mat);
+  gsl_matrix_free(J_mat);
+  gsl_matrix_free(Var_mat);
+
+  return;
+}
+
 
 
 

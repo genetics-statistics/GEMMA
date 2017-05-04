@@ -30,6 +30,7 @@ double VectorVar (const gsl_vector *v);
 void CenterMatrix (gsl_matrix *G);
 void CenterMatrix (gsl_matrix *G, const gsl_vector *w);
 void CenterMatrix (gsl_matrix *G, const gsl_matrix *W);
+void StandardizeMatrix (gsl_matrix *G);
 double ScaleMatrix (gsl_matrix *G);
 double CenterVector (gsl_vector *y);
 void CenterVector (gsl_vector *y, const gsl_matrix *W);

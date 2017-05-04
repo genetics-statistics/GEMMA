@@ -95,6 +95,7 @@ public:
 	void WriteFile_qs (const gsl_vector *s_vec, const gsl_vector *q_vec, const gsl_vector *qvar_vec, const gsl_matrix *S_mat, const gsl_matrix *Svar_mat);
 	void CalcVChe (const gsl_matrix *K, const gsl_matrix *W, const gsl_vector *y);
 	void CalcVCreml (const bool noconstrain, const gsl_matrix *K, const gsl_matrix *W, const gsl_vector *y);
+	void CalcVCacl (const gsl_matrix *K, const gsl_matrix *W, const gsl_vector *y);
 };
 
 void CalcVCss(const gsl_matrix *Vq, const gsl_matrix *S_mat, const gsl_matrix *Svar_mat, const gsl_vector *q_vec, const gsl_vector *s_vec, const double df, vector<double> &v_pve, vector<double> &v_se_pve, double &pve_total, double &se_pve_total, vector<double> &v_sigma2, vector<double> &v_se_sigma2, vector<double> &v_enrich, vector<double> &v_se_enrich);

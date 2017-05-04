@@ -57,6 +57,7 @@ pheno_mean(0), noconstrain (false),
 h_min(-1), h_max(-1),	h_scale(-1),
 rho_min(0.0), rho_max(1.0),	rho_scale(-1),
 logp_min(0.0), logp_max(0.0), logp_scale(-1),
+h_ngrid(10), rho_ngrid(10),
 s_min(0), s_max(300),
 w_step(100000),	s_step(1000000),
 r_pace(10), w_pace(1000),
@@ -66,7 +67,7 @@ geo_mean(2000.0),
 randseed(-1),
 window_cm(0), window_bp(0), window_ns(0), n_block(200),
 error(false),
-ni_subsample(0), n_cvt(1), n_vc(1),
+ni_subsample(0), n_cvt(1), n_vc(1), n_cat(0),
 time_total(0.0), time_G(0.0), time_eigen(0.0), time_UtX(0.0), time_UtZ(0.0), time_opt(0.0), time_Omega(0.0)
 {}
 
@@ -76,7 +77,14 @@ time_total(0.0), time_G(0.0), time_eigen(0.0), time_UtX(0.0), time_UtZ(0.0), tim
 void PARAM::ReadFiles (void)
 {
 	string file_str;
-
+	/*
+	//read continuous cat file
+	if (!file_mcatc.empty()) {
+	  if (ReadFile_mcatc (file_mcatc, mapRS2catc, n_cat)==false) {error=true;}
+	} else if (!file_catc.empty()) {
+	  if (ReadFile_catc (file_catc, mapRS2catc, n_cat)==false) {error=true;}
+	}
+	*/
 	//read cat file
 	if (!file_mcat.empty()) {
 	  if (ReadFile_mcat (file_mcat, mapRS2cat, n_vc)==false) {error=true;}
@@ -398,7 +406,7 @@ void PARAM::CheckParam (void)
 
 	//check parameters
 	if (k_mode!=1 && k_mode!=2) {cout<<"error! unknown kinship/relatedness input mode: "<<k_mode<<endl; error=true;}
-	if (a_mode!=1 && a_mode!=2 && a_mode!=3 && a_mode!=4 && a_mode!=5 && a_mode!=11 && a_mode!=12 && a_mode!=13 && a_mode!=14 && a_mode!=21 && a_mode!=22 && a_mode!=25 && a_mode!=26 && a_mode!=27 && a_mode!=28 && a_mode!=31 && a_mode!=41 && a_mode!=42 && a_mode!=43 && a_mode!=51 && a_mode!=52 && a_mode!=53 && a_mode!=54 && a_mode!=61 && a_mode!=62 && a_mode!=66 && a_mode!=67 && a_mode!=71)
+	if (a_mode!=1 && a_mode!=2 && a_mode!=3 && a_mode!=4 && a_mode!=5 && a_mode!=11 && a_mode!=12 && a_mode!=13 && a_mode!=14 && a_mode!=15 && a_mode!=21 && a_mode!=22 && a_mode!=25 && a_mode!=26 && a_mode!=27 && a_mode!=28 && a_mode!=31 && a_mode!=41 && a_mode!=42 && a_mode!=43 && a_mode!=51 && a_mode!=52 && a_mode!=53 && a_mode!=54 && a_mode!=61 && a_mode!=62 && a_mode!=63 && a_mode!=66 && a_mode!=67 && a_mode!=71)
 	{cout<<"error! unknown analysis mode: "<<a_mode<<". make sure -gk or -eigen or -lmm or -bslmm -predict or -calccov is sepcified correctly."<<endl; error=true;}
 	if (miss_level>1) {cout<<"error! missing level needs to be between 0 and 1. current value = "<<miss_level<<endl; error=true;}
 	if (maf_level>0.5) {cout<<"error! maf level needs to be between 0 and 0.5. current value = "<<maf_level<<endl; error=true;}
@@ -550,7 +558,7 @@ void PARAM::CheckParam (void)
 	// WJA added
 	if (!file_oxford.empty()) {flag++;}
 
-	if (flag!=1 && a_mode!=27 && a_mode!=28 && a_mode!=43 && a_mode!=5 && a_mode!=61 && a_mode!=62 && a_mode!=66 && a_mode!=67) {
+	if (flag!=1 && a_mode!=15 && a_mode!=27 && a_mode!=28 && a_mode!=43 && a_mode!=5 && a_mode!=61 && a_mode!=62 && a_mode!=63 && a_mode!=66 && a_mode!=67) {
 		cout<<"error! either plink binary files, or bimbam mean genotype files, or gene expression files are required."<<endl; error=true;
 	}
 
@@ -575,6 +583,16 @@ void PARAM::CheckParam (void)
 	    */
 	  } else if ( (file_mstudy.empty() && file_study.empty()) || (file_mref.empty() && file_ref.empty() )  ) {
 	      cout<<"error! either beta file, or phenotype files or study/ref mstudy/mref files are required."<<endl; error=true;
+	  }
+	}
+
+
+	if (a_mode==63) {
+	  if (file_kin.empty() && (file_ku.empty()||file_kd.empty()) && file_mk.empty() ) {
+	    cout<<"error! missing relatedness file. "<<endl;  error=true;
+	  }
+	  if ( file_pheno.empty() ) {
+	    cout<<"error! missing phenotype file."<<endl; error=true;
 	  }
 	}
 
@@ -630,7 +648,7 @@ void PARAM::CheckParam (void)
 
 	if ((a_mode==43) && file_kin.empty())  {cout<<"error! missing relatedness file. -predict option requires -k option to provide a relatedness file."<<endl;  error=true;}
 
-	if ((a_mode==11 || a_mode==12 || a_mode==13) && !file_cvt.empty() ) {cout<<"error! -bslmm option does not support covariates files."<<endl; error=true;}
+	if ((a_mode==11 || a_mode==12 || a_mode==13 || a_mode==14 || a_mode==16) && !file_cvt.empty() ) {cout<<"error! -bslmm option does not support covariates files."<<endl; error=true;}
 
 	if (a_mode==41 || a_mode==42) {
 		if (!file_cvt.empty() ) {cout<<"error! -predict option does not support covariates files."<<endl; error=true;}
@@ -738,7 +756,7 @@ void PARAM::CheckData (void) {
 		}
 	}
 	*/
-	if (ni_test==0 && file_cor.empty() && file_mstudy.empty() && file_study.empty() && file_beta.empty() ) {
+	if (ni_test==0 && file_cor.empty() && file_mstudy.empty() && file_study.empty() && file_beta.empty() && file_bf.empty() ) {
 		error=true;
 		cout<<"error! number of analyzed individuals equals 0. "<<endl;
 		return;
@@ -759,7 +777,7 @@ void PARAM::CheckData (void) {
 	}
 
 	//output some information
-	if (file_cor.empty() && file_mstudy.empty() && file_study.empty() && a_mode!=27 && a_mode!=28) {
+	if (file_cor.empty() && file_mstudy.empty() && file_study.empty() && a_mode!=15 && a_mode!=27 && a_mode!=28) {
 	  cout<<"## number of total individuals = "<<ni_total<<endl;
 	  if (a_mode==43) {
 	    cout<<"## number of analyzed individuals = "<<ni_cvt<<endl;
@@ -806,7 +824,7 @@ void PARAM::CheckData (void) {
 
 	//set parameters for BSLMM
 	//and check for predict
-	if (a_mode==11 || a_mode==12 || a_mode==13) {
+	if (a_mode==11 || a_mode==12 || a_mode==13 || a_mode==14) {
 		if (a_mode==11) {n_mh=1;}
 		if (logp_min==0) {logp_min=-1.0*log((double)ns_test);}
 
@@ -1598,7 +1616,7 @@ void PARAM::ProcessCvtPhen ()
 	}
 
 	//check ni_test
-	if (ni_test==0) {
+	if (ni_test==0 && a_mode!=15) {
 		error=true;
 		cout<<"error! number of analyzed individuals equals 0. "<<endl;
 		return;
@@ -1641,6 +1659,54 @@ void PARAM::CopyCvt (gsl_matrix *W)
 	return;
 }
 
+/*
+//if there is a column contains all 1's, then flag==1; otherwise flag=0
+void PARAM::CopyA (size_t flag, gsl_matrix *A)
+{
+	size_t ci_test=0;
+	string rs;
+	vector<size_t> flag_vec;
+	vector<double> catc;
+
+	for (size_t j=0; j<n_cat; j++) {
+	  flag_vec.push_back(0);
+	}
+
+	for (vector<int>::size_type i=0; i<indicator_snp.size(); ++i) {
+		if (indicator_snp[i]==0) {continue;}
+		rs=snpInfo[i].rs_number;
+
+		if (mapRS2catc.count(rs)==0) {
+		  for (size_t j=0; j<n_cat; j++) {
+		    gsl_matrix_set (A, ci_test, j, 0);
+		  }
+		} else {
+		  for (size_t j=0; j<n_cat; j++) {
+		    gsl_matrix_set (A, ci_test, j, mapRS2catc[rs][j]);
+		  }
+		}
+
+		if (ci_test==0) {
+		  for (size_t j=0; j<n_cat; j++) {
+		    catc.push_back(mapRS2catc[rs][j]);
+		  }
+		} else {
+		  for (size_t j=0; j<n_cat; j++) {
+		    if (catc[j]==mapRS2catc[rs][j]) {flag_vec[j]++;};
+		  }
+		}
+
+		ci_test++;
+	}
+
+	flag=0;
+	for (size_t j=0; j<n_cat; j++) {
+	  if (flag_vec[j]==0) {flag++;}
+	}
+
+	return;
+}
+*/
 
 void PARAM::CopyGxe (gsl_vector *env)
 {
