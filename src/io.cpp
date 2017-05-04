@@ -47,10 +47,9 @@
 #include "io.h"
 #endif
 
-
 using namespace std;
 
-
+bool ReadHeader_io (const string &line, HEADER &header);
 
 //Print process bar
 void ProgressBar (string str, double p, double total)
@@ -181,7 +180,7 @@ bool ReadFile_snps_header (const string &file_snps, set<string> &setSnps)
 	//read header
 	HEADER header;
 	!safeGetline(infile, line).eof();
-	ReadHeader (line, header);
+	ReadHeader_io (line, header);
 
 	if (header.rs_col==0 && (header.chr_col==0 || header.pos_col==0) ) {
 	  cout<<"missing rs id in the hearder"<<endl;
@@ -2501,7 +2500,7 @@ bool bgenKin (const string &file_oxford, vector<int> &indicator_snp, const int k
 
 
 //read header to determine which column contains which item
-bool ReadHeader (const string &line, HEADER &header)
+bool ReadHeader_io (const string &line, HEADER &header)
 {
   string rs_ptr[]={"rs","RS","snp","SNP","snps","SNPS","snpid","SNPID","rsid","RSID","MarkerName"};
   set<string> rs_set(rs_ptr, rs_ptr+11);
@@ -2636,7 +2635,7 @@ bool ReadFile_cat (const string &file_cat, map<string, size_t> &mapRS2cat, size_
   //read header
   HEADER header;
   !safeGetline(infile, line).eof();
-  ReadHeader (line, header);
+  ReadHeader_io (line, header);
 
   //use the header to count the number of categories
   n_vc=header.coln;
@@ -3209,7 +3208,7 @@ bool ReadFile_wsnp (const string &file_wcat, const size_t n_vc, map<string, vect
   //read header
   HEADER header;
   !safeGetline(infile, line).eof();
-  ReadHeader (line, header);
+  ReadHeader_io (line, header);
 
   while (!safeGetline(infile, line).eof()) {
     if (isBlankLine(line)) {continue;}
@@ -3282,7 +3281,7 @@ void ReadFile_beta (const string &file_beta, const map<string, size_t> &mapRS2ca
   //read header
   HEADER header;
   !safeGetline(infile, line).eof();
-  ReadHeader (line, header);
+  ReadHeader_io (line, header);
 
   if (header.n_col==0 ) {
     if ( (header.nobs_col==0 && header.nmis_col==0) && (header.ncase_col==0 && header.ncontrol_col==0) ) {
@@ -3413,7 +3412,7 @@ void ReadFile_beta (const string &file_beta, const map<string, double> &mapRS2wA
   //read header
   HEADER header;
   !safeGetline(infile, line).eof();
-  ReadHeader (line, header);
+  ReadHeader_io (line, header);
 
   if (header.n_col==0 ) {
     if ( (header.nobs_col==0 && header.nmis_col==0) && (header.ncase_col==0 && header.ncontrol_col==0) ) {
@@ -3844,21 +3843,6 @@ void ReadFile_mstudy (const string &file_mstudy, gsl_matrix *Vq_mat, gsl_vector 
   gsl_vector_free(s);
 
   return;
-}
-
-
-//copied from lmm.cpp; is used in the following function compKtoV
-//map a number 1-(n_cvt+2) to an index between 0 and [(n_c+2)^2+(n_c+2)]/2-1
-size_t GetabIndex (const size_t a, const size_t b, const size_t n_cvt) {
-	if (a>n_cvt+2 || b>n_cvt+2 || a<=0 || b<=0) {cout<<"error in GetabIndex."<<endl; return 0;}
-	size_t index;
-	size_t l, h;
-	if (b>a) {l=a; h=b;} else {l=b; h=a;}
-
-	size_t n=n_cvt+2;
-	index=(2*n-l+2)*(l-1)/2+h-l;
-
-	return index;
 }
 
 //read reference file

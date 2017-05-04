@@ -299,6 +299,7 @@ public:
 	void UpdateSNP (const map<string, double> &mapRS2wA);
 };
 
-
+size_t GetabIndex (const size_t a, const size_t b, const size_t n_cvt);
+  
 #endif
 
