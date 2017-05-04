@@ -79,7 +79,7 @@
 \section{Introduction}
 
 \subsection{What is GEMMA}
-GEMMA is the software implementing the Genome-wide Efficient Mixed Model Association algorithm \cite{Zhou:2012} for a standard linear mixed model and some of its close relatives for genome-wide association studies (GWAS). It fits a univariate linear mixed model (LMM) for marker association tests with a single phenotype to account for population stratification and sample structure, and for estimating the proportion of variance in phenotypes explained (PVE) by typed genotypes (i.e. "chip heritability") \cite{Zhou:2012}.  It fits a multivariate linear mixed model (mvLMM) for testing marker associations with multiple phenotypes simultaneously while controlling for population stratification, and for estimating genetic correlations among complex phenotypes \cite{Zhou:2014}. It fits a Bayesian sparse linear mixed model (BSLMM) using Markov chain Monte Carlo (MCMC) for estimating PVE by typed genotypes, predicting phenotypes, and identifying associated markers by jointly modeling all markers while controlling for population structure \cite{Zhou:2013}. It is computationally efficient for large scale GWAS and uses freely available open-source numerical libraries.
+GEMMA is the software implementing the Genome-wide Efficient Mixed Model Association algorithm \cite{Zhou:2012} for a standard linear mixed model and some of its close relatives for genome-wide association studies (GWAS). It fits a univariate linear mixed model (LMM) for marker association tests with a single phenotype to account for population stratification and sample structure, and for estimating the proportion of variance in phenotypes explained (PVE) by typed genotypes (i.e. "chip heritability") \cite{Zhou:2012}.  It fits a multivariate linear mixed model (mvLMM) for testing marker associations with multiple phenotypes simultaneously while controlling for population stratification, and for estimating genetic correlations among complex phenotypes \cite{Zhou:2014}. It fits a Bayesian sparse linear mixed model (BSLMM) using Markov chain Monte Carlo (MCMC) for estimating PVE by typed genotypes, predicting phenotypes, and identifying associated markers by jointly modeling all markers while controlling for population structure \cite{Zhou:2013}. It fits HE, REML and MQS for variance component estimation using either individual-level data or summary statistics \cite{Zhou:2016}. It is computationally efficient for large scale GWAS and uses freely available open-source numerical libraries.
 
 
 \subsection{How to Cite GEMMA}
@@ -90,6 +90,8 @@ Xiang Zhou and Matthew Stephens (2012). Genome-wide efficient mixed-model analys
 Xiang Zhou and Matthew Stephens (2014). Efficient multivariate linear mixed model algorithms for genome-wide association studies. Nature Methods. 11: 407-409.
 \item Bayesian sparse linear mixed models \\
 Xiang Zhou, Peter Carbonetto and Matthew Stephens (2013). Polygenic modeling with Bayesian sparse linear mixed models. PLoS Genetics. 9(2): e1003264.
+\item Variance component estimation with individual-level or summary data\\
+Xiang Zhou (2016). A unified framework for variance component estimation with summary statistics in genome-wide association studies. bioRxiv. 042846.
 \end{itemize}
 
 
@@ -106,6 +108,7 @@ where $\by$ is an $n$-vector of quantitative traits (or binary disease labels) f
 GEMMA tests the alternative hypothesis $H_1: \beta\neq 0$ against the null hypothesis $H_0: \beta=0$ for each SNP in turn, using one of the three commonly used test statistics (Wald, likelihood ratio or score). GEMMA obtains either the maximum likelihood estimate (MLE) or the restricted maximum likelihood estimate (REML) of $\lambda$ and $\beta$, and outputs the corresponding $p$ value.
 
 In addition, GEMMA estimates the PVE by typed genotypes or ``chip heritability".
+
 
 \subsubsection{Multivariate Linear Mixed Model}
 GEMMA can fit a multivariate linear mixed model in the following form:
@@ -143,6 +146,22 @@ There are two important hyper-parameters in the model: PVE, being the proportion
 GEMMA uses MCMC to estimate $\boldsymbol\beta$, $\mathbf u$ and all other hyper-parameters including PVE, PGE and $\pi$. 
 
 
+\subsubsection{Variance Component Models}
+GEMMA can be used to estimate variance components from a multiple-component linear mixed model in the following form:
+%
+\begin{equation*}
+\by=\sum_{i=1}^k \bX_i\bbeta_i+\bepsilon;   \quad \beta_{il} \sim \mbox{N}(0, \sigma_i^2/p_i), \quad \bepsilon \sim \mbox{MVN}_n(0, \sigma_e^2 \bI_n),
+\end{equation*}
+%
+which is equivalent to
+\begin{equation*}
+\by=\sum_{i=1}^k \bu_i +\bepsilon;   \quad \bu_i \sim \mbox{MVN}_n(0, \sigma_i^2 \bK_i), \quad \bepsilon \sim \mbox{MVN}_n(0, \sigma_e^2 \bI_n),
+\end{equation*}
+%
+where genetic markers are classified into $k$ non-overlapping categories; $\bX_i$ is an $n \times p_i$ matrix of genotypes measured on $n$ individuals at $p_i$ genetic markers in $i$'th category; $\bbeta_i$ is the corresponding $p_i$-vector of the genetic marker effects, where each element follows a normal distribution with variance $\sigma_i^2/p_i$; $u_i$ is the combined genetic effects from $i$'th category; $\bK_i=\bX_i\bX_i^T/p_i$ is the category specific genetic relatedness matrix; and other parameters are the same as defined in the standard linear mixed model in the previous section.
+
+GEMMA estimates the variance components $\sigma_i^2$. When individual-level data are available, GEMMA uses the HE regression method or the REML average information (AI) algorithm for estimation. When summary-level data are available, GEMMA uses MQS (MINQUE for Summary Statistics) for estimation. 
+
 
 \subsection{Missing Data}
 \subsubsection{Missing Genotypes}
@@ -165,9 +184,9 @@ If you are interested in fitting BSLMM for a large scale GWAS data set but have 
 
 \newpage
 \section{Input File Formats}
-GEMMA requires four input files containing genotypes, phenotypes, relatedness matrix and (optionally) covariates. Genotype and phenotype files can be in two formats, either both in the PLINK binary ped format or both in the BIMBAM format. Mixing genotype and phenotype files from the two formats (for example, using PLINK files for genotypes and using BIMBAM files for phenotypes) will result in unwanted errors. BIMBAM format is particularly useful for imputed genotypes, as PLINK codes genotypes using 0/1/2, while BIMBAM can accommodate any real values between 0 and 2 (and any real values if paired with ``-notsnp" option).
+GEMMA requires four main input files containing genotypes, phenotypes, relatedness matrix and (optionally) covariates. Genotype and phenotype files can be in two formats, either both in the PLINK binary ped format or both in the BIMBAM format. Mixing genotype and phenotype files from the two formats (for example, using PLINK files for genotypes and using BIMBAM files for phenotypes) will result in unwanted errors. BIMBAM format is particularly useful for imputed genotypes, as PLINK codes genotypes using 0/1/2, while BIMBAM can accommodate any real values between 0 and 2 (and any real values if paired with ``-notsnp" option). In addition, to estimate variance components using summary statistics, GEMMA requires two other input files: one contains marginal z-scores and the other contains SNP category. 
 
-Notice that the BIMBAM mean genotype file and/or the relatedness matrix file can be provided in compressed gzip format, while other files should be provided in uncompressed format.
+Notice that the BIMBAM mean genotype file, the relatedness matrix file, the marginal z-score file and the category file can be provided in compressed gzip format, while other files should be provided in uncompressed format.
 
 \subsection{PLINK Binary PED File Format}
 GEMMA recognizes the PLINK binary ped file format (\url{http://pngu.mgh.harvard.edu/~purcell/plink/}) \cite{Purcell:2007} for both genotypes and phenotypes. This format requires three files: *.bed, *.bim and *.fam, all with the same prefix. The *.bed file should be in the default SNP-major mode (beginning with three bytes). One can use the PLINK software to generate binary ped files from standard ped files using the following command:
@@ -294,6 +313,55 @@ It can happen, especially in a small GWAS data set, that some of the covariates 
 
 
 
+\subsection{Beta/Z File}
+This file contains marginal z-scores from the study. The first row is a header line. The first column is the SNP id, the second column is number of total SNPs, the third column is the marginal z-score, the fourth and fifth columns are the SNP alleles. The SNPs are not required to be in the same order of the other files. An example category file with four SNPs is as follows:
+%
+\begin{verbatim}
+SNP N Z INC_ALLELE DEC_ALLELE
+rs1 1200 -0.322165 A T
+rs2 1000 -0.343634 G T
+rs3 3320 -0.338341 A T
+rs4 5430 -0.322820 T C
+\end{verbatim}
+%
+This file is flexible. You can use beta and se\_beta columns instead of marginal z-scores. You can directly use the output *.assoc.txt file from the a linear model analysis as the input beta/z file.
+
+
+\subsection{Category File}
+This file contains SNP category information. The first row is a header line. The first column is chromosome number (optional), the second column is base pair position (optional), the third column is SNP id, the fourth column is its genetic distance on the chromosome (optional), and the following columns list non-overlapping categories. A vector of indicators is provided for each SNP. The SNPs are not required to be in the same order of the other files. An example category file with four SNPs is as follows:
+%
+\begin{verbatim}
+CHR  BP  SNP  CM  CODING  UTR  PROMOTER  DHS  INTRON  ELSE
+1  1200  rs1  0.428408  1  0  0  0  0  0
+1  1000  rs2  0.743268  0  0  0  0  0  1
+1  3320  rs3  0.744197  0  0  1  1  0  0
+1  5430  rs4  0.766409  0  0  0  0  0  0
+\end{verbatim}
+%
+In the above file, rs1 belongs to a coding region; rs2 belongs does not belong to any of the first five categories; rs3 belongs to both promoter and DHS regions but will be treated as an DHS snp in the analysis; rs4 does not belong to any category and will be ignored in the analysis. Note that if a SNP is labeled with more than one category, then it will be treated as the last category label. 
+
+This file is also flexible, as long as it contains the SNP id and the category information.
+
+
+\subsection{LD Score File}
+This file contains the LD scores for all SNPs. The first row is a header line. The first column is chromosome number (optional), the second column is SNP id, the third column is base pair position (optional), the fourth column is the LD score of the SNP. An example LD score file with four SNPs is as follows:
+%
+\begin{verbatim}
+CHR	SNP	BP	L2
+1	rs1	1200	1.004
+1	rs2	1000	1.052
+1	rs3	3320	0.974
+1	rs4	5430	0.986
+\end{verbatim}
+%
+In the above file, the LD score for rs1 is 1.004 and the LD score for rs4 is 0.986.
+
+This file is also flexible, as long as it contains the SNP id and the LD score information.
+
+
+
+
+
 \newpage
 \section{Running GEMMA}
 
@@ -313,13 +381,50 @@ The are a few SNP filters implemented in the software.
 \begin{itemize}
 \item Polymorphism. Non-polymorphic SNPs will not be included in the analysis.
 \item Missingness. By default, SNPs with missingness below 5\% will not be included in the analysis. Use ``-miss [num]'' to change. For example, ``-miss 0.1'' changes the threshold to 10\%.
-\item Minor allele frequency. By default, SNPs with minor allele frequency above 1\% will not be included in the analysis. Use ``-maf [num]" to change. For example, ``-maf 0.05'' changes the threshold to 5\%.
+\item Minor allele frequency. By default, SNPs with minor allele frequency below 1\% will not be included in the analysis. Use ``-maf [num]" to change. For example, ``-maf 0.05'' changes the threshold to 5\%.
 \item Correlation with any covariate. By default, SNPs with $r^2$ correlation with any of the covariates above 0.9999 will not be included in the analysis. Use ``-r2 [num]'' to change. For example, ``-r2 0.999999'' changes the threshold to 0.999999.
 \item Hardy-Weinberg equilibrium. Use ``-hwe [num]'' to specify. For example, ``-hwe 0.001'' will filter out SNPs with Hardy-Weinberg $p$ values below 0.001.
 \item User-defined SNP list. Use ``-snps [filename]'' to specify a list of SNPs to be included in the analysis. 
 \end{itemize}
 
 Calculations of the above filtering thresholds are based on analyzed individuals (i.e. individuals with no missing phenotypes and no missing covariates). Therefore, if all individuals have missing phenotypes, no SNP will be analyzed and the output matrix will be full of ``nan"s. 
+
+
+
+
+
+\subsection{Association Tests with a Linear Model}
+\subsubsection{Basic Usage}
+The basic usages for linear model association analysis with either the PLINK binary ped format or the BIMBAM format are:
+\begin{verbatim}
+./gemma -bfile [prefix] -lm [num] -o [prefix]
+./gemma -g [filename] -p [filename] -a [filename] -lm [num] -o [prefix]
+\end{verbatim}
+where the ``-lm [num]" option specifies which frequentist test to use, i.e. ``-lm 1" performs Wald test, ``-lm 2" performs likelihood ratio test, ``-lm 3" performs score test, and ``-lm 4" performs all the three tests; ``-bfile [prefix]" specifies PLINK binary ped file prefix; ``-g [filename]" specifies BIMBAM mean genotype file name; ``-p [filename]" specifies BIMBAM phenotype file name; ``-a [filename]" (optional) specifies BIMBAM SNP annotation file name; ``-o [prefix]" specifies output file prefix. 
+
+Notice that different from a linear mixed model, this analysis does not require a relatedness matrix. 
+
+\subsubsection{Detailed Information}
+For binary traits, one can label controls as 0 and cases as 1, and follow our previous approaches to fit the data with a linear mixed model by treating the binary case control labels as quantitative traits \cite{Zhou:2012, Zhou:2013}. This approach can be justified partly by recognizing the linear model as a first order Taylor approximation to a generalized linear model, and partly by the robustness of the linear model to model misspecification \cite{Zhou:2013}.
+
+
+\subsubsection{Output Files}
+There will be two output files, both inside an output folder in the current directory. The prefix.log.txt file contains some detailed information about the running parameters and computation time. In addition, prefix.log.txt contains PVE estimate and its standard error in the null linear mixed model.
+
+The prefix.assoc.txt contains the results. An example file with a few SNPs is shown below:
+%
+\begin{verbatim}
+chr     rs      ps      n_mis   n_obs   allele1 allele0 af      beta    se      p_wald
+1  rs3683945  3197400  0  1410  A  G  0.443  -1.586575e-01  3.854542e-02  4.076703e-05
+1  rs3707673  3407393  0  1410  G  A  0.443  -1.563903e-01  3.855200e-02  5.252187e-05
+1  rs6269442  3492195  0  1410  A  G  0.365  -2.349908e-01  3.905200e-02  2.256622e-09
+1  rs6336442  3580634  0  1410  A  G  0.443  -1.566721e-01  3.857380e-02  5.141944e-05
+1  rs13475700  4098402  0  1410  A  C  0.127  2.209575e-01  5.644804e-02  9.497902e-05
+\end{verbatim}
+%
+
+The 11 columns are: chromosome numbers, snp ids, base pair positions on the chromosome, number of missing individuals for a given snp, number of non-missing individuals for a given snp, minor allele, major allele, allele frequency, beta estimates, standard errors for beta, and $p$ values from the Wald test. 
+
 
 
 \subsection{Estimate Relatedness Matrix from Genotypes}
@@ -376,6 +481,8 @@ GEMMA extracts the matrix elements corresponding to the analyzed individuals (wh
 \subsubsection{Output Files}
 There will be three output files, all inside an output folder in the current directory. The prefix.log.txt file contains some detailed information about the running parameters and computation time, while the prefix.eigenD.txt and prefix.eigenU.txt contain the eigen values and eigen vectors of the estimated relatedness matrix, respectively.
 
+
+
 \subsection{Association Tests with Univariate Linear Mixed Models}
 \subsubsection{Basic Usage}
 The basic usages for association analysis with either the PLINK binary ped format or the BIMBAM format are:
@@ -384,6 +491,8 @@ The basic usages for association analysis with either the PLINK binary ped forma
 ./gemma -g [filename] -p [filename] -a [filename] -k [filename] -lmm [num] -o [prefix]
 \end{verbatim}
 where the ``-lmm [num]" option specifies which frequentist test to use, i.e. ``-lmm 1" performs Wald test, ``-lmm 2" performs likelihood ratio test, ``-lmm 3" performs score test, and ``-lmm 4" performs all the three tests; ``-bfile [prefix]" specifies PLINK binary ped file prefix; ``-g [filename]" specifies BIMBAM mean genotype file name; ``-p [filename]" specifies BIMBAM phenotype file name; ``-a [filename]" (optional) specifies BIMBAM SNP annotation file name; ``-k [filename]" specifies relatedness matrix file name; ``-o [prefix]" specifies output file prefix. 
+
+To detect gene environmental interactions, you can add "-gxe [filename]". This gxe file contains a column of environmental variables. In this case, for each SNP in turn, GEMMA will fit a linear mixed model that controls both the SNP main effect and environmental main effect, while testing for the interaction effect. 
 
 Notice that ``-k [filename]" could be replaced by ``-d [filename]" and ``-u [filename]", where ``-d [filename]" specifies the eigen value file and ``-u [filename]" specifies the eigen vector file. The BIMBAM mean genotype file and/or the relatedness matrix file (or the eigen vector file) can be provided in a gzip compressed format.
 
@@ -408,7 +517,7 @@ chr	rs	ps	n_miss	allele1	allele0	af	beta	se	l_remle	p_wald
 \end{verbatim}
 %
 
-The eight columns are: chromosome numbers, snp ids, base pair positions on the chromosome, number of missing values for a given snp, minor allele, major allele, allele frequency, beta estimates, standard errors for beta, remle estimates for lambda, and $p$ values from Wald test. 
+The 11 columns are: chromosome numbers, snp ids, base pair positions on the chromosome, number of missing values for a given snp, minor allele, major allele, allele frequency, beta estimates, standard errors for beta, remle estimates for lambda, and $p$ values from Wald test. 
 
 
 \subsection{Association Tests with Multivariate Linear Mixed Models}
@@ -420,6 +529,8 @@ The basic usages for association analysis with either the PLINK binary ped forma
 -n [num1] [num2] [num3] -o [prefix]
 \end{verbatim}
 This is identical to the above univariate linear mixed model association test, except that an "-n " option is employed to specify which phenotypes in the phenotype file are used for association tests.  (The values after the ``-n " option should be separated by a space.) 
+
+To detect gene environmental interactions, you can add "-gxe [filename]". This gxe file contains a column of environmental variables. In this case, for each SNP in turn, GEMMA will fit a linear mixed model that controls both the SNP main effect and environmental main effect, while testing for the interaction effect. 
 
 Notice that ``-k [filename]" could be replaced by ``-d [filename]" and ``-u [filename]", where ``-d [filename]" specifies the eigen value file and ``-u [filename]" specifies the eigen vector file. The BIMBAM mean genotype file and/or the relatedness matrix file (or the eigen vector file) can be provided in a gzip compressed format.
 
@@ -524,6 +635,71 @@ There will be two output files, both inside an output folder in the current dire
 
 
 
+
+
+
+\subsection{Variance Component Estimation with Relatedness Matrices}
+\subsubsection{Basic Usage}
+The basic usages for variance component estimation with relatedness matrices are:
+\begin{verbatim}
+./gemma -p [filename] -k [filename] -n [num] -vc [num] -o [prefix]
+./gemma -p [filename] -mk [filename] -n [num] -vc [num] -o [prefix]
+\end{verbatim}
+where the ``-vc [num]" option specifies which estimation to use, in particular, "-vc 1" (default) uses HE regression and "-vc 2" uses REML AI algorithm; ``-p [filename]" specifies phenotype file name; ``-n [num]" (default 1) specifies which column of phenotype to use (e.g. one can use "-n 6" for a fam file); ``-k [filename]" specifies relatedness matrix file name; ``-mk [filename]" specifies the multiple relatedness matrix file name; the multiple relatedness matrix file is a text file where each row contains the full path to the relatedness matrices; ``-o [prefix]" specifies output file prefix. 
+
+The relatedness matrix file can be provided in a gzip compressed format.
+
+
+
+\subsubsection{Detailed Information}
+By default, the variance component estimates from the REML AI algorithm are constrained to be positive. To allow for unbiased estimates, one can use "-noconstrain" to pair with "-vc 2". The estimates from the HE regression are not constrained. 
+
+For binary traits, one can label controls as 0 and cases as 1, and follow our previous approaches to fit the data with a linear mixed model by treating the binary case control labels as quantitative traits \cite{Zhou:2013}. A scaling factor can be used to transform variance component estimates from the observed scale back to liability scale \cite{Zhou:2013}.
+
+
+\subsubsection{Output Files}
+One output file will be generated inside an output folder in the current directory. This prefix.log.txt file contains detailed information about the running parameters, computation time, as well as the variance component/PVE estimates and their standard errors.
+
+
+
+
+
+\subsection{Variance Component Estimation with Summary Statistics}
+\subsubsection{Basic Usage}
+This analysis option requires marginal z-scores from the study and individual-level genotypes from a random subset of the study (or a separate reference panel). The marginal z-scores are provided in a beta file while the genotypes can be provided either in the PLINK binary ped format or the BIMBAM format. The basic usages for variance component estimation with summary statistics are:
+\begin{verbatim}
+./gemma -beta [filename] -bfile [prefix] -vc 1 -o [prefix]
+./gemma -beta [filename] -g [filename] -p [filename] -a [filename] -vc 1 -o [prefix]
+\end{verbatim}
+where the ``-vc 1" option specifies to use MQS-HEW; ``-beta [filename]" specifies beta file name; ``-bfile [prefix]" specifies PLINK binary ped file prefix; ``-g [filename]" specifies BIMBAM mean genotype file name; ``-p [filename]" specifies BIMBAM phenotype file name; ``-a [filename]" (optional) specifies BIMBAM SNP annotation file name; ``-o [prefix]" specifies output file prefix. Note that the phenotypes in the phenotype file are not used in this analysis and are only for selecting individuals. The use of phenotypes is different from the CI1 method detailed in the next section.
+
+To fit a multiple variance component model, you will need to add "-cat [filename]" to provide the SNP category file that classifies SNPs into different non-overlapping categories. 
+
+The beta file and genotype file can be provided in a gzip compressed format. In addition, to fit MQS-LDW, you will need to add "-wcat [filename]" together with "-vc 2". The "-wcat [filename]" option specifies the LD score file, which can be provided in a gzip compressed format.
+
+
+\subsubsection{Detailed Information}
+MQS-LDW uses an iterative procedure to update the variance components. It will first compute the MQS-HEW estimates and then use these estimates to update and obtain the MQS-LDW estimates. Therefore, there will be two outputs in the terminal, but only the final results are saved in the output file.
+
+By default, the standard errors for the variance component estimates are computed with the approximate block-wise jackknife method.  The jackknife method works well for unrelated individuals and quantitative traits. If you are interested in using the aymptotic method that is validated in all scenarios, you need to provide genotypes and phenotypes from the study, as well as the output files from the previous MQS run. The basic usages for using the asymptotic form to compute the confidence intervals are
+\begin{verbatim}
+./gemma -beta [filename] -bfile [prefix] -ref [prefix] -pve [num] -ci 1 -o [prefix]
+./gemma -beta [filename] -g [filename] -p [filename] -ref [prefix] -pve [num] -ci 1 -o [prefix]
+\end{verbatim}
+In the above usages, ``-ref [prefix]" specifies the prefix of the output file (including full path) from the previous MQS fit (e.g. q and S estimates from the reference genotype files); and ``-pve [num]" specifies the pve estimates from the previous MQS fit. PLINK format files can be replaced with BIMBAM mean genotype files. In addition, to fit MQS-LDW, one can add "-wcat [filename]" together with "-ci 2". The "-wcat [filename]" option specifies the LD score file, which can be provided in a gzip compressed format. 
+
+The asympototic method requires additional summary statistics besides marginal z-scores \cite{Zhou:2016}. In the current implementation of the asymptotic form, we use individual level data from the study to compute these extra summary statistics internally. Thus, at this stage, the asymptotic form requires the genotype and phenotype files for all individuals from the study. In the near future, we will output these extra summary statistics to facilitate consortium studies and meta-analysis. We are currently working with some consortium studies to figure out the best way to output these values and to make the asymptotic method easier to use. 
+
+For binary traits, one can label controls as 0 and cases as 1, and follow our previous approaches to fit the data with a linear mixed model by treating the binary case control labels as quantitative traits \cite{Zhou:2013}. A scaling factor can be used to transform variance component estimates from the observed scale back to liability scale \cite{Zhou:2013}.
+
+
+\subsubsection{Output Files}
+Five output files will be generated inside an output folder in the current directory. The prefix.log.txt file contains detailed information about the running parameters, computation time, as well as the variance component/PVE estimates and their standard errors. This is the main file of interest. The prefix.S.txt file contains S estimates and their estimated errors. The prefix.q.txt file contains q estimates. The prefix.Vq.txt file contains the standard errors for q. The prefix.size.txt file contains the number of SNPs in each category and the number of individuals in the study.
+
+
+
+
+
 \clearpage
 \newpage
 \section{Questions and Answers}
@@ -549,6 +725,10 @@ A: One should always use the same phenotype and genotype files for both fitting 
 \item  \textcolor{red}{ -d        [filename]}     \quad  specify input eigen value file name
 \item  \textcolor{red}{ -u        [filename]}     \quad  specify input eigen vector file name
 \item  \textcolor{red}{ -c        [filename] }     \quad      specify input covariates file name (optional); an intercept term is needed in the covariates file
+\item  \textcolor{red}{ -widv        [filename] }     \quad      specify input weight file name; this is only used for weighting the residual variance of different individuals
+\item  \textcolor{red}{ -gxe        [filename] }     \quad      specify input environmental covariate file name; this is only used for detecting gene x environmental interactions
+\item  \textcolor{red}{ -cat        [filename] }     \quad      specify input SNP category file name; this is only used for variance component estimation using summary statistics
+\item  \textcolor{red}{ -beta        [filename] }     \quad      specify input beta/z file name; this is only used for variance component estimation using summary statistics
 \item  \textcolor{red}{ -epm        [filename] }     \quad    specify input estimated parameter file name
 \item  \textcolor{red}{ -en [n1]  [n2]  [n3]  [n4]}     \quad    specify values for the input estimated parameter file (with a header) (default 2 5 6 7 when no -ebv -k files, and 2 0 6 7 when -ebv and -k files are supplied; n1: rs column number; n2: estimated alpha column number (0 to ignore); n3: estimated beta column number (0 to ignore); n4: estimated gamma column number (0 to ignore).)
 \item  \textcolor{red}{ -ebv        [filename] }     \quad    specify input estimated random effect (breeding value) file name
@@ -556,7 +736,9 @@ A: One should always use the same phenotype and genotype files for both fitting 
 \item  \textcolor{red}{ -mu        [filename] }     \quad    specify estimated mean value directly, instead of using -emu file
 \item  \textcolor{red}{ -snps        [filename] }     \quad    specify input snps file name to only analyze a certain set of snps; contains a column of snp ids
 \item  \textcolor{red}{ -pace     [num]}     \quad           specify terminal display update pace (default 100000).
+\item  \textcolor{red}{ -outdir        [prefix]}     \quad        specify output directory path (default ``./output/")
 \item  \textcolor{red}{ -o        [prefix]}     \quad        specify output file prefix (default ``result")
+\item  \textcolor{red}{ -outdir        [path]}     \quad        specify output directory path (default ``./output/")
 \end{itemize}
 %
 \textcolor{blue}{SNP Quality Control Options}
@@ -567,6 +749,12 @@ A: One should always use the same phenotype and genotype files for both fitting 
 \item  \textcolor{red}{-r2      [num] }     \quad           specify r-squared threshold (default 0.9999)
 \item  \textcolor{red}{-hwe      [num] }     \quad           specify HWE test p value threshold (default 0; no test)
 \item  \textcolor{red}{-notsnp  }     \quad          minor allele frequency cutoff is not used and so all real values can be used as covariates
+\end{itemize}
+%
+\textcolor{blue}{Linear Model Options}
+%
+\begin{itemize}
+\item  \textcolor{red}{-lm       [num]}     \quad          specify frequentist analysis choice (default 1; valid value 1-4; 1: Wald test; 2: likelihood ratio test; 3: score test; 4: all 1-3.)
 \end{itemize}
 %
 \textcolor{blue}{Relatedness Matrix Calculation Options}
@@ -619,6 +807,14 @@ A: One should always use the same phenotype and genotype files for both fitting 
 \begin{itemize}
 \item  \textcolor{red}{-predict       [num]}     \quad          specify prediction options (default 1; valid value 1-2; 1: predict for individuals with missing phenotypes; 2: predict for individuals with missing phenotypes, and convert the predicted values using normal CDF.)
 \end{itemize}
+%
+\textcolor{blue}{Variance Component Estimation Options}
+%
+\begin{itemize}
+\item  \textcolor{red}{-vc       [num]}     \quad          specify fitting algorithm. For individual level data (default 1; valid value 1-2; 1: HE regression; 2: REML AI algorithm.). For summary statistics (default 1; valid value 1-2; 1: MQS-HEW; 2: MQS-LDW.)
+\item  \textcolor{red}{-ci       [num]}     \quad          specify fitting algorithm to compute the standard errors. (default 1; valid value 1-2; 1: MQS-HEW; 2: MQS-LDW.)
+\end{itemize}
+%
 	
 \clearpage
 \bibliographystyle{plain}
