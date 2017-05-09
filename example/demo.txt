@@ -1,13 +1,10 @@
-## Detailed description of the data set is available in the online GEMMA user manual
-## Each of the following steps may take over one minute to run
-
-
-
-
-
+## Detailed description of the data set is available in the online
+## GEMMA user manual. Each of the following steps may take over one
+## minute to run.
 
 ## To calculate a centered relatedness matrix:
-../bin/gemma -g mouse_hs1940.geno.txt.gz -p mouse_hs1940.pheno.txt -a mouse_hs1940.anno.txt -gk -o mouse_hs1940
+../bin/gemma -g mouse_hs1940.geno.txt.gz -p mouse_hs1940.pheno.txt \
+  -a mouse_hs1940.anno.txt -gk -o mouse_hs1940
 
 # The estimated relatedness matrix should look like this:
 0.3350590  -0.0227226  0.0103535 ...
@@ -55,7 +52,9 @@ se(pve) in the null model = 0.032774
 ## To perform association tests with a multivariate linear mixed model, for two phenotypes CD8 (column 1) and MCH (column 6):
 ## Notice that the number of individuals in this analysis is different from that above, so the allele frequencies are different between the two analyses
 
-../bin/gemma -g mouse_hs1940.geno.txt.gz -p mouse_hs1940.pheno.txt -n 1 6 -a mouse_hs1940.anno.txt -k ./output/mouse_hs1940.cXX.txt -lmm -o mouse_hs1940_CD8MCH_lmm
+../bin/gemma -g mouse_hs1940.geno.txt.gz -p mouse_hs1940.pheno.txt \
+  -n 1 6 -a mouse_hs1940.anno.txt -k ./output/mouse_hs1940.cXX.txt \
+  -lmm -o mouse_hs1940_CD8MCH_lmm
 
 # The result for top 5 SNPs should look like this:
 chr	rs	ps	n_miss	allele1	allele0	af	beta_1	beta_2	Vbeta_1_1	Vbeta_1_2	Vbeta_2_2	p_wald

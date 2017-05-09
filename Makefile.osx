@@ -30,7 +30,7 @@ SRC_DIR  = ./src
 CPP = g++
 
 CPPFLAGS = -F /System/Library/Frameworks -Wall -O3 \
-  -I/usr/local/opt/gsl@1/include
+  -I/usr/local/opt/gsl@1/include -Wc++11-narrowing
 
 LIBS = /usr/local/opt/gsl@1/lib/libgsl.a \
        /usr/local/opt/gsl@1/lib/libgslcblas.a -lz

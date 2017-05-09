@@ -2160,7 +2160,9 @@ bool ReadFile_bgen(const string &file_bgen, const set<string> &setSnps, const gs
 		uint16_t unzipped_data[3*bgen_N];
 
 		if (setSnps.size()!=0 && setSnps.count(rs)==0) {
-		  SNPINFO sInfo={"-9", rs, -9, -9, minor, major, -9, -9, (long int) -9};
+		  SNPINFO sInfo={"-9", rs, -9, -9, minor, major,
+				 static_cast<size_t>(-9), -9, (long int) -9};
+		  
 			snpInfo.push_back(sInfo);
 			indicator_snp.push_back(0);
 			if(CompressedSNPBlocks)
