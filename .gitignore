@@ -2,3 +2,4 @@
 *.o
 *.tar.gz
 bin/
+example/output/
