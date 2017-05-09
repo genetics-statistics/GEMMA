@@ -3315,7 +3315,7 @@ void MVLMM::Analyzebgen (const gsl_matrix *U, const gsl_vector *eval, const gsl_
 		gsl_vector_memcpy (&Xlarge_col.vector, x);
 		csnp++;
 
-		if (csnp%msize==0 || c==t_last ) {
+		if (csnp%msize==0 || csnp==t_last ) {
 		  size_t l=0;
 		  if (csnp%msize==0) {l=msize;} else {l=csnp%msize;}
 
@@ -3714,7 +3714,7 @@ void MVLMM::AnalyzeBimbam (const gsl_matrix *U, const gsl_vector *eval, const gs
 		gsl_vector_memcpy (&Xlarge_col.vector, x);
 		csnp++;
 
-		if (csnp%msize==0 || c==t_last ) {
+		if (csnp%msize==0 || csnp==t_last ) {
 		  size_t l=0;
 		  if (csnp%msize==0) {l=msize;} else {l=csnp%msize;}
 
@@ -4148,7 +4148,7 @@ void MVLMM::AnalyzePlink (const gsl_matrix *U, const gsl_vector *eval, const gsl
 		gsl_vector_memcpy (&Xlarge_col.vector, x);
 		csnp++;
 
-		if (csnp%msize==0 || c==t_last ) {
+		if (csnp%msize==0 || csnp==t_last ) {
 		  size_t l=0;
 		  if (csnp%msize==0) {l=msize;} else {l=csnp%msize;}
 
