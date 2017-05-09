@@ -18,7 +18,7 @@ WITH_LAPACK = 1
 FORCE_32BIT = 
 FORCE_DYNAMIC = 
 FORCE_FLOAT = 
-DIST_NAME = gemma-0.95alpha
+DIST_NAME = gemma-0.95.1alpha
 
 # --------------------------------------------------------------------
 # Edit below this line with caution
