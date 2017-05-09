@@ -31,7 +31,7 @@ SRC_DIR  = ./src
 
 CPP = g++
 
-CPPFLAGS = -Wall -O3 -std=gnu++11
+CPPFLAGS = -Wall -Weffc++ -O3 -std=gnu++11
 
 ifdef FORCE_DYNAMIC
 LIBS = -lgsl -lgslcblas -lblas -pthread -lz
