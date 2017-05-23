@@ -7,7 +7,14 @@ GEMMA is a software toolkit for fast application of linear mixed
 models (LMMs) and related models to genome-wide association studies
 (GWAS) and other large-scale data sets.
 
-Features include:
+*Add note here about posting questions, comments or bug reports to
+Issues.*
+
+*Note: The image above summarizes physiological and behavioral trait
+loci discovered in CFW mice using GEMMA, from [Parker et al, Nat.
+Genet., 2006](https://doi.org/10.1038/ng.3609).*
+
+## Key features
 
 1. Fast assocation tests implemented using the univariate linear mixed
 model (LMM). In GWAS, this can correct for population structure and
@@ -16,7 +23,7 @@ proportion of variance in phenotypes explained by available genotypes
 (PVE), often called "chip heritability" or "SNP heritability".
 
 2. Fast association tests for multiple phenotypes implemented using a
-multivariate linear mixed model (lvLMM). In GWAS, this can correct for
+multivariate linear mixed model (mvLMM). In GWAS, this can correct for
 populations tructure and sample nonexchangeability jointly in multiple
 complex phenotypes.
 
@@ -30,26 +37,19 @@ algorithm can be used to estimate variance components when
 individual-level data are available. For summary data, GEMMA uses the
 MQS algorithm to estimate variance components.
 
-*Add note here about posting questions, comments or bug reports to
-Issues.*
-
-*Note: The image above summarizes physiological and behavioral trait
-loci discovered in CFW mice, from [Parker et al, Nat. Genet.,
-2006](https://doi.org/10.1038/ng.3609).*
-
-### Citing GEMMA
+## Citing GEMMA
 
 *Add text here.*
 
-### License
+## License
 
 Copyright (C) 2012–2017, Xiang Zhou.
 
-### Quick start
+## Quick start
 
 *Add text here.*
 
-### Setup
+## Setup
 
 *Add text here.*
 
