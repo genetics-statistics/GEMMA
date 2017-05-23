@@ -1,4 +1,4 @@
-![Genetic associations discovered in CFW mice using GEMMA (Parker et al,
+![Genetic associations identified in CFW mice using GEMMA (Parker et al,
 Nat. Genet., 2016)](cfw.gif)
 
 # GEMMA: Genome-wide Efficient Mixed Model Association
@@ -20,7 +20,7 @@ multivariate linear mixed model (lvLMM). In GWAS, this can correct for
 populations tructure and sample nonexchangeability jointly in multiple
 complex phenotypes.
 
-3 Bayesian sparse linear mixed model (BSLMM) for estimating PVE,
+3. Bayesian sparse linear mixed model (BSLMM) for estimating PVE,
 phenotype prediction, and multi-marker modeling in GWAS.
 
 4. Estimation of variance components ("chip heritability") partitioned
@@ -32,6 +32,10 @@ MQS algorithm to estimate variance components.
 
 *Add note here about posting questions, comments or bug reports to
 Issues.*
+
+*Note: The image above summarizes physiological and behavioral trait
+loci discovered in CFW mice, from [Parker et al, Nat. Genet.,
+2006](https://doi.org/10.1038/ng.3609).*
 
 ### Citing GEMMA
 
