@@ -10,9 +10,9 @@ models (LMMs) and related models to genome-wide association studies
 *Add note here about posting questions, comments or bug reports to
 Issues.*
 
-*Note: The image above summarizes physiological and behavioral trait
-loci discovered in CFW mice using GEMMA, from [Parker et al, Nat.
-Genet., 2006](https://doi.org/10.1038/ng.3609).*
+*Note:* The image above summarizes physiological and behavioral trait
+loci in CFW mice identified using GEMMA, from [Parker et al, Nat.
+Genet., 2006](https://doi.org/10.1038/ng.3609).
 
 ## Key features
 
@@ -53,3 +53,6 @@ Copyright (C) 2012–2017, Xiang Zhou.
 
 *Add text here.*
 
+## Credits
+
+*Add text here.*
