@@ -1,3 +1,9 @@
 *.o
 *.tar.gz
-example/output/
+example/output
+doc/manual.aux
+doc/manual.bbl
+doc/manual.blg
+doc/manual.log
+doc/manual.out
+doc/manual.toc

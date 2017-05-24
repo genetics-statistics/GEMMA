@@ -96,7 +96,8 @@ the full text of the license.
 
 ## Credits
 
-The *GEMMA* software was developed by:<br>
+The *GEMMA* software was developed by:
+
 [Xiang Zhou](http://www.xzlab.org)<br>
 Dept. of Biostatistics<br>
 University of Michigan<br>

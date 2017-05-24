@@ -1,20 +1,13 @@
 \documentclass[11pt]{article}
-\usepackage{amsmath,latexsym,natbib,fullpage,color, subfigure, rotating,url,setspace, multirow,amssymb,hyperref}
+\usepackage{amsmath,latexsym,natbib,fullpage,color,subfigure,rotating,
+  url,setspace,multirow,amssymb,hyperref}
 \onehalfspacing
 
 \providecommand{\url}[1]{\texttt{#1}}
 
-
-
-
-
-
-
-
 \title{GEMMA User Manual}
 \author{Xiang Zhou}
 \date{\today}
-
 
 \newcommand{\me}{\mathrm{e}}
 \newcommand{\supp}{\operatorname{supp}}
@@ -64,7 +57,6 @@
 \newcommand{\bOmega}{\boldsymbol\Omega}
 \newcommand{\bSigma}{\boldsymbol\Sigma}
 
-
 \begin{document}
 \maketitle
 
@@ -72,15 +64,30 @@
 
 \newpage
 
-
-
-
-
 \section{Introduction}
 
 \subsection{What is GEMMA}
-GEMMA is the software implementing the Genome-wide Efficient Mixed Model Association algorithm \cite{Zhou:2012} for a standard linear mixed model and some of its close relatives for genome-wide association studies (GWAS). It fits a univariate linear mixed model (LMM) for marker association tests with a single phenotype to account for population stratification and sample structure, and for estimating the proportion of variance in phenotypes explained (PVE) by typed genotypes (i.e. "chip heritability") \cite{Zhou:2012}.  It fits a multivariate linear mixed model (mvLMM) for testing marker associations with multiple phenotypes simultaneously while controlling for population stratification, and for estimating genetic correlations among complex phenotypes \cite{Zhou:2014}. It fits a Bayesian sparse linear mixed model (BSLMM) using Markov chain Monte Carlo (MCMC) for estimating PVE by typed genotypes, predicting phenotypes, and identifying associated markers by jointly modeling all markers while controlling for population structure \cite{Zhou:2013}. It fits HE, REML and MQS for variance component estimation using either individual-level data or summary statistics \cite{Zhou:2016}. It is computationally efficient for large scale GWAS and uses freely available open-source numerical libraries.
 
+GEMMA is the software implementing the Genome-wide Efficient Mixed
+Model Association algorithm \cite{Zhou:2012} for a standard linear
+mixed model and some of its close relatives for genome-wide
+association studies (GWAS). It fits a univariate linear mixed model
+(LMM) for marker association tests with a single phenotype to account
+for population stratification and sample structure, and for estimating
+the proportion of variance in phenotypes explained (PVE) by typed
+genotypes (i.e. "chip heritability") \cite{Zhou:2012}. It fits a
+multivariate linear mixed model (mvLMM) for testing marker
+associations with multiple phenotypes simultaneously while controlling
+for population stratification, and for estimating genetic correlations
+among complex phenotypes \cite{Zhou:2014}. It fits a Bayesian sparse
+linear mixed model (BSLMM) using Markov chain Monte Carlo (MCMC) for
+estimating PVE by typed genotypes, predicting phenotypes, and
+identifying associated markers by jointly modeling all markers while
+controlling for population structure \cite{Zhou:2013}. It fits HE,
+REML and MQS for variance component estimation using either
+individual-level data or summary statistics \cite{Zhou:2016}. It is
+computationally efficient for large scale GWAS and uses freely
+available open-source numerical libraries.
 
 \subsection{How to Cite GEMMA}
 \begin{itemize}
@@ -93,7 +100,6 @@ Xiang Zhou, Peter Carbonetto and Matthew Stephens (2013). Polygenic modeling wit
 \item Variance component estimation with individual-level or summary data\\
 Xiang Zhou (2016). A unified framework for variance component estimation with summary statistics in genome-wide association studies. bioRxiv. 042846.
 \end{itemize}
-
 
 \subsection{Models}
 \subsubsection{Univariate Linear Mixed Model}
@@ -326,9 +332,15 @@ rs4 5430 -0.322820 T C
 %
 This file is flexible. You can use beta and se\_beta columns instead of marginal z-scores. You can directly use the output *.assoc.txt file from the a linear model analysis as the input beta/z file.
 
-
 \subsection{Category File}
-This file contains SNP category information. The first row is a header line. The first column is chromosome number (optional), the second column is base pair position (optional), the third column is SNP id, the fourth column is its genetic distance on the chromosome (optional), and the following columns list non-overlapping categories. A vector of indicators is provided for each SNP. The SNPs are not required to be in the same order of the other files. An example category file with four SNPs is as follows:
+This file contains SNP category information. The first row is a header
+line. The first column is chromosome number (optional), the second
+column is base pair position (optional), the third column is SNP id,
+the fourth column is its genetic distance on the chromosome
+(optional), and the following columns list non-overlapping
+categories. A vector of indicators is provided for each SNP. The SNPs
+are not required to be in the same order of the other files. An
+example category file with four SNPs is as follows:
 %
 \begin{verbatim}
 CHR  BP  SNP  CM  CODING  UTR  PROMOTER  DHS  INTRON  ELSE
@@ -338,13 +350,22 @@ CHR  BP  SNP  CM  CODING  UTR  PROMOTER  DHS  INTRON  ELSE
 1  5430  rs4  0.766409  0  0  0  0  0  0
 \end{verbatim}
 %
-In the above file, rs1 belongs to a coding region; rs2 belongs does not belong to any of the first five categories; rs3 belongs to both promoter and DHS regions but will be treated as an DHS snp in the analysis; rs4 does not belong to any category and will be ignored in the analysis. Note that if a SNP is labeled with more than one category, then it will be treated as the last category label. 
+In the above file, rs1 belongs to a coding region; rs2 belongs does
+not belong to any of the first five categories; rs3 belongs to both
+promoter and DHS regions but will be treated as an DHS snp in the
+analysis; rs4 does not belong to any category and will be ignored in
+the analysis. Note that if a SNP is labeled with more than one
+category, then it will be treated as the last category label.
 
-This file is also flexible, as long as it contains the SNP id and the category information.
-
+This file is also flexible, as long as it contains the SNP id and the
+category information.
 
 \subsection{LD Score File}
-This file contains the LD scores for all SNPs. The first row is a header line. The first column is chromosome number (optional), the second column is SNP id, the third column is base pair position (optional), the fourth column is the LD score of the SNP. An example LD score file with four SNPs is as follows:
+This file contains the LD scores for all SNPs. The first row is a
+header line. The first column is chromosome number (optional), the
+second column is SNP id, the third column is base pair position
+(optional), the fourth column is the LD score of the SNP. An example
+LD score file with four SNPs is as follows:
 %
 \begin{verbatim}
 CHR	SNP	BP	L2
@@ -354,15 +375,14 @@ CHR	SNP	BP	L2
 1	rs4	5430	0.986
 \end{verbatim}
 %
-In the above file, the LD score for rs1 is 1.004 and the LD score for rs4 is 0.986.
+In the above file, the LD score for rs1 is 1.004 and the LD score for
+rs4 is 0.986.
 
-This file is also flexible, as long as it contains the SNP id and the LD score information.
-
-
-
-
+This file is also flexible, as long as it contains the SNP id and the
+LD score information.
 
 \newpage
+
 \section{Running GEMMA}
 
 \subsection{A Small GWAS Example Dataset}
@@ -818,6 +838,6 @@ A: One should always use the same phenotype and genotype files for both fitting 
 	
 \clearpage
 \bibliographystyle{plain}
-\bibliography{GEMMAmanual}
+\bibliography{manual}
 
 \end{document}
