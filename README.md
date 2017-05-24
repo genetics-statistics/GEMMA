@@ -7,12 +7,12 @@ GEMMA is a software toolkit for fast application of linear mixed
 models (LMMs) and related models to genome-wide association studies
 (GWAS) and other large-scale data sets.
 
-*Add note here about posting questions, comments or bug reports to
-Issues.*
+Please post comments, feature requests or suspected bugs to
+[Github issues](https://github.com/xiangzhou/GEMMA/issues).
 
-*Note: The image above summarizes physiological and behavioral trait
-loci in CFW mice identified using GEMMA, from [Parker et al, Nature
-Genetics, 2006](https://doi.org/10.1038/ng.3609).*
+*Note: The above image depicts physiological and behavioral trait
+loci identified in CFW mice using GEMMA ([Parker et al, Nature
+Genetics, 2006](https://doi.org/10.1038/ng.3609)).*
 
 ## Key features
 
