@@ -94,6 +94,11 @@ the full text of the license.
 
 ### Building from source
 
+You will need a standard C/C++ compiler such as GNU gcc, as well as
+[GSL](http://www.gnu.org/s/gsl) and
+[LAPACK](http://www.netlib.org/lapack) libraries. You will need to
+change the library paths in the Makefile accordingly.
+
 ## Credits
 
 The *GEMMA* software was developed by:
