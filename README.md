@@ -11,8 +11,8 @@ models (LMMs) and related models to genome-wide association studies
 Issues.*
 
 *Note: The image above summarizes physiological and behavioral trait
-loci in CFW mice identified using GEMMA, from [Parker et al, Nat.
-Genet., 2006](https://doi.org/10.1038/ng.3609).*
+loci in CFW mice identified using GEMMA, from [Parker et al, Nature
+Genetics, 2006](https://doi.org/10.1038/ng.3609).*
 
 ## Key features
 
@@ -39,7 +39,33 @@ MQS algorithm to estimate variance components.
 
 ## Citing GEMMA
 
-*Add text here.*
+If you use GEMMA for published work, please cite our paper:
+
+Xiang Zhou and Matthew Stephens (2012). [Genome-wide efficient
+mixed-model analysis for association studies.](http://doi.org/10.1038/ng.2310) 
+*Nature Genetics* **44**, 821–824.
+
+If you use the multivariate linear mixed model (mvLMM) in your
+research, please cite:
+
+Xiang Zhou and Matthew Stephens (2014). [Efficient multivariate linear
+mixed model algorithms for genome-wide association
+studies.](http://doi.org/10.1038/nmeth.2848)
+*Nature Methods* **11**, 407–409.
+
+If you use the Bayesian sparse linear mixed model (BSLMM), please cite:
+
+Xiang Zhou, Peter Carbonetto and Matthew Stephens (2013). [Polygenic
+modeling with bayesian sparse linear mixed
+models.](http://doi.org/10.1371/journal.pgen.1003264) *PLoS Genetics*
+**9**, e1003264. 
+
+And if you use of the variance component estimation using summary
+statistics, please cite:
+
+Xiang Zhou (2016). [A unified framework for variance component
+estimation with summary statistics in genome-wide association
+studies.](https://doi.org/10.1101/042846) *bioRxiv* 042846.
 
 ## License
 
@@ -47,11 +73,17 @@ Copyright (C) 2012–2017, Xiang Zhou.
 
 ## Quick start
 
-*Add text here.*
+1. Download and install the software. *Give more details here.*
 
-## Setup
+2. Work through the tutorial. *Give more details here.*
 
-*Add text here.*
+3. Read the manual. *Give more details.*
+
+## Setup 
+
+### Using precompiled executables
+
+### Building from source
 
 ## Credits
 
