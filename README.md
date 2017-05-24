@@ -41,21 +41,21 @@ MQS algorithm to estimate variance components.
 
 If you use GEMMA for published work, please cite our paper:
 
-Xiang Zhou and Matthew Stephens (2012). [Genome-wide efficient
++ Xiang Zhou and Matthew Stephens (2012). [Genome-wide efficient
 mixed-model analysis for association studies.](http://doi.org/10.1038/ng.2310) 
 *Nature Genetics* **44**, 821–824.
 
 If you use the multivariate linear mixed model (mvLMM) in your
 research, please cite:
 
-Xiang Zhou and Matthew Stephens (2014). [Efficient multivariate linear
++ Xiang Zhou and Matthew Stephens (2014). [Efficient multivariate linear
 mixed model algorithms for genome-wide association
 studies.](http://doi.org/10.1038/nmeth.2848)
 *Nature Methods* **11**, 407–409.
 
 If you use the Bayesian sparse linear mixed model (BSLMM), please cite:
 
-Xiang Zhou, Peter Carbonetto and Matthew Stephens (2013). [Polygenic
++ Xiang Zhou, Peter Carbonetto and Matthew Stephens (2013). [Polygenic
 modeling with bayesian sparse linear mixed
 models.](http://doi.org/10.1371/journal.pgen.1003264) *PLoS Genetics*
 **9**, e1003264. 
@@ -63,7 +63,7 @@ models.](http://doi.org/10.1371/journal.pgen.1003264) *PLoS Genetics*
 And if you use of the variance component estimation using summary
 statistics, please cite:
 
-Xiang Zhou (2016). [A unified framework for variance component
++ Xiang Zhou (2016). [A unified framework for variance component
 estimation with summary statistics in genome-wide association
 studies.](https://doi.org/10.1101/042846) *bioRxiv* 042846.
 
