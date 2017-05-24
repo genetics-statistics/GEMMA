@@ -12,7 +12,7 @@ Please post comments, feature requests or suspected bugs to
 
 *The above image depicts physiological and behavioral trait
 loci identified in CFW mice using GEMMA, from [Parker et al, Nature
-Genetics, 2006](https://doi.org/10.1038/ng.3609).*
+Genetics, 2016](https://doi.org/10.1038/ng.3609).*
 
 ## Key features
 
