@@ -7,6 +7,8 @@ GEMMA is a software toolkit for fast application of linear mixed
 models (LMMs) and related models to genome-wide association studies
 (GWAS) and other large-scale data sets.
 
+Check out [NEWS.md](NEWS.md) to see what's new in each GEMMA release.
+
 Please post comments, feature requests or suspected bugs to
 [Github issues](https://github.com/xiangzhou/GEMMA/issues).
 
