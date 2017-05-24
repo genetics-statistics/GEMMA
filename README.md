@@ -37,6 +37,14 @@ algorithm can be used to estimate variance components when
 individual-level data are available. For summary data, GEMMA uses the
 MQS algorithm to estimate variance components.
 
+## Quick start
+
+1. Download and install the software. *Give more details here.*
+
+2. Work through the tutorial. *Give more details here.*
+
+3. Read the manual. *Give more details.*
+
 ## Citing GEMMA
 
 If you use GEMMA for published work, please cite our paper:
@@ -71,13 +79,14 @@ studies.](https://doi.org/10.1101/042846) *bioRxiv* 042846.
 
 Copyright (C) 2012–2017, Xiang Zhou.
 
-## Quick start
-
-1. Download and install the software. *Give more details here.*
-
-2. Work through the tutorial. *Give more details here.*
-
-3. Read the manual. *Give more details.*
+The *GEMMA* source code repository is free software: you can
+redistribute it under the terms of the
+[GNU General Public License](http://www.gnu.org/licenses/gpl.html). All
+the files in this project are part of *GEMMA*. This project is
+distributed in the hope that it will be useful, but **without any
+warranty**; without even the implied warranty of **merchantability or
+fitness for a particular purpose**. See file [LICENSE](LICENSE) for
+the full text of the license.
 
 ## Setup 
 
