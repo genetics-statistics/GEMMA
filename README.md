@@ -43,7 +43,7 @@ MQS algorithm to estimate variance components.
 
 2. Work through the tutorial. *Give more details here.*
 
-3. Read the manual. *Give more details.*
+3. Read the manual and run `gemma -h`. *Give more details here.*
 
 ## Citing GEMMA
 
