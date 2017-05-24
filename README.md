@@ -10,9 +10,9 @@ models (LMMs) and related models to genome-wide association studies
 Please post comments, feature requests or suspected bugs to
 [Github issues](https://github.com/xiangzhou/GEMMA/issues).
 
-*The above image depicts physiological and behavioral trait
+*(The above image depicts physiological and behavioral trait
 loci identified in CFW mice using GEMMA, from [Parker et al, Nature
-Genetics, 2016](https://doi.org/10.1038/ng.3609).*
+Genetics, 2016](https://doi.org/10.1038/ng.3609).)*
 
 ## Key features
 
@@ -98,7 +98,8 @@ the full text of the license.
 
 The *GEMMA* software was developed by:<br>
 [Xiang Zhou](http://www.xzlab.org)<br>
-Dept. of Biostatistics, University of Michigan<br>
+Dept. of Biostatistics<br>
+University of Michigan<br>
 2012-2017
 
 Peter Carbonetto, Tim Flutre, Matthew Stephens and others have also
