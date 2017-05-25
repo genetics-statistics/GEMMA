@@ -92,9 +92,17 @@ the full text of the license.
 
 ## Setup 
 
+*Explain that there are two ways to install GEMMA on your computer;
+give pros and cons of each approach.*
+
 ### Using precompiled executables
 
 ### Building from source
+
+*We provide a simple Makefile which will need to be customized; please
+see the comments at the top of the Makefile. Explain why we
+automatically generate a Makefile using programs such as CMake or
+Autotools.*
 
 You will need a standard C/C++ compiler such as GNU gcc, as well as
 [GSL](http://www.gnu.org/s/gsl) and
