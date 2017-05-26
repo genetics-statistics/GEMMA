@@ -97,6 +97,24 @@ warranty**; without even the implied warranty of **merchantability or
 fitness for a particular purpose**. See file [LICENSE](LICENSE) for
 the full text of the license.
 
+## What's included
+
+This is the current structure of the GEMMA source repository:
+
+```
+├── LICENSE
+├── Makefile
+├── NEWS.md
+├── README.md
+├── bin
+├── doc
+├── example
+└── src
+    └── Eigen
+```
+
+*Explain here what is in each of the subfolders.*
+
 ## Setup 
 
 There are two ways to install GEMMA:
