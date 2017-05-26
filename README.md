@@ -123,17 +123,19 @@ file appropriate for your platform: gemma.linux.gz or gemma.macosx.gz.
 2. Run `gunzip gemma.linux.gz` or `gunzip gemma.linux.gz` to
 decompress the file.
 
-3. The binaries we provide are linked to static versions of the GSL,
-LAPACK and BLAS libraries. However, since the program dynamically
-links to standard system libraries and libraries included with the C++
-compiler, *you need to make sure that you have installed on your
+3. For convenience, the binaries we provide are linked to static
+versions of the GSL, LAPACK and BLAS libraries. So you do not need to
+install these libraries.
+
+4. Cince the program dynamically links to standard C++ and system
+libraries, *you need to make sure that you have installed on your
 system the same C++ compiler that was used to build the program.* For
 example, `gemma.linux` was built using `gcc 4.8.5`, so you should have
 `gcc 4.8.x`. If the libraries are installed somewhere non-standard,
 you can tell where GEMMA can find the libraries by setting the
-`LD_LIBRARY_PATH` environment variable. If you have the wrong C++
-compiler version, or the libraries are in a place where GEMMA cannot
-find them, then the program will complain about dynamic linking
+`LD_LIBRARY_PATH` environment variable. If you have the wrong version
+of the C++ compiler, or if the libraries are in a place where GEMMA
+cannot find them, then the program will complain about dynamic linking
 errors.
 
 ### Building the binaries from source
