@@ -10,13 +10,15 @@ models (LMMs) and related models to genome-wide association studies
 Check out [NEWS.md](NEWS.md) to see what's new in each GEMMA release.
 
 Please post comments, feature requests or suspected bugs to
-[Github issues](https://github.com/xiangzhou/GEMMA/issues).
+[Github issues](https://github.com/xiangzhou/GEMMA/issues). We also
+encourage contributions, for example, by forking the repository,
+making your changes to the code, and issuing a pull request.
 
-Currently, GEMMA is supported for Mac OS X and Unix-alike platforms
-(e.g., Linux). *Windows is not currently supported.* If you are
-interested in helping to make GEMMA available on Windows platforms
-(e.g., by providing installation instructions for Windows, or by
-contributing Windows binaries) please post a note in the
+Currently, GEMMA is supported for 64-bit Mac OS X and Linux
+platforms. *Windows is not currently supported.* If you are interested
+in helping to make GEMMA available on Windows platforms (e.g., by
+providing installation instructions for Windows, or by contributing
+Windows binaries) please post a note in the
 [Github issues](https://github.com/xiangzhou/GEMMA/issues).
 
 *(The above image depicts physiological and behavioral trait
@@ -119,7 +121,7 @@ This is the current structure of the GEMMA source repository:
 
 There are two ways to install GEMMA:
 
-1. Download the precompiled binaries.
+1. Download the precompiled binaries (64-bit Linux and Mac only).
 
 2. Compile the GEMMA executable from source.
 
@@ -133,10 +135,11 @@ numerical libraries.
 In both cases, we recommend downloading the
 [latest stable release][latest_release] instead of the Github repository.
 
-### Using precompiled binaries
+### Precompiled binaries
 
 1. Go to the [latest stable release](latest_release) and download the
-file appropriate for your platform: gemma.linux.gz or gemma.macosx.gz.
+file appropriate for your platform: `gemma.linux.gz` for Linux, or
+`gemma.macosx.gz` for Mac OS X.
 
 2. Run `gunzip gemma.linux.gz` or `gunzip gemma.linux.gz` to
 decompress the file.
@@ -156,7 +159,9 @@ of the C++ compiler, or if the libraries are in a place where GEMMA
 cannot find them, then the program will complain about dynamic linking
 errors.
 
-### Building the binaries from source
+### Building from source
+
+*Provde a brief list the dependencies here.*
 
 *We provide a simple Makefile which will need to be customized; please
 see the comments at the top of the Makefile. Explain why we
