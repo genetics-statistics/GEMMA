@@ -12,6 +12,13 @@ Check out [NEWS.md](NEWS.md) to see what's new in each GEMMA release.
 Please post comments, feature requests or suspected bugs to
 [Github issues](https://github.com/xiangzhou/GEMMA/issues).
 
+Currently, GEMMA is supported for Mac OS X and Unix-alike platforms
+(e.g., Linux). Windows is not currently supported. If you are
+interested in helping to make GEMMA available on Windows platforms
+(e.g., by providing installation instructions for Windows, or by
+contributing Windows binaries) please post a note in the
+[Github issues](https://github.com/xiangzhou/GEMMA/issues).
+
 *(The above image depicts physiological and behavioral trait
 loci identified in CFW mice using GEMMA, from [Parker et al, Nature
 Genetics, 2016](https://doi.org/10.1038/ng.3609).)*
@@ -43,7 +50,7 @@ MQS algorithm to estimate variance components.
 
 1. Download and install the software. *Give more details here.*
 
-2. Work through the tutorial. *Give more details here.*
+2. Work through the demo. *Give more details here.*
 
 3. Read the manual and run `gemma -h`. *Give more details here.*
 
@@ -92,12 +99,13 @@ the full text of the license.
 
 ## Setup 
 
-*Explain that there are two ways to install GEMMA on your computer;
-give pros and cons of each approach.*
+There are two ways to install GEMMA: (1) download the precompiled
+binaries, or (2) compiling GEMMA from source. The first option is much
+simpler, and is therefore recommended 
 
-### Using precompiled executables
+### Using precompiled binaries
 
-### Building from source
+### Building binaries from source
 
 *We provide a simple Makefile which will need to be customized; please
 see the comments at the top of the Makefile. Explain why we
