@@ -13,7 +13,7 @@ Please post comments, feature requests or suspected bugs to
 [Github issues](https://github.com/xiangzhou/GEMMA/issues).
 
 Currently, GEMMA is supported for Mac OS X and Unix-alike platforms
-(e.g., Linux). Windows is not currently supported. If you are
+(e.g., Linux). *Windows is not currently supported.* If you are
 interested in helping to make GEMMA available on Windows platforms
 (e.g., by providing installation instructions for Windows, or by
 contributing Windows binaries) please post a note in the
@@ -99,9 +99,18 @@ the full text of the license.
 
 ## Setup 
 
-There are two ways to install GEMMA: (1) download the precompiled
-binaries, or (2) compiling GEMMA from source. The first option is much
-simpler, and is therefore recommended 
+There are two ways to install GEMMA:
+
+1. Download the precompiled binaries.
+
+2. Compile the GEMMA executable from source.
+
+The first option is simpler, and is therefore recommended for
+most users.
+
+The main benefit of the second option is that it allows for boosting
+performance of the program using specialized C++ compilers (e.g., the
+Intel C++ compiler) and numerical libraries.
 
 ### Using precompiled binaries
 
