@@ -108,16 +108,35 @@ There are two ways to install GEMMA:
 The first option is simpler, and is therefore recommended for
 most users.
 
-The main benefit of the second option is that it allows for boosting
-performance of the program using specialized C++ compilers (e.g., the
-Intel C++ compiler) and numerical libraries.
+Compiling from source takes more work, but can boost performance of
+the program, especially when using specialized C++ compilers and
+numerical libraries.
 
 In both cases, we recommend downloading the
-[latest stable release][release] instead of the Github repository.
+[latest stable release][latest_release] instead of the Github repository.
 
 ### Using precompiled binaries
 
-### Building binaries from source
+1. Go to the [latest stable release](latest_release) and download the
+file appropriate for your platform: `gemma.linux.gz` or
+`gemma.macosx.gz`.
+
+2. Run `gunzip gemma.linux.gz` or `gunzip gemma.linux.gz` to
+decompress the file.
+
+3. The binaries we provide are linked to static versions of the GSL,
+LAPACK and BLAS libraries. However, since the program dynamically
+links to standard system libraries and libraries included with the C++
+compiler, *you need to make sure that you have installed on your
+system the same C++ compiler that was used to build the program.* For
+example, `gemma.linux` was built using `gcc 4.8.5`, so you should have
+`gcc 4.8.x`. If the libraries are installed somewhere non-standard,
+you can tell where GEMMA can find the libraries by setting the
+`LD_LIBRARY_PATH` environment variable. If you have the wrong C++
+compiler version, then the program will likely complain about dynamic
+linking errors.
+
+### Building the binaries from source
 
 *We provide a simple Makefile which will need to be customized; please
 see the comments at the top of the Makefile. Explain why we
@@ -141,4 +160,4 @@ University of Michigan<br>
 Peter Carbonetto, Tim Flutre, Matthew Stephens and others have also
 contributed to the development of this software.
 
-[release]: https://github.com/xiangzhou/GEMMA/releases/tag/v0.96 "Most recent stable release"
+[latest_release]: https://github.com/xiangzhou/GEMMA/releases/tag/v0.96 "Most recent stable release"
