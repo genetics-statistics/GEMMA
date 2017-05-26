@@ -118,8 +118,7 @@ In both cases, we recommend downloading the
 ### Using precompiled binaries
 
 1. Go to the [latest stable release](latest_release) and download the
-file appropriate for your platform: `gemma.linux.gz` or
-`gemma.macosx.gz`.
+file appropriate for your platform: gemma.linux.gz or gemma.macosx.gz.
 
 2. Run `gunzip gemma.linux.gz` or `gunzip gemma.linux.gz` to
 decompress the file.
@@ -133,8 +132,9 @@ example, `gemma.linux` was built using `gcc 4.8.5`, so you should have
 `gcc 4.8.x`. If the libraries are installed somewhere non-standard,
 you can tell where GEMMA can find the libraries by setting the
 `LD_LIBRARY_PATH` environment variable. If you have the wrong C++
-compiler version, then the program will likely complain about dynamic
-linking errors.
+compiler version, or the libraries are in a place where GEMMA cannot
+find them, then the program will complain about dynamic linking
+errors.
 
 ### Building the binaries from source
 

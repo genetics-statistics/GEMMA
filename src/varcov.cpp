@@ -1,6 +1,6 @@
 /*
 	Genome-wide Efficient Mixed Model Association (GEMMA)
-    Copyright (C) 2011  Xiang Zhou
+    Copyright (C) 2011-2017 Xiang Zhou
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -51,11 +51,7 @@
 #include "mathfunc.h"
 #endif
 
-
 using namespace std;
-
-
-
 
 void VARCOV::CopyFromParam (PARAM &cPar)
 {
@@ -79,17 +75,14 @@ void VARCOV::CopyFromParam (PARAM &cPar)
 	return;
 }
 
-
 void VARCOV::CopyToParam (PARAM &cPar)
 {
 	cPar.time_opt=time_opt;
 	return;
 }
 
-
-
-//chr rs ps n_idv allele1 allele0 af var window_size r2 (r2_11,n_11,r2_12,n_12...r2_1m,n_1m)
-void VARCOV::WriteCov (const int flag, const vector<SNPINFO> &snpInfo_sub, const vector<vector<double> > &Cov_mat) 
+void VARCOV::WriteCov (const int flag, const vector<SNPINFO> &snpInfo_sub,
+		       const vector<vector<double> > &Cov_mat) 
 {
   string file_cov;
   file_cov=path_out+"/"+file_out;
@@ -134,11 +127,6 @@ void VARCOV::WriteCov (const int flag, const vector<SNPINFO> &snpInfo_sub, const
   return;
 }
 
-
-
-
-// sort SNPs first based on chromosomes then based on bp (or cm, if bp is not available)
-//if chr1=chr2 and bp1=bp2, then return with the same order
 bool CompareSNPinfo (const SNPINFO &snpInfo1, const SNPINFO &snpInfo2)
 {
   int c_chr=snpInfo1.chr.compare(snpInfo2.chr);
@@ -160,12 +148,10 @@ bool CompareSNPinfo (const SNPINFO &snpInfo1, const SNPINFO &snpInfo2)
 }
 
 
-// do not sort SNPs (because gzip files do not support random access)
-// then calculate n_nb, the number of neighbours, for each snp
+// Do not sort SNPs (because gzip files do not support random access)
+// then calculate n_nb, the number of neighbours, for each snp.
 void VARCOV::CalcNB (vector<SNPINFO> &snpInfo_sort)
 {
-  //  stable_sort(snpInfo_sort.begin(), snpInfo_sort.end(), CompareSNPinfo);
-
   size_t t2=0, n_nb=0;
   for (size_t t=0; t<indicator_snp.size(); ++t) {
     if (indicator_snp[t]==0) {continue;}
@@ -191,9 +177,7 @@ void VARCOV::CalcNB (vector<SNPINFO> &snpInfo_sort)
   return;
 }
 
-
-
-//vector double is centered to have mean 0
+// Vector double is centered to have mean 0.
 void Calc_Cor(vector<vector<double> > &X_mat, vector<double> &cov_vec)
 {
   cov_vec.clear();
@@ -215,94 +199,22 @@ void Calc_Cor(vector<vector<double> > &X_mat, vector<double> &cov_vec)
   return;
 } 
 
-/*
-//somehow this can produce nan for some snps; perhaps due to missing values?
-//vector int is not centered, and have 0/1/2 values only
-//missing value is -9; to calculate covariance, these values are replaced by 
-void Calc_Cor(const vector<vector<int> > &X_mat, vector<double> &cov_vec)
-{
-  cov_vec.clear();
-
-  int d1, d2, m1, m2, n1, n2, n12;
-  double m1d, m2d, m12d, v1d, v2d, v;
-
-  vector<int> x_vec=X_mat[0];
-  
-  //calculate m2
-  m2=0; n2=0;
-  for (size_t j=0; j<x_vec.size(); j++) {
-    d2=x_vec[j];
-    if (d2==-9) {continue;}
-    m2+=d2; n2++;
-  }
-  m2d=(double)m2/(double)n2;
-
-  for (size_t i=0; i<X_mat.size(); i++) {
-    //calculate m1
-    m1=0; n1=0;
-    for (size_t j=0; j<x_vec.size(); j++) {
-      d1=X_mat[i][j];
-      if (d1==-9) {continue;}
-      m1+=d1; n1++;
-    }
-    m1d=(double)m1/(double)n1;
-
-    //calculate v1
-    m1=0; m2=0; m12d=0; n12=0;
-    for (size_t j=0; j<x_vec.size(); j++) {
-      d1=X_mat[i][j];
-      if (d1==-9) {
-	n12++;
-      } else if (d1!=0) {
-	if (d1==1) {m12d+=1;} else if (d1==2) {m12d+=4;} else {m12d+=(double)(d1*d1);}
-      }
-    }
-    
-    v1d=((double)m12d+m1d*(double)m2+m2d*(double)m1+(double)n12*m1d*m2d)/(double)x_vec.size()-m1d*m2d;
-
-    //calculate covariance
-    if (i!=0) {
-      m1=0; m2=0; m12d=0; n12=0;
-      for (size_t j=0; j<x_vec.size(); j++) {
-	d1=X_mat[i][j]; d2=x_vec[j];
-	if (d1==-9 && d2==-9) {
-	  n12++;
-	} else if (d1==-9) {
-	  m2+=d2;
-	} else if (d2==-9) {
-	  m1+=d1;
-	} else if (d1!=0 && d2!=0) {
-	  if (d1==1) {m12d+=d2;} else if (d1==2) {m12d+=d2+d2;} else {m12d+=(double)(d1*d2);}
-	}
-      }
-    
-      v=((double)m12d+m1d*(double)m2+m2d*(double)m1+(double)n12*m1d*m2d)/(double)x_vec.size()-m1d*m2d;
-      v/=sqrt(v1d*v2d);
-    } else {
-      v2d=v1d;
-      v=v1d/(double)x_vec.size();
-    }
-    
-    cov_vec.push_back(v);
-  }
-  return;
-} 
-*/
-
-
-//read the genotype file again, calculate r2 between pairs of SNPs within a window, output the file every 10K SNPs
-//the output results are sorted based on chr and bp
-//output format similar to assoc.txt files (remember n_miss is replaced by n_idv)
-
-//r2 between the current SNP and every following SNPs within the window_size (which can vary if cM was used)
-//read bimbam mean genotype file and calculate the covariance matrix for neighboring SNPs
-//output values at 10000-SNP-interval
+// Read the genotype file again, calculate r2 between pairs of SNPs
+// within a window, output the file every 10K SNPs the output results
+// are sorted based on chr and bp output format similar to assoc.txt
+// files (remember n_miss is replaced by n_idv).
+//
+// r2 between the current SNP and every following SNPs within the
+// window_size (which can vary if cM was used) read bimbam mean
+// genotype file and calculate the covariance matrix for neighboring
+// SNPs output values at 10000-SNP-interval.
+//
 void VARCOV::AnalyzeBimbam ()
 {
   igzstream infile (file_geno.c_str(), igzstream::in);
   if (!infile) {cout<<"error reading genotype file:"<<file_geno<<endl; return;}
 
-  //calculate the number of right-hand-side neighbours for each SNP
+  // Calculate the number of right-hand-side neighbours for each SNP.
   vector<SNPINFO> snpInfo_sub;
   CalcNB(snpInfo);
 
@@ -327,9 +239,9 @@ void VARCOV::AnalyzeBimbam ()
   int n_nb=0;
 
   for (size_t t=0; t<indicator_snp.size(); ++t) {
-    if (t%d_pace==0 || t==(indicator_snp.size()-1)) {ProgressBar ("Reading SNPs  ", t, indicator_snp.size()-1);}
+    if (t%d_pace==0 || t==(indicator_snp.size()-1))
+      {ProgressBar ("Reading SNPs  ", t, indicator_snp.size()-1);}
     if (indicator_snp[t]==0) {continue;}
-    //    if (t>=2) {break;}    
 
     if (X_mat.size()==0) {
       n_nb=snpInfo[t].n_nb+1;
@@ -340,7 +252,7 @@ void VARCOV::AnalyzeBimbam ()
     for (int i=0; i<n_nb; i++) {
       if (X_mat.size()==0) {t2=t;} 
 
-      //read a line of the snp is filtered out
+      // Read a line of the snp is filtered out.
       inc=0;
       while (t2<indicator_snp.size() && indicator_snp[t2]==0) {
 	t2++; inc++; 
@@ -365,7 +277,7 @@ void VARCOV::AnalyzeBimbam ()
 
     X_mat.erase(X_mat.begin());
 
-    //write out var/cov values
+    // Write out var/cov values.
     if (Cov_mat.size()==10000) {
       WriteCov (1, snpInfo_sub, Cov_mat);
       Cov_mat.clear();
@@ -387,16 +299,13 @@ void VARCOV::AnalyzeBimbam ()
   return;
 }
 
-
-
-
 void VARCOV::AnalyzePlink ()
 {
   string file_bed=file_bfile+".bed";
   ifstream infile (file_bed.c_str(), ios::binary);
   if (!infile) {cout<<"error reading bed file:"<<file_bed<<endl; return;}
 
-  //calculate the number of right-hand-side neighbours for each SNP
+  // Calculate the number of right-hand-side neighbours for each SNP.
   vector<SNPINFO> snpInfo_sub;
   CalcNB(snpInfo);
   
@@ -421,9 +330,9 @@ void VARCOV::AnalyzePlink ()
   int n_nb=0;
 
   for (size_t t=0; t<indicator_snp.size(); ++t) {
-    if (t%d_pace==0 || t==(indicator_snp.size()-1)) {ProgressBar ("Reading SNPs  ", t, indicator_snp.size()-1);}
+    if (t%d_pace==0 || t==(indicator_snp.size()-1))
+      {ProgressBar ("Reading SNPs  ", t, indicator_snp.size()-1);}
     if (indicator_snp[t]==0) {continue;}
-    //    if (t>=2) {break;}    
 
     if (X_mat.size()==0) {
       n_nb=snpInfo[t].n_nb+1;
@@ -434,7 +343,7 @@ void VARCOV::AnalyzePlink ()
     for (int i=0; i<n_nb; i++) {
       if (X_mat.size()==0) {t2=t;} 
 
-      //read a line of the snp is filtered out
+      // Read a line of the snp is filtered out.
       inc=0;
       while (t2<indicator_snp.size() && indicator_snp[t2]==0) {
 	t2++; inc++; 
@@ -459,7 +368,7 @@ void VARCOV::AnalyzePlink ()
 
     X_mat.erase(X_mat.begin());
 
-    //write out var/cov values
+    // Write out var/cov values.
     if (Cov_mat.size()==10000) {
       WriteCov (1, snpInfo_sub, Cov_mat);
       Cov_mat.clear();
