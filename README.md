@@ -112,6 +112,9 @@ The main benefit of the second option is that it allows for boosting
 performance of the program using specialized C++ compilers (e.g., the
 Intel C++ compiler) and numerical libraries.
 
+In both cases, we recommend downloading the
+[latest stable release][release] instead of the Github repository.
+
 ### Using precompiled binaries
 
 ### Building binaries from source
@@ -137,3 +140,5 @@ University of Michigan<br>
 
 Peter Carbonetto, Tim Flutre, Matthew Stephens and others have also
 contributed to the development of this software.
+
+[release]: https://github.com/xiangzhou/GEMMA/releases/tag/v0.96 "Most recent stable release"
