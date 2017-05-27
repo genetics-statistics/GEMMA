@@ -112,10 +112,11 @@ This is the current structure of the GEMMA source repository:
 ├── doc
 ├── example
 └── src
-    └── Eigen
 ```
 
-*Explain here what is in each of the subfolders.*
+*Write a paragraph here briefly explaining what is in each of the
+subfolders; see Wilson et al "Good Enough Practices" paper for example
+of this.*
 
 ## Setup 
 
@@ -172,6 +173,11 @@ You will need a standard C/C++ compiler such as GNU gcc, as well as
 [GSL](http://www.gnu.org/s/gsl) and
 [LAPACK](http://www.netlib.org/lapack) libraries. You will need to
 change the library paths in the Makefile accordingly.
+
+*Revise this step:* You will need to download the
+[Eigen C++ library](http://eigen.tuxfamily.org), and copy the `Eigen`
+subdirectory into the `src` directory of the GEMMA repository. (It was
+last tested using Eigen version 3.3.3.)
 
 ## Credits
 

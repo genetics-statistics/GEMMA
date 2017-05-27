@@ -23,7 +23,9 @@
 
 ## To perform association tests with a univariate linear mixed model:
 
-../bin/gemma -g mouse_hs1940.geno.txt.gz -p mouse_hs1940.pheno.txt -n 1 -a mouse_hs1940.anno.txt -k ./output/mouse_hs1940.cXX.txt -lmm -o mouse_hs1940_CD8_lmm
+../bin/gemma -g mouse_hs1940.geno.txt.gz -p mouse_hs1940.pheno.txt -n 1 \
+  -a mouse_hs1940.anno.txt -k ./output/mouse_hs1940.cXX.txt -lmm \
+  -o mouse_hs1940_CD8_lmm
 
 # The result for top 5 SNPs should look like this:
 chr	rs	ps	n_miss	allele1	allele0	af	beta	se	l_remle	p_wald
