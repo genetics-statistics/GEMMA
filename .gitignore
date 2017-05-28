@@ -1,8 +1,6 @@
 *.o
 *.tar.gz
 src/Eigen
-src/*_float.h
-src/*_float.cpp
 example/output
 doc/manual.aux
 doc/manual.bbl
