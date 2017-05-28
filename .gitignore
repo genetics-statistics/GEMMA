@@ -1,5 +1,7 @@
 *.o
 *.tar.gz
+src/*_float.h
+src/*_float.cpp
 example/output
 doc/manual.aux
 doc/manual.bbl

@@ -17,8 +17,8 @@ SYS = LNX
 WITH_LAPACK = 1
 FORCE_32BIT = 
 FORCE_DYNAMIC = 
-FORCE_FLOAT = 
-DIST_NAME = gemma-0.96alpha
+FORCE_FLOAT = 1
+DIST_NAME = gemma-0.95.2alpha
 
 # --------------------------------------------------------------------
 # Edit below this line with caution
