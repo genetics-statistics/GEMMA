@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for prefix in gemma param io lm lmm mvlmm bslmm mathfunc prdt
+for prefix in gemma param io lm lmm mvlmm bslmm mathfunc prdt vc
 do
 for extension in cpp h
 do
