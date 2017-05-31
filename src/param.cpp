@@ -1,6 +1,6 @@
 /*
     Genome-wide Efficient Mixed Model Association (GEMMA)
-    Copyright (C) 2011  Xiang Zhou
+    Copyright (C) 2011-2017 Xiang Zhou
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -13,7 +13,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <iostream>
@@ -33,29 +33,20 @@
 
 #include "eigenlib.h"
 #include "mathfunc.h"
-
-#ifdef FORCE_FLOAT
-#include "param_float.h"
-#include "io_float.h"
-#else
 #include "param.h"
 #include "io.h"
-#endif
 
 using namespace std;
-
-
-
-
 
 PARAM::PARAM(void):
 mode_silence (false), a_mode (0), k_mode(1), d_pace (100000),
 file_out("result"), path_out("./output/"),
 miss_level(0.05), maf_level(0.01), hwe_level(0), r2_level(0.9999),
-l_min(1e-5), l_max(1e5), n_region(10),p_nr(0.001),em_prec(0.0001),nr_prec(0.0001),em_iter(10000),nr_iter(100),crt(0),
+l_min(1e-5), l_max(1e5), n_region(10),p_nr(0.001),em_prec(0.0001),
+nr_prec(0.0001),em_iter(10000),nr_iter(100),crt(0),
 pheno_mean(0), noconstrain (false),
-h_min(-1), h_max(-1),	h_scale(-1),
-rho_min(0.0), rho_max(1.0),	rho_scale(-1),
+h_min(-1), h_max(-1), h_scale(-1),
+rho_min(0.0), rho_max(1.0), rho_scale(-1),
 logp_min(0.0), logp_max(0.0), logp_scale(-1),
 h_ngrid(10), rho_ngrid(10),
 s_min(0), s_max(300),
@@ -68,31 +59,22 @@ randseed(-1),
 window_cm(0), window_bp(0), window_ns(0), n_block(200),
 error(false),
 ni_subsample(0), n_cvt(1), n_vc(1), n_cat(0),
-time_total(0.0), time_G(0.0), time_eigen(0.0), time_UtX(0.0), time_UtZ(0.0), time_opt(0.0), time_Omega(0.0)
+time_total(0.0), time_G(0.0), time_eigen(0.0), time_UtX(0.0),
+time_UtZ(0.0), time_opt(0.0), time_Omega(0.0)
 {}
 
-
-//read files
-//obtain ns_total, ng_total, ns_test, ni_test
-void PARAM::ReadFiles (void)
-{
+// Read files: obtain ns_total, ng_total, ns_test, ni_test.
+void PARAM::ReadFiles (void) {
 	string file_str;
-	/*
-	//read continuous cat file
-	if (!file_mcatc.empty()) {
-	  if (ReadFile_mcatc (file_mcatc, mapRS2catc, n_cat)==false) {error=true;}
-	} else if (!file_catc.empty()) {
-	  if (ReadFile_catc (file_catc, mapRS2catc, n_cat)==false) {error=true;}
-	}
-	*/
-	//read cat file
+	
+	// Read cat file.
 	if (!file_mcat.empty()) {
 	  if (ReadFile_mcat (file_mcat, mapRS2cat, n_vc)==false) {error=true;}
 	} else if (!file_cat.empty()) {
 	  if (ReadFile_cat (file_cat, mapRS2cat, n_vc)==false) {error=true;}
 	}
 
-	//read snp weight files
+	// Read snp weight files.
 	if (!file_wcat.empty()) {
 	  if (ReadFile_wsnp (file_wcat, n_vc, mapRS2wcat)==false) {error=true;}
 	}
@@ -100,45 +82,60 @@ void PARAM::ReadFiles (void)
 	  if (ReadFile_wsnp (file_wsnp, mapRS2wsnp)==false) {error=true;}
 	}
 
-	//count number of kinship files
+	// Count number of kinship files.
 	if (!file_mk.empty()) {
 	  if (CountFileLines (file_mk, n_vc)==false) {error=true;}
 	}
 
-	//read snp set
+	// Read SNP set.
 	if (!file_snps.empty()) {
 		if (ReadFile_snps (file_snps, setSnps)==false) {error=true;}
 	} else {
 		setSnps.clear();
 	}
 
-	//for prediction
+	// For prediction.
 	if (!file_epm.empty()) {
-		if (ReadFile_est (file_epm, est_column, mapRS2est)==false) {error=true;}
-
+		if (ReadFile_est (file_epm, est_column, mapRS2est)==false) {
+		  error=true;
+		}
 		if (!file_bfile.empty()) {
 			file_str=file_bfile+".bim";
-			if (ReadFile_bim (file_str, snpInfo)==false) {error=true;}
-
+			if (ReadFile_bim (file_str, snpInfo)==false) {
+			  error=true;
+			}
 			file_str=file_bfile+".fam";
-			if (ReadFile_fam (file_str, indicator_pheno, pheno, mapID2num, p_column)==false) {error=true;}
+			if (ReadFile_fam (file_str, indicator_pheno, pheno,
+					  mapID2num, p_column)==false) {
+			  error=true;
+			}
 		}
 
 		if (!file_geno.empty()) {
-			if (ReadFile_pheno (file_pheno, indicator_pheno, pheno, p_column)==false) {error=true;}
+			if (ReadFile_pheno (file_pheno, indicator_pheno,
+					    pheno, p_column)==false) {
+			  error=true;
+			}
 
-			if (CountFileLines (file_geno, ns_total)==false) {error=true;}
+			if (CountFileLines (file_geno, ns_total)==false) {
+			  error=true;
+			}
 		}
 
 		if (!file_ebv.empty() ) {
-			if (ReadFile_column (file_ebv, indicator_bv, vec_bv, 1)==false) {error=true;}
+			if (ReadFile_column (file_ebv, indicator_bv,
+					     vec_bv, 1)==false) {
+			  error=true;
+			}
 		}
 
 		if (!file_log.empty() ) {
-			if (ReadFile_log (file_log, pheno_mean)==false) {error=true;}
+			if (ReadFile_log (file_log, pheno_mean)==false) {
+			  error=true;
+			}
 		}
 
-		//convert indicator_pheno to indicator_idv
+		// Convert indicator_pheno to indicator_idv.
 		int k=1;
 		for (size_t i=0; i<indicator_pheno.size(); i++) {
 			k=1;
@@ -153,10 +150,12 @@ void PARAM::ReadFiles (void)
 		return;
 	}
 
-	//read covariates before the genotype files
+	// Read covariates before the genotype files.
 	if (!file_cvt.empty() ) {
-		if (ReadFile_cvt (file_cvt, indicator_cvt, cvt, n_cvt)==false) {error=true;}
-
+		if (ReadFile_cvt (file_cvt, indicator_cvt,
+				  cvt, n_cvt)==false) {
+		  error=true;
+		}
 		if ((indicator_cvt).size()==0) {
 			n_cvt=1;
 		}
@@ -165,102 +164,135 @@ void PARAM::ReadFiles (void)
 	}
 
 	if (!file_gxe.empty() ) {
-	  if (ReadFile_column (file_gxe, indicator_gxe, gxe, 1)==false) {error=true;}
+	  if (ReadFile_column (file_gxe, indicator_gxe, gxe, 1)==false) {
+	    error=true;
+	  }
 	}
 	if (!file_weight.empty() ) {
-	  if (ReadFile_column (file_weight, indicator_weight, weight, 1)==false) {error=true;}
+	  if (ReadFile_column (file_weight, indicator_weight,
+			       weight, 1)==false) {
+	    error=true;
+	  }
 	}
 
 
-	// WJA added
-	//read genotype and phenotype file for bgen format
+	// WJA added.
+	// Read genotype and phenotype file for bgen format.
 	if (!file_oxford.empty()) {
 		file_str=file_oxford+".sample";
-		if (ReadFile_sample(file_str, indicator_pheno, pheno, p_column,indicator_cvt, cvt, n_cvt)==false) {error=true;}
+		if (ReadFile_sample(file_str, indicator_pheno, pheno, p_column,
+				    indicator_cvt, cvt, n_cvt)==false) {
+		  error=true;
+		}
 		if ((indicator_cvt).size()==0) {
 			n_cvt=1;
 		}
-	//	n_cvt=1;
 
-		//post-process covariates and phenotypes, obtain ni_test, save all useful covariates
+		// Post-process covariates and phenotypes, obtain
+		// ni_test, save all useful covariates.
 		ProcessCvtPhen();
 
-		//obtain covariate matrix
+		// Obtain covariate matrix.
 		gsl_matrix *W=gsl_matrix_alloc (ni_test, n_cvt);
 		CopyCvt (W);
 
 		file_str=file_oxford+".bgen";
-		if (ReadFile_bgen (file_str, setSnps, W, indicator_idv, indicator_snp, snpInfo, maf_level, miss_level, hwe_level, r2_level, ns_test)==false) {error=true;}
+		if (ReadFile_bgen (file_str, setSnps, W, indicator_idv,
+				   indicator_snp, snpInfo, maf_level,
+				   miss_level, hwe_level, r2_level,
+				   ns_test)==false) {
+		  error=true;
+		}
 		gsl_matrix_free(W);
 
 		ns_total=indicator_snp.size();
 	}
 
 
-	//read genotype and phenotype file for plink format
+	// Read genotype and phenotype file for PLINK format.
 	if (!file_bfile.empty()) {
 		file_str=file_bfile+".bim";
 		snpInfo.clear();
 		if (ReadFile_bim (file_str, snpInfo)==false) {error=true;}
 
-		//if both fam file and pheno files are used, use phenotypes inside the pheno file
+		// If both fam file and pheno files are used, use
+		// phenotypes inside the pheno file.
 		if (!file_pheno.empty()) {
-		  //phenotype file before genotype file
-		  if (ReadFile_pheno (file_pheno, indicator_pheno, pheno, p_column)==false) {error=true;}
+		  
+		  // Phenotype file before genotype file.
+		  if (ReadFile_pheno (file_pheno, indicator_pheno, pheno,
+				      p_column)==false) {error=true;}
 		} else {
 		  file_str=file_bfile+".fam";
-		  if (ReadFile_fam (file_str, indicator_pheno, pheno, mapID2num, p_column)==false) {error=true;}
+		  if (ReadFile_fam (file_str, indicator_pheno, pheno,
+				    mapID2num, p_column)==false) {error=true;}
 		}
 
-		//post-process covariates and phenotypes, obtain ni_test, save all useful covariates
+		// Post-process covariates and phenotypes, obtain
+		// ni_test, save all useful covariates.
 		ProcessCvtPhen();
 
-		//obtain covariate matrix
+		// Obtain covariate matrix.
 		gsl_matrix *W=gsl_matrix_alloc (ni_test, n_cvt);
 		CopyCvt (W);
 
 		file_str=file_bfile+".bed";
-		if (ReadFile_bed (file_str, setSnps, W, indicator_idv, indicator_snp, snpInfo, maf_level, miss_level, hwe_level, r2_level, ns_test)==false) {error=true;}
-
+		if (ReadFile_bed (file_str, setSnps, W, indicator_idv,
+				  indicator_snp, snpInfo, maf_level,
+				  miss_level, hwe_level, r2_level,
+				  ns_test) == false) {
+		  error=true;
+		}
 		gsl_matrix_free(W);
-
 		ns_total=indicator_snp.size();
 	}
 
-	//read genotype and phenotype file for bimbam format
+	// Read genotype and phenotype file for BIMBAM format.
 	if (!file_geno.empty()) {
-		//annotation file before genotype file
+	  
+	        // Annotation file before genotype file.
 		if (!file_anno.empty() ) {
-			if (ReadFile_anno (file_anno, mapRS2chr, mapRS2bp, mapRS2cM)==false) {error=true;}
+			if (ReadFile_anno (file_anno, mapRS2chr, mapRS2bp,
+					   mapRS2cM)==false) {
+			  error=true;
+			}
 		}
 
-		//phenotype file before genotype file
-		if (ReadFile_pheno (file_pheno, indicator_pheno, pheno, p_column)==false) {error=true;}
+		// Phenotype file before genotype file.
+		if (ReadFile_pheno (file_pheno, indicator_pheno, pheno,
+				    p_column) == false) {
+		  error=true;
+		}
 
-		//post-process covariates and phenotypes, obtain ni_test, save all useful covariates
+		// Post-process covariates and phenotypes, obtain
+		// ni_test, save all useful covariates.
 		ProcessCvtPhen();
 
-		//obtain covariate matrix
+		// Obtain covariate matrix.
 		gsl_matrix *W=gsl_matrix_alloc (ni_test, n_cvt);
 		CopyCvt (W);
 
-		if (ReadFile_geno (file_geno, setSnps, W, indicator_idv, indicator_snp, maf_level, miss_level, hwe_level, r2_level, mapRS2chr, mapRS2bp, mapRS2cM, snpInfo, ns_test)==false) {error=true;}
-
+		if (ReadFile_geno (file_geno, setSnps, W, indicator_idv,
+				   indicator_snp, maf_level, miss_level,
+				   hwe_level, r2_level, mapRS2chr, mapRS2bp,
+				   mapRS2cM, snpInfo, ns_test)==false) {
+		  error=true;
+		}
 		gsl_matrix_free(W);
-
 		ns_total=indicator_snp.size();
 	}
 
 
-	//read genotype file for multiple plink files
+	// Read genotype file for multiple PLINK files.
 	if (!file_mbfile.empty()) {
 	  igzstream infile (file_mbfile.c_str(), igzstream::in);
-	  if (!infile) {cout<<"error! fail to open mbfile file: "<<file_mbfile<<endl; return;}
+	  if (!infile) {
+	    cout<<"error! fail to open mbfile file: " << file_mbfile<<endl;
+	    return;
+	  }
 
 	  string file_name;
-
 	  size_t t=0, ns_test_tmp=0;
-
 	  gsl_matrix *W;
 	  while (!safeGetline(infile, file_name).eof()) {
 		file_str=file_name+".bim";
@@ -268,25 +300,40 @@ void PARAM::ReadFiles (void)
 		if (ReadFile_bim (file_str, snpInfo)==false) {error=true;}
 
 		if (t==0) {
-		  //if both fam file and pheno files are used, use phenotypes inside the pheno file
+		  
+		  // If both fam file and pheno files are used, use
+		  // phenotypes inside the pheno file.
 		  if (!file_pheno.empty()) {
-		    //phenotype file before genotype file
-		    if (ReadFile_pheno (file_pheno, indicator_pheno, pheno, p_column)==false) {error=true;}
+		    
+		    // Phenotype file before genotype file.
+		    if (ReadFile_pheno (file_pheno, indicator_pheno, pheno,
+					p_column)==false) {
+		      error=true;
+		    }
 		  } else {
 		    file_str=file_name+".fam";
-		    if (ReadFile_fam (file_str, indicator_pheno, pheno, mapID2num, p_column)==false) {error=true;}
+		    if (ReadFile_fam (file_str, indicator_pheno, pheno,
+				      mapID2num, p_column)==false) {
+		      error=true;
+		    }
 		  }
 
-		  //post-process covariates and phenotypes, obtain ni_test, save all useful covariates
+		  // Post-process covariates and phenotypes, obtain
+		  // ni_test, save all useful covariates.
 		  ProcessCvtPhen();
 
-		  //obtain covariate matrix
+		  // Obtain covariate matrix.
 		  W=gsl_matrix_alloc (ni_test, n_cvt);
 		  CopyCvt (W);
 		}
 
 		file_str=file_name+".bed";
-		if (ReadFile_bed (file_str, setSnps, W, indicator_idv, indicator_snp, snpInfo, maf_level, miss_level, hwe_level, r2_level, ns_test_tmp)==false) {error=true;}
+		if (ReadFile_bed (file_str, setSnps, W, indicator_idv,
+				  indicator_snp, snpInfo, maf_level,
+				  miss_level, hwe_level, r2_level,
+				  ns_test_tmp)==false) {
+		  error=true;
+		}
 		mindicator_snp.push_back(indicator_snp);
 		msnpInfo.push_back(snpInfo);
 		ns_test+=ns_test_tmp;
@@ -303,30 +350,46 @@ void PARAM::ReadFiles (void)
 
 
 
-	//read genotype and phenotype file for multiple bimbam files
+	// Read genotype and phenotype file for multiple BIMBAM files.
 	if (!file_mgeno.empty()) {
-	  //annotation file before genotype file
+	  
+	  // Annotation file before genotype file.
 	  if (!file_anno.empty() ) {
-	    if (ReadFile_anno (file_anno, mapRS2chr, mapRS2bp, mapRS2cM)==false) {error=true;}
+	    if (ReadFile_anno (file_anno, mapRS2chr, mapRS2bp,
+			       mapRS2cM)==false) {
+	      error=true;
+	    }
 	  }
 
-	  //phenotype file before genotype file
-	  if (ReadFile_pheno (file_pheno, indicator_pheno, pheno, p_column)==false) {error=true;}
+	  // Phenotype file before genotype file.
+	  if (ReadFile_pheno (file_pheno, indicator_pheno, pheno,
+			      p_column)==false) {
+	    error=true;
+	  }
 
-	  //post-process covariates and phenotypes, obtain ni_test, save all useful covariates
+	  // Post-process covariates and phenotypes, obtain ni_test,
+	  // save all useful covariates.
 	  ProcessCvtPhen();
 
-	  //obtain covariate matrix
+	  // Obtain covariate matrix.
 	  gsl_matrix *W=gsl_matrix_alloc (ni_test, n_cvt);
 	  CopyCvt (W);
 
 	  igzstream infile (file_mgeno.c_str(), igzstream::in);
-	  if (!infile) {cout<<"error! fail to open mgeno file: "<<file_mgeno<<endl; return;}
+	  if (!infile) {
+	    cout<<"error! fail to open mgeno file: "<<file_mgeno<<endl;
+	    return;
+	  }
 
 	  string file_name;
 	  size_t ns_test_tmp;
 	  while (!safeGetline(infile, file_name).eof()) {
-	    if (ReadFile_geno (file_name, setSnps, W, indicator_idv, indicator_snp, maf_level, miss_level, hwe_level, r2_level, mapRS2chr, mapRS2bp, mapRS2cM, snpInfo, ns_test_tmp)==false) {error=true;}
+	    if (ReadFile_geno (file_name, setSnps, W, indicator_idv,
+			       indicator_snp, maf_level, miss_level,
+			       hwe_level, r2_level, mapRS2chr, mapRS2bp,
+			       mapRS2cM, snpInfo, ns_test_tmp)==false) {
+	      error=true;
+	    }
 
 	    mindicator_snp.push_back(indicator_snp);
 	    msnpInfo.push_back(snpInfo);
@@ -343,9 +406,10 @@ void PARAM::ReadFiles (void)
 
 
 	if (!file_gene.empty()) {
-		if (ReadFile_pheno (file_pheno, indicator_pheno, pheno, p_column)==false) {error=true;}
+		if (ReadFile_pheno (file_pheno, indicator_pheno, pheno,
+				    p_column)==false) {error=true;}
 
-		//convert indicator_pheno to indicator_idv
+		// Convert indicator_pheno to indicator_idv.
 		int k=1;
 		for (size_t i=0; i<indicator_pheno.size(); i++) {
 			k=1;
@@ -355,57 +419,69 @@ void PARAM::ReadFiles (void)
 			indicator_idv.push_back(k);
 		}
 
-		//post-process covariates and phenotypes, obtain ni_test, save all useful covariates
+		// Post-process covariates and phenotypes, obtain
+		// ni_test, save all useful covariates.
 		ProcessCvtPhen();
 
-		//obtain covariate matrix
+		// Obtain covariate matrix.
 		gsl_matrix *W=gsl_matrix_alloc (ni_test, n_cvt);
 		CopyCvt (W);
 
-		if (ReadFile_gene (file_gene, vec_read, snpInfo, ng_total)==false) {error=true;}
+		if (ReadFile_gene (file_gene, vec_read, snpInfo,
+				   ng_total)==false) {
+		  error=true;
+		}
 	}
 
 
-	//read is after gene file
+	// Read is after gene file.
 	if (!file_read.empty() ) {
-		if (ReadFile_column (file_read, indicator_read, vec_read, 1)==false) {error=true;}
+		if (ReadFile_column (file_read, indicator_read,
+				     vec_read, 1)==false) {
+		  error=true;
+		}
 
 		ni_test=0;
-		for (vector<int>::size_type i=0; i<(indicator_idv).size(); ++i) {
+		for (vector<int>::size_type i=0;
+		     i<(indicator_idv).size();
+		     ++i) {
 			indicator_idv[i]*=indicator_read[i];
 			ni_test+=indicator_idv[i];
 		}
 
 		if (ni_test==0) {
-			error=true;
-			cout<<"error! number of analyzed individuals equals 0. "<<endl;
-			return;
+		  error=true;
+		  cout<<"error! number of analyzed individuals equals 0. "<<
+		    endl;
+		  return;
 		}
 	}
 
-	//for ridge prediction, read phenotype only
+	// For ridge prediction, read phenotype only.
 	if (file_geno.empty() && file_gene.empty() && !file_pheno.empty()) {
-		if (ReadFile_pheno (file_pheno, indicator_pheno, pheno, p_column)==false) {error=true;}
+		if (ReadFile_pheno (file_pheno, indicator_pheno, pheno,
+				    p_column)==false) {
+		  error=true;
+		}
 
-		//post-process covariates and phenotypes, obtain ni_test, save all useful covariates
+		// Post-process covariates and phenotypes, obtain
+		// ni_test, save all useful covariates.
 		ProcessCvtPhen();
 	}
-
 	return;
 }
-
-
-
-
-
 
 void PARAM::CheckParam (void)
 {
 	struct stat fileInfo;
 	string str;
 
-	//check parameters
-	if (k_mode!=1 && k_mode!=2) {cout<<"error! unknown kinship/relatedness input mode: "<<k_mode<<endl; error=true;}
+	// Check parameters.
+	if (k_mode!=1 && k_mode!=2) {
+	  cout<<"error! unknown kinship/relatedness input mode: "<<
+	    k_mode<<endl;
+	  error=true;
+	}
 	if (a_mode!=1 && a_mode!=2 && a_mode!=3 && a_mode!=4 && a_mode!=5 && a_mode!=11 && a_mode!=12 && a_mode!=13 && a_mode!=14 && a_mode!=15 && a_mode!=21 && a_mode!=22 && a_mode!=25 && a_mode!=26 && a_mode!=27 && a_mode!=28 && a_mode!=31 && a_mode!=41 && a_mode!=42 && a_mode!=43 && a_mode!=51 && a_mode!=52 && a_mode!=53 && a_mode!=54 && a_mode!=61 && a_mode!=62 && a_mode!=63 && a_mode!=66 && a_mode!=67 && a_mode!=71)
 	{cout<<"error! unknown analysis mode: "<<a_mode<<". make sure -gk or -eigen or -lmm or -bslmm -predict or -calccov is sepcified correctly."<<endl; error=true;}
 	if (miss_level>1) {cout<<"error! missing level needs to be between 0 and 1. current value = "<<miss_level<<endl; error=true;}
@@ -447,13 +523,10 @@ void PARAM::CheckParam (void)
 		}
 	}
 
-	//sort (p_column.begin(), p_column.end() );
 	n_ph=p_column.size();
 
-
-
-	//only lmm option (and one prediction option) can deal with multiple phenotypes
-	//and no gene expression files
+	// Only LMM option (and one prediction option) can deal with
+	// multiple phenotypes and no gene expression files.
 	if (n_ph>1 && a_mode!=1 && a_mode!=2 && a_mode!=3 && a_mode!=4 && a_mode!=43) {
 		cout<<"error! the current analysis mode "<<a_mode<<" can not deal with multiple phenotypes."<<endl; error=true;
 	}

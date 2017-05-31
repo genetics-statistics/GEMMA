@@ -12,7 +12,6 @@
 SYS = LNX
 # Leave blank after "=" to disable; put "= 1" to enable
 # Disable WITH_LAPACK option can slow computation speed significantly and is not recommended
-# Disable WITH_ARPACK option only disable -apprx option in the software
 WITH_LAPACK = 1
 FORCE_32BIT = 
 FORCE_DYNAMIC = 
