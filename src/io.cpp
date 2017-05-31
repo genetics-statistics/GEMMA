@@ -1,6 +1,6 @@
 /*
-	Genome-wide Efficient Mixed Model Association (GEMMA)
-    Copyright (C) 2011  Xiang Zhou
+    Genome-wide Efficient Mixed Model Association (GEMMA)
+    Copyright (C) 2011-2017 Xiang Zhou
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -13,7 +13,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <iostream>
@@ -40,19 +40,12 @@
 #include "gzstream.h"
 #include "mathfunc.h"
 #include "eigenlib.h"
-
-#ifdef FORCE_FLOAT
-#include "io_float.h"
-#else
 #include "io.h"
-#endif
-
 
 using namespace std;
 
-//Print process bar
-void ProgressBar (string str, double p, double total)
-{
+// Print progress bar.
+void ProgressBar (string str, double p, double total) {
 	double progress = (100.0 * p / total);
 	int barsize = (int) (progress / 2.0);
 	char bar[51];
@@ -68,10 +61,8 @@ void ProgressBar (string str, double p, double total)
 	return;
 }
 
-
-//Print process bar (with acceptance ratio)
-void ProgressBar (string str, double p, double total, double ratio)
-{
+// Print progress bar with acceptance ratio.
+void ProgressBar (string str, double p, double total, double ratio) {
 	double progress = (100.0 * p / total);
 	int barsize = (int) (progress / 2.0);
 	char bar[51];
@@ -83,37 +74,31 @@ void ProgressBar (string str, double p, double total, double ratio)
 		cout<<bar[i];
 	}
 	cout<<setprecision(2)<<fixed<<progress<<"%    "<<ratio<<"\r"<<flush;
-
-
 	return;
 }
 
-
-bool isBlankLine(char const* line)
-{
-    for ( char const* cp = line; *cp; ++cp )
-    {
-        if ( !isspace(*cp) ) return false;
+bool isBlankLine(char const* line) {
+    for ( char const* cp = line; *cp; ++cp ) {
+        if ( !isspace(*cp) )
+	  return false;
     }
     return true;
 }
 
-bool isBlankLine(std::string const& line)
-{
+bool isBlankLine(std::string const& line) {
    return isBlankLine(line.c_str());
 }
 
-// in case files are ended with "\r" or "\r\n"
-std::istream& safeGetline(std::istream& is, std::string& t)
-{
+// In case files are ended with "\r" or "\r\n".
+std::istream& safeGetline(std::istream& is, std::string& t) {
     t.clear();
 
-    // The characters in the stream are read one-by-one using a std::streambuf.
-    // That is faster than reading them one-by-one using the std::istream.
-    // Code that uses streambuf this way must be guarded by a sentry object.
-    // The sentry object performs various tasks,
-    // such as thread synchronization and updating the stream state.
-
+    // The characters in the stream are read one-by-one using a
+    // std::streambuf. That is faster than reading them one-by-one
+    // using the std::istream. Code that uses streambuf this way must
+    // be guarded by a sentry object. The sentry object performs
+    // various tasks, such as thread synchronization and updating the
+    // stream state.
     std::istream::sentry se(is, true);
     std::streambuf* sb = is.rdbuf();
 
@@ -127,7 +112,9 @@ std::istream& safeGetline(std::istream& is, std::string& t)
                 sb->sbumpc();
             return is;
         case EOF:
-            // Also handle the case when the last line has no line ending
+	  
+            // Also handle the case when the last line has no line
+            // ending.
             if(t.empty())
                 is.setstate(std::ios::eofbit);
             return is;
@@ -137,16 +124,15 @@ std::istream& safeGetline(std::istream& is, std::string& t)
     }
 }
 
-//Read snp file
-bool ReadFile_snps (const string &file_snps, set<string> &setSnps)
-{
+// Read SNP file.
+bool ReadFile_snps (const string &file_snps, set<string> &setSnps) {
 	setSnps.clear();
 
-	//ifstream infile (file_snps.c_str(), ifstream::in);
-	//if (!infile) {cout<<"error! fail to open snps file: "<<file_snps<<endl; return false;}
-
 	igzstream infile (file_snps.c_str(), igzstream::in);
-	if (!infile) {cout<<"error! fail to open snps file: "<<file_snps<<endl; return false;}
+	if (!infile) {
+	  cout << "error! fail to open snps file: " << file_snps << endl;
+	  return false;
+	}
 
 	string line;
 	char *ch_ptr;
@@ -162,21 +148,19 @@ bool ReadFile_snps (const string &file_snps, set<string> &setSnps)
 	return true;
 }
 
-
-bool ReadFile_snps_header (const string &file_snps, set<string> &setSnps)
-{
+bool ReadFile_snps_header (const string &file_snps, set<string> &setSnps) {
 	setSnps.clear();
 
-	//ifstream infile (file_snps.c_str(), ifstream::in);
-	//if (!infile) {cout<<"error! fail to open snps file: "<<file_snps<<endl; return false;}
-
 	igzstream infile (file_snps.c_str(), igzstream::in);
-	if (!infile) {cout<<"error! fail to open snps file: "<<file_snps<<endl; return false;}
+	if (!infile) {
+	  cout << "error! fail to open snps file: " << file_snps << endl;
+	  return false;
+	}
 
 	string line, rs, chr, pos;
 	char *ch_ptr;
 
-	//read header
+	// Read header.
 	HEADER header;
 	!safeGetline(infile, line).eof();
 	ReadHeader_io (line, header);
@@ -209,7 +193,6 @@ bool ReadFile_snps_header (const string &file_snps, set<string> &setSnps)
 
 	return true;
 }
-
 
 //Read log file
 bool ReadFile_log (const string &file_log, double &pheno_mean)
@@ -4085,14 +4068,7 @@ void ReadFile_mref (const string &file_mref, gsl_matrix *S_mat, gsl_matrix *Svar
   //free matrices
   gsl_matrix_free(S_sub);
   gsl_matrix_free(Svar_sub);
-  //gsl_matrix_free(V_sub);
   gsl_vector_free(s);
 
   return;
 }
-
-
-
-
-
-
