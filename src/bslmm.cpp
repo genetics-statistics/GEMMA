@@ -1,6 +1,6 @@
 /*
  Genome-wide Efficient Mixed Model Association (GEMMA)
- Copyright (C) 2011  Xiang Zhou
+ Copyright (C) 2011-2017 Xiang Zhou
  
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -13,7 +13,7 @@
  GNU General Public License for more details.
  
  You should have received a copy of the GNU General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <iostream>
@@ -38,29 +38,14 @@
 #include "gsl/gsl_cdf.h"
 #include "gsl/gsl_roots.h"
 
-
-
-
 #include "lapack.h"
-
-#ifdef FORCE_FLOAT
-#include "param_float.h"
-#include "bslmm_float.h"
-#include "lmm_float.h"  //for class FUNC_PARAM and MatrixCalcLR
-#include "lm_float.h"
-#include "mathfunc_float.h"  //for function CenterVector
-#else
 #include "param.h"
 #include "bslmm.h"
 #include "lmm.h"
 #include "lm.h"
 #include "mathfunc.h"
-#endif
 
 using namespace std;
-
-
-
 
 void BSLMM::CopyFromParam (PARAM &cPar) 
 {
@@ -330,11 +315,8 @@ double BSLMM::CalcPveLM (const gsl_matrix *UtXgamma, const gsl_vector *Uty, cons
 	gsl_matrix_set_identity (Omega);
 	gsl_matrix_scale (Omega, 1.0/sigma_a2); 
 
-#ifdef WITH_LAPACK
-	lapack_dgemm ((char *)"T", (char *)"N", 1.0, UtXgamma, UtXgamma, 1.0, Omega);
-#else
-	gsl_blas_dgemm (CblasTrans, CblasNoTrans, 1.0, UtXgamma, UtXgamma, 1.0, Omega);	
-#endif
+	lapack_dgemm ((char *)"T", (char *)"N", 1.0, UtXgamma, UtXgamma,
+		      1.0, Omega);
 	gsl_blas_dgemv (CblasTrans, 1.0, UtXgamma, Uty, 0.0, Xty);
 
 	CholeskySolve(Omega, Xty, OiXty);
@@ -517,11 +499,8 @@ double BSLMM::CalcPosterior (const gsl_matrix *UtXgamma, const gsl_vector *Uty, 
 	gsl_matrix_set_identity (Omega);
 	
 	time_start=clock();
-#ifdef WITH_LAPACK
-	lapack_dgemm ((char *)"T", (char *)"N", sigma_a2, UtXgamma_eval, UtXgamma, 1.0, Omega);
-#else
-	gsl_blas_dgemm (CblasTrans, CblasNoTrans, sigma_a2, UtXgamma_eval, UtXgamma, 1.0, Omega);
-#endif	
+	lapack_dgemm ((char *)"T", (char *)"N", sigma_a2, UtXgamma_eval,
+		      UtXgamma, 1.0, Omega);
 	time_Omega+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
 	
 	
@@ -1229,11 +1208,8 @@ void BSLMM::CalcXtX (const gsl_matrix *X, const gsl_vector *y, const size_t s_si
   gsl_matrix_view XtX_sub=gsl_matrix_submatrix(XtX, 0, 0, s_size, s_size);
   gsl_vector_view Xty_sub=gsl_vector_subvector(Xty, 0, s_size);
 
-#ifdef WITH_LAPACK
-  lapack_dgemm ((char *)"T", (char *)"N", 1.0, &X_sub.matrix, &X_sub.matrix, 0.0, &XtX_sub.matrix);
-#else
-  gsl_blas_dgemm (CblasTrans, CblasNoTrans, 1.0, &X_sub.matrix, &X_sub.matrix, 0.0, &XtX_sub.matrix);
-#endif
+  lapack_dgemm ((char *)"T", (char *)"N", 1.0, &X_sub.matrix,
+		&X_sub.matrix, 0.0, &XtX_sub.matrix);
   gsl_blas_dgemv(CblasTrans, 1.0, &X_sub.matrix, y, 0.0, &Xty_sub.vector);
 
   time_Omega+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
@@ -1282,127 +1258,6 @@ void BSLMM::SetXgamma (const gsl_matrix *X, const gsl_matrix *X_old, const gsl_m
   gsl_vector_view Xtynew_sub=gsl_vector_subvector(Xty_new, 0, rank_new.size());
 
   //get X_new and calculate XtX_new
-  /*
-  if (rank_remove.size()==0 && rank_add.size()==0) {
-    gsl_matrix_memcpy(&Xnew_sub.matrix, &Xold_sub.matrix);
-    gsl_matrix_memcpy(&XtXnew_sub.matrix, &XtXold_sub.matrix);
-    gsl_vector_memcpy(&Xtynew_sub.vector, &Xtyold_sub.vector);
-  } else {
-    gsl_matrix *X_temp=gsl_matrix_alloc(X_old->size1, rank_old.size()-rank_remove.size() );
-    gsl_matrix *XtX_temp=gsl_matrix_alloc(X_temp->size2, X_temp->size2);
-    gsl_vector *Xty_temp=gsl_vector_alloc(X_temp->size2);
-    
-    if (rank_remove.size()==0) {
-      gsl_matrix_memcpy (X_temp, &Xold_sub.matrix);
-      gsl_matrix_memcpy (XtX_temp, &XtXold_sub.matrix);
-      gsl_vector_memcpy (Xty_temp, &Xtyold_sub.vector);
-    } else {
-      size_t i_temp=0, j_temp;
-      for (size_t i=0; i<rank_old.size(); i++) {
-	if (mapRank2in_remove.count(rank_old[i])!=0) {continue;}
-	gsl_vector_const_view Xold_col=gsl_matrix_const_column(X_old, i);	
-	gsl_vector_view Xtemp_col=gsl_matrix_column(X_temp, i_temp);
-	gsl_vector_memcpy (&Xtemp_col.vector, &Xold_col.vector);
-
-	d=gsl_vector_get (Xty_old, i);
-	gsl_vector_set (Xty_temp, i_temp, d);
-	
-	j_temp=i_temp;
-	for (size_t j=i; j<rank_old.size(); j++) {
-	  if (mapRank2in_remove.count(rank_old[j])!=0) {continue;}
-	  d=gsl_matrix_get (XtX_old, i, j);
-	  gsl_matrix_set (XtX_temp, i_temp, j_temp, d);
-	  if (i_temp!=j_temp) {gsl_matrix_set (XtX_temp, j_temp, i_temp, d);}
-	  j_temp++;
-	}
-	i_temp++;
-      }
-    }
-
-    if (rank_add.size()==0) {
-      gsl_matrix_memcpy (&Xnew_sub.matrix, X_temp);
-      gsl_matrix_memcpy (&XtXnew_sub.matrix, XtX_temp);
-      gsl_vector_memcpy (&Xtynew_sub.vector, Xty_temp);
-    } else {
-      gsl_matrix *X_add=gsl_matrix_alloc(X_old->size1, rank_add.size() );
-      gsl_matrix *XtX_aa=gsl_matrix_alloc(X_add->size2, X_add->size2);
-      gsl_matrix *XtX_at=gsl_matrix_alloc(X_add->size2, X_temp->size2);
-      gsl_vector *Xty_add=gsl_vector_alloc(X_add->size2);
-
-      //get X_add
-      SetXgamma (X_add, X, rank_add);
-
-      //get t(X_add)X_add and t(X_add)X_temp	
-      clock_t time_start=clock();
-      
-      //somehow the lapack_dgemm does not work here
-      //#ifdef WITH_LAPACK
-      //lapack_dgemm ((char *)"T", (char *)"N", 1.0, X_add, X_add, 0.0, XtX_aa);
-      //lapack_dgemm ((char *)"T", (char *)"N", 1.0, X_add, X_temp, 0.0, XtX_at);
-      
-      //#else
-      gsl_blas_dgemm (CblasTrans, CblasNoTrans, 1.0, X_add, X_add, 0.0, XtX_aa);
-      gsl_blas_dgemm (CblasTrans, CblasNoTrans, 1.0, X_add, X_temp, 0.0, XtX_at);
-      //#endif
-      gsl_blas_dgemv(CblasTrans, 1.0, X_add, y, 0.0, Xty_add);
-
-      time_Omega+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
-
-      //save to X_new, XtX_new and Xty_new
-      size_t i_temp=0, j_temp, i_flag=0, j_flag=0;
-      for (size_t i=0; i<rank_new.size(); i++) {
-	if (mapRank2in_add.count(rank_new[i])!=0) {i_flag=1;} else {i_flag=0;}
-	gsl_vector_view Xnew_col=gsl_matrix_column(X_new, i); 
-	if (i_flag==1) {
-	  gsl_vector_view Xcopy_col=gsl_matrix_column(X_add, i-i_temp);
-	  gsl_vector_memcpy (&Xnew_col.vector, &Xcopy_col.vector);
-	} else {
-	  gsl_vector_view Xcopy_col=gsl_matrix_column(X_temp, i_temp);	  
-	  gsl_vector_memcpy (&Xnew_col.vector, &Xcopy_col.vector);
-	}	
-
-	if (i_flag==1) {
-          d=gsl_vector_get (Xty_add, i-i_temp);
-        } else {
-          d=gsl_vector_get (Xty_temp, i_temp);
-        }
-	gsl_vector_set (Xty_new, i, d);
-
-	j_temp=i_temp;
-	for (size_t j=i; j<rank_new.size(); j++) {
-          if (mapRank2in_add.count(rank_new[j])!=0) {j_flag=1;} else {j_flag=0;}
-
-	  if (i_flag==1 && j_flag==1) {
-            d=gsl_matrix_get(XtX_aa, i-i_temp, j-j_temp);
-	  } else if (i_flag==1) {
-	    d=gsl_matrix_get(XtX_at, i-i_temp, j_temp);
-	  } else if (j_flag==1) {
-	    d=gsl_matrix_get(XtX_at, j-j_temp, i_temp);
-	  } else {
-	    d=gsl_matrix_get(XtX_temp, i_temp, j_temp);
-	  }
-
-	  gsl_matrix_set (XtX_new, i, j, d);
-	  if (i!=j) {gsl_matrix_set (XtX_new, j, i, d);}
-
-	  if (j_flag==0) {j_temp++;}
-        }
-	if (i_flag==0) {i_temp++;}
-      }
-
-      gsl_matrix_free(X_add);
-      gsl_matrix_free(XtX_aa);
-      gsl_matrix_free(XtX_at);
-      gsl_vector_free(Xty_add);
-    }
-
-    gsl_matrix_free(X_temp);
-    gsl_matrix_free(XtX_temp);
-    gsl_vector_free(Xty_temp);
-  }
-  */
-
-
   if (rank_remove.size()==0 && rank_add.size()==0) {
     gsl_matrix_memcpy(&Xnew_sub.matrix, &Xold_sub.matrix);
     gsl_matrix_memcpy(&XtXnew_sub.matrix, &XtXold_sub.matrix);
@@ -1447,14 +1302,10 @@ void BSLMM::SetXgamma (const gsl_matrix *X, const gsl_matrix *X_old, const gsl_m
       clock_t time_start=clock();
       
       //somehow the lapack_dgemm does not work here
-      //#ifdef WITH_LAPACK
-      //lapack_dgemm ((char *)"T", (char *)"N", 1.0, X_add, X_add, 0.0, XtX_aa);
-      //lapack_dgemm ((char *)"T", (char *)"N", 1.0, X_add, X_temp, 0.0, XtX_at);
-      
-      //#else
-      gsl_blas_dgemm (CblasTrans, CblasNoTrans, 1.0, X_add, X_add, 0.0, XtX_aa);
-      gsl_blas_dgemm (CblasTrans, CblasNoTrans, 1.0, X_add, X_old, 0.0, XtX_ao);
-      //#endif
+      gsl_blas_dgemm (CblasTrans, CblasNoTrans, 1.0, X_add, X_add,
+		      0.0, XtX_aa);
+      gsl_blas_dgemm (CblasTrans, CblasNoTrans, 1.0, X_add, X_old,
+		      0.0, XtX_ao);
       gsl_blas_dgemv(CblasTrans, 1.0, X_add, y, 0.0, Xty_add);
 
       time_Omega+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);

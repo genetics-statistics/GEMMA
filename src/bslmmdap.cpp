@@ -1,6 +1,6 @@
 /*
  Genome-wide Efficient Mixed Model Association (GEMMA)
- Copyright (C) 2011  Xiang Zhou
+ Copyright (C) 2011-2017 Xiang Zhou
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -13,7 +13,7 @@
  GNU General Public License for more details.
 
  You should have received a copy of the GNU General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <iostream>
@@ -38,30 +38,16 @@
 #include "gsl/gsl_cdf.h"
 #include "gsl/gsl_roots.h"
 
-
-
 #include "logistic.h"
 #include "lapack.h"
 #include "io.h"
-
-#ifdef FORCE_FLOAT
-#include "param_float.h"
-#include "bslmmdap_float.h"
-#include "lmm_float.h"  //for class FUNC_PARAM and MatrixCalcLR
-#include "lm_float.h"
-#include "mathfunc_float.h"  //for function CenterVector
-#else
 #include "param.h"
 #include "bslmmdap.h"
 #include "lmm.h"
 #include "lm.h"
 #include "mathfunc.h"
-#endif
 
 using namespace std;
-
-
-
 
 void BSLMMDAP::CopyFromParam (PARAM &cPar)
 {
@@ -506,11 +492,8 @@ double BSLMMDAP::CalcMarginal (const gsl_matrix *UtXgamma, const gsl_vector *Uty
 	gsl_matrix_set_identity (Omega);
 
 	time_start=clock();
-#ifdef WITH_LAPACK
-	lapack_dgemm ((char *)"T", (char *)"N", sigma_a2, UtXgamma_eval, UtXgamma, 1.0, Omega);
-#else
-	gsl_blas_dgemm (CblasTrans, CblasNoTrans, sigma_a2, UtXgamma_eval, UtXgamma, 1.0, Omega);
-#endif
+	lapack_dgemm ((char *)"T", (char *)"N", sigma_a2, UtXgamma_eval,
+		      UtXgamma, 1.0, Omega);
 	time_Omega+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
 
 	//calculate beta_hat
@@ -819,198 +802,3 @@ void BSLMMDAP::DAP_EstimateHyper (const size_t kc, const size_t kd, const vector
 	gsl_vector_free(coef);
 	return;
 }
-
-/*
-//readin the estimated hyper-parameters and perform fine mapping for each region
-void BSLMM::DAP_FineMapping (const gsl_matrix *U, const gsl_matrix *UtX, const gsl_matrix *A, const gsl_vector *Uty, const gsl_vector *K_eval, const gsl_vector *y, gsl_matrix *Hyper, gsl_vector *alpha, gsl_vector *pip) {
-	clock_t time_start;
-
-	//two priority sets: S_1 contains all candidate causal SNPs; S_2 contains the prioritized combintion of them
-	//two marginal probability sets: P_1 contains marginals for S_1; P_2 contains marginals for S_2;
-	set<size_t> S1set, S2set;
-	vector<size_t> S1vec;
-	vector<set<size_t> > S2vec;
-	vector<double> P1, P2;
-
-	//calculate P0 (null) and P1 (for every SNP)
-
-
-
-	//loop through the number of combinations
-	for (size_t s=0; s<p; s++) {
-	  //if (s==0), set up S_1: compute marginal of the null model, then compute P_1, then compute BF_1 and use them to select S_1; compute C_1
-
-
-
-	  //if (s==1), set up S_2: compute pair-wise P_2 and use them to select S_2; compute C_2
-
-	  //otherwise, match each combination of S_2 with each SNP from S_1, select into S_3; and replace S_2 with S_3; compute C_s
-
-
-	  //stop when the stopping critieria are reached (if S_2 is empty; if t; if kappa); add the residual component R
-
-	for (size_t t=0; t<total_step; ++t) {
-		if (t%d_pace==0 || t==total_step-1) {ProgressBar ("Running MCMC ", t, total_step-1, (double)n_accept/(double)(t*n_mh+1));}
-//		if (t>10) {break;}
-
-		if (a_mode==13) {
-			SampleZ (y, z_hat, z);
-			mean_z=CenterVector (z);
-
-			time_start=clock();
-			gsl_blas_dgemv (CblasTrans, 1.0, U, z, 0.0, Utz);
-			time_UtZ+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
-
-			//First proposal
-			if (cHyp_old.n_gamma==0 || cHyp_old.rho==0) {
-				logPost_old=CalcPosterior(Utz, K_eval, Utu_old, alpha_old, cHyp_old);
-				beta_old.clear();
-				for (size_t i=0; i<cHyp_old.n_gamma; ++i) {
-				  beta_old.push_back(0);
-				}
-			}
-			else {
-				gsl_matrix *UtXgamma=gsl_matrix_alloc (ni_test, cHyp_old.n_gamma);
-				gsl_vector *beta=gsl_vector_alloc (cHyp_old.n_gamma);
-				SetXgamma (UtXgamma, UtX, rank_old);
-				logPost_old=CalcPosterior(UtXgamma, Utz, K_eval, UtXb_old, Utu_old, alpha_old, beta, cHyp_old);
-
-				beta_old.clear();
-				for (size_t i=0; i<beta->size; ++i) {
-					beta_old.push_back(gsl_vector_get(beta, i));
-				}
-				gsl_matrix_free (UtXgamma);
-				gsl_vector_free (beta);
-			}
-		}
-
-
-	delete [] p_gamma;
-	beta_g.clear();
-
-	return;
-}
-
-*/
-
-
-
-
-
-
-/*
-//below fits MCMC for rho=1
-void BSLMM::CalcXtX (const gsl_matrix *X, const gsl_vector *y, const size_t s_size, gsl_matrix *XtX, gsl_vector *Xty)
-{
-  time_t time_start=clock();
-  gsl_matrix_const_view X_sub=gsl_matrix_const_submatrix(X, 0, 0, X->size1, s_size);
-  gsl_matrix_view XtX_sub=gsl_matrix_submatrix(XtX, 0, 0, s_size, s_size);
-  gsl_vector_view Xty_sub=gsl_vector_subvector(Xty, 0, s_size);
-
-#ifdef WITH_LAPACK
-  lapack_dgemm ((char *)"T", (char *)"N", 1.0, &X_sub.matrix, &X_sub.matrix, 0.0, &XtX_sub.matrix);
-#else
-  gsl_blas_dgemm (CblasTrans, CblasNoTrans, 1.0, &X_sub.matrix, &X_sub.matrix, 0.0, &XtX_sub.matrix);
-#endif
-  gsl_blas_dgemv(CblasTrans, 1.0, &X_sub.matrix, y, 0.0, &Xty_sub.vector);
-
-  time_Omega+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
-
-  return;
-}
-
-
-
-double BSLMM::CalcPosterior (const double yty, class HYPBSLMM &cHyp)
-{
-	double logpost=0.0;
-
-	//for quantitative traits, calculate pve and pge
-	//pve and pge for case/control data are calculted in CalcCC_PVEnZ
-	if (a_mode==11) {
-		cHyp.pve=0.0;
-		cHyp.pge=1.0;
-	}
-
-	//calculate likelihood
-	if (a_mode==11) {logpost-=0.5*(double)ni_test*log(yty);}
-	else {logpost-=0.5*yty;}
-
-	logpost+=((double)cHyp.n_gamma-1.0)*cHyp.logp+((double)ns_test-(double)cHyp.n_gamma)*log(1-exp(cHyp.logp));
-
-	return logpost;
-}
-
-
-double BSLMM::CalcPosterior (const gsl_matrix *Xgamma, const gsl_matrix *XtX, const gsl_vector *Xty, const double yty, const size_t s_size, gsl_vector *Xb, gsl_vector *beta, class HYPBSLMM &cHyp)
-{
-	double sigma_a2=cHyp.h/( (1-cHyp.h)*exp(cHyp.logp)*(double)ns_test);
-	double logpost=0.0;
-	double d, P_yy=yty, logdet_O=0.0;
-
-	gsl_matrix_const_view Xgamma_sub=gsl_matrix_const_submatrix (Xgamma, 0, 0, Xgamma->size1, s_size);
-	gsl_matrix_const_view XtX_sub=gsl_matrix_const_submatrix (XtX, 0, 0, s_size, s_size);
-	gsl_vector_const_view Xty_sub=gsl_vector_const_subvector (Xty, 0, s_size);
-
-	gsl_matrix *Omega=gsl_matrix_alloc (s_size, s_size);
-	gsl_matrix *M_temp=gsl_matrix_alloc (s_size, s_size);
-	gsl_vector *beta_hat=gsl_vector_alloc (s_size);
-	gsl_vector *Xty_temp=gsl_vector_alloc (s_size);
-
-	gsl_vector_memcpy (Xty_temp, &Xty_sub.vector);
-
-	//calculate Omega
-	gsl_matrix_memcpy (Omega, &XtX_sub.matrix);
-	gsl_matrix_scale (Omega, sigma_a2);
-	gsl_matrix_set_identity (M_temp);
-	gsl_matrix_add (Omega, M_temp);
-
-	//calculate beta_hat
-	logdet_O=CholeskySolve(Omega, Xty_temp, beta_hat);
-	gsl_vector_scale (beta_hat, sigma_a2);
-
-	gsl_blas_ddot (Xty_temp, beta_hat, &d);
-	P_yy-=d;
-
-	//sample tau
-	double tau=1.0;
-	if (a_mode==11) {tau =gsl_ran_gamma (gsl_r, (double)ni_test/2.0,  2.0/P_yy); }
-
-	//sample beta
-	for (size_t i=0; i<s_size; i++)
-	{
-		d=gsl_ran_gaussian(gsl_r, 1);
-		gsl_vector_set(beta, i, d);
-	}
-	gsl_vector_view beta_sub=gsl_vector_subvector(beta, 0, s_size);
-	gsl_blas_dtrsv(CblasUpper, CblasNoTrans, CblasNonUnit, Omega, &beta_sub.vector);
-
-	//it compuates inv(L^T(Omega)) %*% beta;
-	gsl_vector_scale(&beta_sub.vector, sqrt(sigma_a2/tau));
-	gsl_vector_add(&beta_sub.vector, beta_hat);
-	gsl_blas_dgemv (CblasNoTrans, 1.0, &Xgamma_sub.matrix, &beta_sub.vector, 0.0, Xb);
-
-	//for quantitative traits, calculate pve and pge
-	if (a_mode==11) {
-		gsl_blas_ddot (Xb, Xb, &d);
-		cHyp.pve=d/(double)ni_test;
-		cHyp.pve/=cHyp.pve+1.0/tau;
-		cHyp.pge=1.0;
-	}
-
-	logpost=-0.5*logdet_O;
-	if (a_mode==11) {logpost-=0.5*(double)ni_test*log(P_yy);}
-	else {logpost-=0.5*P_yy;}
-
-	logpost+=((double)cHyp.n_gamma-1.0)*cHyp.logp+((double)ns_test-(double)cHyp.n_gamma)*log(1.0-exp(cHyp.logp));
-
-	gsl_matrix_free (Omega);
-	gsl_matrix_free (M_temp);
-	gsl_vector_free (beta_hat);
-	gsl_vector_free (Xty_temp);
-
-	return logpost;
-}
-*/
-
-

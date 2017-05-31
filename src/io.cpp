@@ -1,6 +1,6 @@
 /*
     Genome-wide Efficient Mixed Model Association (GEMMA)
-    Copyright (C) 2011-2017 Xiang Zhou
+    Copyright (C) 2011-2017, Xiang Zhou
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -194,11 +194,13 @@ bool ReadFile_snps_header (const string &file_snps, set<string> &setSnps) {
 	return true;
 }
 
-//Read log file
-bool ReadFile_log (const string &file_log, double &pheno_mean)
-{
+// Read log file.
+bool ReadFile_log (const string &file_log, double &pheno_mean) {
 	ifstream infile (file_log.c_str(), ifstream::in);
-	if (!infile) {cout<<"error! fail to open log file: "<<file_log<<endl; return false;}
+	if (!infile) {
+	  cout << "error! fail to open log file: " << file_log << endl;
+	  return false;
+	}
 
 	string line;
 	char *ch_ptr;
@@ -229,15 +231,18 @@ bool ReadFile_log (const string &file_log, double &pheno_mean)
 	return true;
 }
 
-
-//Read bimbam annotation file
-bool ReadFile_anno (const string &file_anno, map<string, string> &mapRS2chr, map<string, long int> &mapRS2bp, map<string, double> &mapRS2cM)
-{
+// Read bimbam annotation file.
+bool ReadFile_anno (const string &file_anno, map<string, string> &mapRS2chr,
+		    map<string, long int> &mapRS2bp,
+		    map<string, double> &mapRS2cM) {
 	mapRS2chr.clear();
 	mapRS2bp.clear();
 
 	ifstream infile (file_anno.c_str(), ifstream::in);
-	if (!infile) {cout<<"error opening annotation file: "<<file_anno<<endl; return false;}
+	if (!infile) {
+	  cout << "error opening annotation file: " << file_anno << endl;
+	  return false;
+	}
 
 	string line;
 	char *ch_ptr;
@@ -251,11 +256,23 @@ bool ReadFile_anno (const string &file_anno, map<string, string> &mapRS2chr, map
 		ch_ptr=strtok ((char *)line.c_str(), " , \t");
 		rs=ch_ptr;
 		ch_ptr=strtok (NULL, " , \t");
-		if (strcmp(ch_ptr, "NA")==0) {b_pos=-9;} else {b_pos=atol(ch_ptr);}
+		if (strcmp(ch_ptr, "NA")==0) {
+		  b_pos=-9;
+		} else {
+		  b_pos=atol(ch_ptr);
+		}
 		ch_ptr=strtok (NULL, " , \t");
-		if (ch_ptr==NULL || strcmp(ch_ptr, "NA")==0) {chr="-9";} else {chr=ch_ptr;}
+		if (ch_ptr==NULL || strcmp(ch_ptr, "NA")==0) {
+		  chr="-9";
+		} else {
+		  chr=ch_ptr;
+		}
 		ch_ptr=strtok (NULL, " , \t");
-		if (ch_ptr==NULL || strcmp(ch_ptr, "NA")==0) {cM=-9;} else {cM=atof(ch_ptr);}
+		if (ch_ptr==NULL || strcmp(ch_ptr, "NA")==0) {
+		  cM=-9;
+		} else {
+		  cM=atof(ch_ptr);
+		}
 
 		mapRS2chr[rs]=chr;
 		mapRS2bp[rs]=b_pos;
@@ -268,15 +285,17 @@ bool ReadFile_anno (const string &file_anno, map<string, string> &mapRS2chr, map
 	return true;
 }
 
-//read one column of phenotype
-bool ReadFile_column (const string &file_pheno, vector<int> &indicator_idv, vector<double> &pheno, const int &p_column)
-{
+// Read 1 column of phenotype.
+bool ReadFile_column (const string &file_pheno, vector<int> &indicator_idv,
+		      vector<double> &pheno, const int &p_column) {
 	indicator_idv.clear();
 	pheno.clear();
 
 	igzstream infile (file_pheno.c_str(), igzstream::in);
-//	ifstream infile (file_pheno.c_str(), ifstream::in);
-	if (!infile) {cout<<"error! fail to open phenotype file: "<<file_pheno<<endl; return false;}
+	if (!infile) {
+	  cout << "error! fail to open phenotype file: " << file_pheno << endl;
+	  return false;
+	}
 
 	string line;
 	char *ch_ptr;
@@ -288,8 +307,15 @@ bool ReadFile_column (const string &file_pheno, vector<int> &indicator_idv, vect
 		for (int i=0; i<(p_column-1); ++i) {
 			ch_ptr=strtok (NULL, " , \t");
 		}
-		if (strcmp(ch_ptr, "NA")==0) {indicator_idv.push_back(0); pheno.push_back(-9);}		//pheno is different from pimass2
-		else {p=atof(ch_ptr); indicator_idv.push_back(1); pheno.push_back(p);}
+		if (strcmp(ch_ptr, "NA")==0) {
+		  indicator_idv.push_back(0);
+		  pheno.push_back(-9);
+		} // Pheno is different from pimass2.
+		else {
+		  p=atof(ch_ptr);
+		  indicator_idv.push_back(1);
+		  pheno.push_back(p);
+		}
 	}
 
 	infile.close();
@@ -298,17 +324,19 @@ bool ReadFile_column (const string &file_pheno, vector<int> &indicator_idv, vect
 	return true;
 }
 
-
-
-//Read bimbam phenotype file, p_column=1, 2 ...
-bool ReadFile_pheno (const string &file_pheno, vector<vector<int> > &indicator_pheno, vector<vector<double> > &pheno, const vector<size_t> &p_column)
-{
+// Read bimbam phenotype file, p_column=1, 2,...
+bool ReadFile_pheno (const string &file_pheno,
+		     vector<vector<int> > &indicator_pheno,
+		     vector<vector<double> > &pheno,
+		     const vector<size_t> &p_column) {
 	indicator_pheno.clear();
 	pheno.clear();
 
 	igzstream infile (file_pheno.c_str(), igzstream::in);
-//	ifstream infile (file_pheno.c_str(), ifstream::in);
-	if (!infile) {cout<<"error! fail to open phenotype file: "<<file_pheno<<endl; return false;}
+	if (!infile) {
+	  cout << "error! fail to open phenotype file: " << file_pheno << endl;
+	  return false;
+	}
 
 	string line;
 	char *ch_ptr;
@@ -333,8 +361,15 @@ bool ReadFile_pheno (const string &file_pheno, vector<vector<int> > &indicator_p
 		size_t i=0;
 		while (i<p_max ) {
 			if (mapP2c.count(i+1)!=0) {
-				if (strcmp(ch_ptr, "NA")==0) {ind_pheno_row[mapP2c[i+1]]=0; pheno_row[mapP2c[i+1]]=-9;}
-				else {p=atof(ch_ptr); ind_pheno_row[mapP2c[i+1]]=1; pheno_row[mapP2c[i+1]]=p;}
+				if (strcmp(ch_ptr, "NA")==0) {
+				  ind_pheno_row[mapP2c[i+1]]=0;
+				  pheno_row[mapP2c[i+1]]=-9;
+				}
+				else {
+				  p=atof(ch_ptr);
+				  ind_pheno_row[mapP2c[i+1]]=1;
+				  pheno_row[mapP2c[i+1]]=p;
+				}
 			}
 			i++;
 			ch_ptr=strtok (NULL, " , \t");
@@ -350,13 +385,15 @@ bool ReadFile_pheno (const string &file_pheno, vector<vector<int> > &indicator_p
 	return true;
 }
 
-
-bool ReadFile_cvt (const string &file_cvt, vector<int> &indicator_cvt, vector<vector<double> > &cvt, size_t &n_cvt)
-{
+bool ReadFile_cvt (const string &file_cvt, vector<int> &indicator_cvt,
+		   vector<vector<double> > &cvt, size_t &n_cvt) {
 	indicator_cvt.clear();
 
 	ifstream infile (file_cvt.c_str(), ifstream::in);
-	if (!infile) {cout<<"error! fail to open covariates file: "<<file_cvt<<endl; return false;}
+	if (!infile) {
+	  cout << "error! fail to open covariates file: " << file_cvt << endl;
+	  return false;
+	}
 
 	string line;
 	char *ch_ptr;
@@ -374,7 +411,11 @@ bool ReadFile_cvt (const string &file_cvt, vector<int> &indicator_cvt, vector<ve
 			v_d.push_back(d);
 			ch_ptr=strtok (NULL, " , \t");
 		}
-		if (flag_na==0) {indicator_cvt.push_back(1);} else {indicator_cvt.push_back(0);}
+		if (flag_na==0) {
+		  indicator_cvt.push_back(1);
+		} else {
+		  indicator_cvt.push_back(0);
+		}
 		cvt.push_back(v_d);
 	}
 
@@ -382,10 +423,16 @@ bool ReadFile_cvt (const string &file_cvt, vector<int> &indicator_cvt, vector<ve
 	else {
 		flag_na=0;
 		for (vector<int>::size_type i=0; i<indicator_cvt.size(); ++i) {
-			if (indicator_cvt[i]==0) {continue;}
+			if (indicator_cvt[i]==0) {
+			  continue;
+			}
 
 			if (flag_na==0) {flag_na=1; n_cvt=cvt[i].size();}
-			if (flag_na!=0 && n_cvt!=cvt[i].size()) {cout<<"error! number of covariates in row "<<i<<" do not match other rows."<<endl; return false;}
+			if (flag_na!=0 && n_cvt!=cvt[i].size()) {
+			  cout << "error! number of covariates in row " <<
+			    i << " do not match other rows." << endl;
+			  return false;
+			}
 		}
 	}
 
@@ -395,15 +442,15 @@ bool ReadFile_cvt (const string &file_cvt, vector<int> &indicator_cvt, vector<ve
 	return true;
 }
 
-
-
-//Read .bim file
-bool ReadFile_bim (const string &file_bim, vector<SNPINFO> &snpInfo)
-{
-  snpInfo.clear();
+// Read .bim file.
+bool ReadFile_bim (const string &file_bim, vector<SNPINFO> &snpInfo) {
+        snpInfo.clear();
 
 	ifstream infile (file_bim.c_str(), ifstream::in);
-	if (!infile) {cout<<"error opening .bim file: "<<file_bim<<endl; return false;}
+	if (!infile) {
+	  cout << "error opening .bim file: " << file_bim << endl;
+	  return false;
+	}
 
 	string line;
 	char *ch_ptr;
@@ -429,7 +476,8 @@ bool ReadFile_bim (const string &file_bim, vector<SNPINFO> &snpInfo)
 		ch_ptr=strtok (NULL, " \t");
 		major=ch_ptr;
 
-		SNPINFO sInfo={chr, rs, cM, b_pos, minor, major, 0, -9, -9, 0, 0, 0};
+		SNPINFO sInfo={chr, rs, cM, b_pos, minor, major,
+			       0, -9, -9, 0, 0, 0};
 		snpInfo.push_back(sInfo);
 	}
 
@@ -438,8 +486,7 @@ bool ReadFile_bim (const string &file_bim, vector<SNPINFO> &snpInfo)
 	return true;
 }
 
-
-//Read .fam file
+// Read .fam file.
 bool ReadFile_fam (const string &file_fam, vector<vector<int> > &indicator_pheno, vector<vector<double> > &pheno, map<string, int> &mapID2num, const vector<size_t> &p_column)
 {
 	indicator_pheno.clear();

@@ -1,6 +1,6 @@
 /*
     Genome-wide Efficient Mixed Model Association (GEMMA)
-    Copyright (C) 2011-2017 Xiang Zhou
+    Copyright (C) 2011-2017, Xiang Zhou
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -121,22 +121,60 @@ bool ReadFile_gene (const string &file_gene, vector<double> &vec_read,
 		    vector<SNPINFO> &snpInfo, size_t &ng_total);
 
 bool ReadHeader_io (const string &line, HEADER &header);
-bool ReadFile_cat (const string &file_cat, map<string, size_t> &mapRS2cat, size_t &n_vc);
-bool ReadFile_mcat (const string &file_mcat, map<string, size_t> &mapRS2cat, size_t &n_vc);
+bool ReadFile_cat (const string &file_cat, map<string, size_t> &mapRS2cat,
+		   size_t &n_vc);
+bool ReadFile_mcat (const string &file_mcat, map<string, size_t> &mapRS2cat,
+		    size_t &n_vc);
 
-bool ReadFile_catc (const string &file_cat, map<string, vector<double> > &mapRS2catc, size_t &n_cat);
-bool ReadFile_mcatc (const string &file_mcat, map<string, vector<double> > &mapRS2catc, size_t &n_cat);
+bool ReadFile_catc (const string &file_cat,
+		    map<string, vector<double> > &mapRS2catc,
+		    size_t &n_cat);
+bool ReadFile_mcatc (const string &file_mcat, map<string,
+		     vector<double> > &mapRS2catc, size_t &n_cat);
 
-bool BimbamKin (const string &file_geno, const int display_pace, const vector<int> &indicator_idv, const vector<int> &indicator_snp, const map<string, double> &mapRS2weight, const map<string, size_t> &mapRS2cat, const vector<SNPINFO> &snpInfo, const gsl_matrix *W, gsl_matrix *matrix_kin, gsl_vector *vector_ns);
-bool PlinkKin (const string &file_bed, const int display_pace, const vector<int> &indicator_idv, const vector<int> &indicator_snp, const map<string, double> &mapRS2weight, const map<string, size_t> &mapRS2cat, const vector<SNPINFO> &snpInfo, const gsl_matrix *W, gsl_matrix *matrix_kin, gsl_vector *vector_ns);
-bool MFILEKin (const size_t mfile_mode, const string &file_mfile, const int display_pace, const vector<int> &indicator_idv, const vector<vector<int> > &mindicator_snp, const map<string, double> &mapRS2weight, const map<string, size_t> &mapRS2cat, const vector<vector<SNPINFO> > &msnpInfo, const gsl_matrix *W, gsl_matrix *matrix_kin, gsl_vector *vector_ns);
+bool BimbamKin (const string &file_geno, const int display_pace,
+		const vector<int> &indicator_idv,
+		const vector<int> &indicator_snp,
+		const map<string, double> &mapRS2weight,
+		const map<string, size_t> &mapRS2cat,
+		const vector<SNPINFO> &snpInfo, const gsl_matrix *W,
+		gsl_matrix *matrix_kin, gsl_vector *vector_ns);
+bool PlinkKin (const string &file_bed, const int display_pace,
+	       const vector<int> &indicator_idv,
+	       const vector<int> &indicator_snp,
+	       const map<string, double> &mapRS2weight,
+	       const map<string, size_t> &mapRS2cat,
+	       const vector<SNPINFO> &snpInfo,
+	       const gsl_matrix *W, gsl_matrix *matrix_kin,
+	       gsl_vector *vector_ns);
+bool MFILEKin (const size_t mfile_mode, const string &file_mfile,
+	       const int display_pace, const vector<int> &indicator_idv,
+	       const vector<vector<int> > &mindicator_snp,
+	       const map<string, double> &mapRS2weight,
+	       const map<string, size_t> &mapRS2cat,
+	       const vector<vector<SNPINFO> > &msnpInfo,
+	       const gsl_matrix *W, gsl_matrix *matrix_kin,
+	       gsl_vector *vector_ns);
 
-bool ReadFile_wsnp (const string &file_wsnp, map<string, double> &mapRS2double);
-bool ReadFile_wsnp (const string &file_wcat, const size_t n_vc, map<string, vector<double> > &mapRS2vector);
+bool ReadFile_wsnp (const string &file_wsnp,
+		    map<string, double> &mapRS2double);
+bool ReadFile_wsnp (const string &file_wcat, const size_t n_vc,
+		    map<string, vector<double> > &mapRS2vector);
 
-void ReadFile_beta (const string &file_beta, const map<string, size_t> &mapRS2cat, const map<string, double> &mapRS2wA, vector<size_t> &vec_cat, vector<size_t> &vec_ni, vector<double> &vec_weight, vector<double> &vec_z2, size_t &ni_total, size_t &ns_total, size_t &ns_test);
-void ReadFile_beta (const string &file_beta, const map<string, double> &mapRS2wA, map<string, string> &mapRS2A1, map<string, double> &mapRS2z);
-void Calcq (const size_t n_block, const vector<size_t> &vec_cat, const vector<size_t> &vec_ni, const vector<double> &vec_weight, const vector<double> &vec_z2, gsl_matrix *Vq, gsl_vector *q, gsl_vector *s);
+void ReadFile_beta (const string &file_beta,
+		    const map<string, size_t> &mapRS2cat,
+		    const map<string, double> &mapRS2wA,
+		    vector<size_t> &vec_cat, vector<size_t> &vec_ni,
+		    vector<double> &vec_weight, vector<double> &vec_z2,
+		    size_t &ni_total, size_t &ns_total, size_t &ns_test);
+void ReadFile_beta (const string &file_beta,
+		    const map<string, double> &mapRS2wA,
+		    map<string, string> &mapRS2A1,
+		    map<string, double> &mapRS2z);
+void Calcq (const size_t n_block, const vector<size_t> &vec_cat,
+	    const vector<size_t> &vec_ni,
+	    const vector<double> &vec_weight, const vector<double> &vec_z2,
+	    gsl_matrix *Vq, gsl_vector *q, gsl_vector *s);
 
 void ReadFile_study (const string &file_study, gsl_matrix *Vq,
 		     gsl_vector *q_vec, gsl_vector *s_vec, size_t &ni);

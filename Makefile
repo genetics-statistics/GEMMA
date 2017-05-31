@@ -4,14 +4,12 @@
 #       Unix / Linux               	LNX
 #       Mac                        	MAC
 # Compilation options
-#       link to LAPACK              WITH_LAPACK
 #       32-bit binary        		FORCE_32BIT
 #       dynamic compilation    		FORCE_DYNAMIC
 
 # Set this variable to either LNX or MAC
 SYS = LNX
 # Leave blank after "=" to disable; put "= 1" to enable
-# Disable WITH_LAPACK option can slow computation speed significantly and is not recommended
 WITH_LAPACK = 1
 FORCE_32BIT = 
 FORCE_DYNAMIC = 
@@ -53,7 +51,6 @@ HDR += $(SRC_DIR)/param.h $(SRC_DIR)/gemma.h $(SRC_DIR)/io.h $(SRC_DIR)/lm.h $(S
 
 ifdef WITH_LAPACK
   OBJS += $(SRC_DIR)/lapack.o
-  CPPFLAGS += -DWITH_LAPACK
 ifeq ($(SYS), MAC)
   LIBS += $(LIBS_MAC_D_LAPACK)
 else

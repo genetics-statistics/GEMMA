@@ -398,13 +398,7 @@ void lapack_eigen_symmv (gsl_matrix *A, gsl_vector *eval, gsl_matrix *evec,
 // DO NOT set eigenvalues to be positive.
 double EigenDecomp (gsl_matrix *G, gsl_matrix *U, gsl_vector *eval,
 		    const size_t flag_largematrix) {
-#ifdef WITH_LAPACK
 	lapack_eigen_symmv (G, eval, U, flag_largematrix);
-#else
-	gsl_eigen_symmv_workspace *w=gsl_eigen_symmv_alloc (G->size1);
-	gsl_eigen_symmv (G, eval, U, w);
-	gsl_eigen_symmv_free (w);	
-#endif	
 
 	// Calculate track_G=mean(diag(G)).
 	double d=0.0;
@@ -420,48 +414,7 @@ double EigenDecomp (gsl_matrix *G, gsl_matrix *U, gsl_vector *eval,
 // DO NOT set eigen values to be positive.
 double EigenDecomp (gsl_matrix_float *G, gsl_matrix_float *U,
 		    gsl_vector_float *eval, const size_t flag_largematrix) {
-#ifdef WITH_LAPACK
 	lapack_float_eigen_symmv (G, eval, U, flag_largematrix);
-#else
-	
-	// GSL doesn't provide single precision eigen decomposition;
-	// plus, float precision eigen decomposition in LAPACK may not
-	// work on OS 10.4 first change to double precision.
-	gsl_matrix *G_double=gsl_matrix_alloc (G->size1, G->size2);
-	gsl_matrix *U_double=gsl_matrix_alloc (U->size1, U->size2);
-	gsl_vector *eval_double=gsl_vector_alloc (eval->size);
-	for (size_t i=0; i<G->size1; i++) {
-		for (size_t j=0; j<G->size2; j++) {
-			gsl_matrix_set(G_double, i, j,
-				       gsl_matrix_float_get(G, i, j));
-		}
-	}	
-	gsl_eigen_symmv_workspace *w_space=gsl_eigen_symmv_alloc (G->size1);
-	gsl_eigen_symmv (G_double, eval_double, U_double, w_space);
-	gsl_eigen_symmv_free (w_space);	
-	
-	// Change back to float precision.
-	for (size_t i=0; i<G->size1; i++) {
-		for (size_t j=0; j<G->size2; j++) {
-			gsl_matrix_float_set(K, i, j,
-					     gsl_matrix_get(G_double, i, j));
-		}
-	}
-	for (size_t i=0; i<U->size1; i++) {
-		for (size_t j=0; j<U->size2; j++) {
-			gsl_matrix_float_set(U, i, j,
-					     gsl_matrix_get(U_double, i, j));
-		}
-	}
-	for (size_t i=0; i<eval->size; i++) {
-		gsl_vector_float_set(eval, i, gsl_vector_get(eval_double, i));
-	}	
-	
-	// Delete double-precision matrices.
-	gsl_matrix_free (G_double);
-	gsl_matrix_free (U_double);
-	gsl_vector_free (eval_double);
-#endif
 
 	// Calculate track_G=mean(diag(G)).
 	double d = 0.0;
@@ -477,28 +430,12 @@ double EigenDecomp (gsl_matrix_float *G, gsl_matrix_float *U,
 double CholeskySolve(gsl_matrix *Omega, gsl_vector *Xty, gsl_vector *OiXty) {
 	double logdet_O=0.0;
 	
-#ifdef WITH_LAPACK
 	lapack_cholesky_decomp(Omega);
 	for (size_t i=0; i<Omega->size1; ++i) {
 		logdet_O+=log(gsl_matrix_get (Omega, i, i));
 	}	
 	logdet_O*=2.0;	
 	lapack_cholesky_solve(Omega, Xty, OiXty);	
-#else	
-	int status = gsl_linalg_cholesky_decomp(Omega);
-	if(status == GSL_EDOM) {
-		cout << "## non-positive definite matrix" << endl; 
-	}
-	
-	for (size_t i=0; i<Omega->size1; ++i) {
-		logdet_O+=log(gsl_matrix_get (Omega, i, i));
-	}
-	logdet_O*=2.0;	
-	
-	gsl_vector_memcpy (OiXty, Xty);
-	gsl_blas_dtrsv(CblasLower, CblasNoTrans, CblasNonUnit, Omega, OiXty); 
-	gsl_blas_dtrsv(CblasUpper, CblasNoTrans, CblasNonUnit, Omega, OiXty);
-#endif
 	
 	return logdet_O;
 }
@@ -508,43 +445,12 @@ double CholeskySolve(gsl_matrix_float *Omega, gsl_vector_float *Xty,
 		     gsl_vector_float *OiXty) {
 	double logdet_O=0.0;
 	
-#ifdef WITH_LAPACK
 	lapack_float_cholesky_decomp(Omega);
 	for (size_t i=0; i<Omega->size1; ++i) {
 		logdet_O+=log(gsl_matrix_float_get (Omega, i, i));
 	}	
 	logdet_O*=2.0;	
 	lapack_float_cholesky_solve(Omega, Xty, OiXty);	
-#else
-	gsl_matrix *Omega_double=gsl_matrix_alloc (Omega->size1, Omega->size2);
-	double d;
-	for (size_t i=0; i<Omega->size1; ++i) {
-		for (size_t j=0; j<Omega->size2; ++j) {
-			d=(double)gsl_matrix_float_get (Omega, i, j);
-			gsl_matrix_set (Omega_double, i, j, d);
-		}
-	}
-	
-	int status = gsl_linalg_cholesky_decomp(Omega_double);
-	if(status == GSL_EDOM) {
-		cout << "## non-positive definite matrix" << endl; 
-	}	
-	
-	for (size_t i=0; i<Omega->size1; ++i) {
-		for (size_t j=0; j<Omega->size2; ++j) {
-			d=gsl_matrix_get (Omega_double, i, j);
-			if (j==i) {logdet_O+=log(d);}
-			gsl_matrix_float_set (Omega, i, j, (float)d);
-		}
-	}
-	logdet_O*=2.0;	
-	
-	gsl_vector_float_memcpy (OiXty, Xty);
-	gsl_blas_strsv(CblasLower, CblasNoTrans, CblasNonUnit, Omega, OiXty); 
-	gsl_blas_strsv(CblasUpper, CblasNoTrans, CblasNonUnit, Omega, OiXty);
-	
-	gsl_matrix_free (Omega_double);
-#endif
 	
 	return logdet_O;
 }	
