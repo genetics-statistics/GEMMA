@@ -1,6 +1,6 @@
 /*
  Genome-wide Efficient Mixed Model Association (GEMMA)
- Copyright (C) 2011  Xiang Zhou
+ Copyright (C) 2011-2017, Xiang Zhou
  
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -13,9 +13,8 @@
  GNU General Public License for more details.
  
  You should have received a copy of the GNU General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
+ along with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #ifndef __LDR_H__                
 #define __LDR_H__
@@ -24,25 +23,14 @@
 #include <map>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
-
-#ifdef FORCE_FLOAT
-#include "param_float.h"
-#else
 #include "param.h"
-#endif
-
 
 using namespace std;
-
-
-
-
-
 
 class LDR {
 
 public:	
-	// IO related parameters
+	// IO-related parameters.
 	int a_mode;	
 	size_t d_pace;
 	
@@ -51,26 +39,32 @@ public:
 	string file_out;
 	string path_out;
 		
-	// Summary statistics
-	size_t ni_total, ns_total;	//number of total individuals and snps
-	size_t ni_test, ns_test;	//number of individuals and snps used for analysis
-	size_t n_cvt;				//number of covariates
-	vector<int> indicator_idv;				//indicator for individuals (phenotypes), 0 missing, 1 available for analysis
-	vector<int> indicator_snp;				//sequence indicator for SNPs: 0 ignored because of (a) maf, (b) miss, (c) non-poly; 1 available for analysis
+	// Summary statistics.
+	size_t ni_total, ns_total; // Total number of individuals & SNPs.
+	size_t ni_test, ns_test;   // Number of individuals & SNPs used
+                                   // for analysis
+	size_t n_cvt;		   // Number of covariates.
+
+        // Indicator for individuals (phenotypes): 0 missing, 1
+        // available for analysis.
+	vector<int> indicator_idv;
+
+       	// Sequence indicator for SNPs: 0 ignored because of (a) maf,
+       	// (b) miss, (c) non-poly; 1 available for analysis.
+	vector<int> indicator_snp;
 	
-	vector<SNPINFO> snpInfo;		//record SNP information
+	vector<SNPINFO> snpInfo; // Record SNP information.
 	
-	// Not included in PARAM
+	// Not included in PARAM.
 	gsl_rng *gsl_r; 	
 	
-	// Main Functions
+	// Main functions.
 	void CopyFromParam (PARAM &cPar);
 	void CopyToParam (PARAM &cPar);
 	
-	void VB(const vector<vector<unsigned char> > &Xt, const gsl_matrix *W_gsl, const gsl_vector *y_gsl);
+	void VB(const vector<vector<unsigned char> > &Xt,
+		const gsl_matrix *W_gsl, const gsl_vector *y_gsl);
 };
-
-
 
 #endif
 

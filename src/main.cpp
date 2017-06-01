@@ -1,6 +1,6 @@
 /*
-	Genome-wide Efficient Mixed Model Association (GEMMA)
-    Copyright (C) 2011  Xiang Zhou
+    Genome-wide Efficient Mixed Model Association (GEMMA)
+    Copyright (C) 2011-2017, Xiang Zhou
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -13,7 +13,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <iostream>
@@ -21,21 +21,11 @@
 #include <sstream>
 #include <sys/stat.h>
 #include <sys/types.h>
-
-#include "param.h"
-
-#ifdef FORCE_FLOAT
-#include "gemma_float.h"
-#else
 #include "gemma.h"
-#endif
 
 using namespace std;
 
-
-
-int main(int argc, char * argv[])
-{ 	
+int main(int argc, char * argv[]) { 	
 	GEMMA cGemma;	
 	PARAM cPar;
 
@@ -79,8 +69,4 @@ int main(int argc, char * argv[])
 	
 	cGemma.WriteLog(argc, argv, cPar);
 	
-    return EXIT_SUCCESS;                                                          
-}
-
-
- 
+    return EXIT_SUCCESS;                                                       }

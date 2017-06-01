@@ -1,6 +1,6 @@
 /*
  Genome-wide Efficient Mixed Model Association (GEMMA)
- Copyright (C) 2011-2017 Xiang Zhou
+ Copyright (C) 2011-2017, Xiang Zhou
  
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by

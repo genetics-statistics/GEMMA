@@ -29,7 +29,7 @@
 #ifndef GZSTREAM_H
 #define GZSTREAM_H 1
 
-// standard C++ with new header file names and std:: namespace
+// Standard C++ with new header file names and std::namespace.
 #include <iostream>
 #include <fstream>
 #include <zlib.h>
@@ -118,4 +118,3 @@ public:
 #endif // GZSTREAM_H
 // ============================================================================
 // EOF //
-
