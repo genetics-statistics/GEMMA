@@ -62,14 +62,14 @@ void lapack_float_cholesky_decomp (gsl_matrix_float *A) {
 	char UPLO='L';
 	
 	if (N!=(int)A->size2) {
-	  cout << "Matrix needs to be symmetric and same dimension in" <<
+	  cout << "Matrix needs to be symmetric and same dimension in " <<
 	    "lapack_cholesky_decomp." << endl;
 	  return;
 	}
 	
 	spotrf_(&UPLO, &N, A->data, &LDA, &INFO);
 	if (INFO!=0) {
-	  cout << "Cholesky decomposition unsuccessful in" <<
+	  cout << "Cholesky decomposition unsuccessful in " <<
 	    "lapack_cholesky_decomp." << endl;
 	  return;
 	}	
@@ -83,14 +83,14 @@ void lapack_cholesky_decomp (gsl_matrix *A) {
 	char UPLO='L';
 	
 	if (N!=(int)A->size2) {
-	  cout << "Matrix needs to be symmetric and same dimension in" <<
+	  cout << "Matrix needs to be symmetric and same dimension in " <<
 	    "lapack_cholesky_decomp." << endl;
 	  return;
 	}
 	
 	dpotrf_(&UPLO, &N, A->data, &LDA, &INFO);
 	if (INFO!=0) {
-	  cout << "Cholesky decomposition unsuccessful in" <<
+	  cout << "Cholesky decomposition unsuccessful in " <<
 	    "lapack_cholesky_decomp."<<endl;
 	  return;
 	} 
@@ -106,7 +106,7 @@ void lapack_float_cholesky_solve (gsl_matrix_float *A,
 	char UPLO='L';
 	
 	if (N!=(int)A->size2 || N!=LDB) {
-	  cout << "Matrix needs to be symmetric and same dimension in" <<
+	  cout << "Matrix needs to be symmetric and same dimension in " <<cout
 	    "lapack_cholesky_solve." << endl;
 	  return;
 	}
@@ -129,7 +129,7 @@ void lapack_cholesky_solve (gsl_matrix *A, const gsl_vector *b,
 	char UPLO='L';
 	
 	if (N!=(int)A->size2 || N!=LDB) {
-	  cout << "Matrix needs to be symmetric and same dimension in" <<
+	  cout << "Matrix needs to be symmetric and same dimension in " <<
 	    "lapack_cholesky_solve." << endl;
 	  return;
 	}
@@ -236,7 +236,7 @@ void lapack_float_eigen_symmv (gsl_matrix_float *A, gsl_vector_float *eval,
 		char JOBZ='V', UPLO='L';
 				
 		if (N!=(int)A->size2 || N!=(int)eval->size) {
-		  cout << "Matrix needs to be symmetric and same" <<
+		  cout << "Matrix needs to be symmetric and same " <<
 		    "dimension in lapack_eigen_symmv."<<endl;
 		  return;
 		}
@@ -246,7 +246,7 @@ void lapack_float_eigen_symmv (gsl_matrix_float *A, gsl_vector_float *eval,
 		ssyev_(&JOBZ, &UPLO, &N, A->data, &LDA, eval->data, WORK,
 		       &LWORK, &INFO);
 		if (INFO!=0) {
-		  cout << "Eigen decomposition unsuccessful in" <<
+		  cout << "Eigen decomposition unsuccessful in " <<
 		    "lapack_eigen_symmv."<<endl;
 		  return;
 		}
@@ -268,7 +268,7 @@ void lapack_float_eigen_symmv (gsl_matrix_float *A, gsl_vector_float *eval,
 		int IL=0, IU=0, M;
 		
 		if (N!=(int)A->size2 || N!=(int)eval->size) {
-		  cout << "Matrix needs to be symmetric and same" <<
+		  cout << "Matrix needs to be symmetric and same " <<
 		    "dimension in lapack_float_eigen_symmv." << endl;
 		  return;
 		}
@@ -282,7 +282,7 @@ void lapack_float_eigen_symmv (gsl_matrix_float *A, gsl_vector_float *eval,
 			evec->data, &LDZ, ISUPPZ, WORK_temp, &LWORK,
 			IWORK_temp, &LIWORK, &INFO);
 		if (INFO!=0) {
-		  cout << "Work space estimate unsuccessful in" <<
+		  cout << "Work space estimate unsuccessful in " <<
 		    "lapack_float_eigen_symmv." << endl;
 		  return;
 		}
@@ -295,7 +295,7 @@ void lapack_float_eigen_symmv (gsl_matrix_float *A, gsl_vector_float *eval,
 			&VU, &IL, &IU, &ABSTOL, &M, eval->data, evec->data,
 			&LDZ, ISUPPZ, WORK, &LWORK, IWORK, &LIWORK, &INFO);
 		if (INFO!=0) {
-		  cout << "Eigen decomposition unsuccessful in" <<
+		  cout << "Eigen decomposition unsuccessful in " <<
 		    "lapack_float_eigen_symmv." << endl;
 		  return;
 		}
@@ -321,7 +321,7 @@ void lapack_eigen_symmv (gsl_matrix *A, gsl_vector *eval, gsl_matrix *evec,
 		char JOBZ='V', UPLO='L';		
 		
 		if (N!=(int)A->size2 || N!=(int)eval->size) {
-		  cout << "Matrix needs to be symmetric and same" <<
+		  cout << "Matrix needs to be symmetric and same " <<
 		    "dimension in lapack_eigen_symmv." << endl;
 		  return;
 		}
@@ -331,7 +331,7 @@ void lapack_eigen_symmv (gsl_matrix *A, gsl_vector *eval, gsl_matrix *evec,
 		dsyev_(&JOBZ, &UPLO, &N, A->data, &LDA, eval->data, WORK,
 		       &LWORK, &INFO);
 		if (INFO!=0) {
-		  cout<<"Eigen decomposition unsuccessful in" <<
+		  cout<<"Eigen decomposition unsuccessful in " <<
 		    "lapack_eigen_symmv." << endl;
 		  return;
 		}
@@ -352,7 +352,7 @@ void lapack_eigen_symmv (gsl_matrix *A, gsl_vector *eval, gsl_matrix *evec,
 		int IL=0, IU=0, M;
 		
 		if (N!=(int)A->size2 || N!=(int)eval->size) {
-		  cout << "Matrix needs to be symmetric and same" <<
+		  cout << "Matrix needs to be symmetric and same " <<
 		    "dimension in lapack_eigen_symmv." << endl;
 		  return;
 		}
@@ -367,7 +367,7 @@ void lapack_eigen_symmv (gsl_matrix *A, gsl_vector *eval, gsl_matrix *evec,
 			&LDZ, ISUPPZ, WORK_temp, &LWORK, IWORK_temp,
 			&LIWORK, &INFO);
 		if (INFO!=0) {
-		  cout << "Work space estimate unsuccessful in" <<
+		  cout << "Work space estimate unsuccessful in " <<
 		    "lapack_eigen_symmv." << endl;
 		  return;
 		}	
@@ -380,7 +380,7 @@ void lapack_eigen_symmv (gsl_matrix *A, gsl_vector *eval, gsl_matrix *evec,
 			&IL, &IU, &ABSTOL, &M, eval->data, evec->data,
 			&LDZ, ISUPPZ, WORK, &LWORK, IWORK, &LIWORK, &INFO);
 		if (INFO!=0) {
-		  cout << "Eigen decomposition unsuccessful in" <<
+		  cout << "Eigen decomposition unsuccessful in " <<
 		    "lapack_eigen_symmv." << endl;
 		  return;
 		}
