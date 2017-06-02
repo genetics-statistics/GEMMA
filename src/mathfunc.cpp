@@ -1,6 +1,6 @@
 /*
  Genome-wide Efficient Mixed Model Association (GEMMA)
- Copyright (C) 2011  Xiang Zhou
+ Copyright (C) 2011-2017, Xiang Zhou
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -14,8 +14,7 @@
 
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
+*/
 
 #include <iostream>
 #include <fstream>
@@ -41,21 +40,13 @@
 
 #include "lapack.h"
 #include "eigenlib.h"
-
-#ifdef FORCE_FLOAT
-#include "mathfunc_float.h"
-#else
 #include "mathfunc.h"
-#endif
-
 
 using namespace std;
 using namespace Eigen;
 
-
 //calculate variance of a vector
-double VectorVar (const gsl_vector *v)
-{
+double VectorVar (const gsl_vector *v) {
 	double d, m=0.0, m2=0.0;
 	for (size_t i=0; i<v->size; ++i) {
 		d=gsl_vector_get (v, i);
@@ -67,11 +58,8 @@ double VectorVar (const gsl_vector *v)
 	return m2-m*m;
 }
 
-
-
-//center the matrix G
-void CenterMatrix (gsl_matrix *G)
-{
+// Center the matrix G.
+void CenterMatrix (gsl_matrix *G) {
 	double d;
 	gsl_vector *w=gsl_vector_alloc (G->size1);
 	gsl_vector *Gw=gsl_vector_alloc (G->size1);
@@ -80,7 +68,8 @@ void CenterMatrix (gsl_matrix *G)
 	gsl_blas_dgemv (CblasNoTrans, 1.0, G, w, 0.0, Gw);
 	gsl_blas_dsyr2 (CblasUpper, -1.0/(double)G->size1, Gw, w, G);
 	gsl_blas_ddot (w, Gw, &d);
-	gsl_blas_dsyr (CblasUpper, d/((double)G->size1*(double)G->size1), w, G);
+	gsl_blas_dsyr (CblasUpper, d/((double)G->size1*(double)G->size1),
+		       w, G);
 
 	for (size_t i=0; i<G->size1; ++i) {
 		for (size_t j=0; j<i; ++j) {
@@ -95,10 +84,8 @@ void CenterMatrix (gsl_matrix *G)
 	return;
 }
 
-
-//center the matrix G
-void CenterMatrix (gsl_matrix *G, const gsl_vector *w)
-{
+// Center the matrix G.
+void CenterMatrix (gsl_matrix *G, const gsl_vector *w) {
 	double d, wtw;
 	gsl_vector *Gw=gsl_vector_alloc (G->size1);
 
@@ -120,11 +107,8 @@ void CenterMatrix (gsl_matrix *G, const gsl_vector *w)
 	return;
 }
 
-
-
-//center the matrix G
-void CenterMatrix (gsl_matrix *G, const gsl_matrix *W)
-{
+// Center the matrix G.
+void CenterMatrix (gsl_matrix *G, const gsl_matrix *W) {
 	gsl_matrix *WtW=gsl_matrix_alloc (W->size2, W->size2);
 	gsl_matrix *WtWi=gsl_matrix_alloc (W->size2, W->size2);
 	gsl_matrix *WtWiWt=gsl_matrix_alloc (W->size2, G->size1);
@@ -141,16 +125,18 @@ void CenterMatrix (gsl_matrix *G, const gsl_matrix *W)
 
 	gsl_blas_dgemm (CblasNoTrans, CblasTrans, 1.0, WtWi, W, 0.0, WtWiWt);
 	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, G, W, 0.0, GW);
-	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, GW, WtWiWt, 0.0, Gtmp);
+	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, GW, WtWiWt, 0.0,
+			Gtmp);
 
 	gsl_matrix_sub (G, Gtmp);
 	gsl_matrix_transpose (Gtmp);
 	gsl_matrix_sub (G, Gtmp);
 
 	gsl_blas_dgemm (CblasTrans, CblasNoTrans, 1.0, W, GW, 0.0, WtGW);
-	//GW is destroyed
+	//GW is destroyed.
 	gsl_blas_dgemm (CblasTrans, CblasNoTrans, 1.0, WtWiWt, WtGW, 0.0, GW);
-	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, GW, WtWiWt, 0.0, Gtmp);
+	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, GW, WtWiWt, 0.0,
+			Gtmp);
 
 	gsl_matrix_add (G, Gtmp);
 
@@ -164,10 +150,8 @@ void CenterMatrix (gsl_matrix *G, const gsl_matrix *W)
 	return;
 }
 
-
-//standardize the matrix G such that all diagonal elements = 1
-void StandardizeMatrix (gsl_matrix *G)
-{
+// "Standardize" the matrix G such that all diagonal elements = 1.
+void StandardizeMatrix (gsl_matrix *G) {
 	double d=0.0;
 	vector<double> vec_d;
 
@@ -190,11 +174,8 @@ void StandardizeMatrix (gsl_matrix *G)
 	return;
 }
 
-
-
-//scale the matrix G such that the mean diagonal = 1
-double ScaleMatrix (gsl_matrix *G)
-{
+// Scale the matrix G such that the mean diagonal = 1.
+double ScaleMatrix (gsl_matrix *G) {
 	double d=0.0;
 
 	for (size_t i=0; i<G->size1; ++i) {
@@ -209,10 +190,8 @@ double ScaleMatrix (gsl_matrix *G)
 	return d;
 }
 
-
-//center the vector y
-double CenterVector (gsl_vector *y)
-{
+// Center the vector y.
+double CenterVector (gsl_vector *y) {
 	double d=0.0;
 
 	for (size_t i=0; i<y->size; ++i) {
@@ -225,10 +204,8 @@ double CenterVector (gsl_vector *y)
 	return d;
 }
 
-
-//center the vector y
-void CenterVector (gsl_vector *y, const gsl_matrix *W)
-{
+// Center the vector y.
+void CenterVector (gsl_vector *y, const gsl_matrix *W) {
 	gsl_matrix *WtW=gsl_matrix_alloc (W->size2, W->size2);
 	gsl_vector *Wty=gsl_vector_alloc (W->size2);
 	gsl_vector *WtWiWty=gsl_vector_alloc (W->size2);
@@ -250,10 +227,8 @@ void CenterVector (gsl_vector *y, const gsl_matrix *W)
 	return;
 }
 
-
-//standardize vector y to have mean 0 and y^ty/n=1
-void StandardizeVector (gsl_vector *y)
-{
+// "Standardize" vector y to have mean 0 and y^ty/n=1.
+void StandardizeVector (gsl_vector *y) {
   double d=0.0, m=0.0, v=0.0;
 
   for (size_t i=0; i<y->size; ++i) {
@@ -271,20 +246,8 @@ void StandardizeVector (gsl_vector *y)
   return;
 }
 
-
-//calculate UtX
-void CalcUtX (const gsl_matrix *U, gsl_matrix *UtX)
-{
-  /*
-	gsl_vector *Utx_vec=gsl_vector_alloc (UtX->size1);
-	for (size_t i=0; i<UtX->size2; ++i) {
-		gsl_vector_view UtX_col=gsl_matrix_column (UtX, i);
-		gsl_blas_dgemv (CblasTrans, 1.0, U, &UtX_col.vector, 0.0, Utx_vec);
-		gsl_vector_memcpy (&UtX_col.vector, Utx_vec);
-	}
-	gsl_vector_free (Utx_vec);
-  */
-
+// Calculate UtX.
+void CalcUtX (const gsl_matrix *U, gsl_matrix *UtX) {
 	gsl_matrix *X=gsl_matrix_alloc (UtX->size1, UtX->size2);
 	gsl_matrix_memcpy (X, UtX);
 	eigenlib_dgemm ("T", "N", 1.0, U, X, 0.0, UtX);
@@ -293,88 +256,87 @@ void CalcUtX (const gsl_matrix *U, gsl_matrix *UtX)
 	return;
 }
 
-
-void CalcUtX (const gsl_matrix *U, const gsl_matrix *X, gsl_matrix *UtX)
-{
-  /*
-	for (size_t i=0; i<X->size2; ++i) {
-		gsl_vector_const_view X_col=gsl_matrix_const_column (X, i);
-		gsl_vector_view UtX_col=gsl_matrix_column (UtX, i);
-		gsl_blas_dgemv (CblasTrans, 1.0, U, &X_col.vector, 0.0, &UtX_col.vector);
-	}
-  */
+void CalcUtX (const gsl_matrix *U, const gsl_matrix *X, gsl_matrix *UtX) {
 	eigenlib_dgemm ("T", "N", 1.0, U, X, 0.0, UtX);
-
 	return;
 }
 
-void CalcUtX (const gsl_matrix *U, const gsl_vector *x, gsl_vector *Utx)
-{
+void CalcUtX (const gsl_matrix *U, const gsl_vector *x, gsl_vector *Utx) {
 	gsl_blas_dgemv (CblasTrans, 1.0, U, x, 0.0, Utx);
 	return;
 }
 
-
-//Kronecker product
-void Kronecker(const gsl_matrix *K, const gsl_matrix *V, gsl_matrix *H)
-{
+// Kronecker product.
+void Kronecker(const gsl_matrix *K, const gsl_matrix *V, gsl_matrix *H) {
 	for (size_t i=0; i<K->size1; i++) {
 		for (size_t j=0; j<K->size2; j++) {
-			gsl_matrix_view H_sub=gsl_matrix_submatrix (H, i*V->size1, j*V->size2, V->size1, V->size2);
+			gsl_matrix_view H_sub=
+			  gsl_matrix_submatrix (H, i*V->size1, j*V->size2,
+						V->size1, V->size2);
 			gsl_matrix_memcpy (&H_sub.matrix, V);
-			gsl_matrix_scale (&H_sub.matrix, gsl_matrix_get (K, i, j));
+			gsl_matrix_scale (&H_sub.matrix,
+					  gsl_matrix_get (K, i, j));
 		}
 	}
 	return;
 }
 
-//symmetric K matrix
-void KroneckerSym(const gsl_matrix *K, const gsl_matrix *V, gsl_matrix *H)
-{
+// Symmetric K matrix.
+void KroneckerSym(const gsl_matrix *K, const gsl_matrix *V, gsl_matrix *H) {
 	for (size_t i=0; i<K->size1; i++) {
 		for (size_t j=i; j<K->size2; j++) {
-			gsl_matrix_view H_sub=gsl_matrix_submatrix (H, i*V->size1, j*V->size2, V->size1, V->size2);
+			gsl_matrix_view H_sub=
+			  gsl_matrix_submatrix (H, i*V->size1, j*V->size2,
+						V->size1, V->size2);
 			gsl_matrix_memcpy (&H_sub.matrix, V);
-			gsl_matrix_scale (&H_sub.matrix, gsl_matrix_get (K, i, j));
+			gsl_matrix_scale (&H_sub.matrix,
+					  gsl_matrix_get (K, i, j));
 
 			if (i!=j) {
-				gsl_matrix_view H_sub_sym=gsl_matrix_submatrix (H, j*V->size1, i*V->size2, V->size1, V->size2);
-				gsl_matrix_memcpy (&H_sub_sym.matrix, &H_sub.matrix);
+				gsl_matrix_view H_sub_sym=
+				  gsl_matrix_submatrix (H, j*V->size1,
+							i*V->size2, V->size1,
+							V->size2);
+				gsl_matrix_memcpy (&H_sub_sym.matrix,
+						   &H_sub.matrix);
 			}
 		}
 	}
 	return;
 }
 
-
-// this function calculates HWE p value with methods described in Wigginton et al., 2005 AJHG;
-// it is based on the code in plink 1.07
-double CalcHWE (const size_t n_hom1, const size_t n_hom2, const size_t n_ab)
-{
+// This function calculates HWE p value with methods described in
+// Wigginton et al. (2005) AJHG; it is based on the code in plink 1.07.
+double CalcHWE (const size_t n_hom1, const size_t n_hom2, const size_t n_ab) {
 	if ( (n_hom1+n_hom2+n_ab)==0 ) {return 1;}
 
-	//aa is the rare allele
+	// "AA" is the rare allele.
 	int n_aa=n_hom1 < n_hom2 ? n_hom1 : n_hom2;
 	int n_bb=n_hom1 < n_hom2 ? n_hom2 : n_hom1;
 
 	int rare_copies = 2 * n_aa + n_ab;
 	int genotypes   = n_ab + n_bb + n_aa;
 
-	double * het_probs = (double *) malloc( (rare_copies + 1) * sizeof(double));
+	double * het_probs = (double *) malloc( (rare_copies + 1) *
+						sizeof(double));
 	if (het_probs == NULL)
-		cout<<"Internal error: SNP-HWE: Unable to allocate array"<<endl;
+		cout << "Internal error: SNP-HWE: Unable to allocate array" <<
+		  endl;
 
 		int i;
 	for (i = 0; i <= rare_copies; i++)
 		het_probs[i] = 0.0;
 
-	/* start at midpoint */
-	//XZ modified to add (long int)
-	int mid = ((long int)rare_copies * (2 * (long int)genotypes - (long int)rare_copies)) / (2 * (long int)genotypes);
+	// Start at midpoint.
+	// XZ modified to add (long int)
+	int mid = ((long int)rare_copies *
+		   (2 * (long int)genotypes - (long int)rare_copies)) /
+	  (2 * (long int)genotypes);
 
-	/* check to ensure that midpoint and rare alleles have same parity */
-		if ((rare_copies & 1) ^ (mid & 1))
-			mid++;
+	// Check to ensure that midpoint and rare alleles have same
+	// parity.
+	if ((rare_copies & 1) ^ (mid & 1))
+	  mid++;
 
 	int curr_hets = mid;
 	int curr_homr = (rare_copies - mid) / 2;
@@ -382,13 +344,14 @@ double CalcHWE (const size_t n_hom1, const size_t n_hom2, const size_t n_ab)
 
 	het_probs[mid] = 1.0;
 	double sum = het_probs[mid];
-	for (curr_hets = mid; curr_hets > 1; curr_hets -= 2)
-    {
-		het_probs[curr_hets - 2] = het_probs[curr_hets] * curr_hets * (curr_hets - 1.0)
+	for (curr_hets = mid; curr_hets > 1; curr_hets -= 2) {
+		het_probs[curr_hets - 2] = het_probs[curr_hets] *
+		  curr_hets * (curr_hets - 1.0)
 		/ (4.0 * (curr_homr + 1.0) * (curr_homc + 1.0));
 		sum += het_probs[curr_hets - 2];
 
-		/* 2 fewer heterozygotes for next iteration -> add one rare, one common homozygote */
+		// Two fewer heterozygotes for next iteration; add one
+		// rare, one common homozygote.
 		curr_homr++;
 		curr_homc++;
     }
@@ -396,13 +359,14 @@ double CalcHWE (const size_t n_hom1, const size_t n_hom2, const size_t n_ab)
 	curr_hets = mid;
 	curr_homr = (rare_copies - mid) / 2;
 	curr_homc = genotypes - curr_hets - curr_homr;
-	for (curr_hets = mid; curr_hets <= rare_copies - 2; curr_hets += 2)
-    {
-		het_probs[curr_hets + 2] = het_probs[curr_hets] * 4.0 * curr_homr * curr_homc
-		/((curr_hets + 2.0) * (curr_hets + 1.0));
+	for (curr_hets = mid; curr_hets <= rare_copies - 2; curr_hets += 2) {
+		het_probs[curr_hets + 2] = het_probs[curr_hets] * 4.0 *
+		  curr_homr * curr_homc /
+		  ((curr_hets + 2.0) * (curr_hets + 1.0));
 		sum += het_probs[curr_hets + 2];
 
-		/* add 2 heterozygotes for next iteration -> subtract one rare, one common homozygote */
+		// Add 2 heterozygotes for next iteration; subtract
+		// one rare, one common homozygote.
 		curr_homr--;
 		curr_homc--;
     }
@@ -410,20 +374,9 @@ double CalcHWE (const size_t n_hom1, const size_t n_hom2, const size_t n_ab)
 	for (i = 0; i <= rare_copies; i++)
 		het_probs[i] /= sum;
 
-	/* alternate p-value calculation for p_hi/p_lo
-	 double p_hi = het_probs[n_ab];
-	 for (i = n_ab + 1; i <= rare_copies; i++)
-     p_hi += het_probs[i];
-
-	 double p_lo = het_probs[n_ab];
-	 for (i = n_ab - 1; i >= 0; i--)
-	 p_lo += het_probs[i];
-
-	 double p_hi_lo = p_hi < p_lo ? 2.0 * p_hi : 2.0 * p_lo;
-	 */
-
 		double p_hwe = 0.0;
-	/*  p-value calculation for p_hwe  */
+		
+	        // p-value calculation for p_hwe.
 		for (i = 0; i <= rare_copies; i++)
 		{
 			if (het_probs[i] > het_probs[n_ab])
@@ -438,25 +391,16 @@ double CalcHWE (const size_t n_hom1, const size_t n_hom2, const size_t n_ab)
 	return p_hwe;
 }
 
-
-
-
 double UcharToDouble02(const unsigned char c) {
   return (double)c*0.01;
-  //  return (double)c*2/(double)UCHAR_MAX;
 }
 
 unsigned char Double02ToUchar(const double dosage) {
   return (int) (dosage*100);
-  //  return (int) (dosage/2*UCHAR_MAX);
 }
 
-
-
-
-
-void uchar_matrix_get_row (const vector<vector<unsigned char> > &X, const size_t i_row, VectorXd &x_row)
-{
+void uchar_matrix_get_row (const vector<vector<unsigned char> > &X,
+			   const size_t i_row, VectorXd &x_row) {
   if (i_row<X.size()) {
     for (size_t j=0; j<x_row.size(); j++) {
       x_row(j)=UcharToDouble02(X[i_row][j]);
@@ -466,34 +410,3 @@ void uchar_matrix_get_row (const vector<vector<unsigned char> > &X, const size_t
     exit(1);
   }
 }
-
-
-/*
-void getGTgslVec(uchar ** X, gsl_vector *xvec, size_t marker_i, const size_t ni_test, const size_t ns_test){
-
-    double geno, geno_mean = 0.0;
-    if (marker_i < ns_test ) {
-        for (size_t j=0; j<ni_test; j++) {
-            geno = UcharToDouble(X[marker_i][j]);
-            //cout << geno << ", ";
-            if (geno < 0.0 || geno > 2.0) {
-                cerr << "wrong genotype value = " << geno << endl;
-                exit(1);
-            }
-            gsl_vector_set(xvec, j, geno);
-            geno_mean += geno;
-        }
-        geno_mean /= (double)ni_test;
-        geno_mean = -geno_mean;
-        gsl_vector_add_constant(xvec, geno_mean); // center genotypes here
-    }
-    else {
-        std::cerr << "Error return genotype vector...\n";
-        exit(1);
-    }
-    //cout << endl;
-}
-*/
-
-
-
