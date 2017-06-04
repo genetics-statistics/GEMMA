@@ -7,45 +7,40 @@
 #include <gsl/gsl_linalg.h>
 #include "logistic.h"
 
-// I need to bundle all the data that goes to the function to optimze together. 
+// I need to bundle all the data that goes to the function to optimze
+// together.
 typedef struct{
   gsl_matrix_int *X;
   gsl_vector_int *nlev;
   gsl_vector *y;
-  gsl_matrix *Xc;   // continuous covariates  Matrix Nobs x Kc (NULL if not used)
+  gsl_matrix *Xc;  // continuous covariates matrix Nobs x Kc (NULL if not used)
   double lambdaL1;
   double lambdaL2;
-}fix_parm_mixed_T;
+} fix_parm_mixed_T;
 
-
-
-
-
-
-double fLogit_mixed(gsl_vector *beta
-		    ,gsl_matrix_int *X
-		    ,gsl_vector_int *nlev
-		    ,gsl_matrix *Xc
-		    ,gsl_vector *y
-		    ,double lambdaL1
-		    ,double lambdaL2)
-{
+double fLogit_mixed(gsl_vector *beta,
+		    gsl_matrix_int *X,
+		    gsl_vector_int *nlev,
+		    gsl_matrix *Xc,
+		    gsl_vector *y,
+		    double lambdaL1,
+		    double lambdaL2) {
   int n = y->size; 
-  //  int k = X->size2; 
   int npar = beta->size; 
   double total = 0;
   double aux = 0;
-  /*   omp_set_num_threads(ompthr); */
-  /*   /\* Changed loop start at 1 instead of 0 to avoid regularization of beta_0*\/ */
-  /*   /\*#pragma omp parallel for reduction (+:total)*\/ */
+  // Changed loop start at 1 instead of 0 to avoid regularization of
+  // beta_0*\/ */
+  // #pragma omp parallel for reduction (+:total)
   for(int i = 1; i < npar; ++i)
     total += beta->data[i]*beta->data[i];
   total = (-total*lambdaL2/2);
-  /*   /\*#pragma omp parallel for reduction (+:aux)*\/ */
+  // #pragma omp parallel for reduction (+:aux)
   for(int i = 1; i < npar; ++i)
     aux += (beta->data[i]>0 ? beta->data[i] : -beta->data[i]);
   total = total-aux*lambdaL1;
-  /* #pragma omp parallel for schedule(static) shared(n,beta,X,nlev,y) reduction (+:total) */
+  // #pragma omp parallel for schedule(static) shared(n,beta,X,nlev,y)
+  // #reduction (+:total)
   for(int i = 0; i < n; ++i) {
     double Xbetai=beta->data[0];
     int iParm=1;
@@ -94,11 +89,12 @@ wgsl_mixed_optim_df (const gsl_vector *beta, void *params,
   int n = p->y->size; 
   int K = p->X->size2; 
   int Kc = p->Xc->size2; 
-  int npar = beta->size; 
+  int npar = beta->size;
+  
   // Intitialize gradient out necessary?
   for(int i = 0; i < npar; ++i) 
     out->data[i]= 0; 
-  /* Changed loop start at 1 instead of 0 to avoid regularization of beta 0 */
+  // Changed loop start at 1 instead of 0 to avoid regularization of beta 0.
   for(int i = 1; i < npar; ++i)
     out->data[i]= p->lambdaL2*beta->data[i]; 
   for(int i = 1; i < npar; ++i)
@@ -113,7 +109,8 @@ wgsl_mixed_optim_df (const gsl_vector *beta, void *params,
 	Xbetai+=beta->data[gsl_matrix_int_get(p->X,i,k)-1+iParm];
       iParm+=p->nlev->data[k]-1;
     }
-    // Adding the continuous
+    
+    // Adding the continuous.
     for(int k = 0; k < Kc; ++k) 
       Xbetai+= gsl_matrix_get(p->Xc,i,k)*beta->data[iParm++];
 
@@ -126,7 +123,8 @@ wgsl_mixed_optim_df (const gsl_vector *beta, void *params,
 	out->data[gsl_matrix_int_get(p->X,i,k)-1+iParm]+=pn;
       iParm+=p->nlev->data[k]-1;
     }
-    // Adding the continuous
+    
+    // Adding the continuous.
     for(int k = 0; k < Kc; ++k) {
       out->data[iParm++] += gsl_matrix_get(p->Xc,i,k)*pn;
     }
@@ -134,12 +132,9 @@ wgsl_mixed_optim_df (const gsl_vector *beta, void *params,
 
 }
 
-
-/* The Hessian of f */
-void 
-wgsl_mixed_optim_hessian (const gsl_vector *beta, void *params, 
-			  gsl_matrix *out)
-{
+// The Hessian of f.
+void  wgsl_mixed_optim_hessian (const gsl_vector *beta, void *params, 
+				gsl_matrix *out) {
   fix_parm_mixed_T *p = (fix_parm_mixed_T *)params;
   int n = p->y->size; 
   int K = p->X->size2; 

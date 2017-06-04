@@ -1,6 +1,6 @@
 /*
  Genome-wide Efficient Mixed Model Association (GEMMA)
- Copyright (C) 2011  Xiang Zhou
+ Copyright (C) 2011-2017, Xiang Zhou
  
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -13,10 +13,8 @@
  GNU General Public License for more details.
  
  You should have received a copy of the GNU General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-
+ along with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #include <iostream>
 #include <sstream>
@@ -33,28 +31,16 @@
 #include "gsl/gsl_linalg.h"
 #include "gsl/gsl_blas.h"
 
-
 #include "io.h"
-#include "lapack.h"  //for functions EigenDecomp
+#include "lapack.h"
 #include "gzstream.h"
-
-#ifdef FORCE_FLOAT
-#include "io_float.h"
-#include "prdt_float.h"
-#include "mathfunc_float.h"
-#else
 #include "io.h"
 #include "prdt.h"
 #include "mathfunc.h"
-#endif
 
 using namespace std;
 
-
-
-
-void PRDT::CopyFromParam (PARAM &cPar) 
-{
+void PRDT::CopyFromParam (PARAM &cPar) {
 	a_mode=cPar.a_mode;
 	d_pace=cPar.d_pace;
 	
@@ -81,19 +67,14 @@ void PRDT::CopyFromParam (PARAM &cPar)
 	return;
 }
 
-void PRDT::CopyToParam (PARAM &cPar) 
-{
+void PRDT::CopyToParam (PARAM &cPar) {
 	cPar.ns_test=ns_test;
 	cPar.time_eigen=time_eigen;
 	
 	return;
 }               
 
-
-
-
-void PRDT::WriteFiles (gsl_vector *y_prdt) 
-{
+void PRDT::WriteFiles (gsl_vector *y_prdt) {
 	string file_str;
 	file_str=path_out+"/"+file_out;
 	file_str+=".";
@@ -101,7 +82,10 @@ void PRDT::WriteFiles (gsl_vector *y_prdt)
 	file_str+=".txt";
 	
 	ofstream outfile (file_str.c_str(), ofstream::out);
-	if (!outfile) {cout<<"error writing file: "<<file_str.c_str()<<endl; return;}
+	if (!outfile) {
+	  cout<<"error writing file: "<<file_str.c_str()<<endl;
+	  return;
+	}
 	
 	size_t ci_test=0;
 	for (size_t i=0; i<indicator_idv.size(); i++) {
@@ -118,15 +102,16 @@ void PRDT::WriteFiles (gsl_vector *y_prdt)
 	return;
 }
 
-
-void PRDT::WriteFiles (gsl_matrix *Y_full) 
-{
+void PRDT::WriteFiles (gsl_matrix *Y_full)  {
 	string file_str;
 	file_str=path_out+"/"+file_out;
 	file_str+=".prdt.txt";
 	
 	ofstream outfile (file_str.c_str(), ofstream::out);
-	if (!outfile) {cout<<"error writing file: "<<file_str.c_str()<<endl; return;}
+	if (!outfile) {
+	  cout<<"error writing file: "<<file_str.c_str()<<endl;
+	  return;
+	}
 	
 	size_t ci_test=0;
 	for (size_t i=0; i<indicator_cvt.size(); i++) {
@@ -134,7 +119,8 @@ void PRDT::WriteFiles (gsl_matrix *Y_full)
 			outfile<<"NA"<<endl;
 		} else {
 			for (size_t j=0; j<Y_full->size2; j++) {
-				outfile<<gsl_matrix_get (Y_full, ci_test, j)<<"\t";
+				outfile << gsl_matrix_get(Y_full,ci_test,j) <<
+				  "\t";
 			}
 			outfile<<endl;
 			ci_test++;
@@ -146,11 +132,7 @@ void PRDT::WriteFiles (gsl_matrix *Y_full)
 	return;
 }
 
-
-
-
-void PRDT::AddBV (gsl_matrix *G, const gsl_vector *u_hat, gsl_vector *y_prdt) 
-{
+void PRDT::AddBV (gsl_matrix *G, const gsl_vector *u_hat, gsl_vector *y_prdt) {
 	size_t ni_test=u_hat->size, ni_total=G->size1;
 	
 	gsl_matrix *Goo=gsl_matrix_alloc (ni_test, ni_test);
@@ -190,7 +172,9 @@ void PRDT::AddBV (gsl_matrix *G, const gsl_vector *u_hat, gsl_vector *y_prdt)
 	clock_t time_start=clock();
 	EigenDecomp (Goo, U, eval, 0);
 	for (size_t i=0; i<eval->size; i++) {
-		if (gsl_vector_get(eval,i)<1e-10) {gsl_vector_set(eval, i, 0);}
+		if (gsl_vector_get(eval,i)<1e-10) {
+		  gsl_vector_set(eval, i, 0);
+		}
 	}
 
 	time_eigen=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);	
@@ -198,12 +182,15 @@ void PRDT::AddBV (gsl_matrix *G, const gsl_vector *u_hat, gsl_vector *y_prdt)
 	gsl_blas_dgemv (CblasTrans, 1.0, U, u_hat, 0.0, Utu);
 	for (size_t i=0; i<eval->size; i++) {
 		d=gsl_vector_get(eval, i);
-		if (d!=0) {d=gsl_vector_get(Utu, i)/d; gsl_vector_set(Utu, i, d);}
+		if (d!=0) {
+		  d=gsl_vector_get(Utu, i)/d;
+		  gsl_vector_set(Utu, i, d);
+		}
 	}
 	gsl_blas_dgemv (CblasNoTrans, 1.0, U, Utu, 0.0, eval);
 	gsl_blas_dgemv (CblasNoTrans, 1.0, Gfo, eval, 1.0, y_prdt);
 	
-	//free matrices
+	// Free matrices.
 	gsl_matrix_free(Goo);
 	gsl_matrix_free(Gfo);
 	gsl_matrix_free(U);
@@ -215,13 +202,12 @@ void PRDT::AddBV (gsl_matrix *G, const gsl_vector *u_hat, gsl_vector *y_prdt)
 	return;	
 }
 
-
-
-void PRDT::AnalyzeBimbam (gsl_vector *y_prdt) 
-{
+void PRDT::AnalyzeBimbam (gsl_vector *y_prdt) {
 	igzstream infile (file_geno.c_str(), igzstream::in);
-//	ifstream infile (file_geno.c_str(), ifstream::in);
-	if (!infile) {cout<<"error reading genotype file:"<<file_geno<<endl; return;}
+	if (!infile) {
+	  cout<<"error reading genotype file:"<<file_geno<<endl;
+	  return;
+	}
 	
 	string line;
 	char *ch_ptr;
@@ -235,32 +221,44 @@ void PRDT::AnalyzeBimbam (gsl_vector *y_prdt)
 	
 	ns_test=0;
 
-	//start reading genotypes and analyze	
+	// Start reading genotypes and analyze.
 	for (size_t t=0; t<ns_total; ++t) {
 		!safeGetline(infile, line).eof();
-		if (t%d_pace==0 || t==(ns_total-1)) {ProgressBar ("Reading SNPs  ", t, ns_total-1);}
+		if (t%d_pace==0 || t==(ns_total-1)) {
+		  ProgressBar ("Reading SNPs  ", t, ns_total-1);
+		}
 		
 		ch_ptr=strtok ((char *)line.c_str(), " , \t");
 		rs=ch_ptr;
 		ch_ptr=strtok (NULL, " , \t");
 		ch_ptr=strtok (NULL, " , \t");		
 		
-		if (mapRS2est.count(rs)==0) {continue;} else {effect_size=mapRS2est[rs];}
+		if (mapRS2est.count(rs)==0) {
+		  continue;
+		} else {
+		  effect_size=mapRS2est[rs];
+		}
 		
-		x_mean=0.0; c_phen=0; n_miss=0; x_train_mean=0; n_train_nomiss=0;
+		x_mean=0.0;
+		c_phen=0;
+		n_miss=0;
+		x_train_mean=0;
+		n_train_nomiss=0;
+		
 		gsl_vector_set_zero(x_miss);
 
 		for (size_t i=0; i<indicator_idv.size(); ++i) {
 			ch_ptr=strtok (NULL, " , \t");
 			if (indicator_idv[i]==1) {
 				if (strcmp(ch_ptr, "NA")!=0) {
-					geno=atof(ch_ptr); 			
+					geno=atof(ch_ptr);
 					x_train_mean+=geno;
 					n_train_nomiss++;
 				}
 			} else {
 				if (strcmp(ch_ptr, "NA")==0) {
-					gsl_vector_set(x_miss, c_phen, 0.0); n_miss++;
+					gsl_vector_set(x_miss, c_phen, 0.0);
+					n_miss++;
 				} else {
 					geno=atof(ch_ptr); 	
 					
@@ -272,7 +270,11 @@ void PRDT::AnalyzeBimbam (gsl_vector *y_prdt)
 			}
 		}
 
-		if (x->size==n_miss) {cout<<"snp "<<rs<<" has missing genotype for all individuals and will be ignored."<<endl; continue;}
+		if (x->size==n_miss) {
+		  cout << "snp " << rs << " has missing genotype for all " <<
+		    "individuals and will be ignored." << endl;
+		  continue;}
+		
 
 		x_mean/=(double)(x->size-n_miss);
 		x_train_mean/=(double)(n_train_nomiss);
@@ -303,17 +305,13 @@ void PRDT::AnalyzeBimbam (gsl_vector *y_prdt)
 	return;
 }
 
-
-
-
-
-
-
-void PRDT::AnalyzePlink (gsl_vector *y_prdt) 
-{
+void PRDT::AnalyzePlink (gsl_vector *y_prdt) {
 	string file_bed=file_bfile+".bed";
 	ifstream infile (file_bed.c_str(), ios::binary);
-	if (!infile) {cout<<"error reading bed file:"<<file_bed<<endl; return;}
+	if (!infile) {
+	  cout<<"error reading bed file:"<<file_bed<<endl;
+	  return;
+	}
 	
 	char ch[1];
 	bitset<8> b;	
@@ -324,11 +322,11 @@ void PRDT::AnalyzePlink (gsl_vector *y_prdt)
 	
 	gsl_vector *x=gsl_vector_alloc (y_prdt->size);
 	
-	//calculate n_bit and c, the number of bit for each snp
+	// Calculate n_bit and c, the number of bit for each SNP.
 	if (indicator_idv.size()%4==0) {n_bit=indicator_idv.size()/4;}
 	else {n_bit=indicator_idv.size()/4+1; }
 	
-	//print the first three majic numbers
+	// Print the first 3 magic numbers.
 	for (size_t i=0; i<3; ++i) {
 		infile.read(ch,1);
 		b=ch[0];
@@ -337,39 +335,71 @@ void PRDT::AnalyzePlink (gsl_vector *y_prdt)
 	ns_test=0;
 	
 	for (vector<SNPINFO>::size_type t=0; t<snpInfo.size(); ++t) {
-		if (t%d_pace==0 || t==snpInfo.size()-1) {ProgressBar ("Reading SNPs  ", t, snpInfo.size()-1);}
-		//if (indicator_snp[t]==0) {continue;}
+		if (t%d_pace==0 || t==snpInfo.size()-1) {
+		  ProgressBar ("Reading SNPs  ", t, snpInfo.size()-1);
+		}
 		
 		rs=snpInfo[t].rs_number;
 		
-		if (mapRS2est.count(rs)==0) {continue;} else {effect_size=mapRS2est[rs];}
+		if (mapRS2est.count(rs)==0) {
+		  continue;
+		} else {
+		  effect_size=mapRS2est[rs];
+		}
+
+		// n_bit, and 3 is the number of magic numbers.
+		infile.seekg(t*n_bit+3);
 		
-		infile.seekg(t*n_bit+3);		//n_bit, and 3 is the number of magic numbers
-		
-		//read genotypes
-		x_mean=0.0;	n_miss=0; ci_total=0; ci_test=0; x_train_mean=0; n_train_nomiss=0;
+		// Read genotypes.
+		x_mean=0.0;
+		n_miss=0;
+		ci_total=0; ci_test=0; x_train_mean=0; n_train_nomiss=0;
 		for (size_t i=0; i<n_bit; ++i) {
 			infile.read(ch,1);
 			b=ch[0];
-			for (size_t j=0; j<4; ++j) {                //minor allele homozygous: 2.0; major: 0.0;
-				if ((i==(n_bit-1)) && ci_total==indicator_idv.size() ) {break;}
+
+			// Minor allele homozygous: 2.0; major: 0.0.
+			for (size_t j=0; j<4; ++j) {                
+				if ((i==(n_bit-1)) &&
+				    ci_total==indicator_idv.size()) {
+				  break;
+				}
 				if (indicator_idv[ci_total]==1) {
 					if (b[2*j]==0) {
-						if (b[2*j+1]==0) {x_train_mean+=2.0; n_train_nomiss++;}
-						else {x_train_mean+=1.0; n_train_nomiss++;}
+						if (b[2*j+1]==0) {
+						  x_train_mean+=2.0;
+						  n_train_nomiss++;
+						}
+						else {
+						  x_train_mean+=1.0;
+						  n_train_nomiss++;
+						}
 					}
 					else {
-						if (b[2*j+1]==1) {n_train_nomiss++;}                                  
+						if (b[2*j+1]==1) {
+						  n_train_nomiss++;
+						}
 						else {}
 					}
 				} else {
 					if (b[2*j]==0) {
-						if (b[2*j+1]==0) {gsl_vector_set(x, ci_test, 2); x_mean+=2.0; }
-						else {gsl_vector_set(x, ci_test, 1); x_mean+=1.0; }
+						if (b[2*j+1]==0) {
+						  gsl_vector_set(x,ci_test,2);
+						  x_mean+=2.0;
+						}
+						else {
+						  gsl_vector_set(x,ci_test,1);
+						  x_mean+=1.0;
+						}
 					}
 					else {
-						if (b[2*j+1]==1) {gsl_vector_set(x, ci_test, 0); }                                  
-						else {gsl_vector_set(x, ci_test, -9); n_miss++; }
+						if (b[2*j+1]==1) {
+						  gsl_vector_set(x,ci_test,0);
+						}
+						else {
+						  gsl_vector_set(x,ci_test,-9);
+						  n_miss++;
+						}
 					}
 					ci_test++;
 				}
@@ -378,7 +408,11 @@ void PRDT::AnalyzePlink (gsl_vector *y_prdt)
 			}
 		}
 		
-		if (x->size==n_miss) {cout<<"snp "<<rs<<" has missing genotype for all individuals and will be ignored."<<endl; continue;}
+		if (x->size==n_miss) {
+		  cout << "snp " << rs << " has missing genotype for all " <<
+		    "individuals and will be ignored."<<endl;
+		  continue;
+		}
 		
 		x_mean/=(double)(x->size-n_miss);
 		x_train_mean/=(double)(n_train_nomiss);
@@ -407,13 +441,10 @@ void PRDT::AnalyzePlink (gsl_vector *y_prdt)
 	return;
 }
 
-
-
-
-//predict missing phenotypes using ridge regression
-//Y_hat contains fixed effects
-void PRDT::MvnormPrdt (const gsl_matrix *Y_hat, const gsl_matrix *H, gsl_matrix *Y_full) 
-{	
+// Predict missing phenotypes using ridge regression.
+// Y_hat contains fixed effects
+void PRDT::MvnormPrdt (const gsl_matrix *Y_hat, const gsl_matrix *H,
+		       gsl_matrix *Y_full) {	
 	gsl_vector *y_obs=gsl_vector_alloc (np_obs);
 	gsl_vector *y_miss=gsl_vector_alloc (np_miss);
 	gsl_matrix *H_oo=gsl_matrix_alloc (np_obs, np_obs);
@@ -422,20 +453,22 @@ void PRDT::MvnormPrdt (const gsl_matrix *Y_hat, const gsl_matrix *H, gsl_matrix 
 	
 	size_t c_obs1=0, c_obs2=0, c_miss1=0, c_miss2=0;
 	
-	//obtain H_oo, H_mo
+	// Obtain H_oo, H_mo.
 	c_obs1=0; c_miss1=0; 
 	for (vector<int>::size_type i1=0; i1<indicator_pheno.size(); ++i1) {
 		if (indicator_cvt[i1]==0) {continue;}
 		for (vector<int>::size_type j1=0; j1<n_ph; ++j1) {
 			
 			c_obs2=0; c_miss2=0;
-			for (vector<int>::size_type i2=0; i2<indicator_pheno.size(); ++i2) {
+			for (vector<int>::size_type i2=0;
+			     i2<indicator_pheno.size(); ++i2) {
 				if (indicator_cvt[i2]==0) {continue;}
-				for (vector<int>::size_type j2=0; j2<n_ph; j2++) {
+				for (vector<int>::size_type j2=0;
+				     j2<n_ph; j2++) {
 					
 					if (indicator_pheno[i2][j2]==1) {
-						if (indicator_pheno[i1][j1]==1) {
-							gsl_matrix_set (H_oo, c_obs1, c_obs2, gsl_matrix_get (H, c_obs1+c_miss1, c_obs2+c_miss2) );
+					      if (indicator_pheno[i1][j1]==1) {
+						gsl_matrix_set(H_oo,c_obs1, c_obs2, gsl_matrix_get (H, c_obs1+c_miss1, c_obs2+c_miss2) );
 						} else {
 							gsl_matrix_set (H_mo, c_miss1, c_obs2, gsl_matrix_get (H, c_obs1+c_miss1, c_obs2+c_miss2) );
 						}
@@ -455,16 +488,16 @@ void PRDT::MvnormPrdt (const gsl_matrix *Y_hat, const gsl_matrix *H, gsl_matrix 
 		
 	}	
 	
-	//do LU decomposition of H_oo
+	// Do LU decomposition of H_oo.
 	int sig;
 	gsl_permutation * pmt=gsl_permutation_alloc (np_obs);
 	LUDecomp (H_oo, pmt, &sig);
 	
-//	if (mode_temp==0) {
-		//obtain y_obs=y_full-y_hat
-		//add the fixed effects part to y_miss: y_miss=y_hat
+		// Obtain y_obs=y_full-y_hat.
+		// Add the fixed effects part to y_miss: y_miss=y_hat.
 		c_obs1=0; c_miss1=0;
-		for (vector<int>::size_type i=0; i<indicator_pheno.size(); ++i) {
+		for (vector<int>::size_type i=0;
+		     i<indicator_pheno.size(); ++i) {
 			if (indicator_cvt[i]==0) {continue;}
 			
 			for (vector<int>::size_type j=0; j<n_ph; ++j) {
@@ -482,9 +515,10 @@ void PRDT::MvnormPrdt (const gsl_matrix *Y_hat, const gsl_matrix *H, gsl_matrix 
 		
 		gsl_blas_dgemv (CblasNoTrans, 1.0, H_mo, Hiy, 1.0, y_miss);
 		
-		//put back predicted y_miss to Y_full
+		// Put back predicted y_miss to Y_full.
 		c_miss1=0;
-		for (vector<int>::size_type i=0; i<indicator_pheno.size(); ++i) {
+		for (vector<int>::size_type i=0;
+		     i<indicator_pheno.size(); ++i) {
 			if (indicator_cvt[i]==0) {continue;}
 			
 			for (vector<int>::size_type j=0; j<n_ph; ++j) {
@@ -494,44 +528,8 @@ void PRDT::MvnormPrdt (const gsl_matrix *Y_hat, const gsl_matrix *H, gsl_matrix 
 				}
 			}
 		}
-/*
-	} else {
-		for (size_t k=0; k<mode_temp; k++) {
-			c_obs1=0; c_miss1=0;
-			for (vector<int>::size_type i=0; i<indicator_pheno.size(); ++i) {
-				if (indicator_cvt[i]==0) {continue;}
-				
-				for (vector<int>::size_type j=0; j<2; ++j) {
-					if (indicator_pheno[i][j]==1) {
-						gsl_vector_set (y_obs, c_obs1, gsl_matrix_get (Y_full, i, j+k*2)-gsl_matrix_get (Y_hat, i, j) );
-						c_obs1++;
-					} else {
-						gsl_vector_set (y_miss, c_miss1, gsl_matrix_get (Y_hat, i, j) );
-						c_miss1++;
-					}
-				}
-			}	
-			
-			LUSolve (H_oo, pmt, y_obs, Hiy);
-			
-			gsl_blas_dgemv (CblasNoTrans, 1.0, H_mo, Hiy, 1.0, y_miss);
-			
-			//put back predicted y_miss to Y_full
-			c_miss1=0;
-			for (vector<int>::size_type i=0; i<indicator_pheno.size(); ++i) {
-				if (indicator_cvt[i]==0) {continue;}
-				
-				for (vector<int>::size_type j=0; j<2; ++j) {
-					if (indicator_pheno[i][j]==0) {
-						gsl_matrix_set (Y_full, i, j+k*2, gsl_vector_get (y_miss, c_miss1) );
-						c_miss1++;
-					}
-				}
-			}
-		}
-	}
-*/
-	//free matrices
+		
+	// Free matrices.
 	gsl_vector_free(y_obs);
 	gsl_vector_free(y_miss);
 	gsl_matrix_free(H_oo);
