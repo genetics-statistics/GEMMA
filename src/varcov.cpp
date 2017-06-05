@@ -38,23 +38,14 @@
 
 #include "lapack.h"
 #include "gzstream.h"
-
-#ifdef FORCE_FLOAT
-#include "param_float.h"
-#include "varcov_float.h"
-#include "io_float.h"
-#include "mathfunc_float.h"
-#else
 #include "param.h"
 #include "varcov.h"
 #include "io.h"
 #include "mathfunc.h"
-#endif
 
 using namespace std;
 
-void VARCOV::CopyFromParam (PARAM &cPar)
-{
+void VARCOV::CopyFromParam (PARAM &cPar) {
 	d_pace=cPar.d_pace;
 	
 	file_bfile=cPar.file_bfile;
@@ -75,15 +66,13 @@ void VARCOV::CopyFromParam (PARAM &cPar)
 	return;
 }
 
-void VARCOV::CopyToParam (PARAM &cPar)
-{
+void VARCOV::CopyToParam (PARAM &cPar) {
 	cPar.time_opt=time_opt;
 	return;
 }
 
 void VARCOV::WriteCov (const int flag, const vector<SNPINFO> &snpInfo_sub,
-		       const vector<vector<double> > &Cov_mat) 
-{
+		       const vector<vector<double> > &Cov_mat) {
   string file_cov;
   file_cov=path_out+"/"+file_out;
   file_cov+=".cor.txt";
@@ -103,7 +92,12 @@ void VARCOV::WriteCov (const int flag, const vector<SNPINFO> &snpInfo_sub,
     if (!outfile) {cout<<"error writing file: "<<file_cov<<endl; return;}
 
     for (size_t i=0; i<Cov_mat.size(); i++) {
-      outfile<<snpInfo_sub[i].chr<<"\t"<<snpInfo_sub[i].rs_number<<"\t"<<snpInfo_sub[i].base_position<<"\t"<<snpInfo_sub[i].n_miss<<"\t"<<snpInfo_sub[i].n_idv<<"\t"<<snpInfo_sub[i].a_minor<<"\t"<<snpInfo_sub[i].a_major<<"\t"<<fixed<<setprecision(3)<<snpInfo_sub[i].maf<<"\t"<<Cov_mat[i].size()-1<<"\t";
+      outfile << snpInfo_sub[i].chr << "\t" << snpInfo_sub[i].rs_number <<
+	"\t" << snpInfo_sub[i].base_position << "\t" <<
+	snpInfo_sub[i].n_miss << "\t" << snpInfo_sub[i].n_idv << "\t" <<
+	snpInfo_sub[i].a_minor << "\t" << snpInfo_sub[i].a_major << "\t" <<
+	fixed << setprecision(3) << snpInfo_sub[i].maf << "\t" <<
+	Cov_mat[i].size()-1 << "\t";
       outfile<<scientific<<setprecision(6)<<Cov_mat[i][0]<<"\t";
 
       if (Cov_mat[i].size()==1) {
@@ -127,8 +121,7 @@ void VARCOV::WriteCov (const int flag, const vector<SNPINFO> &snpInfo_sub,
   return;
 }
 
-bool CompareSNPinfo (const SNPINFO &snpInfo1, const SNPINFO &snpInfo2)
-{
+bool CompareSNPinfo (const SNPINFO &snpInfo1, const SNPINFO &snpInfo2) {
   int c_chr=snpInfo1.chr.compare(snpInfo2.chr);
   long int c_bp=snpInfo1.base_position-snpInfo2.base_position;
 
@@ -149,14 +142,15 @@ bool CompareSNPinfo (const SNPINFO &snpInfo1, const SNPINFO &snpInfo2)
 
 
 // Do not sort SNPs (because gzip files do not support random access)
-// then calculate n_nb, the number of neighbours, for each snp.
-void VARCOV::CalcNB (vector<SNPINFO> &snpInfo_sort)
-{
+// then calculate n_nb, the number of neighbours, for each SNP.
+void VARCOV::CalcNB (vector<SNPINFO> &snpInfo_sort) {
   size_t t2=0, n_nb=0;
   for (size_t t=0; t<indicator_snp.size(); ++t) {
     if (indicator_snp[t]==0) {continue;}
     
-    if (snpInfo_sort[t].chr=="-9" || (snpInfo_sort[t].cM==-9 && window_cm!=0) || (snpInfo_sort[t].base_position==-9 && window_bp!=0) ) {
+    if (snpInfo_sort[t].chr=="-9" ||
+	(snpInfo_sort[t].cM==-9 && window_cm!=0) ||
+	(snpInfo_sort[t].base_position==-9 && window_bp!=0) ) {
       snpInfo_sort[t].n_nb=0; continue;
     }
 
@@ -164,11 +158,24 @@ void VARCOV::CalcNB (vector<SNPINFO> &snpInfo_sort)
 
     t2=t+1; n_nb=0;
 
-    while (t2<indicator_snp.size() && snpInfo_sort[t2].chr==snpInfo_sort[t].chr  && indicator_snp[t2]==0) {t2++;}
+    while (t2<indicator_snp.size() &&
+	   snpInfo_sort[t2].chr == snpInfo_sort[t].chr &&
+	   indicator_snp[t2]==0) {
+      t2++;
+    }
 
-    while (t2<indicator_snp.size() && snpInfo_sort[t2].chr==snpInfo_sort[t].chr && (snpInfo_sort[t2].cM-snpInfo_sort[t].cM<window_cm || window_cm==0) && (snpInfo_sort[t2].base_position-snpInfo_sort[t].base_position<window_bp || window_bp==0) && (n_nb<window_ns|| window_ns==0)  ) {
+    while (t2<indicator_snp.size() &&
+	   snpInfo_sort[t2].chr==snpInfo_sort[t].chr &&
+	   (snpInfo_sort[t2].cM-snpInfo_sort[t].cM<window_cm ||
+	    window_cm==0) &&
+	   (snpInfo_sort[t2].base_position-snpInfo_sort[t].base_position <
+	    window_bp || window_bp==0) && (n_nb<window_ns|| window_ns==0)) {
       t2++; n_nb++;
-      while (t2<indicator_snp.size() && snpInfo_sort[t2].chr==snpInfo_sort[t].chr && indicator_snp[t2]==0) {t2++;}
+      while (t2<indicator_snp.size() &&
+	     snpInfo_sort[t2].chr==snpInfo_sort[t].chr &&
+	     indicator_snp[t2]==0) {
+	t2++;
+      }
     }
 
     snpInfo_sort[t].n_nb=n_nb;
@@ -178,8 +185,7 @@ void VARCOV::CalcNB (vector<SNPINFO> &snpInfo_sort)
 }
 
 // Vector double is centered to have mean 0.
-void Calc_Cor(vector<vector<double> > &X_mat, vector<double> &cov_vec)
-{
+void Calc_Cor(vector<vector<double> > &X_mat, vector<double> &cov_vec) {
   cov_vec.clear();
 
   double v1, v2, r;
@@ -208,11 +214,12 @@ void Calc_Cor(vector<vector<double> > &X_mat, vector<double> &cov_vec)
 // window_size (which can vary if cM was used) read bimbam mean
 // genotype file and calculate the covariance matrix for neighboring
 // SNPs output values at 10000-SNP-interval.
-//
-void VARCOV::AnalyzeBimbam ()
-{
+void VARCOV::AnalyzeBimbam () {
   igzstream infile (file_geno.c_str(), igzstream::in);
-  if (!infile) {cout<<"error reading genotype file:"<<file_geno<<endl; return;}
+  if (!infile) {
+    cout<<"error reading genotype file:"<<file_geno<<endl;
+    return;
+  }
 
   // Calculate the number of right-hand-side neighbours for each SNP.
   vector<SNPINFO> snpInfo_sub;
@@ -299,8 +306,7 @@ void VARCOV::AnalyzeBimbam ()
   return;
 }
 
-void VARCOV::AnalyzePlink ()
-{
+void VARCOV::AnalyzePlink () {
   string file_bed=file_bfile+".bed";
   ifstream infile (file_bed.c_str(), ios::binary);
   if (!infile) {cout<<"error reading bed file:"<<file_bed<<endl; return;}
@@ -343,10 +349,11 @@ void VARCOV::AnalyzePlink ()
     for (int i=0; i<n_nb; i++) {
       if (X_mat.size()==0) {t2=t;} 
 
-      // Read a line of the snp is filtered out.
+      // Read a line if the SNP is filtered out.
       inc=0;
       while (t2<indicator_snp.size() && indicator_snp[t2]==0) {
-	t2++; inc++; 
+	t2++;
+	inc++; 
       }
 
       Plink_ReadOneSNP (t2, indicator_idv, infile, geno, geno_mean);
