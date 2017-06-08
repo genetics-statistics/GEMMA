@@ -13,7 +13,7 @@ typedef struct{
   gsl_matrix_int *X;
   gsl_vector_int *nlev;
   gsl_vector *y;
-  gsl_matrix *Xc;  // continuous covariates matrix Nobs x Kc (NULL if not used)
+  gsl_matrix *Xc; // Continuous covariates matrix Nobs x Kc (NULL if not used).
   double lambdaL1;
   double lambdaL2;
 } fix_parm_mixed_T;
@@ -29,8 +29,9 @@ double fLogit_mixed(gsl_vector *beta,
   int npar = beta->size; 
   double total = 0;
   double aux = 0;
+  
   // Changed loop start at 1 instead of 0 to avoid regularization of
-  // beta_0*\/ */
+  // beta_0*\/
   // #pragma omp parallel for reduction (+:total)
   for(int i = 1; i < npar; ++i)
     total += beta->data[i]*beta->data[i];
@@ -57,8 +58,9 @@ double fLogit_mixed(gsl_vector *beta,
 } 
 
 
-void logistic_mixed_pred(gsl_vector *beta  // Vector of parameters length = 1 + Sum_k(C_k - 1)
-			 ,gsl_matrix_int *X  //Matrix Nobs x K 
+void logistic_mixed_pred(gsl_vector *beta      // Vector of parameters
+					       // length = 1 + Sum_k(C_k -1)
+			 ,gsl_matrix_int *X    //Matrix Nobs x K 
 			 ,gsl_vector_int *nlev // Vector with number categories
 			 ,gsl_matrix *Xc   // continuous covariates  Matrix Nobs x Kc (NULL if not used)
 			 ,gsl_vector *yhat //Vector of prob. predicted by the logistic
@@ -287,39 +289,40 @@ int logistic_mixed_fit(gsl_vector *beta
 /* Categorical */
 /***************/
 
-// I need to bundle all the data that goes to the function to optimze together. 
+// I need to bundle all the data that goes to the function to optimze
+// together.
 typedef struct{
   gsl_matrix_int *X;
   gsl_vector_int *nlev;
   gsl_vector *y;
   double lambdaL1;
   double lambdaL2;
-}fix_parm_cat_T;
+} fix_parm_cat_T;
 
-
-double fLogit_cat(gsl_vector *beta
-		  ,gsl_matrix_int *X
-		  ,gsl_vector_int *nlev
-		  ,gsl_vector *y
-		  ,double lambdaL1
-		  ,double lambdaL2)
-{
+double fLogit_cat(gsl_vector *beta,
+		  gsl_matrix_int *X,
+		  gsl_vector_int *nlev,
+		  gsl_vector *y,
+		  double lambdaL1,
+		  double lambdaL2) {
   int n = y->size; 
-  //  int k = X->size2; 
   int npar = beta->size; 
   double total = 0;
   double aux = 0;
-  /*   omp_set_num_threads(ompthr); */
-  /*   /\* Changed loop start at 1 instead of 0 to avoid regularization of beta 0*\/ */
-  /*   /\*#pragma omp parallel for reduction (+:total)*\/ */
+  // omp_set_num_threads(ompthr); /\* Changed loop start at 1 instead
+  // of 0 to avoid regularization of beta 0*\/ /\*#pragma omp parallel
+  // for reduction (+:total)*\/
   for(int i = 1; i < npar; ++i)
     total += beta->data[i]*beta->data[i];
   total = (-total*lambdaL2/2);
-  /*   /\*#pragma omp parallel for reduction (+:aux)*\/ */
+  
+  // /\*#pragma omp parallel for reduction (+:aux)*\/
   for(int i = 1; i < npar; ++i)
     aux += (beta->data[i]>0 ? beta->data[i] : -beta->data[i]);
   total = total-aux*lambdaL1;
-  /* #pragma omp parallel for schedule(static) shared(n,beta,X,nlev,y) reduction (+:total) */
+  
+  // #pragma omp parallel for schedule(static) shared(n,beta,X,nlev,y)
+  // #reduction (+:total)
   for(int i = 0; i < n; ++i) {
     double Xbetai=beta->data[0];
     int iParm=1;
@@ -332,7 +335,6 @@ double fLogit_cat(gsl_vector *beta
   }
   return -total;
 } 
-
 
 void logistic_cat_pred(gsl_vector *beta  // Vector of parameters length = 1 + Sum_k(C_k - 1)
 		       ,gsl_matrix_int *X  //Matrix Nobs x K 

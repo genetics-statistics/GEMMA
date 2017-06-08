@@ -50,39 +50,65 @@ public:
 	HYPBSLMM cHyp_initial;
 
 	// Summary statistics
-	size_t ni_total, ns_total;	//number of total individuals and snps
-	size_t ni_test, ns_test;	//number of individuals and snps used for analysis
+	size_t ni_total, ns_total; // Number of total individuals and SNPs.
+	size_t ni_test, ns_test;   // Number of individuals and SNPs
+				   // used for analysis.
 
 	double h_min, h_max, rho_min, rho_max;
 	size_t h_ngrid, rho_ngrid;
 
 	double time_UtZ;
-	double time_Omega;		//time spent on optimization iterations
-	double time_Proposal;        //time spent on constructing the proposal distribution for gamma (i.e. lmm or lm analysis)
-	vector<int> indicator_idv;				//indicator for individuals (phenotypes), 0 missing, 1 available for analysis
-	vector<int> indicator_snp;				//sequence indicator for SNPs: 0 ignored because of (a) maf, (b) miss, (c) non-poly; 1 available for analysis
+	double time_Omega;	// Time spent on optimization iterations.
+	double time_Proposal;   // Time spent on constructing the
+				// proposal distribution for gamma
+				// (i.e., lmm or lm analysis).
 
-	vector<SNPINFO> snpInfo;		//record SNP information
+        // Indicator for individuals (phenotypes): 0 missing, 1
+        // available for analysis.
+	vector<int> indicator_idv;
 
-	// Main Functions
+ 	// Sequence indicator for SNPs: 0 ignored because of (a) maf,
+ 	// (b) miss, (c) non-poly; 1 available for analysis.
+	vector<int> indicator_snp;
+
+	vector<SNPINFO> snpInfo;  // Record SNP information.
+
+	// Main functions.
 	void CopyFromParam (PARAM &cPar);
 	void CopyToParam (PARAM &cPar);
 
 	void WriteResult (const gsl_matrix *Hyper, const gsl_matrix *BF);
-	void WriteResult (const vector<string> &vec_rs, const gsl_matrix *Hyper, const gsl_vector *pip, const gsl_vector *coef);
-	double CalcMarginal (const gsl_vector *Uty, const gsl_vector *K_eval, const double sigma_b2, const double tau);
-	double CalcMarginal (const gsl_matrix *UtXgamma, const gsl_vector *Uty, const gsl_vector *K_eval, const double sigma_a2, const double sigma_b2, const double tau);
+	void WriteResult (const vector<string> &vec_rs, 
+			  const gsl_matrix *Hyper, const gsl_vector *pip, 
+			  const gsl_vector *coef);
+	double CalcMarginal (const gsl_vector *Uty, const gsl_vector *K_eval, 
+			     const double sigma_b2, const double tau);
+	double CalcMarginal (const gsl_matrix *UtXgamma, 
+			     const gsl_vector *Uty, const gsl_vector *K_eval, 
+			     const double sigma_a2, const double sigma_b2, 
+			     const double tau);
 	double CalcPrior (class HYPBSLMM &cHyp);
 
-	void DAP_CalcBF (const gsl_matrix *U, const gsl_matrix *UtX, const gsl_vector *Uty, const gsl_vector *K_eval, const gsl_vector *y);
-	void DAP_EstimateHyper (const size_t kc, const size_t kd, const vector<string> &vec_rs, const vector<double> &vec_sa2, const vector<double> &vec_sb2, const vector<double> &wab, const vector<vector<vector<double> > > &BF, gsl_matrix *Ac, gsl_matrix_int *Ad, gsl_vector_int *dlevel);
-
+	void DAP_CalcBF (const gsl_matrix *U, const gsl_matrix *UtX, 
+			 const gsl_vector *Uty, const gsl_vector *K_eval, 
+			 const gsl_vector *y);
+	void DAP_EstimateHyper (const size_t kc, const size_t kd, 
+				const vector<string> &vec_rs, 
+				const vector<double> &vec_sa2, 
+				const vector<double> &vec_sb2, 
+				const vector<double> &wab, 
+				const vector<vector<vector<double> > > &BF, 
+				gsl_matrix *Ac, gsl_matrix_int *Ad, 
+				gsl_vector_int *dlevel);
 };
 
-void ReadFile_hyb (const string &file_hyp, vector<double> &vec_sa2, vector<double> &vec_sb2, vector<double> &vec_wab);
-void ReadFile_bf (const string &file_bf, vector<string> &vec_rs, vector<vector<vector<double> > > &BF);
-void ReadFile_cat (const string &file_cat, const vector<string> &vec_rs, gsl_matrix *Ac, gsl_matrix_int *Ad, gsl_vector_int *dlevel, size_t &kc, size_t &kd);
-
+void ReadFile_hyb (const string &file_hyp, vector<double> &vec_sa2, 
+		   vector<double> &vec_sb2, vector<double> &vec_wab);
+void ReadFile_bf (const string &file_bf, vector<string> &vec_rs, 
+		  vector<vector<vector<double> > > &BF);
+void ReadFile_cat (const string &file_cat, const vector<string> &vec_rs, 
+		   gsl_matrix *Ac, gsl_matrix_int *Ad, gsl_vector_int *dlevel,
+		   size_t &kc, size_t &kd);
 
 #endif
 

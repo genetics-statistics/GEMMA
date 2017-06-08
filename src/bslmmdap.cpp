@@ -49,8 +49,7 @@
 
 using namespace std;
 
-void BSLMMDAP::CopyFromParam (PARAM &cPar)
-{
+void BSLMMDAP::CopyFromParam (PARAM &cPar) {
 	file_out=cPar.file_out;
 	path_out=cPar.path_out;
 
@@ -83,9 +82,7 @@ void BSLMMDAP::CopyFromParam (PARAM &cPar)
 	return;
 }
 
-
-void BSLMMDAP::CopyToParam (PARAM &cPar)
-{
+void BSLMMDAP::CopyToParam (PARAM &cPar) {
 	cPar.time_UtZ=time_UtZ;
 	cPar.time_Omega=time_Omega;
 
@@ -94,13 +91,16 @@ void BSLMMDAP::CopyToParam (PARAM &cPar)
 
 
 
-//read hyp file
-void ReadFile_hyb (const string &file_hyp, vector<double> &vec_sa2, vector<double> &vec_sb2, vector<double> &vec_wab)
-{
+// Read hyp file.
+void ReadFile_hyb (const string &file_hyp, vector<double> &vec_sa2, 
+		   vector<double> &vec_sb2, vector<double> &vec_wab) {
   vec_sa2.clear(); vec_sb2.clear(); vec_wab.clear();
 
   igzstream infile (file_hyp.c_str(), igzstream::in);
-  if (!infile) {cout<<"error! fail to open hyp file: "<<file_hyp<<endl; return;}
+  if (!infile) {
+    cout<<"error! fail to open hyp file: "<<file_hyp<<endl; 
+    return;
+  }
 
   string line;
   char *ch_ptr;
@@ -127,10 +127,9 @@ void ReadFile_hyb (const string &file_hyp, vector<double> &vec_sa2, vector<doubl
   return;
 }
 
-
-//read bf file
-void ReadFile_bf (const string &file_bf, vector<string> &vec_rs, vector<vector<vector<double> > > &BF)
-{
+// Read bf file.
+void ReadFile_bf (const string &file_bf, vector<string> &vec_rs, 
+		  vector<vector<vector<double> > > &BF) {
   BF.clear(); vec_rs.clear();
 
   igzstream infile (file_bf.c_str(), igzstream::in);
@@ -172,7 +171,9 @@ void ReadFile_bf (const string &file_bf, vector<string> &vec_rs, vector<vector<v
     if (t==0) {
       bf_size=vec_bf.size();
     } else {
-      if (bf_size!=vec_bf.size()) {cout<<"error! unequal row size in bf file."<<endl;}
+      if (bf_size!=vec_bf.size()) {
+	cout<<"error! unequal row size in bf file."<<endl;
+      }
     }
 
     if (flag_block==0) {
@@ -193,24 +194,28 @@ void ReadFile_bf (const string &file_bf, vector<string> &vec_rs, vector<vector<v
 }
 
 
-//read category files
-//read both continuous and discrete category file, record mapRS2catc
-void ReadFile_cat (const string &file_cat, const vector<string> &vec_rs, gsl_matrix *Ac, gsl_matrix_int *Ad, gsl_vector_int *dlevel, size_t &kc, size_t &kd)
-{
+// Read category files.
+// Read both continuous and discrete category file, record mapRS2catc.
+void ReadFile_cat (const string &file_cat, const vector<string> &vec_rs, 
+		   gsl_matrix *Ac, gsl_matrix_int *Ad, gsl_vector_int *dlevel,
+		   size_t &kc, size_t &kd) {
   igzstream infile (file_cat.c_str(), igzstream::in);
-  if (!infile) {cout<<"error! fail to open category file: "<<file_cat<<endl; return;}
+  if (!infile) {
+    cout<<"error! fail to open category file: "<<file_cat<<endl; 
+    return;
+  }
 
   string line;
   char *ch_ptr;
 
   string rs, chr, a1, a0, pos, cm;
 
-  //read header
+  // Read header.
   HEADER header;
   !safeGetline(infile, line).eof();
   ReadHeader_io (line, header);
 
-  //use the header to determine the number of categories
+  // Use the header to determine the number of categories.
   kc=header.catc_col.size(); kd=header.catd_col.size();
 
   //set up storage and mapper
@@ -219,7 +224,7 @@ void ReadFile_cat (const string &file_cat, const vector<string> &vec_rs, gsl_mat
   vector<double> catc;
   vector<int> catd;
 
-  //read the following lines to record mapRS2cat
+  // Read the following lines to record mapRS2cat.
   while (!safeGetline(infile, line).eof()) {
     ch_ptr=strtok ((char *)line.c_str(), " , \t");
 
@@ -255,7 +260,7 @@ void ReadFile_cat (const string &file_cat, const vector<string> &vec_rs, gsl_mat
     if (mapRS2catd.count(rs)==0 && kd>0) {mapRS2catd[rs]=catd;}
   }
 
-  //load into Ad and Ac
+  // Load into Ad and Ac.
   if (kc>0) {
     Ac=gsl_matrix_alloc(vec_rs.size(), kc);
     for (size_t i=0; i<vec_rs.size(); i++) {
@@ -305,15 +310,7 @@ void ReadFile_cat (const string &file_cat, const vector<string> &vec_rs, gsl_mat
   return;
 }
 
-
-
-
-
-
-
-
-void BSLMMDAP::WriteResult (const gsl_matrix *Hyper, const gsl_matrix *BF)
-{
+void BSLMMDAP::WriteResult (const gsl_matrix *Hyper, const gsl_matrix *BF) {
   string file_bf, file_hyp;
 	file_bf=path_out+"/"+file_out;
 	file_bf+=".bf.txt";
@@ -325,10 +322,17 @@ void BSLMMDAP::WriteResult (const gsl_matrix *Hyper, const gsl_matrix *BF)
 	outfile_bf.open (file_bf.c_str(), ofstream::out);
 	outfile_hyp.open (file_hyp.c_str(), ofstream::out);
 
-	if (!outfile_bf) {cout<<"error writing file: "<<file_bf<<endl; return;}
-	if (!outfile_hyp) {cout<<"error writing file: "<<file_hyp<<endl; return;}
+	if (!outfile_bf) {
+	  cout<<"error writing file: "<<file_bf<<endl; 
+	  return;
+	}
+	if (!outfile_hyp) {
+	  cout<<"error writing file: "<<file_hyp<<endl; 
+	  return;
+	}
 
-	outfile_hyp<<"h"<<"\t"<<"rho"<<"\t"<<"sa2"<<"\t"<<"sb2"<<"\t"<<"weight"<<endl;
+	outfile_hyp<<"h"<<"\t"<<"rho"<<"\t"<<"sa2"<<"\t"<<"sb2"<<"\t"<<
+	  "weight"<<endl;
 	outfile_hyp<<scientific;
 	for (size_t i=0; i<Hyper->size1; i++) {
 	  for (size_t j=0; j<Hyper->size2; j++) {
@@ -366,10 +370,9 @@ void BSLMMDAP::WriteResult (const gsl_matrix *Hyper, const gsl_matrix *BF)
 	return;
 }
 
-
-
-void BSLMMDAP::WriteResult (const vector<string> &vec_rs, const gsl_matrix *Hyper, const gsl_vector *pip, const gsl_vector *coef)
-{
+void BSLMMDAP::WriteResult (const vector<string> &vec_rs, 
+			    const gsl_matrix *Hyper, const gsl_vector *pip, 
+			    const gsl_vector *coef) {
   string file_gamma, file_hyp, file_coef;
 	file_gamma=path_out+"/"+file_out;
 	file_gamma+=".gamma.txt";
@@ -384,11 +387,21 @@ void BSLMMDAP::WriteResult (const vector<string> &vec_rs, const gsl_matrix *Hype
 	outfile_hyp.open (file_hyp.c_str(), ofstream::out);
 	outfile_coef.open (file_coef.c_str(), ofstream::out);
 
-	if (!outfile_gamma) {cout<<"error writing file: "<<file_gamma<<endl; return;}
-	if (!outfile_hyp) {cout<<"error writing file: "<<file_hyp<<endl; return;}
-	if (!outfile_coef) {cout<<"error writing file: "<<file_coef<<endl; return;}
+	if (!outfile_gamma) {
+	  cout<<"error writing file: "<<file_gamma<<endl; 
+	  return;
+	}
+	if (!outfile_hyp) {
+	  cout<<"error writing file: "<<file_hyp<<endl; 
+	  return;
+	}
+	if (!outfile_coef) {
+	  cout<<"error writing file: "<<file_coef<<endl; 
+	  return;
+	}
 
-	outfile_hyp<<"h"<<"\t"<<"rho"<<"\t"<<"sa2"<<"\t"<<"sb2"<<"\t"<<"weight"<<endl;
+	outfile_hyp<<"h"<<"\t"<<"rho"<<"\t"<<"sa2"<<"\t"<<"sb2"<<"\t"<<
+	  "weight"<<endl;
 	outfile_hyp<<scientific;
 	for (size_t i=0; i<Hyper->size1; i++) {
 	  for (size_t j=0; j<Hyper->size2; j++) {
@@ -397,10 +410,10 @@ void BSLMMDAP::WriteResult (const vector<string> &vec_rs, const gsl_matrix *Hype
 	  outfile_hyp<<endl;
 	}
 
-
 	outfile_gamma<<"rs"<<"\t"<<"gamma"<<endl;
 	for (size_t i=0; i<vec_rs.size(); ++i) {
-	  outfile_gamma<<vec_rs[i]<<"\t"<<scientific<<setprecision(6)<<gsl_vector_get(pip, i)<<endl;
+	  outfile_gamma<<vec_rs[i]<<"\t"<<scientific<<setprecision(6)<<
+	    gsl_vector_get(pip, i)<<endl;
 	}
 
 	outfile_coef<<"coef"<<endl;
@@ -419,25 +432,9 @@ void BSLMMDAP::WriteResult (const vector<string> &vec_rs, const gsl_matrix *Hype
 }
 
 
-
-
-/*
-void BSLMMDAP::SetXgamma (gsl_matrix *Xgamma, const gsl_matrix *X, vector<size_t> &rank)
-{
-	size_t pos;
-	for (size_t i=0; i<rank.size(); ++i) {
-		pos=mapRank2pos[rank[i]];
-		gsl_vector_view Xgamma_col=gsl_matrix_column (Xgamma, i);
-		gsl_vector_const_view X_col=gsl_matrix_const_column (X, pos);
-		gsl_vector_memcpy (&Xgamma_col.vector, &X_col.vector);
-	}
-
-	return;
-}
-*/
-
-double BSLMMDAP::CalcMarginal (const gsl_vector *Uty, const gsl_vector *K_eval, const double sigma_b2, const double tau)
-{
+double BSLMMDAP::CalcMarginal (const gsl_vector *Uty, 
+			       const gsl_vector *K_eval, 
+			       const double sigma_b2, const double tau) {
 	gsl_vector *weight_Hi=gsl_vector_alloc (Uty->size);
 
 	double logm=0.0;
@@ -452,7 +449,7 @@ double BSLMMDAP::CalcMarginal (const gsl_vector *Uty, const gsl_vector *K_eval, 
 		Hi_yy+=d*uy*uy;
 	}
 
-	//calculate likelihood
+	// Calculate likelihood.
 	logm=-0.5*logdet_H-0.5*tau*Hi_yy+0.5*log(tau)*(double)ni_test;
 
 	gsl_vector_free (weight_Hi);
@@ -460,14 +457,17 @@ double BSLMMDAP::CalcMarginal (const gsl_vector *Uty, const gsl_vector *K_eval, 
 	return logm;
 }
 
-
-double BSLMMDAP::CalcMarginal (const gsl_matrix *UtXgamma, const gsl_vector *Uty, const gsl_vector *K_eval, const double sigma_a2, const double sigma_b2, const double tau)
-{
+double BSLMMDAP::CalcMarginal (const gsl_matrix *UtXgamma, 
+			       const gsl_vector *Uty, 
+			       const gsl_vector *K_eval, 
+			       const double sigma_a2, 
+			       const double sigma_b2, const double tau) {
   clock_t  time_start;
 	double logm=0.0;
 	double d, uy, P_yy=0, logdet_O=0.0, logdet_H=0.0;
 
-	gsl_matrix *UtXgamma_eval=gsl_matrix_alloc (UtXgamma->size1, UtXgamma->size2);
+	gsl_matrix *UtXgamma_eval=gsl_matrix_alloc (UtXgamma->size1, 
+						    UtXgamma->size2);
 	gsl_matrix *Omega=gsl_matrix_alloc (UtXgamma->size2, UtXgamma->size2);
 	gsl_vector *XtHiy=gsl_vector_alloc (UtXgamma->size2);
 	gsl_vector *beta_hat=gsl_vector_alloc (UtXgamma->size2);
@@ -477,7 +477,7 @@ double BSLMMDAP::CalcMarginal (const gsl_matrix *UtXgamma, const gsl_vector *Uty
 
 	logdet_H=0.0; P_yy=0.0;
 	for (size_t i=0; i<ni_test; ++i) {
-		gsl_vector_view UtXgamma_row=gsl_matrix_row (UtXgamma_eval, i);
+		gsl_vector_view UtXgamma_row=gsl_matrix_row(UtXgamma_eval,i);
 		d=gsl_vector_get (K_eval, i)*sigma_b2;
 		d=1.0/(d+1.0);
 		gsl_vector_set (weight_Hi, i, d);
@@ -488,7 +488,7 @@ double BSLMMDAP::CalcMarginal (const gsl_matrix *UtXgamma, const gsl_vector *Uty
 		gsl_vector_scale (&UtXgamma_row.vector, d);
 	}
 
-	//calculate Omega
+	// Calculate Omega.
 	gsl_matrix_set_identity (Omega);
 
 	time_start=clock();
@@ -496,7 +496,7 @@ double BSLMMDAP::CalcMarginal (const gsl_matrix *UtXgamma, const gsl_vector *Uty
 		      UtXgamma, 1.0, Omega);
 	time_Omega+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
 
-	//calculate beta_hat
+	// Calculate beta_hat.
 	gsl_blas_dgemv (CblasTrans, 1.0, UtXgamma_eval, Uty, 0.0, XtHiy);
 
 	logdet_O=CholeskySolve(Omega, XtHiy, beta_hat);
@@ -512,24 +512,26 @@ double BSLMMDAP::CalcMarginal (const gsl_matrix *UtXgamma, const gsl_vector *Uty
 	gsl_vector_free (beta_hat);
 	gsl_vector_free (weight_Hi);
 
-	logm=-0.5*logdet_H-0.5*logdet_O-0.5*tau*P_yy+0.5*log(tau)*(double)ni_test;
+	logm=-0.5*logdet_H-0.5*logdet_O-0.5*tau*P_yy+0.5*log(tau)*
+	  (double)ni_test;
 
 	return logm;
 }
 
-
 double BSLMMDAP::CalcPrior (class HYPBSLMM &cHyp) {
   double logprior=0;
-  logprior=((double)cHyp.n_gamma-1.0)*cHyp.logp+((double)ns_test-(double)cHyp.n_gamma)*log(1.0-exp(cHyp.logp));
+  logprior=((double)cHyp.n_gamma-1.0)*cHyp.logp+
+    ((double)ns_test-(double)cHyp.n_gamma)*log(1.0-exp(cHyp.logp));
   return logprior;
 }
 
-
-//where A is the ni_test by n_cat matrix of annotations
-void BSLMMDAP::DAP_CalcBF (const gsl_matrix *U, const gsl_matrix *UtX, const gsl_vector *Uty, const gsl_vector *K_eval, const gsl_vector *y) {
+// Where A is the ni_test by n_cat matrix of annotations.
+void BSLMMDAP::DAP_CalcBF (const gsl_matrix *U, const gsl_matrix *UtX, 
+			   const gsl_vector *Uty, const gsl_vector *K_eval, 
+			   const gsl_vector *y) {
 	clock_t time_start;
 
-	//set up BF
+	// Set up BF.
 	double tau, h, rho, sigma_a2, sigma_b2, d;
 	size_t ns_causal=10;
 	size_t n_grid=h_ngrid*rho_ngrid;
@@ -539,11 +541,13 @@ void BSLMMDAP::DAP_CalcBF (const gsl_matrix *U, const gsl_matrix *UtX, const gsl
 	gsl_matrix *Xgamma=gsl_matrix_alloc(ni_test, 1);
 	gsl_matrix *Hyper=gsl_matrix_alloc(n_grid, 5);
 
-	//compute tau by using yty
+	// Compute tau by using yty.
 	gsl_blas_ddot (Uty, Uty, &tau);
 	tau=(double)ni_test/tau;
 
-	//set up grid values for sigma_a2 and sigma_b2 based on an approximately even grid for h and rho, and a fixed number of causals
+	// Set up grid values for sigma_a2 and sigma_b2 based on an
+	// approximately even grid for h and rho, and a fixed number
+	// of causals.
 	size_t ij=0;
 	for (size_t i=0; i<h_ngrid; i++) {
 	  h=h_min+(h_max-h_min)*(double)i/((double)h_ngrid-1);
@@ -566,7 +570,7 @@ void BSLMMDAP::DAP_CalcBF (const gsl_matrix *U, const gsl_matrix *UtX, const gsl
 	  }
 	}
 
-	//compute BF factors
+	// Compute BF factors.
 	time_start=clock();
 	cout<<"Calculating BF..."<<endl;
 	for (size_t t=0; t<ns_test; t++) {
@@ -587,21 +591,20 @@ void BSLMMDAP::DAP_CalcBF (const gsl_matrix *U, const gsl_matrix *UtX, const gsl
 	}
 	time_Proposal=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
 
-	//save results
+	// Save results.
 	WriteResult (Hyper, BF);
 
-	//free matrices and vectors
+	// Free matrices and vectors.
 	gsl_matrix_free(BF);
 	gsl_matrix_free(Xgamma);
 	gsl_matrix_free(Hyper);
 	return;
 }
 
-
-
-
-
-void single_ct_regression(const gsl_matrix_int *Xd, const gsl_vector_int *dlevel, const gsl_vector *pip_vec, gsl_vector *coef, gsl_vector *prior_vec) {
+void single_ct_regression(const gsl_matrix_int *Xd, 
+			  const gsl_vector_int *dlevel,
+			  const gsl_vector *pip_vec, 
+			  gsl_vector *coef, gsl_vector *prior_vec) {
 
   map<int,double> sum_pip;
   map<int,double> sum;
@@ -623,27 +626,26 @@ void single_ct_regression(const gsl_matrix_int *Xd, const gsl_vector_int *dlevel
     gsl_vector_set(prior_vec,i,sum_pip[cat]/sum[cat]);
   }
 
-  //double baseline=0;
   for(int i=0;i<levels;i++){
     double new_prior = sum_pip[i]/sum[i];
-    //gsl_vector_set(coef, i, log(new_prior/(1-new_prior))-baseline);
-    //if(i==0){
-    //baseline = log(new_prior/(1-new_prior));
-    //}
     gsl_vector_set(coef, i, log(new_prior/(1-new_prior)) );
   }
 
   return;
 }
 
-
-
-
-//where A is the ni_test by n_cat matrix of annotations
-void BSLMMDAP::DAP_EstimateHyper (const size_t kc, const size_t kd, const vector<string> &vec_rs, const vector<double> &vec_sa2, const vector<double> &vec_sb2, const vector<double> &wab, const vector<vector<vector<double> > > &BF, gsl_matrix *Ac, gsl_matrix_int *Ad, gsl_vector_int *dlevel) {
+// Where A is the ni_test by n_cat matrix of annotations.
+void BSLMMDAP::DAP_EstimateHyper (const size_t kc, const size_t kd, 
+				  const vector<string> &vec_rs, 
+				  const vector<double> &vec_sa2, 
+				  const vector<double> &vec_sb2, 
+				  const vector<double> &wab, 
+				  const vector<vector<vector<double> > > &BF, 
+				  gsl_matrix *Ac, gsl_matrix_int *Ad, 
+				  gsl_vector_int *dlevel) {
 	clock_t time_start;
 
-	//set up BF
+	// Set up BF.
 	double h, rho, sigma_a2, sigma_b2, d, s, logm, logm_save;
 	size_t t1, t2;
 	size_t n_grid=wab.size(), ns_test=vec_rs.size();
@@ -653,10 +655,10 @@ void BSLMMDAP::DAP_EstimateHyper (const size_t kc, const size_t kd, const vector
 	gsl_vector *pip=gsl_vector_alloc(ns_test);
 	gsl_vector *coef=gsl_vector_alloc(kc+kd+1);
 
-	//perform the EM algorithm
+	// Perform the EM algorithm.
 	vector<double> vec_wab, vec_wab_new;
 
-	//initial values
+	// Initial values.
 	for (size_t t=0; t<ns_test; t++) {
 	  gsl_vector_set (prior_vec, t, (double)BF.size()/(double)ns_test);
 	}
@@ -665,11 +667,12 @@ void BSLMMDAP::DAP_EstimateHyper (const size_t kc, const size_t kd, const vector
 	  vec_wab_new.push_back(wab[ij]);
 	}
 
-	//EM iteration
+	// EM iteration.
 	size_t it=0;
 	double dif=1;
 	while (it<100 && dif>1e-3) {
-	  //update E_gamma
+
+	  // Update E_gamma.
 	  t1=0, t2=0;
 	  for (size_t b=0; b<BF.size(); b++) {
 	    s=1;
@@ -678,7 +681,7 @@ void BSLMMDAP::DAP_EstimateHyper (const size_t kc, const size_t kd, const vector
 	      for (size_t ij=0; ij<n_grid; ij++) {
 		d+=vec_wab_new[ij]*BF[b][m][ij];
 	      }
-	      d*=gsl_vector_get(prior_vec, t1)/(1-gsl_vector_get(prior_vec, t1));
+	      d*=gsl_vector_get(prior_vec,t1)/(1-gsl_vector_get(prior_vec,t1));
 
 	      gsl_vector_set(pip, t1, d);
 	      s+=d;
@@ -692,7 +695,7 @@ void BSLMMDAP::DAP_EstimateHyper (const size_t kc, const size_t kd, const vector
 	    }
 	  }
 
-	  //update E_wab
+	  // Update E_wab.
 	  s=0;
 	  for (size_t ij=0; ij<n_grid; ij++) {
 	    vec_wab_new[ij]=0;
@@ -701,7 +704,8 @@ void BSLMMDAP::DAP_EstimateHyper (const size_t kc, const size_t kd, const vector
 	    for (size_t b=0; b<BF.size(); b++) {
 	      d=1;
 	      for (size_t m=0; m<BF[b].size(); m++) {
-		d+=gsl_vector_get(prior_vec, t1)/(1-gsl_vector_get(prior_vec, t1))*vec_wab[ij]*BF[b][m][ij];
+		d+=gsl_vector_get(prior_vec, t1)/
+		  (1-gsl_vector_get(prior_vec, t1))*vec_wab[ij]*BF[b][m][ij];
 		t1++;
 	      }
 	      vec_wab_new[ij]+=log(d);
@@ -718,11 +722,12 @@ void BSLMMDAP::DAP_EstimateHyper (const size_t kc, const size_t kd, const vector
 
 	  for (size_t ij=0; ij<n_grid; ij++) {
 	    vec_wab_new[ij]/=d;
-	    //	    vec_wab[ij]=vec_wab_new[ij];
 	  }
 
-	  //update coef, and pi
-	  if(kc==0 && kd==0){//no annotation
+	  // Update coef, and pi.
+	  if(kc==0 && kd==0){
+
+	    // No annotation.
 	    s=0;
 	    for (size_t t=0; t<pip->size; t++) {
 	      s+=gsl_vector_get(pip, t);
@@ -733,22 +738,28 @@ void BSLMMDAP::DAP_EstimateHyper (const size_t kc, const size_t kd, const vector
 	    }
 
 	    gsl_vector_set (coef, 0, log(s/(1-s)));
-	  } else if(kc==0 && kd!=0){//only discrete annotations
+	  } else if(kc==0 && kd!=0){
+
+	    // Only discrete annotations.
 	    if(kd == 1){
 	      single_ct_regression(Ad, dlevel, pip, coef, prior_vec);
 	    }else{
 	      logistic_cat_fit(coef, Ad, dlevel, pip, 0, 0);
 	      logistic_cat_pred(coef, Ad, dlevel, prior_vec);
 	    }
-	  } else if (kc!=0 && kd==0) {//only continuous annotations
+	  } else if (kc!=0 && kd==0) {
+
+	    // Only continuous annotations.
 	    logistic_cont_fit(coef, Ac, pip, 0, 0);
 	    logistic_cont_pred(coef, Ac, prior_vec);
-	  } else if (kc!=0 && kd!=0) {//both continuous and categorical annotations
+	  } else if (kc!=0 && kd!=0) {
+
+	    // Both continuous and categorical annotations.
 	    logistic_mixed_fit(coef, Ad, dlevel, Ac, pip, 0, 0);
 	    logistic_mixed_pred(coef, Ad, dlevel, Ac, prior_vec);
 	  }
 
-	  //compute marginal likelihood
+	  // Compute marginal likelihood.
 	  logm=0;
 
 	  t1=0;
@@ -757,7 +768,8 @@ void BSLMMDAP::DAP_EstimateHyper (const size_t kc, const size_t kd, const vector
 	    for (size_t m=0; m<BF[b].size(); m++) {
 	      s+=log(1-gsl_vector_get(prior_vec, t1));
 	      for (size_t ij=0; ij<n_grid; ij++) {
-		d+=gsl_vector_get(prior_vec, t1)/(1-gsl_vector_get(prior_vec, t1))*vec_wab[ij]*BF[b][m][ij];
+		d+=gsl_vector_get(prior_vec, t1)/
+		  (1-gsl_vector_get(prior_vec, t1))*vec_wab[ij]*BF[b][m][ij];
 	      }
 	    }
 	    logm+=log(d)+s;
@@ -773,14 +785,17 @@ void BSLMMDAP::DAP_EstimateHyper (const size_t kc, const size_t kd, const vector
 	  cout<<"iteration = "<<it<<"; marginal likelihood = "<<logm<<endl;
 	}
 
-	//update h and rho that correspond to w_ab
+	// Update h and rho that correspond to w_ab.
 	for (size_t ij=0; ij<n_grid; ij++) {
 	  sigma_a2=vec_sa2[ij];
 	  sigma_b2=vec_sb2[ij];
 
-	  d=exp(gsl_vector_get(coef, coef->size-1))/(1+exp(gsl_vector_get(coef, coef->size-1)));
-	  h=(d*(double)ns_test*sigma_a2+1*sigma_b2)/(1+d*(double)ns_test*sigma_a2+1*sigma_b2);
-	  rho=d*(double)ns_test*sigma_a2/(d*(double)ns_test*sigma_a2+1*sigma_b2);
+	  d=exp(gsl_vector_get(coef, coef->size-1))/
+	    (1+exp(gsl_vector_get(coef, coef->size-1)));
+	  h=(d*(double)ns_test*sigma_a2+1*sigma_b2)/
+	    (1+d*(double)ns_test*sigma_a2+1*sigma_b2);
+	  rho=d*(double)ns_test*sigma_a2/
+	    (d*(double)ns_test*sigma_a2+1*sigma_b2);
 
 	  gsl_matrix_set (Hyper, ij, 0, h);
 	  gsl_matrix_set (Hyper, ij, 1, rho);
@@ -789,13 +804,12 @@ void BSLMMDAP::DAP_EstimateHyper (const size_t kc, const size_t kd, const vector
 	  gsl_matrix_set (Hyper, ij, 4, vec_wab_new[ij]);
 	}
 
-	//obtain beta and alpha parameters
+	// Obtain beta and alpha parameters.
 
-
-	//save results
+	// Save results.
 	WriteResult (vec_rs, Hyper, pip, coef);
 
-	//free matrices and vectors
+	// Free matrices and vectors.
 	gsl_vector_free(prior_vec);
 	gsl_matrix_free(Hyper);
 	gsl_vector_free(pip);
