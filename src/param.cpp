@@ -208,7 +208,6 @@ void PARAM::ReadFiles (void) {
 		ns_total=indicator_snp.size();
 	}
 
-
 	// Read genotype and phenotype file for PLINK format.
 	if (!file_bfile.empty()) {
 		file_str=file_bfile+".bim";
@@ -348,8 +347,6 @@ void PARAM::ReadFiles (void) {
 	  infile.clear();
 	}
 
-
-
 	// Read genotype and phenotype file for multiple BIMBAM files.
 	if (!file_mgeno.empty()) {
 	  
@@ -403,8 +400,6 @@ void PARAM::ReadFiles (void) {
 	  infile.clear();
 	}
 
-
-
 	if (!file_gene.empty()) {
 		if (ReadFile_pheno (file_pheno, indicator_pheno, pheno,
 				    p_column)==false) {error=true;}
@@ -432,7 +427,6 @@ void PARAM::ReadFiles (void) {
 		  error=true;
 		}
 	}
-
 
 	// Read is after gene file.
 	if (!file_read.empty() ) {
@@ -471,8 +465,7 @@ void PARAM::ReadFiles (void) {
 	return;
 }
 
-void PARAM::CheckParam (void)
-{
+void PARAM::CheckParam (void) {
 	struct stat fileInfo;
 	string str;
 
@@ -482,15 +475,49 @@ void PARAM::CheckParam (void)
 	    k_mode<<endl;
 	  error=true;
 	}
-	if (a_mode!=1 && a_mode!=2 && a_mode!=3 && a_mode!=4 && a_mode!=5 && a_mode!=11 && a_mode!=12 && a_mode!=13 && a_mode!=14 && a_mode!=15 && a_mode!=21 && a_mode!=22 && a_mode!=25 && a_mode!=26 && a_mode!=27 && a_mode!=28 && a_mode!=31 && a_mode!=41 && a_mode!=42 && a_mode!=43 && a_mode!=51 && a_mode!=52 && a_mode!=53 && a_mode!=54 && a_mode!=61 && a_mode!=62 && a_mode!=63 && a_mode!=66 && a_mode!=67 && a_mode!=71)
-	{cout<<"error! unknown analysis mode: "<<a_mode<<". make sure -gk or -eigen or -lmm or -bslmm -predict or -calccov is sepcified correctly."<<endl; error=true;}
-	if (miss_level>1) {cout<<"error! missing level needs to be between 0 and 1. current value = "<<miss_level<<endl; error=true;}
-	if (maf_level>0.5) {cout<<"error! maf level needs to be between 0 and 0.5. current value = "<<maf_level<<endl; error=true;}
-	if (hwe_level>1) {cout<<"error! hwe level needs to be between 0 and 1. current value = "<<hwe_level<<endl; error=true;}
-	if (r2_level>1) {cout<<"error! r2 level needs to be between 0 and 1. current value = "<<r2_level<<endl; error=true;}
+	if (a_mode!=1 && a_mode!=2 && a_mode!=3 && a_mode!=4 && a_mode!=5
+	    && a_mode!=11 && a_mode!=12 && a_mode!=13 && a_mode!=14 &&
+	    a_mode!=15 && a_mode!=21 && a_mode!=22 && a_mode!=25 &&
+	    a_mode!=26 && a_mode!=27 && a_mode!=28 && a_mode!=31 &&
+	    a_mode!=41 && a_mode!=42 && a_mode!=43 && a_mode!=51 &&
+	    a_mode!=52 && a_mode!=53 && a_mode!=54 && a_mode!=61 &&
+	    a_mode!=62 && a_mode!=63 && a_mode!=66 && a_mode!=67 &&
+	    a_mode!=71) {
+	  cout<<"error! unknown analysis mode: "<<a_mode<<
+	    ". make sure -gk or -eigen or -lmm or -bslmm -predict or " <<
+	    "-calccov is sepcified correctly."<<endl;
+	  error=true;
+	}
+	if (miss_level>1) {
+	  cout<<"error! missing level needs to be between 0 and 1. " <<
+	    "current value = "<<miss_level<<endl;
+	  error=true;
+	}
+	if (maf_level>0.5) {
+	  cout<<"error! maf level needs to be between 0 and 0.5. " <<
+	    "current value = "<<maf_level<<endl;
+	  error=true;
+	}
+	if (hwe_level>1) {
+	  cout<<"error! hwe level needs to be between 0 and 1. " <<
+	    "current value = "<<hwe_level<<endl;
+	  error=true;
+	}
+	if (r2_level>1) {
+	  cout<<"error! r2 level needs to be between 0 and 1. " <<
+	    "current value = "<<r2_level<<endl;
+	  error=true;
+	}
 
-	if (l_max<l_min) {cout<<"error! maximum lambda value must be larger than the minimal value. current values = "<<l_max<<" and "<<l_min<<endl; error=true;}
-	if (h_max<h_min) {cout<<"error! maximum h value must be larger than the minimal value. current values = "<<h_max<<" and "<<h_min<<endl; error=true;}
+	if (l_max<l_min) {
+	  cout<<"error! maximum lambda value must be larger than the " <<
+	    "minimal value. current values = "<<l_max<<" and "<<l_min<<endl;
+	  error=true;
+	}
+	if (h_max<h_min) {
+	  cout<<"error! maximum h value must be larger than the minimal value. current values = "<<h_max<<" and "<<h_min<<endl;
+	  error=true;
+	}
 	if (s_max<s_min) {cout<<"error! maximum s value must be larger than the minimal value. current values = "<<s_max<<" and "<<s_min<<endl; error=true;}
 	if (rho_max<rho_min) {cout<<"error! maximum rho value must be larger than the minimal value. current values = "<<rho_max<<" and "<<rho_min<<endl; error=true;}
 	if (logp_max<logp_min) {cout<<"error! maximum logp value must be larger than the minimal value. current values = "<<logp_max/log(10)<<" and "<<logp_min/log(10)<<endl; error=true;}

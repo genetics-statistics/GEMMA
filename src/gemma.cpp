@@ -1,6 +1,6 @@
 /*
-	Genome-wide Efficient Mixed Model Association (GEMMA)
-    Copyright (C) 2011  Xiang Zhou
+    Genome-wide Efficient Mixed Model Association (GEMMA)
+    Copyright (C) 2011-2017, Xiang Zhou
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -13,7 +13,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <iostream>
@@ -31,22 +31,7 @@
 #include "gsl/gsl_eigen.h"
 #include "gsl/gsl_cdf.h"
 
-#include "lapack.h"  //for functions EigenDecomp
-
-#ifdef FORCE_FLOAT
-#include "io_float.h"   //for function ReadFile_kin
-#include "gemma_float.h"
-#include "vc_float.h"
-#include "lm_float.h"  //for LM class
-#include "bslmm_float.h"  //for BSLMM class
-#include "bslmmdap_float.h"  //for BSLMMDAP class
-#include "ldr_float.h"  //for LDR class
-#include "lmm_float.h"  //for LMM class, and functions CalcLambda, CalcPve, CalcVgVe
-#include "mvlmm_float.h"  //for MVLMM class
-#include "prdt_float.h"	//for PRDT class
-#include "varcov_float.h"  //for MVLMM class
-#include "mathfunc_float.h"	//for a few functions
-#else
+#include "lapack.h"  
 #include "io.h"
 #include "gemma.h"
 #include "vc.h"
@@ -59,410 +44,440 @@
 #include "prdt.h"
 #include "varcov.h"
 #include "mathfunc.h"
-#endif
-
 
 using namespace std;
-
-
 
 GEMMA::GEMMA(void):
 version("0.96"), date("05/17/2017"), year("2017")
 {}
 
-void GEMMA::PrintHeader (void)
-{
-	cout<<endl;
-	cout<<"*********************************************************"<<endl;
-	cout<<"  Genome-wide Efficient Mixed Model Association (GEMMA)  "<<endl;
-	cout<<"  Version "<<version<<", "<<date<<"                              "<<endl;
-	cout<<"  Visit http://www.xzlab.org/software.html For Updates   "<<endl;
-	cout<<"  (C) "<<year<<" Xiang Zhou                                   "<<endl;
-	cout<<"  GNU General Public License                             "<<endl;
-	cout<<"  For Help, Type ./gemma -h                              "<<endl;
-	cout<<"*********************************************************"<<endl;
-	cout<<endl;
+void GEMMA::PrintHeader (void) {
+  cout<<endl;
+  cout<<"*********************************************************"<<endl;
+  cout<<"  Genome-wide Efficient Mixed Model Association (GEMMA)  "<<endl;
+  cout<<"  Version "<<version<<", "<<date<<"                              "<<
+    endl;
+  cout<<"  Visit http://www.xzlab.org/software.html For Updates   "<<endl;
+  cout<<"  (C) "<<year<<" Xiang Zhou                                   "<<endl;
+  cout<<"  GNU General Public License                             "<<endl;
+  cout<<"  For Help, Type ./gemma -h                              "<<endl;
+  cout<<"*********************************************************"<<endl;
+  cout<<endl;
 
-	return;
+  return;
 }
 
-
-void GEMMA::PrintLicense (void)
-{
+void GEMMA::PrintLicense (void) {
 	cout<<endl;
-	cout<<"The Software Is Distributed Under GNU General Public License, But May Also Require The Following Notifications."<<endl;
+	cout<<"The Software Is Distributed Under GNU General Public "<<
+	  "License, But May Also Require The Following Notifications."<<endl;
 	cout<<endl;
 
-	cout<<"Including Lapack Routines In The Software May Require The Following Notification:"<<endl;
-	cout<<"Copyright (c) 1992-2010 The University of Tennessee and The University of Tennessee Research Foundation.  All rights reserved."<<endl;
-	cout<<"Copyright (c) 2000-2010 The University of California Berkeley. All rights reserved."<<endl;
-	cout<<"Copyright (c) 2006-2010 The University of Colorado Denver.  All rights reserved."<<endl;
+	cout<<"Including Lapack Routines In The Software May Require"<<
+	  " The Following Notification:"<<endl;
+	cout<<"Copyright (c) 1992-2010 The University of Tennessee and "<<
+	  "The University of Tennessee Research Foundation.  All rights "<<
+	  "reserved."<<endl;
+	cout<<"Copyright (c) 2000-2010 The University of California "<<
+	  "Berkeley. All rights reserved."<<endl;
+	cout<<"Copyright (c) 2006-2010 The University of Colorado Denver. "<<
+	  "All rights reserved."<<endl;
 	cout<<endl;
 
 	cout<<"$COPYRIGHT$"<<endl;
 	cout<<"Additional copyrights may follow"<<endl;
 	cout<<"$HEADER$"<<endl;
-	cout<<"Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:"<<endl;
-	cout<<"- Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer."<<endl;
-	cout<<"- Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer listed in this license in the documentation and/or other materials provided with the distribution."<<endl;
-	cout<<"- Neither the name of the copyright holders nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission."<<endl;
-	cout<<"The copyright holders provide no reassurances that the source code provided does not infringe any patent, copyright, or any other "
-		<<"intellectual property rights of third parties.  The copyright holders disclaim any liability to any recipient for claims brought against "
-		<<"recipient by any third party for infringement of that parties intellectual property rights. "<<endl;
-	cout<<"THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT "
-		<<"LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT "
-		<<"OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT "
-		<<"LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY "
-		<<"THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE "
-		<<"OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."<<endl;
+	cout<<"Redistribution and use in source and binary forms, with or "<<
+	  "without modification, are permitted provided that the following "<<
+	  " conditions are met:"<<endl;
+	cout<<"- Redistributions of source code must retain the above "<<
+	  "copyright notice, this list of conditions and the following "<<
+	  "disclaimer."<<endl;
+	cout<<"- Redistributions in binary form must reproduce the above "<<
+	  "copyright notice, this list of conditions and the following "<<
+	  "disclaimer listed in this license in the documentation and/or "<<
+	  "other materials provided with the distribution."<<endl;
+	cout<<"- Neither the name of the copyright holders nor the names "<<
+	  "of its contributors may be used to endorse or promote products "<<
+	  "derived from this software without specific prior written "<<
+	  "permission."<<endl;
+	cout<<"The copyright holders provide no reassurances that the "<<
+	  "source code provided does not infringe any patent, copyright, "<<
+	  "or any other "<<
+	  "intellectual property rights of third parties. "<<
+	  "The copyright holders disclaim any liability to any recipient "<<
+	  "for claims brought against "<<
+	  "recipient by any third party for infringement of that parties "<<
+	  "intellectual property rights. "<<endl;
+	cout<<"THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND "<<
+	  "CONTRIBUTORS \"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, "<<
+	  "INCLUDING, BUT NOT "<<
+	  "LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND "<<
+	  "FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT "<<
+	  "SHALL THE COPYRIGHT "<<
+	  "OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, "<<
+	  "INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES "<<
+	  "(INCLUDING, BUT NOT "<<
+	  "LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; "<<
+	  "LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) "<<
+	  "HOWEVER CAUSED AND ON ANY "<<
+	  "THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, "<<
+	  "OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY "<<
+	  "OUT OF THE USE "<<
+	  "OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF "<<
+	  "SUCH DAMAGE."<<endl;
 	cout<<endl;
 
-
-
 	return;
 }
 
+void GEMMA::PrintHelp(size_t option) {
+  if (option==0) {
+    cout<<endl;
+    cout<<" GEMMA version "<<version<<", released on "<<date<<endl;
+    cout<<" implemented by Xiang Zhou"<<endl;
+    cout<<endl;
+    cout<<" type ./gemma -h [num] for detailed helps"<<endl;
+    cout<<" options: " << endl;
+    cout<<" 1: quick guide"<<endl;
+    cout<<" 2: file I/O related"<<endl;
+    cout<<" 3: SNP QC"<<endl;
+    cout<<" 4: calculate relatedness matrix"<<endl;
+    cout<<" 5: perform eigen decomposition"<<endl;
+    cout<<" 6: perform variance component estimation"<<endl;
+    cout<<" 7: fit a linear model"<<endl;
+    cout<<" 8: fit a linear mixed model"<<endl;
+    cout<<" 9: fit a multivariate linear mixed model"<<endl;
+    cout<<" 10: fit a Bayesian sparse linear mixed model"<<endl;
+    cout<<" 11: obtain predicted values"<<endl;
+    cout<<" 12: calculate snp variance covariance"<<endl;
+    cout<<" 13: note"<<endl;
+    cout<<endl;
+  }
 
+  if (option==1) {
+    cout<<" QUICK GUIDE" << endl;
+    cout<<" to generate a relatedness matrix: "<<endl;
+    cout<<"         ./gemma -bfile [prefix] -gk [num] -o [prefix]"<<endl;
+    cout<<"         ./gemma -g [filename] -p [filename] -gk [num] -o [prefix]"<<endl;
+    cout<<" to generate the S matrix: "<<endl;
+    cout<<"         ./gemma -bfile [prefix] -gs -o [prefix]"<<endl;
+    cout<<"         ./gemma -p [filename] -g [filename] -gs -o [prefix]"<<endl;
+    cout<<"         ./gemma -bfile [prefix] -cat [filename] -gs -o [prefix]"<<endl;
+    cout<<"         ./gemma -p [filename] -g [filename] -cat [filename] -gs -o [prefix]"<<endl;
+    cout<<"         ./gemma -bfile [prefix] -sample [num] -gs -o [prefix]"<<endl;
+    cout<<"         ./gemma -p [filename] -g [filename] -sample [num] -gs -o [prefix]"<<endl;
+    cout<<" to generate the q vector: "<<endl;
+    cout<<"         ./gemma -beta [filename] -gq -o [prefix]"<<endl;
+    cout<<"         ./gemma -beta [filename] -cat [filename] -gq -o [prefix]"<<endl;
+    cout<<" to generate the ldsc weigthts: "<<endl;
+    cout<<"         ./gemma -beta [filename] -gw -o [prefix]"<<endl;
+    cout<<"         ./gemma -beta [filename] -cat [filename] -gw -o [prefix]"<<endl;
+    cout<<" to perform eigen decomposition of the relatedness matrix: "<<endl;
+    cout<<"         ./gemma -bfile [prefix] -k [filename] -eigen -o [prefix]"<<endl;
+    cout<<"         ./gemma -g [filename] -p [filename] -k [filename] -eigen -o [prefix]"<<endl;
+    cout<<" to estimate variance components: "<<endl;
+    cout<<"         ./gemma -bfile [prefix] -k [filename] -vc [num] -o [prefix]"<<endl;
+    cout<<"         ./gemma -p [filename] -k [filename] -vc [num] -o [prefix]"<<endl;
+    cout<<"         ./gemma -bfile [prefix] -mk [filename] -vc [num] -o [prefix]"<<endl;
+    cout<<"         ./gemma -p [filename] -mk [filename] -vc [num] -o [prefix]"<<endl;
+    cout<<"         ./gemma -beta [filename] -cor [filename] -vc [num] -o [prefix]"<<endl;
+    cout<<"         ./gemma -beta [filename] -cor [filename] -cat [filename] -vc [num] -o [prefix]"<<endl;
+    cout<<"         options for the above two commands: -crt -windowbp [num]"<<endl;
+    cout<<"         ./gemma -mq [filename] -ms [filename] -mv [filename] -vc [num] -o [prefix]"<<endl;
+    cout<<"         or with summary statistics, replace bfile with mbfile, or g or mg; vc=1 for HE weights and vc=2 for LDSC weights"<<endl;
+    cout<<"         ./gemma -beta [filename] -bfile [filename] -cat [filename] -wsnp [filename] -wcat [filename] -vc [num] -o [prefix]"<<endl;
+    cout<<"         ./gemma -beta [filename] -bfile [filename] -cat [filename] -wsnp [filename] -wcat [filename] -ci [num] -o [prefix]"<<endl;
+    cout<<" to fit a linear mixed model: "<<endl;
+    cout<<"         ./gemma -bfile [prefix] -k [filename] -lmm [num] -o [prefix]"<<endl;
+    cout<<"         ./gemma -g [filename] -p [filename] -a [filename] -k [filename] -lmm [num] -o [prefix]"<<endl;
+    cout<<" to fit a linear mixed model to test g by e effects: "<<endl;
+    cout<<"         ./gemma -bfile [prefix] -gxe [filename] -k [filename] -lmm [num] -o [prefix]"<<endl;
+    cout<<"         ./gemma -g [filename] -p [filename] -a [filename] -gxe [filename] -k [filename] -lmm [num] -o [prefix]"<<endl;
+    cout<<" to fit a univariate linear mixed model with different residual weights for different individuals: "<<endl;
+    cout<<"         ./gemma -bfile [prefix] -weight [filename] -k [filename] -lmm [num] -o [prefix]"<<endl;
+    cout<<"         ./gemma -g [filename] -p [filename] -a [filename] -weight [filename] -k [filename] -lmm [num] -o [prefix]"<<endl;
+    cout<<" to fit a multivariate linear mixed model: "<<endl;
+    cout<<"         ./gemma -bfile [prefix] -k [filename] -lmm [num] -n [num1] [num2] -o [prefix]"<<endl;
+    cout<<"         ./gemma -g [filename] -p [filename] -a [filename] -k [filename] -lmm [num] -n [num1] [num2] -o [prefix]"<<endl;
+    cout<<" to fit a Bayesian sparse linear mixed model: "<<endl;
+    cout<<"         ./gemma -bfile [prefix] -bslmm [num] -o [prefix]"<<endl;
+    cout<<"         ./gemma -g [filename] -p [filename] -a [filename] -bslmm [num] -o [prefix]"<<endl;
+    cout<<" to obtain predicted values: "<<endl;
+    cout<<"         ./gemma -bfile [prefix] -epm [filename] -emu [filename] -ebv [filename] -k [filename] -predict [num] -o [prefix]"<<endl;
+    cout<<"         ./gemma -g [filename] -p [filename] -epm [filename] -emu [filename] -ebv [filename] -k [filename] -predict [num] -o [prefix]"<<endl;
+    cout<<" to calculate correlations between SNPs: "<<endl;
+    cout<<"         ./gemma -bfile [prefix] -calccor -o [prefix]"<<endl;
+    cout<<"         ./gemma -g [filename] -p [filename] -calccor -o [prefix]"<<endl;
+    cout<<endl;
+  }
+  
+  if (option==2) {
+    cout<<" FILE I/O RELATED OPTIONS" << endl;
+    cout<<" -bfile    [prefix]       "<<" specify input PLINK binary ped file prefix."<<endl;
+    cout<<"          requires: *.fam, *.bim and *.bed files"<<endl;
+    cout<<"          missing value: -9"<<endl;
+    cout<<" -g        [filename]     "<<" specify input BIMBAM mean genotype file name"<<endl;
+    cout<<"          format: rs#1, allele0, allele1, genotype for individual 1, genotype for individual 2, ..."<<endl;
+    cout<<"                  rs#2, allele0, allele1, genotype for individual 1, genotype for individual 2, ..."<<endl;
+    cout<<"                  ..."<<endl;
+    cout<<"          missing value: NA"<<endl;
+    cout<<" -p        [filename]     "<<" specify input BIMBAM phenotype file name"<<endl;
+    cout<<"          format: phenotype for individual 1"<<endl;
+    cout<<"                  phenotype for individual 2"<<endl;
+    cout<<"                  ..."<<endl;
+    cout<<"          missing value: NA"<<endl;
+    cout<<" -a        [filename]     "<<" specify input BIMBAM SNP annotation file name (optional)"<<endl;
+    cout<<"          format: rs#1, base_position, chr_number"<<endl;
+    cout<<"                  rs#2, base_position, chr_number"<<endl;
+    cout<<"                  ..."<<endl;
+    
+    // WJA added.
+    cout<<" -oxford    [prefix]       "<<" specify input Oxford genotype bgen file prefix."<<endl;
+    cout<<"          requires: *.bgen, *.sample files"<<endl;
+    
+    cout<<" -gxe      [filename]     "<<" specify input file that contains a column of environmental factor for g by e tests"<<endl;
+    cout<<"          format: variable for individual 1"<<endl;
+    cout<<"                  variable for individual 2"<<endl;
+    cout<<"                  ..."<<endl;
+    cout<<"          missing value: NA"<<endl;
+    cout<<" -widv   [filename]     "<<" specify input file that contains a column of residual weights"<<endl;
+    cout<<"          format: variable for individual 1"<<endl;
+    cout<<"                  variable for individual 2"<<endl;
+    cout<<"                  ..."<<endl;
+    cout<<"          missing value: NA"<<endl;
+    cout<<" -k        [filename]     "<<" specify input kinship/relatedness matrix file name"<<endl;
+    cout<<" -mk       [filename]     "<<" specify input file which contains a list of kinship/relatedness matrices"<<endl;
+    cout<<" -u        [filename]     "<<" specify input file containing the eigen vectors of the kinship/relatedness matrix"<<endl;
+    cout<<" -d        [filename]     "<<" specify input file containing the eigen values of the kinship/relatedness matrix"<<endl;
+    cout<<" -c        [filename]     "<<" specify input covariates file name (optional)"<<endl;
+    cout<<" -cat      [filename]     "<<" specify input category file name (optional), which contains rs cat1 cat2 ..."<<endl;
+    cout<<" -beta     [filename]     "<<" specify input beta file name (optional), which contains rs beta se_beta n_total (or n_mis and n_obs) estimates from a lm model"<<endl;
+    cout<<" -cor      [filename]     "<<" specify input correlation file name (optional), which contains rs window_size correlations from snps"<<endl;
+    cout<<"          missing value: NA"<<endl;
+    cout<<"          note: the intercept (a column of 1s) may need to be included"<<endl;
+    cout<<" -epm      [filename]     "<<" specify input estimated parameter file name"<<endl;
+    cout<<" -en [n1] [n2] [n3] [n4]  "<<" specify values for the input estimated parameter file (with a header)"<<endl;
+    cout<<"          options: n1: rs column number"<<endl;
+    cout<<"                   n2: estimated alpha column number (0 to ignore)"<<endl;
+    cout<<"                   n3: estimated beta column number (0 to ignore)"<<endl;
+    cout<<"                   n4: estimated gamma column number (0 to ignore)"<<endl;
+    cout<<"          default: 2 4 5 6 if -ebv is not specified; 2 0 5 6 if -ebv is specified"<<endl;
+    cout<<" -ebv      [filename]     "<<" specify input estimated random effect (breeding value) file name"<<endl;
+    cout<<"          format: value for individual 1"<<endl;
+    cout<<"                  value for individual 2"<<endl;
+    cout<<"                  ..."<<endl;
+    cout<<"          missing value: NA"<<endl;
+    cout<<" -emu      [filename]     "<<" specify input log file name containing estimated mean"<<endl;
+    cout<<" -mu       [num]          "<<" specify input estimated mean value"<<endl;
+    cout<<" -gene     [filename]     "<<" specify input gene expression file name"<<endl;
+    cout<<"          format: header"<<endl;
+    cout<<"                  gene1, count for individual 1, count for individual 2, ..."<<endl;
+    cout<<"                  gene2, count for individual 1, count for individual 2, ..."<<endl;
+    cout<<"                  ..."<<endl;
+    cout<<"          missing value: not allowed"<<endl;
+    cout<<" -r        [filename]     "<<" specify input total read count file name"<<endl;
+    cout<<"          format: total read count for individual 1"<<endl;
+    cout<<"                  total read count for individual 2"<<endl;
+    cout<<"                  ..."<<endl;
+    cout<<"          missing value: NA"<<endl;
+    cout<<" -snps     [filename]     "<<" specify input snps file name to only analyze a certain set of snps"<<endl;
+    cout<<"          format: rs#1"<<endl;
+    cout<<"                  rs#2"<<endl;
+    cout<<"                  ..."<<endl;
+    cout<<"          missing value: NA"<<endl;
+    cout<<" -silence                 "<<" silent terminal display"<<endl;
+    cout<<" -km       [num]          "<<" specify input kinship/relatedness file type (default 1)."<<endl;
+    cout<<"          options: 1: \"n by n matrix\" format"<<endl;
+    cout<<"                   2: \"id  id  value\" format"<<endl;
+    cout<<" -n        [num]          "<<" specify phenotype column in the phenotype/*.fam file (optional; default 1)"<<endl;
+    cout<<" -pace     [num]          "<<" specify terminal display update pace (default 100000 SNPs or 100000 iterations)."<<endl;
+    cout<<" -outdir   [path]         "<<" specify output directory path (default \"./output/\")"<<endl;
+    cout<<" -o        [prefix]       "<<" specify output file prefix (default \"result\")"<<endl;
+    cout<<"          output: prefix.cXX.txt or prefix.sXX.txt from kinship/relatedness matrix estimation"<<endl;
+    cout<<"          output: prefix.assoc.txt and prefix.log.txt form association tests"<<endl;
+    cout<<endl;
+  }
 
-void GEMMA::PrintHelp(size_t option)
-{
-	if (option==0) {
-		cout<<endl;
-		cout<<" GEMMA version "<<version<<", released on "<<date<<endl;
-		cout<<" implemented by Xiang Zhou"<<endl;
-		cout<<endl;
-		cout<<" type ./gemma -h [num] for detailed helps"<<endl;
-		cout<<" options: " << endl;
-		cout<<" 1: quick guide"<<endl;
-		cout<<" 2: file I/O related"<<endl;
-		cout<<" 3: SNP QC"<<endl;
-		cout<<" 4: calculate relatedness matrix"<<endl;
-		cout<<" 5: perform eigen decomposition"<<endl;
-		cout<<" 6: perform variance component estimation"<<endl;
-		cout<<" 7: fit a linear model"<<endl;
-		cout<<" 8: fit a linear mixed model"<<endl;
-		cout<<" 9: fit a multivariate linear mixed model"<<endl;
-		cout<<" 10: fit a Bayesian sparse linear mixed model"<<endl;
-		cout<<" 11: obtain predicted values"<<endl;
-		cout<<" 12: calculate snp variance covariance"<<endl;
-		cout<<" 13: note"<<endl;
-		cout<<endl;
-	}
-
-	if (option==1) {
-		cout<<" QUICK GUIDE" << endl;
-		cout<<" to generate a relatedness matrix: "<<endl;
-		cout<<"         ./gemma -bfile [prefix] -gk [num] -o [prefix]"<<endl;
-		cout<<"         ./gemma -g [filename] -p [filename] -gk [num] -o [prefix]"<<endl;
-		cout<<" to generate the S matrix: "<<endl;
-		cout<<"         ./gemma -bfile [prefix] -gs -o [prefix]"<<endl;
-		cout<<"         ./gemma -p [filename] -g [filename] -gs -o [prefix]"<<endl;
-		cout<<"         ./gemma -bfile [prefix] -cat [filename] -gs -o [prefix]"<<endl;
-		cout<<"         ./gemma -p [filename] -g [filename] -cat [filename] -gs -o [prefix]"<<endl;
-		cout<<"         ./gemma -bfile [prefix] -sample [num] -gs -o [prefix]"<<endl;
-		cout<<"         ./gemma -p [filename] -g [filename] -sample [num] -gs -o [prefix]"<<endl;
-		cout<<" to generate the q vector: "<<endl;
-		cout<<"         ./gemma -beta [filename] -gq -o [prefix]"<<endl;
-		cout<<"         ./gemma -beta [filename] -cat [filename] -gq -o [prefix]"<<endl;
-		cout<<" to generate the ldsc weigthts: "<<endl;
-		cout<<"         ./gemma -beta [filename] -gw -o [prefix]"<<endl;
-		cout<<"         ./gemma -beta [filename] -cat [filename] -gw -o [prefix]"<<endl;
-		cout<<" to perform eigen decomposition of the relatedness matrix: "<<endl;
-		cout<<"         ./gemma -bfile [prefix] -k [filename] -eigen -o [prefix]"<<endl;
-		cout<<"         ./gemma -g [filename] -p [filename] -k [filename] -eigen -o [prefix]"<<endl;
-		cout<<" to estimate variance components: "<<endl;
-		cout<<"         ./gemma -bfile [prefix] -k [filename] -vc [num] -o [prefix]"<<endl;
-		cout<<"         ./gemma -p [filename] -k [filename] -vc [num] -o [prefix]"<<endl;
-		cout<<"         ./gemma -bfile [prefix] -mk [filename] -vc [num] -o [prefix]"<<endl;
-		cout<<"         ./gemma -p [filename] -mk [filename] -vc [num] -o [prefix]"<<endl;
-		cout<<"         ./gemma -beta [filename] -cor [filename] -vc [num] -o [prefix]"<<endl;
-		cout<<"         ./gemma -beta [filename] -cor [filename] -cat [filename] -vc [num] -o [prefix]"<<endl;
-		cout<<"         options for the above two commands: -crt -windowbp [num]"<<endl;
-		cout<<"         ./gemma -mq [filename] -ms [filename] -mv [filename] -vc [num] -o [prefix]"<<endl;
-		cout<<"         or with summary statistics, replace bfile with mbfile, or g or mg; vc=1 for HE weights and vc=2 for LDSC weights"<<endl;
-		cout<<"         ./gemma -beta [filename] -bfile [filename] -cat [filename] -wsnp [filename] -wcat [filename] -vc [num] -o [prefix]"<<endl;
-		cout<<"         ./gemma -beta [filename] -bfile [filename] -cat [filename] -wsnp [filename] -wcat [filename] -ci [num] -o [prefix]"<<endl;
-		cout<<" to fit a linear mixed model: "<<endl;
-		cout<<"         ./gemma -bfile [prefix] -k [filename] -lmm [num] -o [prefix]"<<endl;
-		cout<<"         ./gemma -g [filename] -p [filename] -a [filename] -k [filename] -lmm [num] -o [prefix]"<<endl;
-		cout<<" to fit a linear mixed model to test g by e effects: "<<endl;
-		cout<<"         ./gemma -bfile [prefix] -gxe [filename] -k [filename] -lmm [num] -o [prefix]"<<endl;
-		cout<<"         ./gemma -g [filename] -p [filename] -a [filename] -gxe [filename] -k [filename] -lmm [num] -o [prefix]"<<endl;
-		cout<<" to fit a univariate linear mixed model with different residual weights for different individuals: "<<endl;
-		cout<<"         ./gemma -bfile [prefix] -weight [filename] -k [filename] -lmm [num] -o [prefix]"<<endl;
-		cout<<"         ./gemma -g [filename] -p [filename] -a [filename] -weight [filename] -k [filename] -lmm [num] -o [prefix]"<<endl;
-		cout<<" to fit a multivariate linear mixed model: "<<endl;
-		cout<<"         ./gemma -bfile [prefix] -k [filename] -lmm [num] -n [num1] [num2] -o [prefix]"<<endl;
-		cout<<"         ./gemma -g [filename] -p [filename] -a [filename] -k [filename] -lmm [num] -n [num1] [num2] -o [prefix]"<<endl;
-		cout<<" to fit a Bayesian sparse linear mixed model: "<<endl;
-		cout<<"         ./gemma -bfile [prefix] -bslmm [num] -o [prefix]"<<endl;
-		cout<<"         ./gemma -g [filename] -p [filename] -a [filename] -bslmm [num] -o [prefix]"<<endl;
-		cout<<" to obtain predicted values: "<<endl;
-		cout<<"         ./gemma -bfile [prefix] -epm [filename] -emu [filename] -ebv [filename] -k [filename] -predict [num] -o [prefix]"<<endl;
-		cout<<"         ./gemma -g [filename] -p [filename] -epm [filename] -emu [filename] -ebv [filename] -k [filename] -predict [num] -o [prefix]"<<endl;
-		cout<<" to calculate correlations between SNPs: "<<endl;
-		cout<<"         ./gemma -bfile [prefix] -calccor -o [prefix]"<<endl;
-		cout<<"         ./gemma -g [filename] -p [filename] -calccor -o [prefix]"<<endl;
-		cout<<endl;
-	}
-
-	if (option==2) {
-		cout<<" FILE I/O RELATED OPTIONS" << endl;
-		cout<<" -bfile    [prefix]       "<<" specify input PLINK binary ped file prefix."<<endl;
-		cout<<"          requires: *.fam, *.bim and *.bed files"<<endl;
-		cout<<"          missing value: -9"<<endl;
-		cout<<" -g        [filename]     "<<" specify input BIMBAM mean genotype file name"<<endl;
-		cout<<"          format: rs#1, allele0, allele1, genotype for individual 1, genotype for individual 2, ..."<<endl;
-		cout<<"                  rs#2, allele0, allele1, genotype for individual 1, genotype for individual 2, ..."<<endl;
-		cout<<"                  ..."<<endl;
-		cout<<"          missing value: NA"<<endl;
-		cout<<" -p        [filename]     "<<" specify input BIMBAM phenotype file name"<<endl;
-		cout<<"          format: phenotype for individual 1"<<endl;
-		cout<<"                  phenotype for individual 2"<<endl;
-		cout<<"                  ..."<<endl;
-		cout<<"          missing value: NA"<<endl;
-		cout<<" -a        [filename]     "<<" specify input BIMBAM SNP annotation file name (optional)"<<endl;
-		cout<<"          format: rs#1, base_position, chr_number"<<endl;
-		cout<<"                  rs#2, base_position, chr_number"<<endl;
-		cout<<"                  ..."<<endl;
-		// WJA added
-		cout<<" -oxford    [prefix]       "<<" specify input Oxford genotype bgen file prefix."<<endl;
-		cout<<"          requires: *.bgen, *.sample files"<<endl;
-
-		cout<<" -gxe      [filename]     "<<" specify input file that contains a column of environmental factor for g by e tests"<<endl;
-		cout<<"          format: variable for individual 1"<<endl;
-		cout<<"                  variable for individual 2"<<endl;
-		cout<<"                  ..."<<endl;
-		cout<<"          missing value: NA"<<endl;
-		cout<<" -widv   [filename]     "<<" specify input file that contains a column of residual weights"<<endl;
-		cout<<"          format: variable for individual 1"<<endl;
-		cout<<"                  variable for individual 2"<<endl;
-		cout<<"                  ..."<<endl;
-		cout<<"          missing value: NA"<<endl;
-		cout<<" -k        [filename]     "<<" specify input kinship/relatedness matrix file name"<<endl;
-		cout<<" -mk       [filename]     "<<" specify input file which contains a list of kinship/relatedness matrices"<<endl;
-		cout<<" -u        [filename]     "<<" specify input file containing the eigen vectors of the kinship/relatedness matrix"<<endl;
-		cout<<" -d        [filename]     "<<" specify input file containing the eigen values of the kinship/relatedness matrix"<<endl;
-		cout<<" -c        [filename]     "<<" specify input covariates file name (optional)"<<endl;
-		cout<<" -cat      [filename]     "<<" specify input category file name (optional), which contains rs cat1 cat2 ..."<<endl;
-		cout<<" -beta     [filename]     "<<" specify input beta file name (optional), which contains rs beta se_beta n_total (or n_mis and n_obs) estimates from a lm model"<<endl;
-		cout<<" -cor      [filename]     "<<" specify input correlation file name (optional), which contains rs window_size correlations from snps"<<endl;
-		cout<<"          missing value: NA"<<endl;
-		cout<<"          note: the intercept (a column of 1s) may need to be included"<<endl;
-		cout<<" -epm      [filename]     "<<" specify input estimated parameter file name"<<endl;
-		cout<<" -en [n1] [n2] [n3] [n4]  "<<" specify values for the input estimated parameter file (with a header)"<<endl;
-		cout<<"          options: n1: rs column number"<<endl;
-		cout<<"                   n2: estimated alpha column number (0 to ignore)"<<endl;
-		cout<<"                   n3: estimated beta column number (0 to ignore)"<<endl;
-		cout<<"                   n4: estimated gamma column number (0 to ignore)"<<endl;
-		cout<<"          default: 2 4 5 6 if -ebv is not specified; 2 0 5 6 if -ebv is specified"<<endl;
-		cout<<" -ebv      [filename]     "<<" specify input estimated random effect (breeding value) file name"<<endl;
-		cout<<"          format: value for individual 1"<<endl;
-		cout<<"                  value for individual 2"<<endl;
-		cout<<"                  ..."<<endl;
-		cout<<"          missing value: NA"<<endl;
-		cout<<" -emu      [filename]     "<<" specify input log file name containing estimated mean"<<endl;
-		cout<<" -mu       [num]          "<<" specify input estimated mean value"<<endl;
-		cout<<" -gene     [filename]     "<<" specify input gene expression file name"<<endl;
-		cout<<"          format: header"<<endl;
-		cout<<"                  gene1, count for individual 1, count for individual 2, ..."<<endl;
-		cout<<"                  gene2, count for individual 1, count for individual 2, ..."<<endl;
-		cout<<"                  ..."<<endl;
-		cout<<"          missing value: not allowed"<<endl;
-		cout<<" -r        [filename]     "<<" specify input total read count file name"<<endl;
-		cout<<"          format: total read count for individual 1"<<endl;
-		cout<<"                  total read count for individual 2"<<endl;
-		cout<<"                  ..."<<endl;
-		cout<<"          missing value: NA"<<endl;
-		cout<<" -snps     [filename]     "<<" specify input snps file name to only analyze a certain set of snps"<<endl;
-		cout<<"          format: rs#1"<<endl;
-		cout<<"                  rs#2"<<endl;
-		cout<<"                  ..."<<endl;
-		cout<<"          missing value: NA"<<endl;
-		cout<<" -silence                 "<<" silent terminal display"<<endl;
-		cout<<" -km       [num]          "<<" specify input kinship/relatedness file type (default 1)."<<endl;
-		cout<<"          options: 1: \"n by n matrix\" format"<<endl;
-		cout<<"                   2: \"id  id  value\" format"<<endl;
-		cout<<" -n        [num]          "<<" specify phenotype column in the phenotype/*.fam file (optional; default 1)"<<endl;
-		cout<<" -pace     [num]          "<<" specify terminal display update pace (default 100000 SNPs or 100000 iterations)."<<endl;
-		cout<<" -outdir   [path]         "<<" specify output directory path (default \"./output/\")"<<endl;
-		cout<<" -o        [prefix]       "<<" specify output file prefix (default \"result\")"<<endl;
-		cout<<"          output: prefix.cXX.txt or prefix.sXX.txt from kinship/relatedness matrix estimation"<<endl;
-		cout<<"          output: prefix.assoc.txt and prefix.log.txt form association tests"<<endl;
-		cout<<endl;
-	}
-
-	if (option==3) {
-		cout<<" SNP QC OPTIONS" << endl;
-		cout<<" -miss     [num]          "<<" specify missingness threshold (default 0.05)" << endl;
-		cout<<" -maf      [num]          "<<" specify minor allele frequency threshold (default 0.01)" << endl;
-		cout<<" -hwe      [num]          "<<" specify HWE test p value threshold (default 0; no test)" << endl;
-		cout<<" -r2       [num]          "<<" specify r-squared threshold (default 0.9999)" << endl;
-		cout<<" -notsnp                  "<<" minor allele frequency cutoff is not used" << endl;
-		cout<<endl;
-	}
-
-	if (option==4) {
-		cout<<" RELATEDNESS MATRIX CALCULATION OPTIONS" << endl;
-		cout<<" -gk       [num]          "<<" specify which type of kinship/relatedness matrix to generate (default 1)" << endl;
-		cout<<"          options: 1: centered XX^T/p"<<endl;
-		cout<<"                   2: standardized XX^T/p"<<endl;
-		cout<<"          note: non-polymorphic SNPs are excluded "<<endl;
-		cout<<endl;
-	}
-
-	if (option==5) {
-		cout<<" EIGEN-DECOMPOSITION OPTIONS" << endl;
-		cout<<" -eigen                   "<<" specify to perform eigen decomposition of the loaded relatedness matrix" << endl;
-		cout<<endl;
-	}
-
-	if (option==6) {
-		cout<<" VARIANCE COMPONENT ESTIMATION OPTIONS" << endl;
-		cout<<" -vc                      "<<" specify to perform variance component estimation for the loaded relatedness matrix/matrices" << endl;
-		cout<<"          options (with kinship file):   1: HE regression (default)"<<endl;
-		cout<<"                                         2: REML"<<endl;
-		cout<<"          options (with beta/cor files): 1: Centered genotypes (default)"<<endl;
-		cout<<"                                         2: Standardized genotypes"<<endl;
-		cout<<"                                         -crt -windowbp [num]"<<" specify the window size based on bp (default 1000000; 1Mb)"<<endl;
-		cout<<"                                         -crt -windowcm [num]"<<" specify the window size based on cm (default 0)"<<endl;
-		cout<<"                                         -crt -windowns [num]"<<" specify the window size based on number of snps (default 0)"<<endl;
-		cout<<endl;
-	}
-
-	if (option==7) {
-		cout<<" LINEAR MODEL OPTIONS" << endl;
-		cout<<" -lm       [num]         "<<" specify analysis options (default 1)."<<endl;
-		cout<<"          options: 1: Wald test"<<endl;
-		cout<<"                   2: Likelihood ratio test"<<endl;
-		cout<<"                   3: Score test"<<endl;
-		cout<<"                   4: 1-3"<<endl;
-		cout<<endl;
-	}
-
-	if (option==8) {
-		cout<<" LINEAR MIXED MODEL OPTIONS" << endl;
-		cout<<" -lmm      [num]         "<<" specify analysis options (default 1)."<<endl;
-		cout<<"          options: 1: Wald test"<<endl;
-		cout<<"                   2: Likelihood ratio test"<<endl;
-		cout<<"                   3: Score test"<<endl;
-		cout<<"                   4: 1-3"<<endl;
-		cout<<"                   5: Parameter estimation in the null model only"<<endl;
-		cout<<" -lmin     [num]          "<<" specify minimal value for lambda (default 1e-5)" << endl;
-		cout<<" -lmax     [num]          "<<" specify maximum value for lambda (default 1e+5)" << endl;
-		cout<<" -region   [num]          "<<" specify the number of regions used to evaluate lambda (default 10)" << endl;
-		cout<<endl;
-	}
-
-	if (option==9) {
-		cout<<" MULTIVARIATE LINEAR MIXED MODEL OPTIONS" << endl;
-		cout<<" -pnr				     "<<" specify the pvalue threshold to use the Newton-Raphson's method (default 0.001)"<<endl;
-		cout<<" -emi				     "<<" specify the maximum number of iterations for the PX-EM method in the null (default 10000)"<<endl;
-		cout<<" -nri				     "<<" specify the maximum number of iterations for the Newton-Raphson's method in the null (default 100)"<<endl;
-		cout<<" -emp				     "<<" specify the precision for the PX-EM method in the null (default 0.0001)"<<endl;
-		cout<<" -nrp				     "<<" specify the precision for the Newton-Raphson's method in the null (default 0.0001)"<<endl;
-		cout<<" -crt				     "<<" specify to output corrected pvalues for these pvalues that are below the -pnr threshold"<<endl;
-		cout<<endl;
-	}
-
-	if (option==10) {
-		cout<<" MULTI-LOCUS ANALYSIS OPTIONS" << endl;
-		cout<<" -bslmm	  [num]			 "<<" specify analysis options (default 1)."<<endl;
-		cout<<"          options: 1: BSLMM"<<endl;
-		cout<<"                   2: standard ridge regression/GBLUP (no mcmc)"<<endl;
-		cout<<"                   3: probit BSLMM (requires 0/1 phenotypes)"<<endl;
-		cout<<"                   4: BSLMM with DAP for Hyper Parameter Estimation"<<endl;
-		cout<<"                   5: BSLMM with DAP for Fine Mapping"<<endl;
-
-		cout<<" -ldr	  [num]			 "<<" specify analysis options (default 1)."<<endl;
-		cout<<"          options: 1: LDR"<<endl;
-
-		cout<<"   MCMC OPTIONS" << endl;
-		cout<<"   Prior" << endl;
-		cout<<" -hmin     [num]          "<<" specify minimum value for h (default 0)" << endl;
-		cout<<" -hmax     [num]          "<<" specify maximum value for h (default 1)" << endl;
-		cout<<" -rmin     [num]          "<<" specify minimum value for rho (default 0)" << endl;
-		cout<<" -rmax     [num]          "<<" specify maximum value for rho (default 1)" << endl;
-		cout<<" -pmin     [num]          "<<" specify minimum value for log10(pi) (default log10(1/p), where p is the number of analyzed SNPs )" << endl;
-		cout<<" -pmax     [num]          "<<" specify maximum value for log10(pi) (default log10(1) )" << endl;
-		cout<<" -smin     [num]          "<<" specify minimum value for |gamma| (default 0)" << endl;
-		cout<<" -smax     [num]          "<<" specify maximum value for |gamma| (default 300)" << endl;
-
-		cout<<"   Proposal" << endl;
-		cout<<" -gmean    [num]          "<<" specify the mean for the geometric distribution (default: 2000)" << endl;
-		cout<<" -hscale   [num]          "<<" specify the step size scale for the proposal distribution of h (value between 0 and 1, default min(10/sqrt(n),1) )" << endl;
-		cout<<" -rscale   [num]          "<<" specify the step size scale for the proposal distribution of rho (value between 0 and 1, default min(10/sqrt(n),1) )" << endl;
-		cout<<" -pscale   [num]          "<<" specify the step size scale for the proposal distribution of log10(pi) (value between 0 and 1, default min(5/sqrt(n),1) )" << endl;
-
-		cout<<"   Others" << endl;
-		cout<<" -w        [num]          "<<" specify burn-in steps (default 100,000)" << endl;
-		cout<<" -s        [num]          "<<" specify sampling steps (default 1,000,000)" << endl;
-		cout<<" -rpace    [num]          "<<" specify recording pace, record one state in every [num] steps (default 10)" << endl;
-		cout<<" -wpace    [num]          "<<" specify writing pace, write values down in every [num] recorded steps (default 1000)" << endl;
-		cout<<" -seed     [num]          "<<" specify random seed (a random seed is generated by default)" << endl;
-		cout<<" -mh       [num]          "<<" specify number of MH steps in each iteration (default 10)" << endl;
-		cout<<"          requires: 0/1 phenotypes and -bslmm 3 option"<<endl;
-		cout<<endl;
-	}
-
-	if (option==11) {
-		cout<<" PREDICTION OPTIONS" << endl;
-		cout<<" -predict  [num]			 "<<" specify prediction options (default 1)."<<endl;
-		cout<<"          options: 1: predict for individuals with missing phenotypes"<<endl;
-		cout<<"                   2: predict for individuals with missing phenotypes, and convert the predicted values to probability scale. Use only for files fitted with -bslmm 3 option"<<endl;
-		cout<<endl;
-	}
-
-	if (option==12) {
-		cout<<" CALC CORRELATION OPTIONS" << endl;
-		cout<<" -calccor       			 "<<endl;
-		cout<<" -windowbp       [num]            "<<" specify the window size based on bp (default 1000000; 1Mb)" << endl;
-		cout<<" -windowcm       [num]            "<<" specify the window size based on cm (default 0; not used)" << endl;
-		cout<<" -windowns       [num]            "<<" specify the window size based on number of snps (default 0; not used)" << endl;
-		cout<<endl;
-	}
-
-	if (option==13) {
-		cout<<" NOTE"<<endl;
-		cout<<" 1. Only individuals with non-missing phenotoypes and covariates will be analyzed."<<endl;
-		cout<<" 2. Missing genotoypes will be repalced with the mean genotype of that SNP."<<endl;
-		cout<<" 3. For lmm analysis, memory should be large enough to hold the relatedness matrix and to perform eigen decomposition."<<endl;
-		cout<<" 4. For multivariate lmm analysis, use a large -pnr for each snp will increase computation time dramatically."<<endl;
-		cout<<" 5. For bslmm analysis, in addition to 3, memory should be large enough to hold the whole genotype matrix."<<endl;
-		cout<<endl;
-	}
-
-	return;
+  if (option==3) {
+    cout<<" SNP QC OPTIONS" << endl;
+    cout<<" -miss     [num]          "<<" specify missingness threshold (default 0.05)" << endl;
+    cout<<" -maf      [num]          "<<" specify minor allele frequency threshold (default 0.01)" << endl;
+    cout<<" -hwe      [num]          "<<" specify HWE test p value threshold (default 0; no test)" << endl;
+    cout<<" -r2       [num]          "<<" specify r-squared threshold (default 0.9999)" << endl;
+    cout<<" -notsnp                  "<<" minor allele frequency cutoff is not used" << endl;
+    cout<<endl;
+  }
+  
+  if (option==4) {
+    cout<<" RELATEDNESS MATRIX CALCULATION OPTIONS" << endl;
+    cout<<" -gk       [num]          "<<" specify which type of kinship/relatedness matrix to generate (default 1)" << endl;
+    cout<<"          options: 1: centered XX^T/p"<<endl;
+    cout<<"                   2: standardized XX^T/p"<<endl;
+    cout<<"          note: non-polymorphic SNPs are excluded "<<endl;
+    cout<<endl;
+  }
+  
+  if (option==5) {
+    cout<<" EIGEN-DECOMPOSITION OPTIONS" << endl;
+    cout<<" -eigen                   "<<" specify to perform eigen decomposition of the loaded relatedness matrix" << endl;
+    cout<<endl;
+  }
+  
+  if (option==6) {
+    cout<<" VARIANCE COMPONENT ESTIMATION OPTIONS" << endl;
+    cout<<" -vc                      "<<" specify to perform variance component estimation for the loaded relatedness matrix/matrices" << endl;
+    cout<<"          options (with kinship file):   1: HE regression (default)"<<endl;
+    cout<<"                                         2: REML"<<endl;
+    cout<<"          options (with beta/cor files): 1: Centered genotypes (default)"<<endl;
+    cout<<"                                         2: Standardized genotypes"<<endl;
+    cout<<"                                         -crt -windowbp [num]"<<" specify the window size based on bp (default 1000000; 1Mb)"<<endl;
+    cout<<"                                         -crt -windowcm [num]"<<" specify the window size based on cm (default 0)"<<endl;
+    cout<<"                                         -crt -windowns [num]"<<" specify the window size based on number of snps (default 0)"<<endl;
+    cout<<endl;
+  }
+  
+  if (option==7) {
+    cout<<" LINEAR MODEL OPTIONS" << endl;
+    cout<<" -lm       [num]         "<<" specify analysis options (default 1)."<<endl;
+    cout<<"          options: 1: Wald test"<<endl;
+    cout<<"                   2: Likelihood ratio test"<<endl;
+    cout<<"                   3: Score test"<<endl;
+    cout<<"                   4: 1-3"<<endl;
+    cout<<endl;
+  }
+  
+  if (option==8) {
+    cout<<" LINEAR MIXED MODEL OPTIONS" << endl;
+    cout<<" -lmm      [num]         "<<" specify analysis options (default 1)."<<endl;
+    cout<<"          options: 1: Wald test"<<endl;
+    cout<<"                   2: Likelihood ratio test"<<endl;
+    cout<<"                   3: Score test"<<endl;
+    cout<<"                   4: 1-3"<<endl;
+    cout<<"                   5: Parameter estimation in the null model only"<<endl;
+    cout<<" -lmin     [num]          "<<" specify minimal value for lambda (default 1e-5)" << endl;
+    cout<<" -lmax     [num]          "<<" specify maximum value for lambda (default 1e+5)" << endl;
+    cout<<" -region   [num]          "<<" specify the number of regions used to evaluate lambda (default 10)" << endl;
+    cout<<endl;
+  }
+  
+  if (option==9) {
+    cout<<" MULTIVARIATE LINEAR MIXED MODEL OPTIONS" << endl;
+    cout<<" -pnr				     "<<" specify the pvalue threshold to use the Newton-Raphson's method (default 0.001)"<<endl;
+    cout<<" -emi				     "<<" specify the maximum number of iterations for the PX-EM method in the null (default 10000)"<<endl;
+    cout<<" -nri				     "<<" specify the maximum number of iterations for the Newton-Raphson's method in the null (default 100)"<<endl;
+    cout<<" -emp				     "<<" specify the precision for the PX-EM method in the null (default 0.0001)"<<endl;
+    cout<<" -nrp				     "<<" specify the precision for the Newton-Raphson's method in the null (default 0.0001)"<<endl;
+    cout<<" -crt				     "<<" specify to output corrected pvalues for these pvalues that are below the -pnr threshold"<<endl;
+    cout<<endl;
+  }
+  
+  if (option==10) {
+    cout<<" MULTI-LOCUS ANALYSIS OPTIONS" << endl;
+    cout<<" -bslmm	  [num]			 "<<" specify analysis options (default 1)."<<endl;
+    cout<<"          options: 1: BSLMM"<<endl;
+    cout<<"                   2: standard ridge regression/GBLUP (no mcmc)"<<endl;
+    cout<<"                   3: probit BSLMM (requires 0/1 phenotypes)"<<endl;
+    cout<<"                   4: BSLMM with DAP for Hyper Parameter Estimation"<<endl;
+    cout<<"                   5: BSLMM with DAP for Fine Mapping"<<endl;
+    
+    cout<<" -ldr	  [num]			 "<<" specify analysis options (default 1)."<<endl;
+    cout<<"          options: 1: LDR"<<endl;
+    
+    cout<<"   MCMC OPTIONS" << endl;
+    cout<<"   Prior" << endl;
+    cout<<" -hmin     [num]          "<<" specify minimum value for h (default 0)" << endl;
+    cout<<" -hmax     [num]          "<<" specify maximum value for h (default 1)" << endl;
+    cout<<" -rmin     [num]          "<<" specify minimum value for rho (default 0)" << endl;
+    cout<<" -rmax     [num]          "<<" specify maximum value for rho (default 1)" << endl;
+    cout<<" -pmin     [num]          "<<" specify minimum value for log10(pi) (default log10(1/p), where p is the number of analyzed SNPs )" << endl;
+    cout<<" -pmax     [num]          "<<" specify maximum value for log10(pi) (default log10(1) )" << endl;
+    cout<<" -smin     [num]          "<<" specify minimum value for |gamma| (default 0)" << endl;
+    cout<<" -smax     [num]          "<<" specify maximum value for |gamma| (default 300)" << endl;
+    
+    cout<<"   Proposal" << endl;
+    cout<<" -gmean    [num]          "<<" specify the mean for the geometric distribution (default: 2000)" << endl;
+    cout<<" -hscale   [num]          "<<" specify the step size scale for the proposal distribution of h (value between 0 and 1, default min(10/sqrt(n),1) )" << endl;
+    cout<<" -rscale   [num]          "<<" specify the step size scale for the proposal distribution of rho (value between 0 and 1, default min(10/sqrt(n),1) )" << endl;
+    cout<<" -pscale   [num]          "<<" specify the step size scale for the proposal distribution of log10(pi) (value between 0 and 1, default min(5/sqrt(n),1) )" << endl;
+    
+    cout<<"   Others" << endl;
+    cout<<" -w        [num]          "<<" specify burn-in steps (default 100,000)" << endl;
+    cout<<" -s        [num]          "<<" specify sampling steps (default 1,000,000)" << endl;
+    cout<<" -rpace    [num]          "<<" specify recording pace, record one state in every [num] steps (default 10)" << endl;
+    cout<<" -wpace    [num]          "<<" specify writing pace, write values down in every [num] recorded steps (default 1000)" << endl;
+    cout<<" -seed     [num]          "<<" specify random seed (a random seed is generated by default)" << endl;
+    cout<<" -mh       [num]          "<<" specify number of MH steps in each iteration (default 10)" << endl;
+    cout<<"          requires: 0/1 phenotypes and -bslmm 3 option"<<endl;
+    cout<<endl;
+  }
+  
+  if (option==11) {
+    cout<<" PREDICTION OPTIONS" << endl;
+    cout<<" -predict  [num]			 "<<" specify prediction options (default 1)."<<endl;
+    cout<<"          options: 1: predict for individuals with missing phenotypes"<<endl;
+    cout<<"                   2: predict for individuals with missing phenotypes, and convert the predicted values to probability scale. Use only for files fitted with -bslmm 3 option"<<endl;
+    cout<<endl;
+  }
+  
+  if (option==12) {
+    cout<<" CALC CORRELATION OPTIONS" << endl;
+    cout<<" -calccor       			 "<<endl;
+    cout<<" -windowbp       [num]            "<<" specify the window size based on bp (default 1000000; 1Mb)" << endl;
+    cout<<" -windowcm       [num]            "<<" specify the window size based on cm (default 0; not used)" << endl;
+    cout<<" -windowns       [num]            "<<" specify the window size based on number of snps (default 0; not used)" << endl;
+    cout<<endl;
+  }
+  
+  if (option==13) {
+    cout<<" NOTE"<<endl;
+    cout<<" 1. Only individuals with non-missing phenotoypes and covariates will be analyzed."<<endl;
+    cout<<" 2. Missing genotoypes will be repalced with the mean genotype of that SNP."<<endl;
+    cout<<" 3. For lmm analysis, memory should be large enough to hold the relatedness matrix and to perform eigen decomposition."<<endl;
+    cout<<" 4. For multivariate lmm analysis, use a large -pnr for each snp will increase computation time dramatically."<<endl;
+    cout<<" 5. For bslmm analysis, in addition to 3, memory should be large enough to hold the whole genotype matrix."<<endl;
+    cout<<endl;
+  }
+  
+  return;
 }
 
-//options
-//gk: 21-22
-//gs: 25-26
-//gq: 27-28
-//eigen: 31-32
-//lmm: 1-5
-//bslmm: 11-15
-//predict: 41-43
-//lm: 51
-//vc: 61
-//ci: 66-67
-//calccor: 71
-//gw: 72
+// OPTIONS
+// -------
+// gk:      21-22
+// gs:      25-26
+// gq:      27-28
+// eigen:   31-32
+// lmm:     1-5
+// bslmm:   11-15
+// predict: 41-43
+// lm:      51
+// vc:      61
+// ci:      66-67
+// calccor: 71
+// gw:      72
 
-void GEMMA::Assign(int argc, char ** argv, PARAM &cPar)
-{
+void GEMMA::Assign(int argc, char ** argv, PARAM &cPar) {
 	string str;
 
 	for(int i = 1; i < argc; i++) {
-		if (strcmp(argv[i], "-bfile")==0 || strcmp(argv[i], "--bfile")==0 || strcmp(argv[i], "-b")==0) {
-			if(argv[i+1] == NULL || argv[i+1][0] == '-') {continue;}
+		if (strcmp(argv[i], "-bfile")==0 ||
+		    strcmp(argv[i], "--bfile")==0 ||
+		    strcmp(argv[i], "-b")==0) {
+			if(argv[i+1] == NULL || argv[i+1][0] == '-') {
+			  continue;
+			}
 			++i;
 			str.clear();
 			str.assign(argv[i]);
 			cPar.file_bfile=str;
 		}
-		else if (strcmp(argv[i], "-mbfile")==0 || strcmp(argv[i], "--mbfile")==0 || strcmp(argv[i], "-mb")==0) {
-			if(argv[i+1] == NULL || argv[i+1][0] == '-') {continue;}
+		else if (strcmp(argv[i], "-mbfile")==0 ||
+			 strcmp(argv[i], "--mbfile")==0 ||
+			 strcmp(argv[i], "-mb")==0) {
+			if(argv[i+1] == NULL || argv[i+1][0] == '-') {
+			  continue;
+			}
 			++i;
 			str.clear();
 			str.assign(argv[i]);
@@ -472,113 +487,148 @@ void GEMMA::Assign(int argc, char ** argv, PARAM &cPar)
 			cPar.mode_silence=true;
 		}
 		else if (strcmp(argv[i], "-g")==0) {
-			if(argv[i+1] == NULL || argv[i+1][0] == '-') {continue;}
+			if(argv[i+1] == NULL || argv[i+1][0] == '-') {
+			  continue;
+			}
 			++i;
 			str.clear();
 			str.assign(argv[i]);
 			cPar.file_geno=str;
 		}
 		else if (strcmp(argv[i], "-mg")==0) {
-			if(argv[i+1] == NULL || argv[i+1][0] == '-') {continue;}
+			if(argv[i+1] == NULL || argv[i+1][0] == '-') {
+			  continue;
+			}
 			++i;
 			str.clear();
 			str.assign(argv[i]);
 			cPar.file_mgeno=str;
 		}
 		else if (strcmp(argv[i], "-p")==0) {
-			if(argv[i+1] == NULL || argv[i+1][0] == '-') {continue;}
+			if(argv[i+1] == NULL || argv[i+1][0] == '-') {
+			  continue;
+			}
 			++i;
 			str.clear();
 			str.assign(argv[i]);
 			cPar.file_pheno=str;
 		}
 		else if (strcmp(argv[i], "-a")==0) {
-			if(argv[i+1] == NULL || argv[i+1][0] == '-') {continue;}
+			if(argv[i+1] == NULL || argv[i+1][0] == '-') {
+			  continue;
+			}
 			++i;
 			str.clear();
 			str.assign(argv[i]);
 			cPar.file_anno=str;
 		}
-		// WJA added
-		else if (strcmp(argv[i], "-oxford")==0 || strcmp(argv[i], "--oxford")==0 || strcmp(argv[i], "-x")==0) {
-			if(argv[i+1] == NULL || argv[i+1][0] == '-') {continue;}
+		
+		// WJA added.
+		else if (strcmp(argv[i], "-oxford")==0 ||
+			 strcmp(argv[i], "--oxford")==0 ||
+			 strcmp(argv[i], "-x")==0) {
+			if(argv[i+1] == NULL || argv[i+1][0] == '-') {
+			  continue;
+			}
 			++i;
 			str.clear();
 			str.assign(argv[i]);
 			cPar.file_oxford=str;
 		}
 		else if (strcmp(argv[i], "-gxe")==0) {
-			if(argv[i+1] == NULL || argv[i+1][0] == '-') {continue;}
+			if(argv[i+1] == NULL || argv[i+1][0] == '-') {
+			  continue;
+			}
 			++i;
 			str.clear();
 			str.assign(argv[i]);
 			cPar.file_gxe=str;
 		}
 		else if (strcmp(argv[i], "-widv")==0) {
-			if(argv[i+1] == NULL || argv[i+1][0] == '-') {continue;}
+			if(argv[i+1] == NULL || argv[i+1][0] == '-') {
+			  continue;
+			}
 			++i;
 			str.clear();
 			str.assign(argv[i]);
 			cPar.file_weight=str;
 		}
 		else if (strcmp(argv[i], "-wsnp")==0) {
-			if(argv[i+1] == NULL || argv[i+1][0] == '-') {continue;}
+			if(argv[i+1] == NULL || argv[i+1][0] == '-') {
+			  continue;
+			}
 			++i;
 			str.clear();
 			str.assign(argv[i]);
 			cPar.file_wsnp=str;
 		}
 		else if (strcmp(argv[i], "-wcat")==0) {
-			if(argv[i+1] == NULL || argv[i+1][0] == '-') {continue;}
+			if(argv[i+1] == NULL || argv[i+1][0] == '-') {
+			  continue;
+			}
 			++i;
 			str.clear();
 			str.assign(argv[i]);
 			cPar.file_wcat=str;
 		}
 		else if (strcmp(argv[i], "-k")==0) {
-			if(argv[i+1] == NULL || argv[i+1][0] == '-') {continue;}
+			if(argv[i+1] == NULL || argv[i+1][0] == '-') {
+			  continue;
+			}
 			++i;
 			str.clear();
 			str.assign(argv[i]);
 			cPar.file_kin=str;
 		}
 		else if (strcmp(argv[i], "-mk")==0) {
-			if(argv[i+1] == NULL || argv[i+1][0] == '-') {continue;}
+			if(argv[i+1] == NULL || argv[i+1][0] == '-') {
+			  continue;
+			}
 			++i;
 			str.clear();
 			str.assign(argv[i]);
 			cPar.file_mk=str;
 		}
 		else if (strcmp(argv[i], "-u")==0) {
-			if(argv[i+1] == NULL || argv[i+1][0] == '-') {continue;}
+			if(argv[i+1] == NULL || argv[i+1][0] == '-') {
+			  continue;
+			}
 			++i;
 			str.clear();
 			str.assign(argv[i]);
 			cPar.file_ku=str;
 		}
 		else if (strcmp(argv[i], "-d")==0) {
-			if(argv[i+1] == NULL || argv[i+1][0] == '-') {continue;}
+			if(argv[i+1] == NULL || argv[i+1][0] == '-') {
+			  continue;
+			}
 			++i;
 			str.clear();
 			str.assign(argv[i]);
 			cPar.file_kd=str;
 		}
 		else if (strcmp(argv[i], "-c")==0) {
-			if(argv[i+1] == NULL || argv[i+1][0] == '-') {continue;}
+			if(argv[i+1] == NULL || argv[i+1][0] == '-') {
+			  continue;
+			}
 			++i;
 			str.clear();
 			str.assign(argv[i]);
 			cPar.file_cvt=str;
 		}
 		else if (strcmp(argv[i], "-cat")==0) {
-			if(argv[i+1] == NULL || argv[i+1][0] == '-') {continue;}
+			if(argv[i+1] == NULL || argv[i+1][0] == '-') {
+			  continue;
+			}
 			++i;
 			str.clear();
 			str.assign(argv[i]);
 			cPar.file_cat=str;
 		}
 		else if (strcmp(argv[i], "-mcat")==0) {
-			if(argv[i+1] == NULL || argv[i+1][0] == '-') {continue;}
+			if(argv[i+1] == NULL || argv[i+1][0] == '-') {
+			  continue;
+			}
 			++i;
 			str.clear();
 			str.assign(argv[i]);
@@ -956,16 +1006,6 @@ void GEMMA::Assign(int argc, char ** argv, PARAM &cPar)
 			str.assign(argv[i]);
 			cPar.a_mode=10+atoi(str.c_str());
 		}
-		/*
-		else if (strcmp(argv[i], "-ldr")==0) {
-			if (cPar.a_mode!=0) {cPar.error=true; cout<<"error! only one of -gk -gs -eigen -vc -lm -lmm -bslmm -predict -calccor options is allowed."<<endl; break;}
-			if(argv[i+1] == NULL || argv[i+1][0] == '-') {cPar.a_mode=14; continue;}
-			++i;
-			str.clear();
-			str.assign(argv[i]);
-			cPar.a_mode=13+atoi(str.c_str());
-		}
-		*/
 		else if (strcmp(argv[i], "-hmin")==0) {
 			if(argv[i+1] == NULL || argv[i+1][0] == '-') {continue;}
 			++i;
@@ -1124,20 +1164,19 @@ void GEMMA::Assign(int argc, char ** argv, PARAM &cPar)
 		else {cout<<"error! unrecognized option: "<<argv[i]<<endl; cPar.error=true; continue;}
 	}
 
-	//change prediction mode to 43, if the epm file is not provided
-	if (cPar.a_mode==41 && cPar.file_epm.empty()) {cPar.a_mode=43;}
+	// Change prediction mode to 43 if the epm file is not provided.
+	if (cPar.a_mode==41 && cPar.file_epm.empty()) {
+	  cPar.a_mode=43;
+	}
 
 	return;
 }
 
-
-
-void GEMMA::BatchRun (PARAM &cPar)
-{
+void GEMMA::BatchRun (PARAM &cPar) {
 	clock_t time_begin, time_start;
 	time_begin=clock();
 
-	//Read Files
+	// Read Files.
 	cout<<"Reading Files ... "<<endl;
 	cPar.ReadFiles();
 	if (cPar.error==true) {cout<<"error! fail to read files. "<<endl; return;}
@@ -1210,7 +1249,6 @@ void GEMMA::BatchRun (PARAM &cPar)
 		gsl_vector_free(y_prdt);
 	}
 
-
 	//Prediction with kinship matrix only; for one or more phenotypes
 	if (cPar.a_mode==43) {
 		//first, use individuals with full phenotypes to obtain estimates of Vg and Ve
@@ -1224,6 +1262,7 @@ void GEMMA::BatchRun (PARAM &cPar)
 
 		gsl_matrix *Y_full=gsl_matrix_alloc (cPar.ni_cvt, cPar.n_ph);
 		gsl_matrix *W_full=gsl_matrix_alloc (Y_full->size1, cPar.n_cvt);
+		
 		//set covariates matrix W and phenotype matrix Y
 		//an intercept should be included in W,
 		cPar.CopyCvtPhen (W, Y, 0);
@@ -1401,8 +1440,8 @@ void GEMMA::BatchRun (PARAM &cPar)
 		cVarcov.CopyToParam(cPar);
 	}
 
-
-	//Compute the S matrix (and its variance), that is used for variance component estimation using summary statistics
+	// Compute the S matrix (and its variance), that is used for
+	// variance component estimation using summary statistics.
 	if (cPar.a_mode==25 || cPar.a_mode==26) {
 	  cout<<"Calculating the S Matrix ... "<<endl;
 
@@ -1440,22 +1479,7 @@ void GEMMA::BatchRun (PARAM &cPar)
 	  cPar.WriteMatrix (S, "S");
 	  cPar.WriteVector (ns, "size");
 	  cPar.WriteVar ("snps");
-	  /*
-	  cout<<scientific;
-	  for (size_t i=0; i<cPar.n_vc; i++) {
-            for (size_t j=0; j<cPar.n_vc; j++) {
-	      cout<<gsl_matrix_get(S, i, j)<<" ";
-            }
-            cout<<endl;
-	  }
 
-	  for (size_t i=cPar.n_vc; i<cPar.n_vc*2; i++) {
-            for (size_t j=0; j<cPar.n_vc; j++) {
-	      cout<<gsl_matrix_get(S, i, j)<<" ";
-            }
-            cout<<endl;
-	  }
-	  */
 	  gsl_matrix_free (S);
 	  gsl_vector_free (ns);
 
@@ -1508,8 +1532,7 @@ void GEMMA::BatchRun (PARAM &cPar)
 	  gsl_vector_free (s);
 	}
 
-
-    //Calculate SNP covariance
+	// Calculate SNP covariance.
 	if (cPar.a_mode==71) {
 	  VARCOV cVarcov;
 	  cVarcov.CopyFromParam(cPar);
@@ -1522,9 +1545,8 @@ void GEMMA::BatchRun (PARAM &cPar)
 
 	  cVarcov.CopyToParam(cPar);
 	}
-
-
-	//LM
+	
+	// LM.
 	if (cPar.a_mode==51 || cPar.a_mode==52 || cPar.a_mode==53 || cPar.a_mode==54) {  //Fit LM
 		gsl_matrix *Y=gsl_matrix_alloc (cPar.ni_test, cPar.n_ph);
 		gsl_matrix *W=gsl_matrix_alloc (Y->size1, cPar.n_cvt);
@@ -1573,7 +1595,6 @@ void GEMMA::BatchRun (PARAM &cPar)
 		gsl_matrix_free (W);
 	}
 
-
 	//VC estimation with one or multiple kinship matrices
 	//REML approach only
 	//if file_kin or file_ku/kd is provided, then a_mode is changed to 5 already, in param.cpp
@@ -1591,7 +1612,7 @@ void GEMMA::BatchRun (PARAM &cPar)
 
 	    cPar.UpdateSNP (mapRS2wK);
 
-	    //setup matrices and vectors
+	    // Setup matrices and vectors.
 	    gsl_matrix *S=gsl_matrix_alloc (cPar.n_vc*2, cPar.n_vc);
 	    gsl_matrix *Vq=gsl_matrix_alloc (cPar.n_vc, cPar.n_vc);
 	    gsl_vector *q=gsl_vector_alloc (cPar.n_vc);
