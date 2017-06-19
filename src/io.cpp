@@ -4089,30 +4089,8 @@ void ReadFile_mref (const string &file_mref, gsl_matrix *S_mat, gsl_matrix *Svar
       if (i!=j) {gsl_matrix_set(Svar_mat, j, i, d);}
     }
   }
-  /*
-  //final: update V
-  for (size_t i=0; i<n_vc; i++) {
-    d1=gsl_vector_get(s_vec, i);
-    if (d1==0) {continue;}
-    for (size_t j=i; j<n_vc; j++) {
-      d2=gsl_vector_get(s_vec, j);
-      if (d2==0) {continue;}
-      t_ij=GetabIndex (i+1, j+1, n_vc-2);
-	for (size_t l=0; l<n_vc+1; l++) {
-	  if (l==n_vc) {d3=1;} else {d3=gsl_vector_get(s_vec, l);}
-	  if (d3==0) {continue;}
-	  for (size_t m=0; m<n_vc+1; m++) {
-	    if (m==n_vc) {d4=1;} else {d4=gsl_vector_get(s_vec, m);}
-	    if (d4==0) {continue;}
-
-	    d=gsl_matrix_get (V_mat, l, t_ij*(n_vc+1)+m)/(d1*d2*d3*d4);
-	    gsl_matrix_set (V_mat, l, t_ij*(n_vc+1)+m, d);
-	  }
-	}
-      }
-    }
-  */
-  //free matrices
+  
+  // Free matrices.
   gsl_matrix_free(S_sub);
   gsl_matrix_free(Svar_sub);
   gsl_vector_free(s);

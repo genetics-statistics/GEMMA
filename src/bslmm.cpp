@@ -1730,10 +1730,14 @@ void BSLMM::MCMC (const gsl_matrix *X, const gsl_vector *y) {
 					gsl_vector_view Xtznew_sub=gsl_vector_subvector(Xtz_new, 0, rank_new.size());
 					gsl_vector_view betanew_sub=gsl_vector_subvector(beta_new, 0, rank_new.size());
 
-					gsl_matrix_memcpy(&Xold_sub.matrix, &Xnew_sub.matrix);
-					gsl_matrix_memcpy(&XtXold_sub.matrix, &XtXnew_sub.matrix);
-					gsl_vector_memcpy(&Xtzold_sub.vector, &Xtznew_sub.vector);
-					gsl_vector_memcpy(&betaold_sub.vector, &betanew_sub.vector);
+					gsl_matrix_memcpy(&Xold_sub.matrix,
+							  &Xnew_sub.matrix);
+					gsl_matrix_memcpy(&XtXold_sub.matrix,
+							  &XtXnew_sub.matrix);
+					gsl_vector_memcpy(&Xtzold_sub.vector,
+							  &Xtznew_sub.vector);
+					gsl_vector_memcpy(&betaold_sub.vector,
+							  &betanew_sub.vector);
 				}
 			} else {
 			  cHyp_new=cHyp_old;
@@ -1777,12 +1781,18 @@ void BSLMM::MCMC (const gsl_matrix *X, const gsl_vector *y) {
 					}
 				}
 
-				gsl_matrix_set(Result_hyp,w_col,0,cHyp_old.h);
-				gsl_matrix_set(Result_hyp,w_col,1,cHyp_old.pve);
-				gsl_matrix_set(Result_hyp,w_col,2,cHyp_old.rho);
-				gsl_matrix_set(Result_hyp,w_col,3,cHyp_old.pge);
-				gsl_matrix_set(Result_hyp,w_col,4,cHyp_old.logp);
-				gsl_matrix_set(Result_hyp,w_col,5,cHyp_old.n_gamma);
+				gsl_matrix_set(Result_hyp,w_col,0,
+					       cHyp_old.h);
+				gsl_matrix_set(Result_hyp,w_col,1,
+					       cHyp_old.pve);
+				gsl_matrix_set(Result_hyp,w_col,2,
+					       cHyp_old.rho);
+				gsl_matrix_set(Result_hyp,w_col,3,
+					       cHyp_old.pge);
+				gsl_matrix_set(Result_hyp,w_col,4,
+					       cHyp_old.logp);
+				gsl_matrix_set(Result_hyp,w_col,5,
+					       cHyp_old.n_gamma);
 				
 				for (size_t i=0; i<cHyp_old.n_gamma; ++i) {
 					pos=mapRank2pos[rank_old[i]]+1;
