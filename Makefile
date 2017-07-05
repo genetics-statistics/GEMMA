@@ -11,6 +11,7 @@
 SYS = LNX
 # Leave blank after "=" to disable; put "= 1" to enable
 WITH_LAPACK = 1
+NO_INTEL_COMPAT = 
 FORCE_32BIT = 
 FORCE_DYNAMIC = 
 DIST_NAME = gemma-0.96
@@ -64,10 +65,13 @@ endif
   HDR += $(SRC_DIR)/lapack.h
 endif
 
-ifdef FORCE_32BIT
-  CPPFLAGS += -m32
-else
-  CPPFLAGS += -m64
+ifdef NO_INTEL_COMPAT
+  else
+  ifdef FORCE_32BIT
+    CPPFLAGS += -m32
+  else
+    CPPFLAGS += -m64
+  endif
 endif
 
 ifdef FORCE_DYNAMIC
