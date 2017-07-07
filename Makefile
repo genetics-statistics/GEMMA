@@ -11,15 +11,16 @@
 SYS = LNX
 # Leave blank after "=" to disable; put "= 1" to enable
 WITH_LAPACK = 1
-NO_INTEL_COMPAT = 
-FORCE_32BIT = 
-FORCE_DYNAMIC = 
+NO_INTEL_COMPAT =
+FORCE_32BIT =
+FORCE_DYNAMIC =
 DIST_NAME = gemma-0.96
 
 # --------------------------------------------------------------------
 # Edit below this line with caution
 # --------------------------------------------------------------------
 
+EIGEN_INCLUDE_PATH=/usr/include/eigen3
 
 BIN_DIR  = ./bin
 
@@ -27,7 +28,7 @@ SRC_DIR  = ./src
 
 CPP = g++
 
-CPPFLAGS = -Wall -Weffc++ -O3 -std=gnu++11
+CPPFLAGS = -Wall -Weffc++ -O3 -std=gnu++11 -I$(EIGEN_INCLUDE_PATH)
 
 ifdef FORCE_DYNAMIC
 LIBS = -lgsl -lgslcblas -lblas -pthread -lz
@@ -39,13 +40,13 @@ OUTPUT = $(BIN_DIR)/gemma
 
 SOURCES = $(SRC_DIR)/main.cpp
 
-HDR = 
+HDR =
 
 # Detailed libary paths, D for dynamic and S for static
 
 LIBS_LNX_D_LAPACK = -llapack
 LIBS_MAC_D_LAPACK = -framework Veclib
-LIBS_LNX_S_LAPACK = /usr/lib/lapack/liblapack.a -lgfortran  /usr/lib/atlas-base/libatlas.a /usr/lib/libblas/libblas.a -Wl,--allow-multiple-definition 
+LIBS_LNX_S_LAPACK = /usr/lib/lapack/liblapack.a -lgfortran  /usr/lib/atlas-base/libatlas.a /usr/lib/libblas/libblas.a -Wl,--allow-multiple-definition
 
 SOURCES += $(SRC_DIR)/param.cpp $(SRC_DIR)/gemma.cpp $(SRC_DIR)/io.cpp $(SRC_DIR)/lm.cpp $(SRC_DIR)/lmm.cpp $(SRC_DIR)/vc.cpp $(SRC_DIR)/mvlmm.cpp $(SRC_DIR)/bslmm.cpp $(SRC_DIR)/prdt.cpp $(SRC_DIR)/mathfunc.cpp $(SRC_DIR)/gzstream.cpp $(SRC_DIR)/eigenlib.cpp $(SRC_DIR)/ldr.cpp $(SRC_DIR)/bslmmdap.cpp $(SRC_DIR)/logistic.cpp $(SRC_DIR)/varcov.cpp
 HDR += $(SRC_DIR)/param.h $(SRC_DIR)/gemma.h $(SRC_DIR)/io.h $(SRC_DIR)/lm.h $(SRC_DIR)/lmm.h $(SRC_DIR)/vc.h $(SRC_DIR)/mvlmm.h $(SRC_DIR)/bslmm.h $(SRC_DIR)/prdt.h $(SRC_DIR)/mathfunc.h $(SRC_DIR)/gzstream.h $(SRC_DIR)/eigenlib.h
@@ -90,7 +91,7 @@ $(OUTPUT): $(OBJS)
 
 $(OBJS) : $(HDR)
 
-.cpp.o: 
+.cpp.o:
 	$(CPP) $(CPPFLAGS) $(HEADERS) -c $*.cpp -o $*.o
 .SUFFIXES : .cpp .c .o $(SUFFIXES)
 
@@ -107,4 +108,3 @@ tar:
 	cp -r $(DIST_SUBDIRS) ./$(DIST_NAME)/
 	tar cvzf $(DIST_NAME).tar.gz ./$(DIST_NAME)/
 	rm -r ./$(DIST_NAME)
-
