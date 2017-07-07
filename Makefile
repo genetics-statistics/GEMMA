@@ -14,7 +14,7 @@ WITH_LAPACK = 1
 NO_INTEL_COMPAT =
 FORCE_32BIT =
 FORCE_DYNAMIC =
-DIST_NAME = gemma-0.96
+DIST_NAME = gemma-0.97
 
 # --------------------------------------------------------------------
 # Edit below this line with caution

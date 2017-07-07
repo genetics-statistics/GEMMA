@@ -188,7 +188,7 @@ Dept. of Biostatistics<br>
 University of Michigan<br>
 2012-2017
 
-Peter Carbonetto, Tim Flutre, Matthew Stephens and others have also
-contributed to the development of this software.
+Peter Carbonetto, Tim Flutre, Matthew Stephens, Pjotr Prins and others
+have also contributed to the development of this software.
 
 [latest_release]: https://github.com/xiangzhou/GEMMA/releases/tag/v0.96 "Most recent stable release"
