@@ -1,6 +1,6 @@
 /*
  Genome-wide Efficient Mixed Model Association (GEMMA)
- Copyright (C) 2011  Xiang Zhou
+ Copyright (C) 2011-2017, Xiang Zhou
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -13,10 +13,8 @@
  GNU General Public License for more details.
 
  You should have received a copy of the GNU General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-
+ along with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #include <iostream>
 #include <fstream>
@@ -44,25 +42,13 @@
 #include "lapack.h"
 #include "eigenlib.h"
 #include "gzstream.h"
-
-#ifdef FORCE_FLOAT
-#include "lmm_float.h"
-#include "mvlmm_float.h"
-#else
 #include "lmm.h"
 #include "mvlmm.h"
-#endif
-
-
 
 using namespace std;
 
-
-//in this file, X, Y are already transformed (i.e. UtX and UtY)
-
-
-void MVLMM::CopyFromParam (PARAM &cPar)
-{
+// In this file, X, Y are already transformed (i.e. UtX and UtY).
+void MVLMM::CopyFromParam (PARAM &cPar) {
 	a_mode=cPar.a_mode;
 	d_pace=cPar.d_pace;
 
@@ -105,9 +91,7 @@ void MVLMM::CopyFromParam (PARAM &cPar)
 	return;
 }
 
-
-void MVLMM::CopyToParam (PARAM &cPar)
-{
+void MVLMM::CopyToParam (PARAM &cPar) {
 	cPar.time_UtX=time_UtX;
 	cPar.time_opt=time_opt;
 
@@ -131,17 +115,19 @@ void MVLMM::CopyToParam (PARAM &cPar)
 	return;
 }
 
-
-void MVLMM::WriteFiles ()
-{
+void MVLMM::WriteFiles () {
 	string file_str;
 	file_str=path_out+"/"+file_out;
 	file_str+=".assoc.txt";
 
 	ofstream outfile (file_str.c_str(), ofstream::out);
-	if (!outfile) {cout<<"error writing file: "<<file_str.c_str()<<endl; return;}
+	if (!outfile) {
+	  cout<<"error writing file: "<<file_str.c_str()<<endl; 
+	  return;
+	}
 
-	outfile<<"chr"<<"\t"<<"rs"<<"\t"<<"ps"<<"\t"<<"n_miss"<<"\t"<<"allele1"<<"\t"<<"allele0"<<"\t"<<"af"<<"\t";
+	outfile<<"chr"<<"\t"<<"rs"<<"\t"<<"ps"<<"\t"<<"n_miss"<<"\t"
+	       <<"allele1"<<"\t"<<"allele0"<<"\t"<<"af"<<"\t";
 
 	for (size_t i=0; i<n_ph; i++) {
 		outfile<<"beta_"<<i+1<<"\t";
@@ -167,7 +153,10 @@ void MVLMM::WriteFiles ()
 	for (size_t i=0; i<snpInfo.size(); ++i) {
 		if (indicator_snp[i]==0) {continue;}
 
-		outfile<<snpInfo[i].chr<<"\t"<<snpInfo[i].rs_number<<"\t"<<snpInfo[i].base_position<<"\t"<<snpInfo[i].n_miss<<"\t"<<snpInfo[i].a_minor<<"\t"<<snpInfo[i].a_major<<"\t"<<fixed<<setprecision(3)<<snpInfo[i].maf<<"\t";
+		outfile<<snpInfo[i].chr<<"\t"<<snpInfo[i].rs_number<<"\t"
+		       <<snpInfo[i].base_position<<"\t"<<snpInfo[i].n_miss<<
+		  "\t"<<snpInfo[i].a_minor<<"\t"<<snpInfo[i].a_major<<"\t"<<
+		  fixed<<setprecision(3)<<snpInfo[i].maf<<"\t";
 
 		outfile<<scientific<<setprecision(6);
 
@@ -190,34 +179,26 @@ void MVLMM::WriteFiles ()
 		} else if (a_mode==3) {
 			outfile<<sumStat[t].p_score<<endl;
 		} else if (a_mode==4) {
-			outfile<<sumStat[t].p_wald <<"\t"<<sumStat[t].p_lrt<<"\t"<<sumStat[t].p_score<<endl;
+			outfile<<sumStat[t].p_wald <<"\t"<<sumStat[t].p_lrt<<
+			  "\t"<<sumStat[t].p_score<<endl;
 		} else {}
 
 		t++;
 	}
-
 
 	outfile.close();
 	outfile.clear();
 	return;
 }
 
-
-
-
-//below are functions for EM algorithm
-
-
-
-
-
-
-double EigenProc (const gsl_matrix *V_g, const gsl_matrix *V_e, gsl_vector *D_l, gsl_matrix *UltVeh, gsl_matrix *UltVehi)
-{
+// Below are functions for EM algorithm.
+double EigenProc (const gsl_matrix *V_g, const gsl_matrix *V_e, 
+		  gsl_vector *D_l, gsl_matrix *UltVeh, 
+		  gsl_matrix *UltVehi) {
 	size_t d_size=V_g->size1;
 	double d, logdet_Ve=0.0;
 
-	//eigen decomposition of V_e
+	// Eigen decomposition of V_e.
 	gsl_matrix *Lambda=gsl_matrix_alloc (d_size, d_size);
 	gsl_matrix *V_e_temp=gsl_matrix_alloc (d_size, d_size);
 	gsl_matrix *V_e_h=gsl_matrix_alloc (d_size, d_size);
@@ -228,7 +209,7 @@ double EigenProc (const gsl_matrix *V_g, const gsl_matrix *V_e, gsl_vector *D_l,
 	gsl_matrix_memcpy(V_e_temp, V_e);
 	EigenDecomp(V_e_temp, U_l, D_l, 0);
 
-	//calculate V_e_h and V_e_hi
+	// Calculate V_e_h and V_e_hi.
 	gsl_matrix_set_zero(V_e_h);
 	gsl_matrix_set_zero(V_e_hi);
 	for (size_t i=0; i<d_size; i++) {
@@ -243,57 +224,29 @@ double EigenProc (const gsl_matrix *V_g, const gsl_matrix *V_e, gsl_vector *D_l,
 		gsl_blas_dsyr (CblasUpper, d, &U_col.vector, V_e_hi);
 	}
 
-	//copy the upper part to lower part
+	// Copy the upper part to lower part.
 	for (size_t i=0; i<d_size; i++) {
 		for (size_t j=0; j<i; j++) {
-			gsl_matrix_set (V_e_h, i, j, gsl_matrix_get(V_e_h, j, i));
-			gsl_matrix_set (V_e_hi, i, j, gsl_matrix_get(V_e_hi, j, i));
+		  gsl_matrix_set (V_e_h, i, j, gsl_matrix_get(V_e_h, j, i));
+		  gsl_matrix_set (V_e_hi, i, j, gsl_matrix_get(V_e_hi, j, i));
 		}
 	}
 
-	//calculate Lambda=V_ehi V_g V_ehi
-	gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, V_g, V_e_hi, 0.0, VgVehi);
-	gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, V_e_hi, VgVehi, 0.0, Lambda);
+	// Calculate Lambda=V_ehi V_g V_ehi.
+	gsl_blas_dgemm(CblasNoTrans,CblasNoTrans,1.0,V_g,V_e_hi,0.0,VgVehi);
+	gsl_blas_dgemm(CblasNoTrans,CblasNoTrans,1.0,V_e_hi,VgVehi,0.0,Lambda);
 
-	//eigen decomposition of Lambda
+	// Eigen decomposition of Lambda.
 	EigenDecomp(Lambda, U_l, D_l, 0);
 
 	for (size_t i=0; i<d_size; i++) {
-		d=gsl_vector_get (D_l, i);
-		if (d<0) {gsl_vector_set (D_l, i, 0);}
+	  d=gsl_vector_get (D_l, i);
+	  if (d<0) {gsl_vector_set (D_l, i, 0);}
 	}
 
-	//calculate UltVeh and UltVehi
-	gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, U_l, V_e_h, 0.0, UltVeh);
-	gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, U_l, V_e_hi, 0.0, UltVehi);
-	/*
-	cout<<"Vg: "<<endl;
-	for (size_t i=0; i<d_size; i++) {
-		for (size_t j=0; j<d_size; j++) {
-			cout<<gsl_matrix_get (V_g, i, j)<<" ";
-		}
-		cout<<endl;
-	}
-	cout<<"Ve: "<<endl;
-	for (size_t i=0; i<d_size; i++) {
-		for (size_t j=0; j<d_size; j++) {
-			cout<<gsl_matrix_get (V_e, i, j)<<" ";
-		}
-		cout<<endl;
-	}
-
-	cout<<"Dl: "<<endl;
-	for (size_t i=0; i<d_size; i++) {
-		cout<<gsl_vector_get (D_l, i)<<endl;
-	}
-	cout<<"UltVeh: "<<endl;
-	for (size_t i=0; i<d_size; i++) {
-		for (size_t j=0; j<d_size; j++) {
-			cout<<gsl_matrix_get (UltVeh, i, j)<<" ";
-		}
-		cout<<endl;
-	}
-	*/
+	// Calculate UltVeh and UltVehi.
+	gsl_blas_dgemm(CblasTrans,CblasNoTrans,1.0,U_l,V_e_h,0.0,UltVeh);
+	gsl_blas_dgemm(CblasTrans,CblasNoTrans,1.0,U_l,V_e_hi,0.0,UltVehi);
 
 	//free memory
 	gsl_matrix_free (Lambda);
@@ -306,9 +259,9 @@ double EigenProc (const gsl_matrix *V_g, const gsl_matrix *V_e, gsl_vector *D_l,
 	return logdet_Ve;
 }
 
-//Qi=(\sum_{k=1}^n x_kx_k^T\otimes(delta_k*Dl+I)^{-1} )^{-1}
-double CalcQi (const gsl_vector *eval, const gsl_vector *D_l, const gsl_matrix *X, gsl_matrix *Qi)
-{
+//Qi=(\sum_{k=1}^n x_kx_k^T\otimes(delta_k*Dl+I)^{-1} )^{-1}.
+double CalcQi (const gsl_vector *eval, const gsl_vector *D_l, 
+	       const gsl_matrix *X, gsl_matrix *Qi) {
 	size_t n_size=eval->size, d_size=D_l->size, dc_size=Qi->size1;
 	size_t c_size=dc_size/d_size;
 
@@ -323,14 +276,14 @@ double CalcQi (const gsl_vector *eval, const gsl_vector *D_l, const gsl_matrix *
 				dl=gsl_vector_get(D_l, l);
 
 				if (j<i) {
-					d=gsl_matrix_get (Q, j*d_size+l, i*d_size+l);
+				  d=gsl_matrix_get (Q, j*d_size+l, i*d_size+l);
 				} else {
 					d=0.0;
 					for (size_t k=0; k<n_size; k++) {
-						d1=gsl_matrix_get(X, i, k);
-						d2=gsl_matrix_get(X, j, k);
-						delta=gsl_vector_get(eval, k);
-						d+=d1*d2/(dl*delta+1.0);
+					  d1=gsl_matrix_get(X, i, k);
+					  d2=gsl_matrix_get(X, j, k);
+					  delta=gsl_vector_get(eval, k);
+					  d+=d1*d2/(dl*delta+1.0);
 					}
 				}
 
@@ -339,7 +292,7 @@ double CalcQi (const gsl_vector *eval, const gsl_vector *D_l, const gsl_matrix *
 		}
 	}
 
-	//calculate LU decomposition of Q, and invert Q and calculate |Q|
+	// Calculate LU decomposition of Q, and invert Q and calculate |Q|.
 	int sig;
 	gsl_permutation * pmt=gsl_permutation_alloc (dc_size);
 	LUDecomp (Q, pmt, &sig);
@@ -353,9 +306,10 @@ double CalcQi (const gsl_vector *eval, const gsl_vector *D_l, const gsl_matrix *
 	return logdet_Q;
 }
 
-//xHiy=\sum_{k=1}^n x_k\otimes ((delta_k*Dl+I)^{-1}Ul^TVe^{-1/2}y
-void CalcXHiY(const gsl_vector *eval, const gsl_vector *D_l, const gsl_matrix *X, const gsl_matrix *UltVehiY, gsl_vector *xHiy)
-{
+// xHiy=\sum_{k=1}^n x_k\otimes ((delta_k*Dl+I)^{-1}Ul^TVe^{-1/2}y.
+void CalcXHiY(const gsl_vector *eval, const gsl_vector *D_l, 
+	      const gsl_matrix *X, const gsl_matrix *UltVehiY, 
+	      gsl_vector *xHiy) {
 	size_t n_size=eval->size, c_size=X->size1, d_size=D_l->size;
 
 	gsl_vector_set_zero (xHiy);
@@ -374,20 +328,15 @@ void CalcXHiY(const gsl_vector *eval, const gsl_vector *D_l, const gsl_matrix *X
 			gsl_vector_set(xHiy, j*d_size+i, d);
 		}
 	}
-	/*
-	cout<<"xHiy: "<<endl;
-	for (size_t i=0; i<(d_size*c_size); i++) {
-		cout<<gsl_vector_get(xHiy, i)<<endl;
-	}
-	 */
+
 	return;
 }
 
 
-//OmegaU=D_l/(delta Dl+I)^{-1}
-//OmegaE=delta D_l/(delta Dl+I)^{-1}
-void CalcOmega (const gsl_vector *eval, const gsl_vector *D_l, gsl_matrix *OmegaU, gsl_matrix *OmegaE)
-{
+// OmegaU=D_l/(delta Dl+I)^{-1}
+// OmegaE=delta D_l/(delta Dl+I)^{-1}
+void CalcOmega (const gsl_vector *eval, const gsl_vector *D_l, 
+gsl_matrix *OmegaU, gsl_matrix *OmegaE) {
 	size_t n_size=eval->size, d_size=D_l->size;
 	double delta, dl, d_u, d_e;
 
@@ -407,9 +356,8 @@ void CalcOmega (const gsl_vector *eval, const gsl_vector *D_l, gsl_matrix *Omega
 	return;
 }
 
-
-void UpdateU (const gsl_matrix *OmegaE, const gsl_matrix *UltVehiY, const gsl_matrix *UltVehiBX, gsl_matrix *UltVehiU)
-{
+void UpdateU (const gsl_matrix *OmegaE, const gsl_matrix *UltVehiY, 
+	      const gsl_matrix *UltVehiBX, gsl_matrix *UltVehiU) {
 	gsl_matrix_memcpy (UltVehiU, UltVehiY);
 	gsl_matrix_sub (UltVehiU, UltVehiBX);
 
@@ -417,9 +365,8 @@ void UpdateU (const gsl_matrix *OmegaE, const gsl_matrix *UltVehiY, const gsl_ma
 	return;
 }
 
-
-void UpdateE (const gsl_matrix *UltVehiY, const gsl_matrix *UltVehiBX, const gsl_matrix *UltVehiU, gsl_matrix *UltVehiE)
-{
+void UpdateE (const gsl_matrix *UltVehiY, const gsl_matrix *UltVehiBX, 
+	      const gsl_matrix *UltVehiU, gsl_matrix *UltVehiE) {
 	gsl_matrix_memcpy (UltVehiE, UltVehiY);
 	gsl_matrix_sub (UltVehiE, UltVehiBX);
 	gsl_matrix_sub (UltVehiE, UltVehiU);
@@ -427,10 +374,9 @@ void UpdateE (const gsl_matrix *UltVehiY, const gsl_matrix *UltVehiBX, const gsl
 	return;
 }
 
-
-
-void UpdateL_B (const gsl_matrix *X, const gsl_matrix *XXti, const gsl_matrix *UltVehiY, const gsl_matrix *UltVehiU, gsl_matrix *UltVehiBX, gsl_matrix *UltVehiB)
-{
+void UpdateL_B (const gsl_matrix *X, const gsl_matrix *XXti, 
+		const gsl_matrix *UltVehiY, const gsl_matrix *UltVehiU, 
+		gsl_matrix *UltVehiBX, gsl_matrix *UltVehiB) {
 	size_t c_size=X->size1, d_size=UltVehiY->size1;
 
 	gsl_matrix *YUX=gsl_matrix_alloc (d_size, c_size);
@@ -438,27 +384,29 @@ void UpdateL_B (const gsl_matrix *X, const gsl_matrix *XXti, const gsl_matrix *U
 	gsl_matrix_memcpy (UltVehiBX, UltVehiY);
 	gsl_matrix_sub (UltVehiBX, UltVehiU);
 
-	gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, UltVehiBX, X, 0.0, YUX);
-	gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, YUX, XXti, 0.0, UltVehiB);
+	gsl_blas_dgemm(CblasNoTrans,CblasTrans,1.0,UltVehiBX,X,0.0,YUX);
+	gsl_blas_dgemm(CblasNoTrans,CblasNoTrans,1.0,YUX,XXti,0.0,UltVehiB);
 
 	gsl_matrix_free(YUX);
 
 	return;
 }
 
-void UpdateRL_B (const gsl_vector *xHiy, const gsl_matrix *Qi, gsl_matrix *UltVehiB)
-{
-	size_t d_size=UltVehiB->size1, c_size=UltVehiB->size2, dc_size=Qi->size1;
+void UpdateRL_B (const gsl_vector *xHiy, const gsl_matrix *Qi, 
+		 gsl_matrix *UltVehiB) {
+	size_t d_size=UltVehiB->size1, c_size=UltVehiB->size2, 
+	  dc_size=Qi->size1;
 
 	gsl_vector *b=gsl_vector_alloc (dc_size);
 
-	//calculate b=Qiv
+	// Calculate b=Qiv.
 	gsl_blas_dgemv(CblasNoTrans, 1.0, Qi, xHiy, 0.0, b);
 
-	//copy b to UltVehiB
+	// Copy b to UltVehiB.
 	for (size_t i=0; i<c_size; i++) {
 		gsl_vector_view UltVehiB_col=gsl_matrix_column (UltVehiB, i);
-		gsl_vector_const_view b_subcol=gsl_vector_const_subvector (b, i*d_size, d_size);
+		gsl_vector_const_view b_subcol=
+		  gsl_vector_const_subvector (b, i*d_size, d_size);
 		gsl_vector_memcpy (&UltVehiB_col.vector, &b_subcol.vector);
 	}
 
@@ -467,10 +415,9 @@ void UpdateRL_B (const gsl_vector *xHiy, const gsl_matrix *Qi, gsl_matrix *UltVe
 	return;
 }
 
-
-
-void UpdateV (const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *E, const gsl_matrix *Sigma_uu, const gsl_matrix *Sigma_ee, gsl_matrix *V_g, gsl_matrix *V_e)
-{
+void UpdateV (const gsl_vector *eval, const gsl_matrix *U, 
+	      const gsl_matrix *E, const gsl_matrix *Sigma_uu, 
+	      const gsl_matrix *Sigma_ee, gsl_matrix *V_g, gsl_matrix *V_e) {
 	size_t n_size=eval->size, d_size=U->size1;
 
 	gsl_matrix_set_zero (V_g);
@@ -478,7 +425,7 @@ void UpdateV (const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *E, 
 
 	double delta;
 
-	//calculate the first part: UD^{-1}U^T and EE^T
+	// Calculate the first part: UD^{-1}U^T and EE^T.
 	for (size_t k=0; k<n_size; k++) {
 		delta=gsl_vector_get (eval, k);
 		if (delta==0) {continue;}
@@ -489,7 +436,7 @@ void UpdateV (const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *E, 
 
 	gsl_blas_dsyrk(CblasUpper, CblasNoTrans, 1.0, E, 0.0, V_e);
 
-	//copy the upper part to lower part
+	// Copy the upper part to lower part.
 	for (size_t i=0; i<d_size; i++) {
 		for (size_t j=0; j<i; j++) {
 			gsl_matrix_set (V_g, i, j, gsl_matrix_get(V_g, j, i));
@@ -497,42 +444,50 @@ void UpdateV (const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *E, 
 		}
 	}
 
-	//add Sigma
+	// Add Sigma.
 	gsl_matrix_add (V_g, Sigma_uu);
 	gsl_matrix_add (V_e, Sigma_ee);
 
-	//scale by 1/n
+	// Scale by 1/n.
 	gsl_matrix_scale (V_g, 1.0/(double)n_size);
 	gsl_matrix_scale (V_e, 1.0/(double)n_size);
 
 	return;
 }
 
+void CalcSigma (const char func_name, const gsl_vector *eval, 
+		const gsl_vector *D_l, const gsl_matrix *X, 
+		const gsl_matrix *OmegaU, const gsl_matrix *OmegaE, 
+		const gsl_matrix *UltVeh, const gsl_matrix *Qi, 
+		gsl_matrix *Sigma_uu, gsl_matrix *Sigma_ee) {
+	if (func_name!='R' && func_name!='L' && func_name!='r' && 
+	    func_name!='l') {
+	  cout<<"func_name only takes 'R' or 'L': 'R' for log-restricted "<<
+	    "likelihood, 'L' for log-likelihood."<<endl; 
+	  return;
+	}
 
-void CalcSigma (const char func_name, const gsl_vector *eval, const gsl_vector *D_l, const gsl_matrix *X, const gsl_matrix *OmegaU, const gsl_matrix *OmegaE, const gsl_matrix *UltVeh, const gsl_matrix *Qi, gsl_matrix *Sigma_uu, gsl_matrix *Sigma_ee)
-{
-	if (func_name!='R' && func_name!='L' && func_name!='r' && func_name!='l') {cout<<"func_name only takes 'R' or 'L': 'R' for log-restricted likelihood, 'L' for log-likelihood."<<endl; return;}
-
-	size_t n_size=eval->size, c_size=X->size1, d_size=D_l->size, dc_size=Qi->size1;
+	size_t n_size=eval->size, c_size=X->size1;
+	size_t d_size=D_l->size, dc_size=Qi->size1;
 
 	gsl_matrix_set_zero(Sigma_uu);
 	gsl_matrix_set_zero(Sigma_ee);
 
 	double delta, dl, x, d;
 
-	//calculate the first diagonal term
+	// Calculate the first diagonal term.
 	gsl_vector_view Suu_diag=gsl_matrix_diagonal (Sigma_uu);
 	gsl_vector_view See_diag=gsl_matrix_diagonal (Sigma_ee);
 
 	for (size_t k=0; k<n_size; k++) {
-		gsl_vector_const_view OmegaU_col=gsl_matrix_const_column (OmegaU, k);
-		gsl_vector_const_view OmegaE_col=gsl_matrix_const_column (OmegaE, k);
+	  gsl_vector_const_view OmegaU_col=gsl_matrix_const_column (OmegaU, k);
+	  gsl_vector_const_view OmegaE_col=gsl_matrix_const_column (OmegaE, k);
 
-		gsl_vector_add (&Suu_diag.vector, &OmegaU_col.vector);
-		gsl_vector_add (&See_diag.vector, &OmegaE_col.vector);
+	  gsl_vector_add (&Suu_diag.vector, &OmegaU_col.vector);
+	  gsl_vector_add (&See_diag.vector, &OmegaE_col.vector);
 	}
 
-	//calculate the second term for reml
+	// Calculate the second term for REML.
 	if (func_name=='R' || func_name=='r') {
 		gsl_matrix *M_u=gsl_matrix_alloc(dc_size, d_size);
 		gsl_matrix *M_e=gsl_matrix_alloc(dc_size, d_size);
@@ -542,52 +497,53 @@ void CalcSigma (const char func_name, const gsl_vector *eval, const gsl_vector *
 		gsl_matrix_set_zero(M_e);
 
 		for (size_t k=0; k<n_size; k++) {
-			delta=gsl_vector_get(eval, k);
-			//if (delta==0) {continue;}
-
-			for (size_t i=0; i<d_size; i++) {
-				dl=gsl_vector_get(D_l, i);
-				for (size_t j=0; j<c_size; j++) {
-					x=gsl_matrix_get(X, j, k);
-					d=x/(delta*dl+1.0);
-					gsl_matrix_set(M_e, j*d_size+i, i, d);
-					gsl_matrix_set(M_u, j*d_size+i, i, d*dl);
-				}
-			}
-			gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, Qi, M_u, 0.0, QiM);
-			gsl_blas_dgemm(CblasTrans, CblasNoTrans, delta, M_u, QiM, 1.0, Sigma_uu);
-
-			gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, Qi, M_e, 0.0, QiM);
-			gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, M_e, QiM, 1.0, Sigma_ee);
+		  delta=gsl_vector_get(eval, k);
+		  
+		  for (size_t i=0; i<d_size; i++) {
+		    dl=gsl_vector_get(D_l, i);
+		    for (size_t j=0; j<c_size; j++) {
+		      x=gsl_matrix_get(X, j, k);
+		      d=x/(delta*dl+1.0);
+		      gsl_matrix_set(M_e, j*d_size+i, i, d);
+		      gsl_matrix_set(M_u, j*d_size+i, i, d*dl);
+		    }
+		  }
+		  gsl_blas_dgemm(CblasNoTrans,CblasNoTrans,1.0,Qi,M_u,0.0,QiM);
+		  gsl_blas_dgemm(CblasTrans,CblasNoTrans,delta,M_u,QiM,1.0,
+				 Sigma_uu);
+		  
+		  gsl_blas_dgemm(CblasNoTrans,CblasNoTrans,1.0,Qi,M_e,0.0,QiM);
+		  gsl_blas_dgemm(CblasTrans,CblasNoTrans,1.0,M_e,QiM,1.0,
+				 Sigma_ee);
 		}
-
+		
 		gsl_matrix_free(M_u);
 		gsl_matrix_free(M_e);
 		gsl_matrix_free(QiM);
 	}
 
-	//multiply both sides by VehUl
+	// Multiply both sides by VehUl.
 	gsl_matrix *M=gsl_matrix_alloc (d_size, d_size);
 
-	gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, Sigma_uu, UltVeh, 0.0, M);
-	gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, UltVeh, M, 0.0, Sigma_uu);
-	gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, Sigma_ee, UltVeh, 0.0, M);
-	gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, UltVeh, M, 0.0, Sigma_ee);
+	gsl_blas_dgemm(CblasNoTrans,CblasNoTrans,1.0,Sigma_uu,UltVeh,0.0,M);
+	gsl_blas_dgemm(CblasTrans,CblasNoTrans,1.0,UltVeh,M,0.0,Sigma_uu);
+	gsl_blas_dgemm(CblasNoTrans,CblasNoTrans,1.0,Sigma_ee,UltVeh,0.0,M);
+	gsl_blas_dgemm(CblasTrans, CblasNoTrans,1.0,UltVeh,M,0.0,Sigma_ee);
 
 	gsl_matrix_free(M);
 	return;
 }
 
-
-//'R' for restricted likelihood and 'L' for likelihood
-//'R' update B and 'L' don't
-//only calculate -0.5*\sum_{k=1}^n|H_k|-0.5yPxy
-double MphCalcLogL (const gsl_vector *eval, const gsl_vector *xHiy, const gsl_vector *D_l, const gsl_matrix *UltVehiY, const gsl_matrix *Qi)
-{
+// 'R' for restricted likelihood and 'L' for likelihood.
+// 'R' update B and 'L' don't.
+// only calculate -0.5*\sum_{k=1}^n|H_k|-0.5yPxy.
+double MphCalcLogL (const gsl_vector *eval, const gsl_vector *xHiy, 
+		    const gsl_vector *D_l, const gsl_matrix *UltVehiY, 
+		    const gsl_matrix *Qi) {
 	size_t n_size=eval->size, d_size=D_l->size, dc_size=Qi->size1;
 	double logl=0.0, delta, dl, y, d;
 
-	//calculate yHiy+log|H_k|
+	// Calculate yHiy+log|H_k|.
 	for (size_t k=0; k<n_size; k++) {
 		delta=gsl_vector_get(eval, k);
 		for (size_t i=0; i<d_size; i++) {
@@ -599,7 +555,7 @@ double MphCalcLogL (const gsl_vector *eval, const gsl_vector *xHiy, const gsl_ve
 		}
 	}
 
-	//calculate the rest of yPxy
+	// Calculate the rest of yPxy.
 	gsl_vector *Qiv=gsl_vector_alloc(dc_size);
 
 	gsl_blas_dgemv(CblasNoTrans, 1.0, Qi, xHiy, 0.0, Qiv);
@@ -612,15 +568,22 @@ double MphCalcLogL (const gsl_vector *eval, const gsl_vector *xHiy, const gsl_ve
 	return -0.5*logl;
 }
 
-
-
-
-
-//Y is a dxn matrix, X is a cxn matrix, B is a dxc matrix, V_g is a dxd matrix, V_e is a dxd matrix, eval is a size n vector
-//'R' for restricted likelihood and 'L' for likelihood
-double MphEM (const char func_name, const size_t max_iter, const double max_prec, const gsl_vector *eval, const gsl_matrix *X, const gsl_matrix *Y, gsl_matrix *U_hat, gsl_matrix *E_hat, gsl_matrix *OmegaU, gsl_matrix *OmegaE, gsl_matrix *UltVehiY, gsl_matrix *UltVehiBX, gsl_matrix *UltVehiU, gsl_matrix *UltVehiE, gsl_matrix *V_g, gsl_matrix *V_e, gsl_matrix *B)
-{
-	if (func_name!='R' && func_name!='L' && func_name!='r' && func_name!='l') {cout<<"func_name only takes 'R' or 'L': 'R' for log-restricted likelihood, 'L' for log-likelihood."<<endl; return 0.0;}
+// Y is a dxn matrix, X is a cxn matrix, B is a dxc matrix, V_g is a
+// dxd matrix, V_e is a dxd matrix, eval is a size n vector
+//'R' for restricted likelihood and 'L' for likelihood.
+double MphEM (const char func_name, const size_t max_iter, 
+	      const double max_prec, const gsl_vector *eval, 
+	      const gsl_matrix *X, const gsl_matrix *Y, gsl_matrix *U_hat, 
+	      gsl_matrix *E_hat, gsl_matrix *OmegaU, gsl_matrix *OmegaE, 
+	      gsl_matrix *UltVehiY, gsl_matrix *UltVehiBX, 
+	      gsl_matrix *UltVehiU, gsl_matrix *UltVehiE, 
+	      gsl_matrix *V_g, gsl_matrix *V_e, gsl_matrix *B) {
+	if (func_name!='R' && func_name!='L' && 
+	    func_name!='r' && func_name!='l') {
+	  cout<<"func_name only takes 'R' or 'L': 'R' for log-restricted "<<
+	    "likelihood, 'L' for log-likelihood."<<endl; 
+	  return 0.0;
+	}
 
 	size_t n_size=eval->size, c_size=X->size1, d_size=Y->size1;
 	size_t dc_size=d_size*c_size;
@@ -637,94 +600,88 @@ double MphEM (const char func_name, const size_t max_iter, const double max_prec
 	gsl_vector *xHiy=gsl_vector_alloc (dc_size);
 	gsl_permutation * pmt=gsl_permutation_alloc (c_size);
 
-	double logl_const=0.0, logl_old=0.0, logl_new=0.0, logdet_Q, logdet_Ve;
+	double logl_const=0.0, logl_old=0.0, logl_new=0.0;
+	double logdet_Q, logdet_Ve;
 	int sig;
 
-	//calculate |XXt| and (XXt)^{-1}
+	// Calculate |XXt| and (XXt)^{-1}.
 	gsl_blas_dsyrk (CblasUpper, CblasNoTrans, 1.0, X, 0.0, XXt);
 	for (size_t i=0; i<c_size; ++i) {
 		for (size_t j=0; j<i; ++j) {
-			gsl_matrix_set (XXt, i, j, gsl_matrix_get (XXt, j, i));
+		  gsl_matrix_set (XXt, i, j, gsl_matrix_get (XXt, j, i));
 		}
 	}
 
 	LUDecomp (XXt, pmt, &sig);
 	LUInvert (XXt, pmt, XXti);
 
-	//calculate the constant for logl
+	// Calculate the constant for logl.
 	if (func_name=='R' || func_name=='r') {
-		logl_const=-0.5*(double)(n_size-c_size)*(double)d_size*log(2.0*M_PI)+0.5*(double)d_size*LULndet (XXt);
+	  logl_const=-0.5*(double)(n_size-c_size)*
+	    (double)d_size*log(2.0*M_PI)+0.5*(double)d_size*LULndet (XXt);
 	} else {
-		logl_const=-0.5*(double)n_size*(double)d_size*log(2.0*M_PI);
+	  logl_const=-0.5*(double)n_size*(double)d_size*log(2.0*M_PI);
 	}
 
-	//start EM
+	// Start EM.
 	for (size_t t=0; t<max_iter; t++) {
-		logdet_Ve=EigenProc (V_g, V_e, D_l, UltVeh, UltVehi);
+	  logdet_Ve=EigenProc (V_g, V_e, D_l, UltVeh, UltVehi);
+	  
+	  logdet_Q=CalcQi (eval, D_l, X, Qi);
+	  
+	  gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, UltVehi, 
+			 Y, 0.0, UltVehiY);
+	  CalcXHiY(eval, D_l, X, UltVehiY, xHiy);
 
-		logdet_Q=CalcQi (eval, D_l, X, Qi);
+	  // Calculate log likelihood/restricted likelihood value, and
+	  // terminate if change is small.
+	  logl_new=logl_const+MphCalcLogL (eval, xHiy, D_l, UltVehiY, Qi) - 
+	    0.5*(double)n_size*logdet_Ve;
+	  if (func_name=='R' || func_name=='r') {
+	    logl_new+=-0.5*(logdet_Q-(double)c_size*logdet_Ve);
+	  }
+	  if (t!=0 && abs(logl_new-logl_old)<max_prec) {break;}
+	  logl_old=logl_new;
+	  
+	  CalcOmega (eval, D_l, OmegaU, OmegaE);
 
-		gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, UltVehi, Y, 0.0, UltVehiY);
-		CalcXHiY(eval, D_l, X, UltVehiY, xHiy);
+	  // Update UltVehiB, UltVehiU.
+	  if (func_name=='R' || func_name=='r') {
+	    UpdateRL_B(xHiy, Qi, UltVehiB);
+	    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, UltVehiB, X, 
+			   0.0, UltVehiBX);
+	  } else if (t==0) {
+	    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, UltVehi, B, 
+			   0.0, UltVehiB);
+	    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, UltVehiB, X, 
+			   0.0, UltVehiBX);
+	  }
+	  
+	  UpdateU(OmegaE, UltVehiY, UltVehiBX, UltVehiU);
+	  
+	  if (func_name=='L' || func_name=='l') {
 
-		//calculate log likelihood/restricted likelihood value, and terminate if change is small
-		logl_new=logl_const+MphCalcLogL (eval, xHiy, D_l, UltVehiY, Qi)-0.5*(double)n_size*logdet_Ve;
-		if (func_name=='R' || func_name=='r') {
-			logl_new+=-0.5*(logdet_Q-(double)c_size*logdet_Ve);
-		}
-		if (t!=0 && abs(logl_new-logl_old)<max_prec) {break;}
-		logl_old=logl_new;
+	    // UltVehiBX is destroyed here.
+	    UpdateL_B(X, XXti, UltVehiY, UltVehiU, UltVehiBX, UltVehiB);
+	    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, UltVehiB, X, 
+			   0.0, UltVehiBX);
+	  }
+	  
+	  UpdateE(UltVehiY, UltVehiBX, UltVehiU, UltVehiE);
 
-		/*
-		cout<<"iteration = "<<t<<" log-likelihood = "<<logl_old<<"\t"<<logl_new<<endl;
-
-		cout<<"Vg: "<<endl;
-		for (size_t i=0; i<d_size; i++) {
-			for (size_t j=0; j<d_size; j++) {
-				cout<<gsl_matrix_get(V_g, i, j)<<"\t";
-			}
-			cout<<endl;
-		}
-		cout<<"Ve: "<<endl;
-		for (size_t i=0; i<d_size; i++) {
-			for (size_t j=0; j<d_size; j++) {
-				cout<<gsl_matrix_get(V_e, i, j)<<"\t";
-			}
-			cout<<endl;
-		}
-		*/
-
-		CalcOmega (eval, D_l, OmegaU, OmegaE);
-
-		//Update UltVehiB, UltVehiU
-		if (func_name=='R' || func_name=='r') {
-			UpdateRL_B(xHiy, Qi, UltVehiB);
-			gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, UltVehiB, X, 0.0, UltVehiBX);
-		} else if (t==0) {
-			gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, UltVehi, B, 0.0, UltVehiB);
-			gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, UltVehiB, X, 0.0, UltVehiBX);
-		}
-
-		UpdateU(OmegaE, UltVehiY, UltVehiBX, UltVehiU);
-
-		if (func_name=='L' || func_name=='l') {
-			//UltVehiBX is destroyed here
-			UpdateL_B(X, XXti, UltVehiY, UltVehiU, UltVehiBX, UltVehiB);
-			gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, UltVehiB, X, 0.0, UltVehiBX);
-		}
-
-		UpdateE(UltVehiY, UltVehiBX, UltVehiU, UltVehiE);
-
-		//calculate U_hat, E_hat and B
-		gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, UltVeh, UltVehiU, 0.0, U_hat);
-		gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, UltVeh, UltVehiE, 0.0, E_hat);
-		gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, UltVeh, UltVehiB, 0.0, B);
-
-		//calculate Sigma_uu and Sigma_ee
-		CalcSigma (func_name, eval, D_l, X, OmegaU, OmegaE, UltVeh, Qi, Sigma_uu, Sigma_ee);
-
-		//update V_g and V_e
-		UpdateV (eval, U_hat, E_hat, Sigma_uu, Sigma_ee, V_g, V_e);
+	  // Calculate U_hat, E_hat and B.
+	  gsl_blas_dgemm(CblasTrans,CblasNoTrans,1.0,UltVeh,UltVehiU,
+			 0.0,U_hat);
+	  gsl_blas_dgemm(CblasTrans,CblasNoTrans,1.0,UltVeh,UltVehiE,
+			 0.0,E_hat);
+	  gsl_blas_dgemm(CblasTrans,CblasNoTrans,1.0,UltVeh,UltVehiB,0.0,B);
+	  
+	  // Calculate Sigma_uu and Sigma_ee.
+	  CalcSigma (func_name, eval, D_l, X, OmegaU, OmegaE, UltVeh, 
+		     Qi, Sigma_uu, Sigma_ee);
+	  
+	  // Update V_g and V_e.
+	  UpdateV (eval, U_hat, E_hat, Sigma_uu, Sigma_ee, V_g, V_e);
 	}
 
 	gsl_matrix_free(XXt);
@@ -742,15 +699,11 @@ double MphEM (const char func_name, const size_t max_iter, const double max_prec
 	return logl_new;
 }
 
-
-
-
-
-
-
-//calculate p-value, beta (d by 1 vector) and V(beta)
-double MphCalcP (const gsl_vector *eval, const gsl_vector *x_vec, const gsl_matrix *W, const gsl_matrix *Y, const gsl_matrix *V_g, const gsl_matrix *V_e, gsl_matrix *UltVehiY, gsl_vector *beta, gsl_matrix *Vbeta)
-{
+// Calculate p-value, beta (d by 1 vector) and V(beta).
+double MphCalcP (const gsl_vector *eval, const gsl_vector *x_vec, 
+		 const gsl_matrix *W, const gsl_matrix *Y, 
+		 const gsl_matrix *V_g, const gsl_matrix *V_e, 
+		 gsl_matrix *UltVehiY, gsl_vector *beta, gsl_matrix *Vbeta) {
 	size_t n_size=eval->size, c_size=W->size1, d_size=V_g->size1;
 	size_t dc_size=d_size*c_size;
 	double delta, dl, d, d1, d2, dy, dx, dw, logdet_Ve, logdet_Q, p_value;
@@ -764,7 +717,6 @@ double MphCalcP (const gsl_vector *eval, const gsl_vector *x_vec, const gsl_matr
 
 	gsl_matrix *xPx=gsl_matrix_alloc (d_size, d_size);
 	gsl_vector *xPy=gsl_vector_alloc (d_size);
-	//gsl_vector *UltVehiy=gsl_vector_alloc (d_size);
 	gsl_vector *WHiy=gsl_vector_alloc (dc_size);
 
 	gsl_matrix_set_zero (xPx);
@@ -772,16 +724,17 @@ double MphCalcP (const gsl_vector *eval, const gsl_vector *x_vec, const gsl_matr
 	gsl_vector_set_zero (xPy);
 	gsl_vector_set_zero (WHiy);
 
-	//eigen decomposition and calculate log|Ve|
+	// Eigen decomposition and calculate log|Ve|.
 	logdet_Ve=EigenProc (V_g, V_e, D_l, UltVeh, UltVehi);
 
-	//calculate Qi and log|Q|
+	// Calculate Qi and log|Q|.
 	logdet_Q=CalcQi (eval, D_l, W, Qi);
 
-	//calculate UltVehiY
-	gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, UltVehi, Y, 0.0, UltVehiY);
+	// Calculate UltVehiY.
+	gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, UltVehi, Y, 
+		       0.0, UltVehiY);
 
-	//calculate WHix, WHiy, xHiy, xHix
+	// Calculate WHix, WHiy, xHiy, xHix.
 	for (size_t i=0; i<d_size; i++) {
 		dl=gsl_vector_get(D_l, i);
 
@@ -805,7 +758,6 @@ double MphCalcP (const gsl_vector *eval, const gsl_vector *x_vec, const gsl_matr
 				dw=gsl_matrix_get(W, j, k);
 				dy=gsl_matrix_get(UltVehiY, i, k);
 
-				//if (delta==0) {continue;}
 				d1+=dx*dw/(delta*dl+1.0);
 				d2+=dy*dw/(delta*dl+1.0);
 			}
@@ -818,24 +770,23 @@ double MphCalcP (const gsl_vector *eval, const gsl_vector *x_vec, const gsl_matr
 	gsl_blas_dgemm(CblasTrans, CblasNoTrans, -1.0, WHix, QiWHix, 1.0, xPx);
 	gsl_blas_dgemv(CblasTrans, -1.0, QiWHix, WHiy, 1.0, xPy);
 
-	//calculate V(beta) and beta
+	// Calculate V(beta) and beta.
 	int sig;
 	gsl_permutation * pmt=gsl_permutation_alloc (d_size);
 	LUDecomp (xPx, pmt, &sig);
 	LUSolve (xPx, pmt, xPy, D_l);
 	LUInvert (xPx, pmt, Vbeta);
 
-	//need to multiply UltVehi on both sides or one side
+	// Need to multiply UltVehi on both sides or one side.
 	gsl_blas_dgemv(CblasTrans, 1.0, UltVeh, D_l, 0.0, beta);
-	gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, Vbeta, UltVeh, 0.0, xPx);
+	gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, Vbeta, UltVeh, 
+		       0.0, xPx);
 	gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, UltVeh, xPx, 0.0, Vbeta);
 
-	//calculate test statistic and p value
+	// Calculate test statistic and p value.
 	gsl_blas_ddot(D_l, xPy, &d);
 
 	p_value=gsl_cdf_chisq_Q (d, (double)d_size);
-	//d*=(double)(n_size-c_size-d_size)/((double)d_size*(double)(n_size-c_size-1));
-	//p_value=gsl_cdf_fdist_Q (d, (double)d_size, (double)(n_size-c_size-d_size));
 
 	gsl_vector_free(D_l);
 	gsl_matrix_free(UltVeh);
@@ -853,11 +804,12 @@ double MphCalcP (const gsl_vector *eval, const gsl_vector *x_vec, const gsl_matr
 	return p_value;
 }
 
-
-
-//calculate B and its standard error (which is a matrix of the same dimension as B)
-void MphCalcBeta (const gsl_vector *eval, const gsl_matrix *W, const gsl_matrix *Y, const gsl_matrix *V_g, const gsl_matrix *V_e, gsl_matrix *UltVehiY, gsl_matrix *B, gsl_matrix *se_B)
-{
+// Calculate B and its standard error (which is a matrix of the same
+// dimension as B).
+void MphCalcBeta (const gsl_vector *eval, const gsl_matrix *W, 
+		  const gsl_matrix *Y, const gsl_matrix *V_g, 
+		  const gsl_matrix *V_e, gsl_matrix *UltVehiY, 
+		  gsl_matrix *B, gsl_matrix *se_B) {
 	size_t n_size=eval->size, c_size=W->size1, d_size=V_g->size1;
 	size_t dc_size=d_size*c_size;
 	double delta, dl, d, dy, dw, logdet_Ve, logdet_Q;
@@ -867,7 +819,6 @@ void MphCalcBeta (const gsl_vector *eval, const gsl_matrix *W, const gsl_matrix 
 	gsl_matrix *UltVehi=gsl_matrix_alloc (d_size, d_size);
 	gsl_matrix *Qi=gsl_matrix_alloc (dc_size, dc_size);
 	gsl_matrix *Qi_temp=gsl_matrix_alloc (dc_size, dc_size);
-	//gsl_vector *UltVehiy=gsl_vector_alloc (d_size);
 	gsl_vector *WHiy=gsl_vector_alloc (dc_size);
 	gsl_vector *QiWHiy=gsl_vector_alloc (dc_size);
 	gsl_vector *beta=gsl_vector_alloc (dc_size);
@@ -875,16 +826,17 @@ void MphCalcBeta (const gsl_vector *eval, const gsl_matrix *W, const gsl_matrix 
 
 	gsl_vector_set_zero (WHiy);
 
-	//eigen decomposition and calculate log|Ve|
+	// Eigen decomposition and calculate log|Ve|.
 	logdet_Ve=EigenProc (V_g, V_e, D_l, UltVeh, UltVehi);
 
-	//calculate Qi and log|Q|
+	// Calculate Qi and log|Q|.
 	logdet_Q=CalcQi (eval, D_l, W, Qi);
 
-	//calculate UltVehiY
-	gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, UltVehi, Y, 0.0, UltVehiY);
+	// Calculate UltVehiY.
+	gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, UltVehi, Y, 
+		       0.0, UltVehiY);
 
-	//calculate WHiy
+	// Calculate WHiy.
 	for (size_t i=0; i<d_size; i++) {
 		dl=gsl_vector_get(D_l, i);
 
@@ -895,7 +847,6 @@ void MphCalcBeta (const gsl_vector *eval, const gsl_matrix *W, const gsl_matrix 
 				dw=gsl_matrix_get(W, j, k);
 				dy=gsl_matrix_get(UltVehiY, i, k);
 
-				//if (delta==0) {continue;}
 				d+=dy*dw/(delta*dl+1.0);
 			}
 			gsl_vector_set(WHiy, j*d_size+i, d);
@@ -904,36 +855,45 @@ void MphCalcBeta (const gsl_vector *eval, const gsl_matrix *W, const gsl_matrix 
 
 	gsl_blas_dgemv(CblasNoTrans, 1.0, Qi, WHiy, 0.0, QiWHiy);
 
-	//need to multiply I_c\otimes UltVehi on both sides or one side
+	// Need to multiply I_c\otimes UltVehi on both sides or one side.
 	for (size_t i=0; i<c_size; i++) {
-		gsl_vector_view QiWHiy_sub=gsl_vector_subvector(QiWHiy, i*d_size, d_size);
-		gsl_vector_view beta_sub=gsl_vector_subvector(beta, i*d_size, d_size);
-		gsl_blas_dgemv(CblasTrans, 1.0, UltVeh, &QiWHiy_sub.vector, 0.0, &beta_sub.vector);
-
-		for (size_t j=0; j<c_size; j++) {
-			gsl_matrix_view Qi_sub=gsl_matrix_submatrix (Qi, i*d_size, j*d_size, d_size, d_size);
-			gsl_matrix_view Qitemp_sub=gsl_matrix_submatrix (Qi_temp, i*d_size, j*d_size, d_size, d_size);
-			gsl_matrix_view Vbeta_sub=gsl_matrix_submatrix (Vbeta, i*d_size, j*d_size, d_size, d_size);
-
-			if (j<i) {
-				gsl_matrix_view Vbeta_sym=gsl_matrix_submatrix (Vbeta, j*d_size, i*d_size, d_size, d_size);
-				gsl_matrix_transpose_memcpy (&Vbeta_sub.matrix, &Vbeta_sym.matrix);
-			} else {
-				gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &Qi_sub.matrix, UltVeh, 0.0, &Qitemp_sub.matrix);
-				gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, UltVeh, &Qitemp_sub.matrix, 0.0, &Vbeta_sub.matrix);
-			}
-		}
+	  gsl_vector_view QiWHiy_sub=
+	    gsl_vector_subvector(QiWHiy, i*d_size, d_size);
+	  gsl_vector_view beta_sub=gsl_vector_subvector(beta,i*d_size,d_size);
+	  gsl_blas_dgemv(CblasTrans, 1.0, UltVeh, &QiWHiy_sub.vector, 0.0, 
+			 &beta_sub.vector);
+	  
+	  for (size_t j=0; j<c_size; j++) {
+	    gsl_matrix_view Qi_sub=
+	      gsl_matrix_submatrix (Qi, i*d_size, j*d_size, d_size, d_size);
+	    gsl_matrix_view Qitemp_sub=
+	      gsl_matrix_submatrix (Qi_temp,i*d_size,j*d_size,d_size,d_size);
+	    gsl_matrix_view Vbeta_sub=
+	      gsl_matrix_submatrix (Vbeta, i*d_size, j*d_size, d_size, d_size);
+	    
+	    if (j<i) {
+	      gsl_matrix_view Vbeta_sym=
+		gsl_matrix_submatrix(Vbeta,j*d_size,i*d_size,d_size,d_size);
+	      gsl_matrix_transpose_memcpy(&Vbeta_sub.matrix,&Vbeta_sym.matrix);
+	    } else {
+	      gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &Qi_sub.matrix, 
+			     UltVeh, 0.0, &Qitemp_sub.matrix);
+	      gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, UltVeh, 
+			     &Qitemp_sub.matrix, 0.0, &Vbeta_sub.matrix);
+	    }
+	  }
 	}
 
-	//copy beta to B, and Vbeta to se_B
+	// Copy beta to B, and Vbeta to se_B.
 	for (size_t j=0; j<B->size2; j++) {
-		for (size_t i=0; i<B->size1; i++) {
-			gsl_matrix_set(B, i, j, gsl_vector_get(beta, j*d_size+i));
-			gsl_matrix_set(se_B, i, j, sqrt(gsl_matrix_get(Vbeta, j*d_size+i, j*d_size+i)));
-		}
+	  for (size_t i=0; i<B->size1; i++) {
+	    gsl_matrix_set(B, i, j, gsl_vector_get(beta, j*d_size+i));
+	    gsl_matrix_set(se_B, i, j, 
+			   sqrt(gsl_matrix_get(Vbeta,j*d_size+i,j*d_size+i)));
+	  }
 	}
-
-	//free matrices
+	
+	// Free matrices.
 	gsl_vector_free(D_l);
 	gsl_matrix_free(UltVeh);
 	gsl_matrix_free(UltVehi);
@@ -947,19 +907,15 @@ void MphCalcBeta (const gsl_vector *eval, const gsl_matrix *W, const gsl_matrix 
 	return;
 }
 
+// Below are functions for Newton-Raphson's algorithm.
 
-
-//below are functions for Newton-Raphson's algorithm
-
-
-
-
-
-//calculate all Hi and return logdet_H=\sum_{k=1}^{n}log|H_k|
-//and calculate Qi and return logdet_Q
-//and calculate yPy
-void CalcHiQi (const gsl_vector *eval, const gsl_matrix *X, const gsl_matrix *V_g, const gsl_matrix *V_e, gsl_matrix *Hi_all, gsl_matrix *Qi, double &logdet_H, double &logdet_Q)
-{
+// Calculate all Hi and return logdet_H=\sum_{k=1}^{n}log|H_k|
+// and calculate Qi and return logdet_Q
+// and calculate yPy.
+void CalcHiQi (const gsl_vector *eval, const gsl_matrix *X,
+	       const gsl_matrix *V_g, const gsl_matrix *V_e,
+	       gsl_matrix *Hi_all, gsl_matrix *Qi, double &logdet_H,
+	       double &logdet_Q) {
 	gsl_matrix_set_zero (Hi_all);
 	gsl_matrix_set_zero (Qi);
 	logdet_H=0.0; logdet_Q=0.0;
@@ -972,10 +928,10 @@ void CalcHiQi (const gsl_vector *eval, const gsl_matrix *X, const gsl_matrix *V_
 	gsl_matrix *UltVehi=gsl_matrix_alloc (d_size, d_size);
 	gsl_vector *D_l=gsl_vector_alloc (d_size);
 
-	//calculate D_l, UltVeh and UltVehi
+	// Calculate D_l, UltVeh and UltVehi.
 	logdet_Ve=EigenProc (V_g, V_e, D_l, UltVeh, UltVehi);
 
-	//calculate each Hi and log|H_k|
+	// Calculate each Hi and log|H_k|.
 	logdet_H=(double)n_size*logdet_Ve;
 	for (size_t k=0; k<n_size; k++) {
 		delta=gsl_vector_get (eval, k);
@@ -991,28 +947,34 @@ void CalcHiQi (const gsl_vector *eval, const gsl_matrix *X, const gsl_matrix *V_
 			logdet_H+=log(d);
 		}
 
-		gsl_matrix_view Hi_k=gsl_matrix_submatrix(Hi_all, 0, k*d_size, d_size, d_size);
-		gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, UltVehi, mat_dd, 0.0, &Hi_k.matrix);
+		gsl_matrix_view Hi_k=
+		  gsl_matrix_submatrix(Hi_all, 0, k*d_size, d_size, d_size);
+		gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, UltVehi,
+			       mat_dd, 0.0, &Hi_k.matrix);
 	}
 
-	//calculate Qi, and multiply I\otimes UtVeh on both side
-	//and calculate logdet_Q, don't forget to substract c_size*logdet_Ve
+	// Calculate Qi, and multiply I\otimes UtVeh on both side
+	// and calculate logdet_Q, don't forget to substract c_size*logdet_Ve.
 	logdet_Q=CalcQi (eval, D_l, X, Qi)-(double)c_size*logdet_Ve;
 
 	for (size_t i=0; i<c_size; i++) {
 		for (size_t j=0; j<c_size; j++) {
-			gsl_matrix_view Qi_sub=gsl_matrix_submatrix (Qi, i*d_size, j*d_size, d_size, d_size);
-			if (j<i) {
-				gsl_matrix_view Qi_sym=gsl_matrix_submatrix (Qi, j*d_size, i*d_size, d_size, d_size);
-				gsl_matrix_transpose_memcpy (&Qi_sub.matrix, &Qi_sym.matrix);
-			} else {
-				gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &Qi_sub.matrix, UltVeh, 0.0, mat_dd);
-				gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, UltVeh, mat_dd, 0.0, &Qi_sub.matrix);
-			}
+		  gsl_matrix_view Qi_sub=
+		    gsl_matrix_submatrix(Qi,i*d_size,j*d_size,d_size,d_size);
+		  if (j<i) {
+		    gsl_matrix_view Qi_sym=
+		      gsl_matrix_submatrix(Qi,j*d_size,i*d_size,d_size,d_size);
+		    gsl_matrix_transpose_memcpy(&Qi_sub.matrix,&Qi_sym.matrix);
+		  } else {
+		    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
+				   &Qi_sub.matrix, UltVeh, 0.0, mat_dd);
+		    gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, UltVeh,
+				   mat_dd, 0.0, &Qi_sub.matrix);
+		  }
 		}
 	}
 
-	//free memory
+	// Free memory.
 	gsl_matrix_free(mat_dd);
 	gsl_matrix_free(UltVeh);
 	gsl_matrix_free(UltVehi);
@@ -1021,31 +983,29 @@ void CalcHiQi (const gsl_vector *eval, const gsl_matrix *X, const gsl_matrix *V_
 	return;
 }
 
-
-
-
-//calculate all Hiy
-void Calc_Hiy_all (const gsl_matrix *Y, const gsl_matrix *Hi_all, gsl_matrix *Hiy_all)
-{
+// Calculate all Hiy.
+void Calc_Hiy_all (const gsl_matrix *Y, const gsl_matrix *Hi_all,
+		   gsl_matrix *Hiy_all) {
 	gsl_matrix_set_zero (Hiy_all);
 
 	size_t n_size=Y->size2, d_size=Y->size1;
 
 	for (size_t k=0; k<n_size; k++) {
-		gsl_matrix_const_view Hi_k=gsl_matrix_const_submatrix(Hi_all, 0, k*d_size, d_size, d_size);
-		gsl_vector_const_view y_k=gsl_matrix_const_column(Y, k);
+		gsl_matrix_const_view Hi_k=
+		  gsl_matrix_const_submatrix(Hi_all,0,k*d_size,d_size,d_size);
+		gsl_vector_const_view y_k=gsl_matrix_const_column(Y,k);
 		gsl_vector_view Hiy_k=gsl_matrix_column(Hiy_all, k);
 
-		gsl_blas_dgemv (CblasNoTrans, 1.0, &Hi_k.matrix, &y_k.vector, 0.0, &Hiy_k.vector);
+		gsl_blas_dgemv(CblasNoTrans,1.0,&Hi_k.matrix,&y_k.vector,
+			       0.0,&Hiy_k.vector);
 	}
 
 	return;
 }
 
-
-//calculate all xHi
-void Calc_xHi_all (const gsl_matrix *X, const gsl_matrix *Hi_all, gsl_matrix *xHi_all)
-{
+// Calculate all xHi.
+void Calc_xHi_all (const gsl_matrix *X, const gsl_matrix *Hi_all,
+		   gsl_matrix *xHi_all) {
 	gsl_matrix_set_zero (xHi_all);
 
 	size_t n_size=X->size2, c_size=X->size1, d_size=Hi_all->size1;
@@ -1053,11 +1013,14 @@ void Calc_xHi_all (const gsl_matrix *X, const gsl_matrix *Hi_all, gsl_matrix *xH
 	double d;
 
 	for (size_t k=0; k<n_size; k++) {
-		gsl_matrix_const_view Hi_k=gsl_matrix_const_submatrix(Hi_all, 0, k*d_size, d_size, d_size);
+		gsl_matrix_const_view Hi_k=
+		  gsl_matrix_const_submatrix(Hi_all,0,k*d_size,d_size,d_size);
 
 		for (size_t i=0; i<c_size; i++) {
 			d=gsl_matrix_get (X, i, k);
-			gsl_matrix_view xHi_sub=gsl_matrix_submatrix(xHi_all, i*d_size, k*d_size, d_size, d_size);
+			gsl_matrix_view xHi_sub=
+			  gsl_matrix_submatrix(xHi_all,i*d_size,k*d_size,
+					       d_size,d_size);
 			gsl_matrix_memcpy(&xHi_sub.matrix, &Hi_k.matrix);
 			gsl_matrix_scale(&xHi_sub.matrix, d);
 		}
@@ -1066,60 +1029,62 @@ void Calc_xHi_all (const gsl_matrix *X, const gsl_matrix *Hi_all, gsl_matrix *xH
 	return;
 }
 
-
-//calculate scalar yHiy
-double Calc_yHiy (const gsl_matrix *Y, const gsl_matrix *Hiy_all)
-{
+// Calculate scalar yHiy.
+double Calc_yHiy (const gsl_matrix *Y, const gsl_matrix *Hiy_all) {
 	double yHiy=0.0, d;
 	size_t n_size=Y->size2;
 
 	for (size_t k=0; k<n_size; k++) {
-		gsl_vector_const_view y_k=gsl_matrix_const_column(Y, k);
-		gsl_vector_const_view Hiy_k=gsl_matrix_const_column(Hiy_all, k);
+	  gsl_vector_const_view y_k=gsl_matrix_const_column(Y, k);
+	  gsl_vector_const_view Hiy_k=gsl_matrix_const_column(Hiy_all, k);
 
-		gsl_blas_ddot (&Hiy_k.vector, &y_k.vector, &d);
-		yHiy+=d;
+	  gsl_blas_ddot (&Hiy_k.vector, &y_k.vector, &d);
+	  yHiy+=d;
 	}
 
 	return yHiy;
 }
 
-
-//calculate the vector xHiy
-void Calc_xHiy (const gsl_matrix *Y, const gsl_matrix *xHi, gsl_vector *xHiy)
-{
+// Calculate the vector xHiy.
+void Calc_xHiy (const gsl_matrix *Y, const gsl_matrix *xHi, gsl_vector *xHiy) {
 	gsl_vector_set_zero (xHiy);
 
 	size_t n_size=Y->size2, d_size=Y->size1, dc_size=xHi->size1;
 
 	for (size_t k=0; k<n_size; k++) {
-		gsl_matrix_const_view xHi_k=gsl_matrix_const_submatrix(xHi, 0, k*d_size, dc_size, d_size);
+		gsl_matrix_const_view xHi_k=
+		  gsl_matrix_const_submatrix(xHi,0,k*d_size,dc_size,d_size);
 		gsl_vector_const_view y_k=gsl_matrix_const_column(Y, k);
 
-		gsl_blas_dgemv (CblasNoTrans, 1.0, &xHi_k.matrix, &y_k.vector, 1.0, xHiy);
+		gsl_blas_dgemv(CblasNoTrans,1.0,&xHi_k.matrix,&y_k.vector,
+			       1.0,xHiy);
 	}
 
 	return;
 }
 
-
-
-
-//0<=i,j<d_size
-size_t GetIndex (const size_t i, const size_t j, const size_t d_size)
-{
-	if (i>=d_size || j>=d_size) {cout<<"error in GetIndex."<<endl; return 0;}
+// 0<=i,j<d_size
+size_t GetIndex (const size_t i, const size_t j, const size_t d_size) {
+	if (i>=d_size || j>=d_size) {
+	  cout<<"error in GetIndex."<<endl;
+	  return 0;
+	}
 
 	size_t s, l;
-	if (j<i) {s=j; l=i;} else {s=i; l=j;}
+	if (j<i) {
+	  s=j;
+	  l=i;
+	} else {
+	  s=i;
+	  l=j;
+	}
 
 	return (2*d_size-s+1)*s/2+l-s;
 }
 
-
-
-void Calc_yHiDHiy (const gsl_vector *eval, const gsl_matrix *Hiy, const size_t i, const size_t j, double &yHiDHiy_g, double &yHiDHiy_e)
-{
+void Calc_yHiDHiy (const gsl_vector *eval, const gsl_matrix *Hiy,
+		   const size_t i, const size_t j, double &yHiDHiy_g,
+		   double &yHiDHiy_e) {
 	yHiDHiy_g=0.0;
 	yHiDHiy_e=0.0;
 
@@ -1144,10 +1109,9 @@ void Calc_yHiDHiy (const gsl_vector *eval, const gsl_matrix *Hiy, const size_t i
 	return;
 }
 
-
-
-void Calc_xHiDHiy (const gsl_vector *eval, const gsl_matrix *xHi, const gsl_matrix *Hiy, const size_t i, const size_t j, gsl_vector *xHiDHiy_g, gsl_vector *xHiDHiy_e)
-{
+void Calc_xHiDHiy (const gsl_vector *eval, const gsl_matrix *xHi,
+		   const gsl_matrix *Hiy, const size_t i, const size_t j,
+		   gsl_vector *xHiDHiy_g, gsl_vector *xHiDHiy_e) {
 	gsl_vector_set_zero(xHiDHiy_g);
 	gsl_vector_set_zero(xHiDHiy_e);
 
@@ -1158,27 +1122,29 @@ void Calc_xHiDHiy (const gsl_vector *eval, const gsl_matrix *xHi, const gsl_matr
 	for (size_t k=0; k<n_size; k++) {
 		delta=gsl_vector_get (eval, k);
 
-		gsl_vector_const_view xHi_col_i=gsl_matrix_const_column (xHi, k*d_size+i);
+		gsl_vector_const_view xHi_col_i=
+		  gsl_matrix_const_column (xHi, k*d_size+i);
 		d=gsl_matrix_get (Hiy, j, k);
 
 		gsl_blas_daxpy (d*delta, &xHi_col_i.vector, xHiDHiy_g);
 		gsl_blas_daxpy (d, &xHi_col_i.vector, xHiDHiy_e);
 
 		if (i!=j) {
-			gsl_vector_const_view xHi_col_j=gsl_matrix_const_column (xHi, k*d_size+j);
-			d=gsl_matrix_get (Hiy, i, k);
-
-			gsl_blas_daxpy (d*delta, &xHi_col_j.vector, xHiDHiy_g);
-			gsl_blas_daxpy (d, &xHi_col_j.vector, xHiDHiy_e);
+		  gsl_vector_const_view xHi_col_j=
+		    gsl_matrix_const_column (xHi, k*d_size+j);
+		  d=gsl_matrix_get (Hiy, i, k);
+		  
+		  gsl_blas_daxpy (d*delta, &xHi_col_j.vector, xHiDHiy_g);
+		  gsl_blas_daxpy (d, &xHi_col_j.vector, xHiDHiy_e);
 		}
 	}
 
 	return;
 }
 
-
-void Calc_xHiDHix (const gsl_vector *eval, const gsl_matrix *xHi, const size_t i, const size_t j, gsl_matrix *xHiDHix_g, gsl_matrix *xHiDHix_e)
-{
+void Calc_xHiDHix (const gsl_vector *eval, const gsl_matrix *xHi,
+		   const size_t i, const size_t j, gsl_matrix *xHiDHix_g,
+		   gsl_matrix *xHiDHix_e) {
 	gsl_matrix_set_zero(xHiDHix_g);
 	gsl_matrix_set_zero(xHiDHix_e);
 
@@ -1193,11 +1159,14 @@ void Calc_xHiDHix (const gsl_vector *eval, const gsl_matrix *xHi, const size_t i
 	for (size_t k=0; k<n_size; k++) {
 		delta=gsl_vector_get (eval, k);
 
-		gsl_vector_const_view xHi_col_i=gsl_matrix_const_column (xHi, k*d_size+i);
-		gsl_vector_const_view xHi_col_j=gsl_matrix_const_column (xHi, k*d_size+j);
+		gsl_vector_const_view xHi_col_i=
+		  gsl_matrix_const_column (xHi, k*d_size+i);
+		gsl_vector_const_view xHi_col_j=
+		  gsl_matrix_const_column (xHi, k*d_size+j);
 
 		gsl_matrix_set_zero (mat_dcdc);
-		gsl_blas_dger (1.0, &xHi_col_i.vector, &xHi_col_j.vector, mat_dcdc);
+		gsl_blas_dger(1.0,&xHi_col_i.vector,&xHi_col_j.vector,
+			      mat_dcdc);
 
 		gsl_matrix_transpose_memcpy (mat_dcdc_t, mat_dcdc);
 
@@ -1220,17 +1189,19 @@ void Calc_xHiDHix (const gsl_vector *eval, const gsl_matrix *xHi, const size_t i
 	return;
 }
 
-
-
-void Calc_yHiDHiDHiy (const gsl_vector *eval, const gsl_matrix *Hi, const gsl_matrix *Hiy, const size_t i1, const size_t j1, const size_t i2, const size_t j2, double &yHiDHiDHiy_gg, double &yHiDHiDHiy_ee, double &yHiDHiDHiy_ge)
-{
+void Calc_yHiDHiDHiy (const gsl_vector *eval, const gsl_matrix *Hi,
+		      const gsl_matrix *Hiy, const size_t i1,
+		      const size_t j1, const size_t i2, const size_t j2,
+		      double &yHiDHiDHiy_gg, double &yHiDHiDHiy_ee,
+		      double &yHiDHiDHiy_ge) {
 	yHiDHiDHiy_gg=0.0;
 	yHiDHiDHiy_ee=0.0;
 	yHiDHiDHiy_ge=0.0;
 
 	size_t n_size=eval->size, d_size=Hiy->size1;
 
-	double delta, d_Hiy_i1, d_Hiy_j1, d_Hiy_i2, d_Hiy_j2, d_Hi_i1i2, d_Hi_i1j2, d_Hi_j1i2, d_Hi_j1j2;
+	double delta, d_Hiy_i1, d_Hiy_j1, d_Hiy_i2, d_Hiy_j2;
+	double d_Hi_i1i2, d_Hi_i1j2, d_Hi_j1i2, d_Hi_j1j2;
 
 	for (size_t k=0; k<n_size; k++) {
 		delta=gsl_vector_get (eval, k);
@@ -1246,34 +1217,45 @@ void Calc_yHiDHiDHiy (const gsl_vector *eval, const gsl_matrix *Hi, const gsl_ma
 		d_Hi_j1j2=gsl_matrix_get (Hi, j1, k*d_size+j2);
 
 		if (i1==j1) {
-			yHiDHiDHiy_gg+=delta*delta*(d_Hiy_i1*d_Hi_j1i2*d_Hiy_j2);
-			yHiDHiDHiy_ee+=(d_Hiy_i1*d_Hi_j1i2*d_Hiy_j2);
-			yHiDHiDHiy_ge+=delta*(d_Hiy_i1*d_Hi_j1i2*d_Hiy_j2);
-
-			if (i2!=j2) {
-				yHiDHiDHiy_gg+=delta*delta*(d_Hiy_i1*d_Hi_j1j2*d_Hiy_i2);
-				yHiDHiDHiy_ee+=(d_Hiy_i1*d_Hi_j1j2*d_Hiy_i2);
-				yHiDHiDHiy_ge+=delta*(d_Hiy_i1*d_Hi_j1j2*d_Hiy_i2);
-			}
+		  yHiDHiDHiy_gg+=delta*delta*(d_Hiy_i1*d_Hi_j1i2*d_Hiy_j2);
+		  yHiDHiDHiy_ee+=(d_Hiy_i1*d_Hi_j1i2*d_Hiy_j2);
+		  yHiDHiDHiy_ge+=delta*(d_Hiy_i1*d_Hi_j1i2*d_Hiy_j2);
+		  
+		  if (i2!=j2) {
+		    yHiDHiDHiy_gg+=delta*delta*(d_Hiy_i1*d_Hi_j1j2*d_Hiy_i2);
+		    yHiDHiDHiy_ee+=(d_Hiy_i1*d_Hi_j1j2*d_Hiy_i2);
+		    yHiDHiDHiy_ge+=delta*(d_Hiy_i1*d_Hi_j1j2*d_Hiy_i2);
+		  }
 		} else {
-			yHiDHiDHiy_gg+=delta*delta*(d_Hiy_i1*d_Hi_j1i2*d_Hiy_j2+d_Hiy_j1*d_Hi_i1i2*d_Hiy_j2);
-			yHiDHiDHiy_ee+=(d_Hiy_i1*d_Hi_j1i2*d_Hiy_j2+d_Hiy_j1*d_Hi_i1i2*d_Hiy_j2);
-			yHiDHiDHiy_ge+=delta*(d_Hiy_i1*d_Hi_j1i2*d_Hiy_j2+d_Hiy_j1*d_Hi_i1i2*d_Hiy_j2);
-
-			if (i2!=j2) {
-				yHiDHiDHiy_gg+=delta*delta*(d_Hiy_i1*d_Hi_j1j2*d_Hiy_i2+d_Hiy_j1*d_Hi_i1j2*d_Hiy_i2);
-				yHiDHiDHiy_ee+=(d_Hiy_i1*d_Hi_j1j2*d_Hiy_i2+d_Hiy_j1*d_Hi_i1j2*d_Hiy_i2);
-				yHiDHiDHiy_ge+=delta*(d_Hiy_i1*d_Hi_j1j2*d_Hiy_i2+d_Hiy_j1*d_Hi_i1j2*d_Hiy_i2);
-			}
+		  yHiDHiDHiy_gg+=
+		    delta*delta*(d_Hiy_i1*d_Hi_j1i2*d_Hiy_j2 +
+				 d_Hiy_j1*d_Hi_i1i2*d_Hiy_j2);
+		  yHiDHiDHiy_ee+=
+		    (d_Hiy_i1*d_Hi_j1i2*d_Hiy_j2+d_Hiy_j1*d_Hi_i1i2*d_Hiy_j2);
+		  yHiDHiDHiy_ge+=
+		    delta*(d_Hiy_i1*d_Hi_j1i2*d_Hiy_j2 +
+			   d_Hiy_j1*d_Hi_i1i2*d_Hiy_j2);
+		  
+		  if (i2!=j2) {
+		    yHiDHiDHiy_gg+=
+		      delta*delta*(d_Hiy_i1*d_Hi_j1j2*d_Hiy_i2 +
+				   d_Hiy_j1*d_Hi_i1j2*d_Hiy_i2);
+		    yHiDHiDHiy_ee+=(d_Hiy_i1*d_Hi_j1j2*d_Hiy_i2 +
+				    d_Hiy_j1*d_Hi_i1j2*d_Hiy_i2);
+		    yHiDHiDHiy_ge+=delta*(d_Hiy_i1*d_Hi_j1j2*d_Hiy_i2 +
+					  d_Hiy_j1*d_Hi_i1j2*d_Hiy_i2);
+		  }
 		}
 	}
-
+	
 	return;
 }
 
-
-void Calc_xHiDHiDHiy (const gsl_vector *eval, const gsl_matrix *Hi, const gsl_matrix *xHi, const gsl_matrix *Hiy, const size_t i1, const size_t j1, const size_t i2, const size_t j2, gsl_vector *xHiDHiDHiy_gg, gsl_vector *xHiDHiDHiy_ee, gsl_vector *xHiDHiDHiy_ge)
-{
+void Calc_xHiDHiDHiy (const gsl_vector *eval, const gsl_matrix *Hi,
+		      const gsl_matrix *xHi, const gsl_matrix *Hiy,
+		      const size_t i1, const size_t j1, const size_t i2,
+		      const size_t j2, gsl_vector *xHiDHiDHiy_gg,
+		      gsl_vector *xHiDHiDHiy_ee, gsl_vector *xHiDHiDHiy_ge) {
 	gsl_vector_set_zero(xHiDHiDHiy_gg);
 	gsl_vector_set_zero(xHiDHiDHiy_ee);
 	gsl_vector_set_zero(xHiDHiDHiy_ge);
