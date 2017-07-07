@@ -1,22 +1,22 @@
 /*
  Genome-wide Efficient Mixed Model Association (GEMMA)
  Copyright (C) 2011-2017, Xiang Zhou
- 
+
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
  (at your option) any later version.
- 
+
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
- 
+
  You should have received a copy of the GNU General Public License
  along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __BSLMM_H__                
+#ifndef __BSLMM_H__
 #define __BSLMM_H__
 
 #include <vector>
@@ -30,23 +30,23 @@ using namespace std;
 
 class BSLMM {
 
-public:	
+public:
 	// IO-related parameters.
-	int a_mode;	
+	int a_mode;
 	size_t d_pace;
-	
+
 	string file_bfile;
 	string file_geno;
 	string file_out;
 	string path_out;
-	
+
 	// LMM-related parameters.
 	double l_min;
 	double l_max;
 	size_t n_region;
 	double pve_null;
 	double pheno_mean;
-	
+
 	// BSLMM MCMC-related parameters
 	double h_min, h_max, h_scale;	       // Priors for h.
 	double rho_min, rho_max, rho_scale;    // Priors for rho.
@@ -61,8 +61,8 @@ public:
 	size_t n_mh;			       // Number of MH steps per iter.
 	double geo_mean;		       // Mean of geometric dist.
 	long int randseed;
-	double trace_G;	
-	
+	double trace_G;
+
 	HYPBSLMM cHyp_initial;
 
 	// Summary statistics.
@@ -74,32 +74,32 @@ public:
 
         // Time spent on constructing the proposal distribution for
         // gamma (i.e. lmm or lm analysis).
-	double time_Proposal;        
+	double time_Proposal;
 
         // Indicator for individuals (phenotypes): 0 missing, 1
         // available for analysis.
-	vector<int> indicator_idv;				
+	vector<int> indicator_idv;
 
 	// Sequence indicator for SNPs: 0 ignored because of (a) maf,
 	// (b) miss, (c) non-poly; 1 available for analysis.
-	vector<int> indicator_snp;	
+	vector<int> indicator_snp;
 
         // Record SNP information.
-	vector<SNPINFO> snpInfo;		
-	
+	vector<SNPINFO> snpInfo;
+
 	// Not included in PARAM.
-	gsl_rng *gsl_r; 
-	gsl_ran_discrete_t *gsl_t;	
-	map<size_t, size_t> mapRank2pos;	
-	
+	gsl_rng *gsl_r;
+	gsl_ran_discrete_t *gsl_t;
+	map<size_t, size_t> mapRank2pos;
+
 	// Main functions.
 	void CopyFromParam (PARAM &cPar);
 	void CopyToParam (PARAM &cPar);
-	
+
 	void RidgeR(const gsl_matrix *U, const gsl_matrix *UtX,
 		    const gsl_vector *Uty, const gsl_vector *eval,
 		    const double lambda);
-	
+
 	void MCMC (const gsl_matrix *U, const gsl_matrix *UtX,
 		   const gsl_vector *Uty, const gsl_vector *K_eval,
 		   const gsl_vector *y);
@@ -111,10 +111,10 @@ public:
 	void WriteParam (const gsl_vector *alpha);
 	void WriteResult (const int flag, const gsl_matrix *Result_hyp,
 			  const gsl_matrix *Result_gamma, const size_t w_col);
-	
+
 	// Subfunctions inside MCMC.
 	void CalcPgamma (double *p_gammar);
-	
+
 	double CalcPveLM (const gsl_matrix *UtXgamma, const gsl_vector *Uty,
 			  const double sigma_a2);
 	void InitialMCMC (const gsl_matrix *UtX, const gsl_vector *Uty,

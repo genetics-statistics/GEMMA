@@ -141,7 +141,7 @@ public:
 	string file_read; // File containing total number of reads.
 	string file_gene; // Gene expression file.
 	string file_snps; // File containing analyzed SNPs or genes.
-  
+
         // WJA added.
 	string file_oxford;
 
@@ -212,7 +212,7 @@ public:
 
 	// Summary statistics.
 	bool error;
-  
+
         // Number of individuals.
 	size_t ni_total, ni_test, ni_cvt, ni_study, ni_ref;
 
@@ -221,7 +221,7 @@ public:
 
         // Number of SNPs.
 	size_t ns_total, ns_test, ns_study, ns_ref;
-  
+
 	size_t ng_total, ng_test;   // Number of genes.
 	size_t ni_control, ni_case; // Number of controls and number of cases.
 	size_t ni_subsample;        // Number of subsampled individuals.

@@ -61,7 +61,7 @@ MQS algorithm to estimate variance components.
 If you use GEMMA for published work, please cite our paper:
 
 + Xiang Zhou and Matthew Stephens (2012). [Genome-wide efficient
-mixed-model analysis for association studies.](http://doi.org/10.1038/ng.2310) 
+mixed-model analysis for association studies.](http://doi.org/10.1038/ng.2310)
 *Nature Genetics* **44**, 821–824.
 
 If you use the multivariate linear mixed model (mvLMM) in your
@@ -77,7 +77,7 @@ If you use the Bayesian sparse linear mixed model (BSLMM), please cite:
 + Xiang Zhou, Peter Carbonetto and Matthew Stephens (2013). [Polygenic
 modeling with bayesian sparse linear mixed
 models.](http://doi.org/10.1371/journal.pgen.1003264) *PLoS Genetics*
-**9**, e1003264. 
+**9**, e1003264.
 
 And if you use of the variance component estimation using summary
 statistics, please cite:
@@ -118,7 +118,7 @@ This is the current structure of the GEMMA source repository:
 subfolders; see Wilson et al "Good Enough Practices" paper for example
 of this.*
 
-## Setup 
+## Setup
 
 There are two ways to install GEMMA:
 

@@ -78,35 +78,35 @@ public:
 	void CopyToParam (PARAM &cPar);
 
 	void WriteResult (const gsl_matrix *Hyper, const gsl_matrix *BF);
-	void WriteResult (const vector<string> &vec_rs, 
-			  const gsl_matrix *Hyper, const gsl_vector *pip, 
+	void WriteResult (const vector<string> &vec_rs,
+			  const gsl_matrix *Hyper, const gsl_vector *pip,
 			  const gsl_vector *coef);
-	double CalcMarginal (const gsl_vector *Uty, const gsl_vector *K_eval, 
+	double CalcMarginal (const gsl_vector *Uty, const gsl_vector *K_eval,
 			     const double sigma_b2, const double tau);
-	double CalcMarginal (const gsl_matrix *UtXgamma, 
-			     const gsl_vector *Uty, const gsl_vector *K_eval, 
-			     const double sigma_a2, const double sigma_b2, 
+	double CalcMarginal (const gsl_matrix *UtXgamma,
+			     const gsl_vector *Uty, const gsl_vector *K_eval,
+			     const double sigma_a2, const double sigma_b2,
 			     const double tau);
 	double CalcPrior (class HYPBSLMM &cHyp);
 
-	void DAP_CalcBF (const gsl_matrix *U, const gsl_matrix *UtX, 
-			 const gsl_vector *Uty, const gsl_vector *K_eval, 
+	void DAP_CalcBF (const gsl_matrix *U, const gsl_matrix *UtX,
+			 const gsl_vector *Uty, const gsl_vector *K_eval,
 			 const gsl_vector *y);
-	void DAP_EstimateHyper (const size_t kc, const size_t kd, 
-				const vector<string> &vec_rs, 
-				const vector<double> &vec_sa2, 
-				const vector<double> &vec_sb2, 
-				const vector<double> &wab, 
-				const vector<vector<vector<double> > > &BF, 
-				gsl_matrix *Ac, gsl_matrix_int *Ad, 
+	void DAP_EstimateHyper (const size_t kc, const size_t kd,
+				const vector<string> &vec_rs,
+				const vector<double> &vec_sa2,
+				const vector<double> &vec_sb2,
+				const vector<double> &wab,
+				const vector<vector<vector<double> > > &BF,
+				gsl_matrix *Ac, gsl_matrix_int *Ad,
 				gsl_vector_int *dlevel);
 };
 
-void ReadFile_hyb (const string &file_hyp, vector<double> &vec_sa2, 
+void ReadFile_hyb (const string &file_hyp, vector<double> &vec_sa2,
 		   vector<double> &vec_sb2, vector<double> &vec_wab);
-void ReadFile_bf (const string &file_bf, vector<string> &vec_rs, 
+void ReadFile_bf (const string &file_bf, vector<string> &vec_rs,
 		  vector<vector<vector<double> > > &BF);
-void ReadFile_cat (const string &file_cat, const vector<string> &vec_rs, 
+void ReadFile_cat (const string &file_cat, const vector<string> &vec_rs,
 		   gsl_matrix *Ac, gsl_matrix_int *Ad, gsl_vector_int *dlevel,
 		   size_t &kc, size_t &kd);
 

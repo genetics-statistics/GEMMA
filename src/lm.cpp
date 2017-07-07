@@ -412,13 +412,13 @@ void LM::Analyzebgen (const gsl_matrix *W, const gsl_vector *y) {
 	string chr;
 	std::cout << "Warning: WJA hard coded SNP missingness " <<
 	  "threshold of 10%" << std::endl;
-	
+
 	// Start reading genotypes and analyze.
 	for (size_t t=0; t<indicator_snp.size(); ++t) {
 		if (t%d_pace==0 || t==(ns_total-1)) {
 		  ProgressBar ("Reading SNPs  ", t, ns_total-1);
 		}
-		
+
 		// Read SNP header.
 		id.clear();
 		rs.clear();
@@ -500,7 +500,7 @@ void LM::Analyzebgen (const gsl_matrix *W, const gsl_vector *y) {
 			    static_cast<double>(unzipped_data[i*3+1])/32768.0;
 			  bgen_geno_prob_BB=
 			    static_cast<double>(unzipped_data[i*3+2])/32768.0;
-			  
+
 				// WJA
 			  bgen_geno_prob_non_miss=
 			    bgen_geno_prob_AA +

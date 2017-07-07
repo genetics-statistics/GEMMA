@@ -16,7 +16,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __PRDT_H__                
+#ifndef __PRDT_H__
 #define __PRDT_H__
 
 #include <vector>
@@ -29,30 +29,30 @@
 using namespace std;
 
 class PRDT {
-	
+
 public:
 	// IO-related parameters.
 	size_t a_mode;
 	size_t d_pace;
-	
+
 	string file_bfile;
 	string file_geno;
 	string file_out;
 	string path_out;
-	
+
 	vector<vector<int> > indicator_pheno;
 	vector<int> indicator_cvt;
 	vector<int> indicator_idv;
 	vector<SNPINFO> snpInfo;
 	map<string, double> mapRS2est;
-	
+
 	size_t n_ph;
 	size_t np_obs, np_miss;
 	size_t ns_total;
 	size_t ns_test;
-	
+
 	double time_eigen;
-	
+
 	// Main functions.
 	void CopyFromParam (PARAM &cPar);
 	void CopyToParam (PARAM &cPar);

@@ -375,7 +375,7 @@ double CalcHWE (const size_t n_hom1, const size_t n_hom2, const size_t n_ab) {
 		het_probs[i] /= sum;
 
 		double p_hwe = 0.0;
-		
+
 	        // p-value calculation for p_hwe.
 		for (i = 0; i <= rare_copies; i++)
 		{

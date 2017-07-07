@@ -14,8 +14,8 @@ SYS = LNX
 # Disable WITH_LAPACK option can slow computation speed significantly and is not recommended
 # Disable WITH_ARPACK option only disable -apprx option in the software
 WITH_LAPACK = 1
-FORCE_32BIT = 
-FORCE_DYNAMIC = 
+FORCE_32BIT =
+FORCE_DYNAMIC =
 DIST_NAME = gemma-0.96alpha
 
 # --------------------------------------------------------------------
@@ -45,7 +45,7 @@ OUTPUT = $(BIN_DIR)/gemma
 
 SOURCES = $(SRC_DIR)/main.cpp
 
-HDR = 
+HDR =
 
 # Detailed libary paths, D for dynamic and S for static
 LIBS_LNX_D_LAPACK = -llapack
@@ -54,7 +54,7 @@ LIBS_LNX_S_LAPACK = /software/atlas-3.10.3-el7-x86_64/lib/liblapack.a \
    /software/atlas-3.10.3-el7-x86_64/lib/libcblas.a \
    /software/atlas-3.10.3-el7-x86_64/lib/libf77blas.a \
    /software/atlas-3.10.3-el7-x86_64/lib/libatlas.a -lgfortran \
-   -Wl,--allow-multiple-definition 
+   -Wl,--allow-multiple-definition
 
 SOURCES += $(SRC_DIR)/param.cpp $(SRC_DIR)/gemma.cpp $(SRC_DIR)/io.cpp $(SRC_DIR)/lm.cpp $(SRC_DIR)/lmm.cpp $(SRC_DIR)/vc.cpp $(SRC_DIR)/mvlmm.cpp $(SRC_DIR)/bslmm.cpp $(SRC_DIR)/prdt.cpp $(SRC_DIR)/mathfunc.cpp $(SRC_DIR)/gzstream.cpp $(SRC_DIR)/eigenlib.cpp $(SRC_DIR)/ldr.cpp $(SRC_DIR)/bslmmdap.cpp $(SRC_DIR)/logistic.cpp $(SRC_DIR)/varcov.cpp
 HDR += $(SRC_DIR)/param.h $(SRC_DIR)/gemma.h $(SRC_DIR)/io.h $(SRC_DIR)/lm.h $(SRC_DIR)/lmm.h $(SRC_DIR)/vc.h $(SRC_DIR)/mvlmm.h $(SRC_DIR)/bslmm.h $(SRC_DIR)/prdt.h $(SRC_DIR)/mathfunc.h $(SRC_DIR)/gzstream.h $(SRC_DIR)/eigenlib.h
@@ -91,7 +91,7 @@ $(OUTPUT): $(OBJS)
 
 $(OBJS) : $(HDR)
 
-.cpp.o: 
+.cpp.o:
 	$(CPP) $(CPPFLAGS) $(HEADERS) -c $*.cpp -o $*.o
 .SUFFIXES : .cpp .c .o $(SUFFIXES)
 

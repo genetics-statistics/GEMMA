@@ -92,13 +92,13 @@ void BSLMMDAP::CopyToParam (PARAM &cPar) {
 
 
 // Read hyp file.
-void ReadFile_hyb (const string &file_hyp, vector<double> &vec_sa2, 
+void ReadFile_hyb (const string &file_hyp, vector<double> &vec_sa2,
 		   vector<double> &vec_sb2, vector<double> &vec_wab) {
   vec_sa2.clear(); vec_sb2.clear(); vec_wab.clear();
 
   igzstream infile (file_hyp.c_str(), igzstream::in);
   if (!infile) {
-    cout<<"error! fail to open hyp file: "<<file_hyp<<endl; 
+    cout<<"error! fail to open hyp file: "<<file_hyp<<endl;
     return;
   }
 
@@ -128,7 +128,7 @@ void ReadFile_hyb (const string &file_hyp, vector<double> &vec_sa2,
 }
 
 // Read bf file.
-void ReadFile_bf (const string &file_bf, vector<string> &vec_rs, 
+void ReadFile_bf (const string &file_bf, vector<string> &vec_rs,
 		  vector<vector<vector<double> > > &BF) {
   BF.clear(); vec_rs.clear();
 
@@ -196,12 +196,12 @@ void ReadFile_bf (const string &file_bf, vector<string> &vec_rs,
 
 // Read category files.
 // Read both continuous and discrete category file, record mapRS2catc.
-void ReadFile_cat (const string &file_cat, const vector<string> &vec_rs, 
+void ReadFile_cat (const string &file_cat, const vector<string> &vec_rs,
 		   gsl_matrix *Ac, gsl_matrix_int *Ad, gsl_vector_int *dlevel,
 		   size_t &kc, size_t &kd) {
   igzstream infile (file_cat.c_str(), igzstream::in);
   if (!infile) {
-    cout<<"error! fail to open category file: "<<file_cat<<endl; 
+    cout<<"error! fail to open category file: "<<file_cat<<endl;
     return;
   }
 
@@ -323,11 +323,11 @@ void BSLMMDAP::WriteResult (const gsl_matrix *Hyper, const gsl_matrix *BF) {
 	outfile_hyp.open (file_hyp.c_str(), ofstream::out);
 
 	if (!outfile_bf) {
-	  cout<<"error writing file: "<<file_bf<<endl; 
+	  cout<<"error writing file: "<<file_bf<<endl;
 	  return;
 	}
 	if (!outfile_hyp) {
-	  cout<<"error writing file: "<<file_hyp<<endl; 
+	  cout<<"error writing file: "<<file_hyp<<endl;
 	  return;
 	}
 
@@ -370,8 +370,8 @@ void BSLMMDAP::WriteResult (const gsl_matrix *Hyper, const gsl_matrix *BF) {
 	return;
 }
 
-void BSLMMDAP::WriteResult (const vector<string> &vec_rs, 
-			    const gsl_matrix *Hyper, const gsl_vector *pip, 
+void BSLMMDAP::WriteResult (const vector<string> &vec_rs,
+			    const gsl_matrix *Hyper, const gsl_vector *pip,
 			    const gsl_vector *coef) {
   string file_gamma, file_hyp, file_coef;
 	file_gamma=path_out+"/"+file_out;
@@ -388,15 +388,15 @@ void BSLMMDAP::WriteResult (const vector<string> &vec_rs,
 	outfile_coef.open (file_coef.c_str(), ofstream::out);
 
 	if (!outfile_gamma) {
-	  cout<<"error writing file: "<<file_gamma<<endl; 
+	  cout<<"error writing file: "<<file_gamma<<endl;
 	  return;
 	}
 	if (!outfile_hyp) {
-	  cout<<"error writing file: "<<file_hyp<<endl; 
+	  cout<<"error writing file: "<<file_hyp<<endl;
 	  return;
 	}
 	if (!outfile_coef) {
-	  cout<<"error writing file: "<<file_coef<<endl; 
+	  cout<<"error writing file: "<<file_coef<<endl;
 	  return;
 	}
 
@@ -432,8 +432,8 @@ void BSLMMDAP::WriteResult (const vector<string> &vec_rs,
 }
 
 
-double BSLMMDAP::CalcMarginal (const gsl_vector *Uty, 
-			       const gsl_vector *K_eval, 
+double BSLMMDAP::CalcMarginal (const gsl_vector *Uty,
+			       const gsl_vector *K_eval,
 			       const double sigma_b2, const double tau) {
 	gsl_vector *weight_Hi=gsl_vector_alloc (Uty->size);
 
@@ -457,16 +457,16 @@ double BSLMMDAP::CalcMarginal (const gsl_vector *Uty,
 	return logm;
 }
 
-double BSLMMDAP::CalcMarginal (const gsl_matrix *UtXgamma, 
-			       const gsl_vector *Uty, 
-			       const gsl_vector *K_eval, 
-			       const double sigma_a2, 
+double BSLMMDAP::CalcMarginal (const gsl_matrix *UtXgamma,
+			       const gsl_vector *Uty,
+			       const gsl_vector *K_eval,
+			       const double sigma_a2,
 			       const double sigma_b2, const double tau) {
   clock_t  time_start;
 	double logm=0.0;
 	double d, uy, P_yy=0, logdet_O=0.0, logdet_H=0.0;
 
-	gsl_matrix *UtXgamma_eval=gsl_matrix_alloc (UtXgamma->size1, 
+	gsl_matrix *UtXgamma_eval=gsl_matrix_alloc (UtXgamma->size1,
 						    UtXgamma->size2);
 	gsl_matrix *Omega=gsl_matrix_alloc (UtXgamma->size2, UtXgamma->size2);
 	gsl_vector *XtHiy=gsl_vector_alloc (UtXgamma->size2);
@@ -526,8 +526,8 @@ double BSLMMDAP::CalcPrior (class HYPBSLMM &cHyp) {
 }
 
 // Where A is the ni_test by n_cat matrix of annotations.
-void BSLMMDAP::DAP_CalcBF (const gsl_matrix *U, const gsl_matrix *UtX, 
-			   const gsl_vector *Uty, const gsl_vector *K_eval, 
+void BSLMMDAP::DAP_CalcBF (const gsl_matrix *U, const gsl_matrix *UtX,
+			   const gsl_vector *Uty, const gsl_vector *K_eval,
 			   const gsl_vector *y) {
 	clock_t time_start;
 
@@ -601,9 +601,9 @@ void BSLMMDAP::DAP_CalcBF (const gsl_matrix *U, const gsl_matrix *UtX,
 	return;
 }
 
-void single_ct_regression(const gsl_matrix_int *Xd, 
+void single_ct_regression(const gsl_matrix_int *Xd,
 			  const gsl_vector_int *dlevel,
-			  const gsl_vector *pip_vec, 
+			  const gsl_vector *pip_vec,
 			  gsl_vector *coef, gsl_vector *prior_vec) {
 
   map<int,double> sum_pip;
@@ -635,13 +635,13 @@ void single_ct_regression(const gsl_matrix_int *Xd,
 }
 
 // Where A is the ni_test by n_cat matrix of annotations.
-void BSLMMDAP::DAP_EstimateHyper (const size_t kc, const size_t kd, 
-				  const vector<string> &vec_rs, 
-				  const vector<double> &vec_sa2, 
-				  const vector<double> &vec_sb2, 
-				  const vector<double> &wab, 
-				  const vector<vector<vector<double> > > &BF, 
-				  gsl_matrix *Ac, gsl_matrix_int *Ad, 
+void BSLMMDAP::DAP_EstimateHyper (const size_t kc, const size_t kd,
+				  const vector<string> &vec_rs,
+				  const vector<double> &vec_sa2,
+				  const vector<double> &vec_sb2,
+				  const vector<double> &wab,
+				  const vector<vector<vector<double> > > &BF,
+				  gsl_matrix *Ac, gsl_matrix_int *Ad,
 				  gsl_vector_int *dlevel) {
 	clock_t time_start;
 
