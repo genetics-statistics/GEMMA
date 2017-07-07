@@ -28,7 +28,7 @@
 #include <cstring>
 #include <cmath>
 #include <stdio.h>
-#include <stdlib.h> 
+#include <stdlib.h>
 
 #include "gsl/gsl_vector.h"
 #include "gsl/gsl_matrix.h"
@@ -47,22 +47,22 @@ using namespace std;
 
 void VARCOV::CopyFromParam (PARAM &cPar) {
 	d_pace=cPar.d_pace;
-	
+
 	file_bfile=cPar.file_bfile;
 	file_geno=cPar.file_geno;
 	file_out=cPar.file_out;
 	path_out=cPar.path_out;
-	
+
 	time_opt=0.0;
 
 	window_cm=cPar.window_cm;
 	window_bp=cPar.window_bp;
 	window_ns=cPar.window_ns;
-	
+
 	indicator_idv=cPar.indicator_idv;
 	indicator_snp=cPar.indicator_snp;
 	snpInfo=cPar.snpInfo;
-	
+
 	return;
 }
 
@@ -82,7 +82,7 @@ void VARCOV::WriteCov (const int flag, const vector<SNPINFO> &snpInfo_sub,
   if (flag==0) {
     outfile.open (file_cov.c_str(), ofstream::out);
     if (!outfile) {cout<<"error writing file: "<<file_cov<<endl; return;}
-		
+
     outfile<<"chr"<<"\t"<<"rs"<<"\t"<<"ps"<<"\t"<<"n_mis"
 	   <<"\t"<<"n_obs"<<"\t"<<"allele1"<<"\t"<<"allele0"
 	   <<"\t"<<"af"<<"\t"<<"window_size"
@@ -111,11 +111,11 @@ void VARCOV::WriteCov (const int flag, const vector<SNPINFO> &snpInfo_sub,
 	  }
 	}
       }
-      
+
       outfile<<endl;
     }
   }
-	
+
   outfile.close();
   outfile.clear();
   return;
@@ -147,7 +147,7 @@ void VARCOV::CalcNB (vector<SNPINFO> &snpInfo_sort) {
   size_t t2=0, n_nb=0;
   for (size_t t=0; t<indicator_snp.size(); ++t) {
     if (indicator_snp[t]==0) {continue;}
-    
+
     if (snpInfo_sort[t].chr=="-9" ||
 	(snpInfo_sort[t].cM==-9 && window_cm!=0) ||
 	(snpInfo_sort[t].base_position==-9 && window_bp!=0) ) {
@@ -203,7 +203,7 @@ void Calc_Cor(vector<vector<double> > &X_mat, vector<double> &cov_vec) {
   }
 
   return;
-} 
+}
 
 // Read the genotype file again, calculate r2 between pairs of SNPs
 // within a window, output the file every 10K SNPs the output results
@@ -229,7 +229,7 @@ void VARCOV::AnalyzeBimbam () {
   for (size_t i=0; i<indicator_idv.size(); i++) {
     ni_test+=indicator_idv[i];
   }
-  
+
   gsl_vector *geno=gsl_vector_alloc (ni_test);
   double geno_mean;
 
@@ -253,29 +253,29 @@ void VARCOV::AnalyzeBimbam () {
     if (X_mat.size()==0) {
       n_nb=snpInfo[t].n_nb+1;
     } else {
-      n_nb=snpInfo[t].n_nb-n_nb+1;       
+      n_nb=snpInfo[t].n_nb-n_nb+1;
     }
 
     for (int i=0; i<n_nb; i++) {
-      if (X_mat.size()==0) {t2=t;} 
+      if (X_mat.size()==0) {t2=t;}
 
       // Read a line of the snp is filtered out.
       inc=0;
       while (t2<indicator_snp.size() && indicator_snp[t2]==0) {
-	t2++; inc++; 
+	t2++; inc++;
       }
 
       Bimbam_ReadOneSNP (inc, indicator_idv, infile, geno, geno_mean);
       gsl_vector_add_constant (geno, -1.0*geno_mean);
-            
+
       for (size_t j=0; j<geno->size; j++) {
 	x_vec[j]=gsl_vector_get(geno, j);
       }
       X_mat.push_back(x_vec);
 
       t2++;
-    }     
-    
+    }
+
     n_nb=snpInfo[t].n_nb;
 
     Calc_Cor(X_mat, cov_vec);
@@ -301,8 +301,8 @@ void VARCOV::AnalyzeBimbam () {
   gsl_vector_free(geno);
 
   infile.close();
-  infile.clear();	
-	
+  infile.clear();
+
   return;
 }
 
@@ -314,7 +314,7 @@ void VARCOV::AnalyzePlink () {
   // Calculate the number of right-hand-side neighbours for each SNP.
   vector<SNPINFO> snpInfo_sub;
   CalcNB(snpInfo);
-  
+
   size_t ni_test=0;
   for (size_t i=0; i<indicator_idv.size(); i++) {
     ni_test+=indicator_idv[i];
@@ -343,30 +343,30 @@ void VARCOV::AnalyzePlink () {
     if (X_mat.size()==0) {
       n_nb=snpInfo[t].n_nb+1;
     } else {
-      n_nb=snpInfo[t].n_nb-n_nb+1;       
+      n_nb=snpInfo[t].n_nb-n_nb+1;
     }
 
     for (int i=0; i<n_nb; i++) {
-      if (X_mat.size()==0) {t2=t;} 
+      if (X_mat.size()==0) {t2=t;}
 
       // Read a line if the SNP is filtered out.
       inc=0;
       while (t2<indicator_snp.size() && indicator_snp[t2]==0) {
 	t2++;
-	inc++; 
+	inc++;
       }
 
       Plink_ReadOneSNP (t2, indicator_idv, infile, geno, geno_mean);
       gsl_vector_add_constant (geno, -1.0*geno_mean);
-            
+
       for (size_t j=0; j<geno->size; j++) {
 	x_vec[j]=gsl_vector_get(geno, j);
       }
       X_mat.push_back(x_vec);
 
       t2++;
-    }     
-    
+    }
+
     n_nb=snpInfo[t].n_nb;
 
     Calc_Cor(X_mat, cov_vec);
@@ -392,7 +392,7 @@ void VARCOV::AnalyzePlink () {
   gsl_vector_free(geno);
 
   infile.close();
-  infile.clear();	
-	
+  infile.clear();
+
   return;
 }

@@ -175,7 +175,7 @@ void UpdateParam (const gsl_vector *log_sigma2, VC_PARAM *p) {
   gsl_matrix *WtHiWiWtHi=gsl_matrix_alloc(n_cvt, n1);
 
   double sigma2;
-  
+
   // Calculate H = \sum_i^{k+1} \sigma_i^2 K_i.
   gsl_matrix_set_zero (p->P);
   for (size_t i=0; i<n_vc+1; i++) {
@@ -196,7 +196,7 @@ void UpdateParam (const gsl_vector *log_sigma2, VC_PARAM *p) {
     gsl_matrix_scale(K_temp, sigma2);
     gsl_matrix_add (p->P, K_temp);
   }
-  
+
   // Calculate H^{-1}.
   eigenlib_invert(p->P);
 
@@ -211,7 +211,7 @@ void UpdateParam (const gsl_vector *log_sigma2, VC_PARAM *p) {
 
   // Calculate Py, KPy, PKPy.
   gsl_blas_dgemv(CblasNoTrans, 1.0, p->P, p->y, 0.0, p->Py);
-  
+
   double d;
   for (size_t i=0; i<n_vc+1; i++) {
     gsl_vector_view KPy=gsl_matrix_column (p->KPy_mat, i);
@@ -221,7 +221,7 @@ void UpdateParam (const gsl_vector *log_sigma2, VC_PARAM *p) {
       gsl_vector_memcpy (&KPy.vector, p->Py);
     } else {
       gsl_matrix_const_view K_sub=gsl_matrix_const_submatrix (p->K, 0, n1*i, n1, n1);
-      
+
       // Seems to be important to use gsl dgemv here instead of
       // eigenlib_dgemv; otherwise.
       gsl_blas_dgemv(CblasNoTrans, 1.0, &K_sub.matrix, p->Py, 0.0,
@@ -643,7 +643,7 @@ void ReadFile_cor (const string &file_cor, const set<string> &setSnps,
   }
 
   while (!safeGetline(infile, line).eof()) {
-    
+
     //do not read cor values this time; upto col_n-1.
     ch_ptr=strtok ((char *)line.c_str(), " , \t");
 
@@ -942,7 +942,7 @@ void ReadFile_cor (const string &file_cor, const vector<string> &vec_rs,
   ReadHeader_vc (line, header);
 
   while (!safeGetline(infile, line).eof()) {
-    
+
     // Do not read cor values this time; upto col_n-1.
     d_pos1=0; d_cm1=0;
     ch_ptr=strtok ((char *)line.c_str(), " , \t");
@@ -1115,7 +1115,7 @@ void ReadFile_cor (const string &file_cor, const vector<string> &vec_rs,
 	    mat_S[i][j]*=crt_factor; mat_S[j][i]*=crt_factor;
 	  }
 	  cout<<crt_factor<<endl;
-	  
+
 	  // Correct qvar.
 	  if (i==j) {
 	    vec_qvar[i]*=crt_factor;
@@ -1198,7 +1198,7 @@ void CalcVCss(const gsl_matrix *Vq, const gsl_matrix *S_mat,
   // Get qvar_mat.
   gsl_matrix_memcpy (qvar_mat, Vq);
   gsl_matrix_scale (qvar_mat, 1.0/(df*df));
-  
+
   // Calculate variance for these estimates.
   for (size_t i=0; i<n_vc; i++) {
     for (size_t j=i; j<n_vc; j++) {
@@ -1873,7 +1873,7 @@ void VC::CalcVCacl (const gsl_matrix *K, const gsl_matrix *W,
   size_t it=0;
   double s=1;
   while (abs(s)>1e-3 && it<100) {
-    
+
     // Update tau_inv.
     gsl_blas_ddot (q_vec, pve, &d);
     if (it>0) {s=y2_sum/(double)n1-d/((double)n1*((double)n1-1))-tau_inv;}
@@ -2143,7 +2143,7 @@ bool PlinkXwz (const string &file_bed, const int display_pace,
 	gsl_vector_mul(wz, w);
 
 	int n_bit;
-	
+
 	// Calculate n_bit and c, the number of bit for each snp.
 	if (ni_total%4==0) {n_bit=ni_total/4;}
 	else {n_bit=ni_total/4+1; }
@@ -2170,7 +2170,7 @@ bool PlinkXwz (const string &file_bed, const int display_pace,
 			b=ch[0];
 
 			// Minor allele homozygous: 2.0; major: 0.0.
-			for (size_t j=0; j<4; ++j) {                
+			for (size_t j=0; j<4; ++j) {
 				if ((i==(n_bit-1)) && ci_total==ni_total) {
 				  break;
 				}
@@ -2393,7 +2393,7 @@ bool PlinkXtXwz (const string &file_bed, const int display_pace,
 		if (indicator_snp[t]==0) {continue;}
 
 		// n_bit, and 3 is the number of magic numbers.
-		infile.seekg(t*n_bit+3); 
+		infile.seekg(t*n_bit+3);
 
 		// Read genotypes.
 		geno_mean=0.0;	n_miss=0; ci_total=0; geno_var=0.0; ci_test=0;
@@ -2402,7 +2402,7 @@ bool PlinkXtXwz (const string &file_bed, const int display_pace,
 			b=ch[0];
 
 			// Minor allele homozygous: 2.0; major: 0.0;
-			for (size_t j=0; j<4; ++j) {                
+			for (size_t j=0; j<4; ++j) {
 				if ((i==(n_bit-1)) && ci_total==ni_total) {
 				  break;
 				}

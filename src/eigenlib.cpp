@@ -28,9 +28,9 @@ using namespace std;
 using namespace Eigen;
 
 // On two different clusters, compare eigen vs lapack/gsl:
-// 
+//
 // dgemm, 5x or 0.5x faster or slower than lapack, 5x or 4x faster than gsl
-// dgemv, 20x or 4x faster than gsl, 
+// dgemv, 20x or 4x faster than gsl,
 // eigen, 1x or 0.3x slower than lapack
 // invert, 20x or 10x faster than lapack
 //

@@ -55,7 +55,7 @@ void LMM::CopyFromParam (PARAM &cPar) {
 	file_out=cPar.file_out;
 	path_out=cPar.path_out;
 	file_gene=cPar.file_gene;
-	
+
 	// WJA added.
 	file_oxford=cPar.file_oxford;
 
@@ -228,12 +228,12 @@ void CalcPab (const size_t n_cvt, const size_t e_mode,
 				  index_aw=GetabIndex (a, p, n_cvt);
 				  index_bw=GetabIndex (b, p, n_cvt);
 				  index_ww=GetabIndex (p, p, n_cvt);
-				  
+
 				  ps_ab=gsl_matrix_get (Pab, p-1, index_ab);
 				  ps_aw=gsl_matrix_get (Pab, p-1, index_aw);
 				  ps_bw=gsl_matrix_get (Pab, p-1, index_bw);
 				  ps_ww=gsl_matrix_get (Pab, p-1, index_ww);
-				  
+
 				  p_ab=ps_ab-ps_aw*ps_bw/ps_ww;
 				  gsl_matrix_set (Pab, p, index_ab, p_ab);
 				}
@@ -269,7 +269,7 @@ void CalcPPab (const size_t n_cvt, const size_t e_mode,
 				  index_aw=GetabIndex (a, p, n_cvt);
 				  index_bw=GetabIndex (b, p, n_cvt);
 				  index_ww=GetabIndex (p, p, n_cvt);
-				  
+
 				  ps2_ab=gsl_matrix_get (PPab, p-1, index_ab);
 				  ps_aw=gsl_matrix_get (Pab, p-1, index_aw);
 				  ps_bw=gsl_matrix_get (Pab, p-1, index_bw);
@@ -277,7 +277,7 @@ void CalcPPab (const size_t n_cvt, const size_t e_mode,
 				  ps2_aw=gsl_matrix_get (PPab, p-1, index_aw);
 				  ps2_bw=gsl_matrix_get (PPab, p-1, index_bw);
 				  ps2_ww=gsl_matrix_get (PPab, p-1, index_ww);
-				  
+
 				  p2_ab=ps2_ab+ps_aw*ps_bw*
 				    ps2_ww/(ps_ww*ps_ww);
 				  p2_ab-=(ps_aw*ps2_bw+ps_bw*ps2_aw)/ps_ww;
@@ -318,7 +318,7 @@ void CalcPPPab (const size_t n_cvt, const size_t e_mode,
 				  index_aw=GetabIndex (a, p, n_cvt);
 				  index_bw=GetabIndex (b, p, n_cvt);
 				  index_ww=GetabIndex (p, p, n_cvt);
-				  
+
 				  ps3_ab=gsl_matrix_get (PPPab, p-1, index_ab);
 				  ps_aw=gsl_matrix_get (Pab, p-1, index_aw);
 				  ps_bw=gsl_matrix_get (Pab, p-1, index_bw);
@@ -337,7 +337,7 @@ void CalcPPPab (const size_t n_cvt, const size_t e_mode,
 				  p3_ab+=(ps_aw*ps2_bw*ps2_ww+ps_bw*
 					  ps2_aw*ps2_ww+ps_aw*ps_bw*ps3_ww)/
 				    (ps_ww*ps_ww);
-				  
+
 				  gsl_matrix_set (PPPab, p, index_ab, p3_ab);
 				}
 			}
@@ -1479,7 +1479,7 @@ void LMM::AnalyzePlink (const gsl_matrix *U, const gsl_vector *eval,
 			b=ch[0];
 
 			// Minor allele homozygous: 2.0; major: 0.0.
-			for (size_t j=0; j<4; ++j) {                
+			for (size_t j=0; j<4; ++j) {
 			  if ((i==(n_bit-1)) && ci_total==(int)ni_total) {
 			    break;
 			  }
@@ -1487,7 +1487,7 @@ void LMM::AnalyzePlink (const gsl_matrix *U, const gsl_vector *eval,
 			    ci_total++;
 			    continue;
 			  }
-			  
+
 			  if (b[2*j]==0) {
 			    if (b[2*j+1]==0) {
 			      gsl_vector_set(x, ci_test, 2);
@@ -1499,7 +1499,7 @@ void LMM::AnalyzePlink (const gsl_matrix *U, const gsl_vector *eval,
 			    if (b[2*j+1]==1) {gsl_vector_set(x, ci_test, 0); }
 			    else {gsl_vector_set(x, ci_test, -9); n_miss++; }
 			  }
-			  
+
 			  ci_total++;
 			  ci_test++;
 			}
@@ -1678,7 +1678,7 @@ void LMM::Analyzebgen (const gsl_matrix *U, const gsl_vector *eval,
 		  ProgressBar ("Reading SNPs  ", t, ns_total-1);
 		}
 		if (indicator_snp[t]==0) {continue;}
-		
+
 		// Read SNP header.
 		id.clear();
 		rs.clear();
@@ -1752,14 +1752,14 @@ void LMM::Analyzebgen (const gsl_matrix *U, const gsl_vector *eval,
 		gsl_vector_set_zero(x_miss);
 		for (size_t i=0; i<bgen_N; ++i) {
 		  if (indicator_idv[i]==0) {continue;}
-		  
+
 		  bgen_geno_prob_AA=
 		    static_cast<double>(unzipped_data[i*3])/32768.0;
 		  bgen_geno_prob_AB=
 		    static_cast<double>(unzipped_data[i*3+1])/32768.0;
 		  bgen_geno_prob_BB=
 		    static_cast<double>(unzipped_data[i*3+2])/32768.0;
-		  
+
 		  // WJA.
 		  bgen_geno_prob_non_miss = bgen_geno_prob_AA +
 		    bgen_geno_prob_AB+bgen_geno_prob_BB;
@@ -1768,13 +1768,13 @@ void LMM::Analyzebgen (const gsl_matrix *U, const gsl_vector *eval,
 		    n_miss++;
 		  }
 		  else {
-		    
+
 		    bgen_geno_prob_AA/=bgen_geno_prob_non_miss;
 		    bgen_geno_prob_AB/=bgen_geno_prob_non_miss;
 		    bgen_geno_prob_BB/=bgen_geno_prob_non_miss;
-		    
+
 		    geno=2.0*bgen_geno_prob_BB+bgen_geno_prob_AB;
-		    
+
 		    gsl_vector_set(x, c_phen, geno);
 		    gsl_vector_set(x_miss, c_phen, 1.0);
 		    x_mean+=geno;
@@ -1962,7 +1962,7 @@ void CalcLambda (const char func_name, FUNC_PARAM &params,
 		}
 	}
 	else {
-	  
+
 		// If derivates change signs.
 		int status;
 		int iter=0, max_iter=100;
@@ -2010,11 +2010,11 @@ void CalcLambda (const char func_name, FUNC_PARAM &params,
 		    status=gsl_root_test_interval(lambda_l,lambda_h,0,1e-1);
 		  }
 		  while (status==GSL_CONTINUE && iter<max_iter);
-		  
+
 		  iter=0;
-		  
+
 		  gsl_root_fdfsolver_set (s_fdf, &FDF, l);
-		  
+
 		  do {
 		    iter++;
 		    status=gsl_root_fdfsolver_iterate (s_fdf);
@@ -2034,7 +2034,7 @@ void CalcLambda (const char func_name, FUNC_PARAM &params,
 		  } else {
 		    logf_l=LogL_f (l, &params);
 		  }
-		  
+
 		  if (i==0) {logf=logf_l; lambda=l;}
 		  else if (logf<logf_l) {logf=logf_l; lambda=l;}
 		  else {}
@@ -2228,7 +2228,7 @@ void LMM::AnalyzeBimbamGXE (const gsl_matrix *U, const gsl_vector *eval,
 	gsl_blas_dgemv (CblasTrans, 1.0, U, env, 0.0, &UtW_expand_env.vector);
 	gsl_vector_view UtW_expand_x=
 	  gsl_matrix_column(UtW_expand, UtW->size2+1);
-	
+
 	// Start reading genotypes and analyze.
 	for (size_t t=0; t<indicator_snp.size(); ++t) {
 		!safeGetline(infile, line).eof();
@@ -2400,7 +2400,7 @@ void LMM::AnalyzePlinkGXE (const gsl_matrix *U, const gsl_vector *eval,
 			b=ch[0];
 
 			// Minor allele homozygous: 2.0; major: 0.0.
-			for (size_t j=0; j<4; ++j) {                
+			for (size_t j=0; j<4; ++j) {
 			  if ((i==(n_bit-1)) && ci_total==(int)ni_total) {
 			    break;
 			  }
@@ -2408,7 +2408,7 @@ void LMM::AnalyzePlinkGXE (const gsl_matrix *U, const gsl_vector *eval,
 			    ci_total++;
 			    continue;
 			  }
-			  
+
 			  if (b[2*j]==0) {
 			    if (b[2*j+1]==0) {
 			      gsl_vector_set(x, ci_test, 2);
@@ -2420,7 +2420,7 @@ void LMM::AnalyzePlinkGXE (const gsl_matrix *U, const gsl_vector *eval,
 			    if (b[2*j+1]==1) {gsl_vector_set(x, ci_test, 0); }
 			    else {gsl_vector_set(x, ci_test, -9); n_miss++; }
 			  }
-			  
+
 			  ci_total++;
 			  ci_test++;
 			}

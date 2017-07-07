@@ -14,7 +14,7 @@ SYS = MAC
 # Disable WITH_LAPACK option can slow computation speed significantly and is not recommended
 # Disable WITH_ARPACK option only disable -apprx option in the software
 WITH_LAPACK = 1
-FORCE_32BIT = 
+FORCE_32BIT =
 FORCE_DYNAMIC = 1
 DIST_NAME = gemma-0.96
 
@@ -37,13 +37,13 @@ OUTPUT = $(BIN_DIR)/gemma
 
 SOURCES = $(SRC_DIR)/main.cpp
 
-HDR = 
+HDR =
 
 # Detailed libary paths, D for dynamic and S for static
 
 LIBS_LNX_D_LAPACK = -llapack
 LIBS_MAC_D_LAPACK = -framework Accelerate
-LIBS_LNX_S_LAPACK = /usr/lib/lapack/liblapack.a -lgfortran  /usr/lib/atlas-base/libatlas.a /usr/lib/libblas/libblas.a -Wl,--allow-multiple-definition 
+LIBS_LNX_S_LAPACK = /usr/lib/lapack/liblapack.a -lgfortran  /usr/lib/atlas-base/libatlas.a /usr/lib/libblas/libblas.a -Wl,--allow-multiple-definition
 
 # Options
 
@@ -82,7 +82,7 @@ $(OUTPUT): $(OBJS)
 
 $(OBJS) : $(HDR)
 
-.cpp.o: 
+.cpp.o:
 	$(CPP) $(CPPFLAGS) $(HEADERS) -c $*.cpp -o $*.o
 .SUFFIXES : .cpp .c .o $(SUFFIXES)
 

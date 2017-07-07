@@ -31,7 +31,7 @@
 #include "gsl/gsl_eigen.h"
 #include "gsl/gsl_cdf.h"
 
-#include "lapack.h"  
+#include "lapack.h"
 #include "io.h"
 #include "gemma.h"
 #include "vc.h"
@@ -211,7 +211,7 @@ void GEMMA::PrintHelp(size_t option) {
     cout<<"         ./gemma -g [filename] -p [filename] -calccor -o [prefix]"<<endl;
     cout<<endl;
   }
-  
+
   if (option==2) {
     cout<<" FILE I/O RELATED OPTIONS" << endl;
     cout<<" -bfile    [prefix]       "<<" specify input PLINK binary ped file prefix."<<endl;
@@ -231,11 +231,11 @@ void GEMMA::PrintHelp(size_t option) {
     cout<<"          format: rs#1, base_position, chr_number"<<endl;
     cout<<"                  rs#2, base_position, chr_number"<<endl;
     cout<<"                  ..."<<endl;
-    
+
     // WJA added.
     cout<<" -oxford    [prefix]       "<<" specify input Oxford genotype bgen file prefix."<<endl;
     cout<<"          requires: *.bgen, *.sample files"<<endl;
-    
+
     cout<<" -gxe      [filename]     "<<" specify input file that contains a column of environmental factor for g by e tests"<<endl;
     cout<<"          format: variable for individual 1"<<endl;
     cout<<"                  variable for individual 2"<<endl;
@@ -308,7 +308,7 @@ void GEMMA::PrintHelp(size_t option) {
     cout<<" -notsnp                  "<<" minor allele frequency cutoff is not used" << endl;
     cout<<endl;
   }
-  
+
   if (option==4) {
     cout<<" RELATEDNESS MATRIX CALCULATION OPTIONS" << endl;
     cout<<" -gk       [num]          "<<" specify which type of kinship/relatedness matrix to generate (default 1)" << endl;
@@ -317,13 +317,13 @@ void GEMMA::PrintHelp(size_t option) {
     cout<<"          note: non-polymorphic SNPs are excluded "<<endl;
     cout<<endl;
   }
-  
+
   if (option==5) {
     cout<<" EIGEN-DECOMPOSITION OPTIONS" << endl;
     cout<<" -eigen                   "<<" specify to perform eigen decomposition of the loaded relatedness matrix" << endl;
     cout<<endl;
   }
-  
+
   if (option==6) {
     cout<<" VARIANCE COMPONENT ESTIMATION OPTIONS" << endl;
     cout<<" -vc                      "<<" specify to perform variance component estimation for the loaded relatedness matrix/matrices" << endl;
@@ -336,7 +336,7 @@ void GEMMA::PrintHelp(size_t option) {
     cout<<"                                         -crt -windowns [num]"<<" specify the window size based on number of snps (default 0)"<<endl;
     cout<<endl;
   }
-  
+
   if (option==7) {
     cout<<" LINEAR MODEL OPTIONS" << endl;
     cout<<" -lm       [num]         "<<" specify analysis options (default 1)."<<endl;
@@ -346,7 +346,7 @@ void GEMMA::PrintHelp(size_t option) {
     cout<<"                   4: 1-3"<<endl;
     cout<<endl;
   }
-  
+
   if (option==8) {
     cout<<" LINEAR MIXED MODEL OPTIONS" << endl;
     cout<<" -lmm      [num]         "<<" specify analysis options (default 1)."<<endl;
@@ -360,7 +360,7 @@ void GEMMA::PrintHelp(size_t option) {
     cout<<" -region   [num]          "<<" specify the number of regions used to evaluate lambda (default 10)" << endl;
     cout<<endl;
   }
-  
+
   if (option==9) {
     cout<<" MULTIVARIATE LINEAR MIXED MODEL OPTIONS" << endl;
     cout<<" -pnr				     "<<" specify the pvalue threshold to use the Newton-Raphson's method (default 0.001)"<<endl;
@@ -371,7 +371,7 @@ void GEMMA::PrintHelp(size_t option) {
     cout<<" -crt				     "<<" specify to output corrected pvalues for these pvalues that are below the -pnr threshold"<<endl;
     cout<<endl;
   }
-  
+
   if (option==10) {
     cout<<" MULTI-LOCUS ANALYSIS OPTIONS" << endl;
     cout<<" -bslmm	  [num]			 "<<" specify analysis options (default 1)."<<endl;
@@ -380,10 +380,10 @@ void GEMMA::PrintHelp(size_t option) {
     cout<<"                   3: probit BSLMM (requires 0/1 phenotypes)"<<endl;
     cout<<"                   4: BSLMM with DAP for Hyper Parameter Estimation"<<endl;
     cout<<"                   5: BSLMM with DAP for Fine Mapping"<<endl;
-    
+
     cout<<" -ldr	  [num]			 "<<" specify analysis options (default 1)."<<endl;
     cout<<"          options: 1: LDR"<<endl;
-    
+
     cout<<"   MCMC OPTIONS" << endl;
     cout<<"   Prior" << endl;
     cout<<" -hmin     [num]          "<<" specify minimum value for h (default 0)" << endl;
@@ -394,13 +394,13 @@ void GEMMA::PrintHelp(size_t option) {
     cout<<" -pmax     [num]          "<<" specify maximum value for log10(pi) (default log10(1) )" << endl;
     cout<<" -smin     [num]          "<<" specify minimum value for |gamma| (default 0)" << endl;
     cout<<" -smax     [num]          "<<" specify maximum value for |gamma| (default 300)" << endl;
-    
+
     cout<<"   Proposal" << endl;
     cout<<" -gmean    [num]          "<<" specify the mean for the geometric distribution (default: 2000)" << endl;
     cout<<" -hscale   [num]          "<<" specify the step size scale for the proposal distribution of h (value between 0 and 1, default min(10/sqrt(n),1) )" << endl;
     cout<<" -rscale   [num]          "<<" specify the step size scale for the proposal distribution of rho (value between 0 and 1, default min(10/sqrt(n),1) )" << endl;
     cout<<" -pscale   [num]          "<<" specify the step size scale for the proposal distribution of log10(pi) (value between 0 and 1, default min(5/sqrt(n),1) )" << endl;
-    
+
     cout<<"   Others" << endl;
     cout<<" -w        [num]          "<<" specify burn-in steps (default 100,000)" << endl;
     cout<<" -s        [num]          "<<" specify sampling steps (default 1,000,000)" << endl;
@@ -411,7 +411,7 @@ void GEMMA::PrintHelp(size_t option) {
     cout<<"          requires: 0/1 phenotypes and -bslmm 3 option"<<endl;
     cout<<endl;
   }
-  
+
   if (option==11) {
     cout<<" PREDICTION OPTIONS" << endl;
     cout<<" -predict  [num]			 "<<" specify prediction options (default 1)."<<endl;
@@ -419,7 +419,7 @@ void GEMMA::PrintHelp(size_t option) {
     cout<<"                   2: predict for individuals with missing phenotypes, and convert the predicted values to probability scale. Use only for files fitted with -bslmm 3 option"<<endl;
     cout<<endl;
   }
-  
+
   if (option==12) {
     cout<<" CALC CORRELATION OPTIONS" << endl;
     cout<<" -calccor       			 "<<endl;
@@ -428,7 +428,7 @@ void GEMMA::PrintHelp(size_t option) {
     cout<<" -windowns       [num]            "<<" specify the window size based on number of snps (default 0; not used)" << endl;
     cout<<endl;
   }
-  
+
   if (option==13) {
     cout<<" NOTE"<<endl;
     cout<<" 1. Only individuals with non-missing phenotoypes and covariates will be analyzed."<<endl;
@@ -438,7 +438,7 @@ void GEMMA::PrintHelp(size_t option) {
     cout<<" 5. For bslmm analysis, in addition to 3, memory should be large enough to hold the whole genotype matrix."<<endl;
     cout<<endl;
   }
-  
+
   return;
 }
 
@@ -522,7 +522,7 @@ void GEMMA::Assign(int argc, char ** argv, PARAM &cPar) {
 			str.assign(argv[i]);
 			cPar.file_anno=str;
 		}
-		
+
 		// WJA added.
 		else if (strcmp(argv[i], "-oxford")==0 ||
 			 strcmp(argv[i], "--oxford")==0 ||
@@ -1262,7 +1262,7 @@ void GEMMA::BatchRun (PARAM &cPar) {
 
 		gsl_matrix *Y_full=gsl_matrix_alloc (cPar.ni_cvt, cPar.n_ph);
 		gsl_matrix *W_full=gsl_matrix_alloc (Y_full->size1, cPar.n_cvt);
-		
+
 		//set covariates matrix W and phenotype matrix Y
 		//an intercept should be included in W,
 		cPar.CopyCvtPhen (W, Y, 0);
@@ -1545,7 +1545,7 @@ void GEMMA::BatchRun (PARAM &cPar) {
 
 	  cVarcov.CopyToParam(cPar);
 	}
-	
+
 	// LM.
 	if (cPar.a_mode==51 || cPar.a_mode==52 || cPar.a_mode==53 || cPar.a_mode==54) {  //Fit LM
 		gsl_matrix *Y=gsl_matrix_alloc (cPar.ni_test, cPar.n_ph);
@@ -2581,7 +2581,7 @@ void GEMMA::BatchRun (PARAM &cPar) {
 	    } else {
 	      kc=0; kd=0;
 	    }
-	    
+
 	    cout<<"## number of blocks = "<<BF.size()<<endl;
 	    cout<<"## number of analyzed SNPs = "<<vec_rs.size()<<endl;
 	    cout<<"## grid size for hyperparameters = "<<wab.size()<<endl;

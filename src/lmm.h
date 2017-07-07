@@ -1,4 +1,4 @@
-/* 
+/*
     Genome-wide Efficient Mixed Model Association (GEMMA)
     Copyright (C) 2011-2017, Xiang Zhou
 
@@ -71,7 +71,7 @@ public:
 
         // Indicator for individuals (phenotypes): 0 missing, 1
         // available for analysis.
-	vector<int> indicator_idv;				
+	vector<int> indicator_idv;
 
         // Sequence indicator for SNPs: 0 ignored because of (a) maf,
         // (b) miss, (c) non-poly; 1 available for analysis.

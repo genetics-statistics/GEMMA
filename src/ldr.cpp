@@ -1,17 +1,17 @@
 /*
  Genome-wide Efficient Mixed Model Association (GEMMA)
  Copyright (C) 2011-2017, Xiang Zhou
- 
+
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
  (at your option) any later version.
- 
+
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
- 
+
  You should have received a copy of the GNU General Public License
  along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
@@ -24,7 +24,7 @@
 #include <cmath>
 #include <iostream>
 #include <stdio.h>
-#include <stdlib.h> 
+#include <stdlib.h>
 #include <ctime>
 #include <cstring>
 #include <algorithm>
@@ -51,7 +51,7 @@ using namespace Eigen;
 void LDR::CopyFromParam (PARAM &cPar) {
 	a_mode=cPar.a_mode;
 	d_pace=cPar.d_pace;
-	
+
 	file_bfile=cPar.file_bfile;
 	file_geno=cPar.file_geno;
 	file_out=cPar.file_out;
@@ -62,11 +62,11 @@ void LDR::CopyFromParam (PARAM &cPar) {
 	ni_test=cPar.ni_test;
 	ns_test=cPar.ns_test;
 	n_cvt=cPar.n_cvt;
-	
+
 	indicator_idv=cPar.indicator_idv;
 	indicator_snp=cPar.indicator_snp;
 	snpInfo=cPar.snpInfo;
-	
+
 	return;
 }
 
@@ -77,7 +77,7 @@ void LDR::CopyToParam (PARAM &cPar) {
 //X is a p by n matrix.
 void LDR::VB (const vector<vector<unsigned char> > &Xt,
 	      const gsl_matrix *W_gsl, const gsl_vector *y_gsl) {
-  
+
   // Save gsl_vector and gsl_matrix into Eigen library formats.
   MatrixXd W(W_gsl->size1, W_gsl->size2);
   VectorXd y(y_gsl->size);
@@ -105,6 +105,6 @@ void LDR::VB (const vector<vector<unsigned char> > &Xt,
 
   // Save results.
   // TO DO.
-  
+
   return;
 }

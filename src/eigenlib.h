@@ -16,7 +16,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __EIGENLIB_H__                
+#ifndef __EIGENLIB_H__
 #define __EIGENLIB_H__
 
 #include <vector>

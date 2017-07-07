@@ -100,11 +100,11 @@ available open-source numerical libraries.
   Stephens (2014). Efficient multivariate linear mixed model
   algorithms for genome-wide association studies. Nature Methods. 11:
   407-409.
-  
+
 \item Bayesian sparse linear mixed models \\ Xiang Zhou, Peter
   Carbonetto and Matthew Stephens (2013). Polygenic modeling with
   Bayesian sparse linear mixed models. PLoS Genetics. 9(2): e1003264.
-  
+
 \item Variance component estimation with individual-level or summary
   data\\ Xiang Zhou (2016). A unified framework for variance component
   estimation with summary statistics in genome-wide association
@@ -212,10 +212,10 @@ effects terms ($\mathbf X\boldsymbol\beta$). These two parameters are
 defined as follows:
 \begin{align*}
 \mbox{PVE}(\bbeta, \bu, \tau) &
-  :=\frac{\mbox{V}(\bX\bbeta+\bu)}{\mbox{V}(\bX\bbeta+\bu)+\tau^{-1}}, \\  
+  :=\frac{\mbox{V}(\bX\bbeta+\bu)}{\mbox{V}(\bX\bbeta+\bu)+\tau^{-1}}, \\
 \mbox{PGE}(\bbeta, \bu)
   & :=\frac{\mbox{V}(\bX\bbeta)}{\mbox{V}(\bX\bbeta+\bu)}, \\
-\intertext{where}  
+\intertext{where}
 \mbox{V}({\bf x}) &:=\frac{1}{n}\sum_{i=1}^n (x_i-\overline {x})^2.
 \end{align*}
 
@@ -429,7 +429,7 @@ BIMBAM mean genotype file from IMPUTE genotype files
 (\url{http://www.stats.ox.ac.uk/~marchini/software/gwas/file_format.html})\cite{Howie:2009}:
 %
 \begin{verbatim}
-cat [impute filename] | awk -v s=[number of samples/individuals] 
+cat [impute filename] | awk -v s=[number of samples/individuals]
 '{ printf $2 "," $4 "," $5; for(i=1; i<=s; i++) printf "," $(i*3+3)*2+$(i*3+4); printf "\n" }'
 > [bimbam filename]
 \end{verbatim}
@@ -815,7 +815,7 @@ chr     rs      ps      n_mis   n_obs   allele1 allele0 af      beta    se      
 \end{verbatim}
 %
 
-The 11 columns are: chromosome numbers, snp ids, base pair positions on the chromosome, number of missing individuals for a given snp, number of non-missing individuals for a given snp, minor allele, major allele, allele frequency, beta estimates, standard errors for beta, and $p$ values from the Wald test. 
+The 11 columns are: chromosome numbers, snp ids, base pair positions on the chromosome, number of missing individuals for a given snp, number of non-missing individuals for a given snp, minor allele, major allele, allele frequency, beta estimates, standard errors for beta, and $p$ values from the Wald test.
 
 \subsection{Estimate Relatedness Matrix from Genotypes}
 
@@ -1009,7 +1009,7 @@ ped format or the BIMBAM format are:
 
 \begin{verbatim}
 ./gemma -bfile [prefix] -k [filename] -lmm [num] -n [num1] [num2] [num3] -o [prefix]
-./gemma -g [filename] -p [filename] -a [filename] -k [filename] -lmm [num] 
+./gemma -g [filename] -p [filename] -a [filename] -k [filename] -lmm [num]
 -n [num1] [num2] [num3] -o [prefix]
 \end{verbatim}
 
@@ -1041,7 +1041,7 @@ missing, one can impute these missing values before association tests:
 
 \begin{verbatim}
 ./gemma -bfile [prefix] -k [filename] -predict -n [num1] [num2] [num3] -o [prefix]
-./gemma -g [filename] -p [filename] -a [filename] -k [filename] -predict 
+./gemma -g [filename] -p [filename] -a [filename] -k [filename] -predict
 -n [num1] [num2] [num3] -o [prefix]
 \end{verbatim}
 
@@ -1154,10 +1154,10 @@ below:
 %
 \begin{verbatim}
 h 	 pve 	 rho 	 pge 	 pi 	 n_gamma
-4.777635e-01	5.829042e-01	4.181280e-01	4.327976e-01	2.106763e-03	25	
-5.278073e-01	5.667885e-01	3.339020e-01	4.411859e-01	2.084355e-03	26	
-5.278073e-01	5.667885e-01	3.339020e-01	4.411859e-01	2.084355e-03	26	
-6.361674e-01	6.461678e-01	3.130355e-01	3.659850e-01	2.188401e-03	25	
+4.777635e-01	5.829042e-01	4.181280e-01	4.327976e-01	2.106763e-03	25
+5.278073e-01	5.667885e-01	3.339020e-01	4.411859e-01	2.084355e-03	26
+5.278073e-01	5.667885e-01	3.339020e-01	4.411859e-01	2.084355e-03	26
+6.361674e-01	6.461678e-01	3.130355e-01	3.659850e-01	2.188401e-03	25
 5.479237e-01	6.228036e-01	3.231856e-01	4.326231e-01	2.164183e-03	27
 \end{verbatim}
 %
@@ -1196,9 +1196,9 @@ The basic usages for association analysis with either the PLINK binary
 ped format or the BIMBAM format are:
 
 \begin{verbatim}
-./gemma -bfile [prefix] -epm [filename] -emu [filename] -ebv [filename] -k [filename] 
+./gemma -bfile [prefix] -epm [filename] -emu [filename] -ebv [filename] -k [filename]
 -predict [num] -o [prefix]
-./gemma -g [filename] -p [filename] -epm [filename] -emu [filename] -ebv [filename] 
+./gemma -g [filename] -p [filename] -epm [filename] -emu [filename] -ebv [filename]
 -k [filename] -predict [num] -o [prefix]
 \end{verbatim}
 
@@ -1544,7 +1544,7 @@ source code for detailed examples.
 \item  \textcolor{red}{-ci       [num]}     \quad          specify fitting algorithm to compute the standard errors. (default 1; valid value 1-2; 1: MQS-HEW; 2: MQS-LDW.)
 \end{itemize}
 %
-	
+
 \clearpage
 
 \bibliographystyle{plain}

@@ -66,7 +66,7 @@ time_UtZ(0.0), time_opt(0.0), time_Omega(0.0)
 // Read files: obtain ns_total, ng_total, ns_test, ni_test.
 void PARAM::ReadFiles (void) {
 	string file_str;
-	
+
 	// Read cat file.
 	if (!file_mcat.empty()) {
 	  if (ReadFile_mcat (file_mcat, mapRS2cat, n_vc)==false) {error=true;}
@@ -216,7 +216,7 @@ void PARAM::ReadFiles (void) {
 		// If both fam file and pheno files are used, use
 		// phenotypes inside the pheno file.
 		if (!file_pheno.empty()) {
-		  
+
 		  // Phenotype file before genotype file.
 		  if (ReadFile_pheno (file_pheno, indicator_pheno, pheno,
 				      p_column)==false) {error=true;}
@@ -247,7 +247,7 @@ void PARAM::ReadFiles (void) {
 
 	// Read genotype and phenotype file for BIMBAM format.
 	if (!file_geno.empty()) {
-	  
+
 	        // Annotation file before genotype file.
 		if (!file_anno.empty() ) {
 			if (ReadFile_anno (file_anno, mapRS2chr, mapRS2bp,
@@ -297,11 +297,11 @@ void PARAM::ReadFiles (void) {
 		if (ReadFile_bim (file_str, snpInfo)==false) {error=true;}
 
 		if (t==0) {
-		  
+
 		  // If both fam file and pheno files are used, use
 		  // phenotypes inside the pheno file.
 		  if (!file_pheno.empty()) {
-		    
+
 		    // Phenotype file before genotype file.
 		    if (ReadFile_pheno (file_pheno, indicator_pheno, pheno,
 					p_column)==false) {
@@ -347,7 +347,7 @@ void PARAM::ReadFiles (void) {
 
 	// Read genotype and phenotype file for multiple BIMBAM files.
 	if (!file_mgeno.empty()) {
-	  
+
 	  // Annotation file before genotype file.
 	  if (!file_anno.empty() ) {
 	    if (ReadFile_anno (file_anno, mapRS2chr, mapRS2bp,
@@ -788,7 +788,7 @@ void PARAM::CheckParam (void) {
 	if (!file_bfile.empty()) {flag++;}
 	if (!file_geno.empty()) {flag++;}
 	if (!file_gene.empty()) {flag++;}
-	
+
 	// WJA added.
 	if (!file_oxford.empty()) {flag++;}
 
@@ -982,7 +982,7 @@ void PARAM::CheckData (void) {
 
   // WJA NOTE: I added this condition so that covariates can be added
   // through sample, probably not exactly what is wanted.
-  if(file_oxford.empty())	
+  if(file_oxford.empty())
 	{
 	  if ((file_cvt).empty() || (indicator_cvt).size()==0) {
 	    n_cvt=1;
@@ -1017,7 +1017,7 @@ void PARAM::CheckData (void) {
       "the number of individuals. "<<endl;
     return;
   }
-  
+
   if ( (indicator_read).size()!=0 &&
        (indicator_read).size()!=(indicator_idv).size()) {
     error=true;
@@ -1025,7 +1025,7 @@ void PARAM::CheckData (void) {
       "match the number of individuals. "<<endl;
     return;
   }
-  
+
 	// Calculate ni_total and ni_test, and set indicator_idv to 0
 	// whenever indicator_cvt=0, and calculate np_obs and np_miss.
 	ni_total=(indicator_idv).size();
@@ -1896,7 +1896,7 @@ void PARAM::CheckCvt () {
 
 // Post-process phentoypes and covariates.
 void PARAM::ProcessCvtPhen () {
-  
+
  	// Convert indicator_pheno to indicator_idv.
 	int k=1;
 	indicator_idv.clear();
@@ -1949,7 +1949,7 @@ void PARAM::ProcessCvtPhen () {
 	    cout<<"error! number of subsamples is less than number of"<<
 	      "analyzed individuals. "<<endl;
 	  } else {
-	    
+
 	    // Set up random environment.
 	    gsl_rng_env_setup();
 	    gsl_rng *gsl_r;

@@ -16,7 +16,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __GEMMA_H__                
+#ifndef __GEMMA_H__
 #define __GEMMA_H__
 
 #include "param.h"
@@ -25,15 +25,15 @@ using namespace std;
 
 class GEMMA {
 
-public:			
+public:
 	// Parameters.
 	string version;
 	string date;
 	string year;
-	
+
 	// Constructor.
 	GEMMA(void);
-	
+
 	// Functions.
 	void PrintHeader (void);
 	void PrintHelp (size_t option);

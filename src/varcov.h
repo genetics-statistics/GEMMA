@@ -16,7 +16,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __VARCOV_H__                
+#ifndef __VARCOV_H__
 #define __VARCOV_H__
 
 #include "gsl/gsl_vector.h"
@@ -47,7 +47,7 @@ public:
 	double window_cm;
 	size_t window_bp;
 	size_t window_ns;
-	
+
 	// Main functions.
 	void CopyFromParam (PARAM &cPar);
 	void CopyToParam (PARAM &cPar);

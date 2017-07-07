@@ -54,7 +54,7 @@ public:
 
         // Sequence indicator for SNPs: 0 ignored because of (a) maf,
         // (b) miss, (c) non-poly; 1 available for analysis.
-	vector<int> indicator_snp;				
+	vector<int> indicator_snp;
 
 	vector<SNPINFO> snpInfo;  // Record SNP information.
 

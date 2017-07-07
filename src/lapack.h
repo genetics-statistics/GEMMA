@@ -16,7 +16,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __LAPACK_H__                
+#ifndef __LAPACK_H__
 #define __LAPACK_H__
 
 #include <vector>
