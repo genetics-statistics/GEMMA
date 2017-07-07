@@ -60,20 +60,20 @@ extern "C" double ddot_(int *N, double *DX, int *INCX, double *DY, int *INCY);
 void lapack_float_cholesky_decomp (gsl_matrix_float *A) {
 	int N=A->size1, LDA=A->size1, INFO;
 	char UPLO='L';
-	
+
 	if (N!=(int)A->size2) {
 	  cout << "Matrix needs to be symmetric and same dimension in " <<
 	    "lapack_cholesky_decomp." << endl;
 	  return;
 	}
-	
+
 	spotrf_(&UPLO, &N, A->data, &LDA, &INFO);
 	if (INFO!=0) {
 	  cout << "Cholesky decomposition unsuccessful in " <<
 	    "lapack_cholesky_decomp." << endl;
 	  return;
-	}	
-	
+	}
+
 	return;
 }
 
@@ -81,19 +81,19 @@ void lapack_float_cholesky_decomp (gsl_matrix_float *A) {
 void lapack_cholesky_decomp (gsl_matrix *A) {
 	int N=A->size1, LDA=A->size1, INFO;
 	char UPLO='L';
-	
+
 	if (N!=(int)A->size2) {
 	  cout << "Matrix needs to be symmetric and same dimension in " <<
 	    "lapack_cholesky_decomp." << endl;
 	  return;
 	}
-	
+
 	dpotrf_(&UPLO, &N, A->data, &LDA, &INFO);
 	if (INFO!=0) {
 	  cout << "Cholesky decomposition unsuccessful in " <<
 	    "lapack_cholesky_decomp."<<endl;
 	  return;
-	} 
+	}
 
 	return;
 }
@@ -104,13 +104,14 @@ void lapack_float_cholesky_solve (gsl_matrix_float *A,
 				  gsl_vector_float *x) {
 	int N=A->size1, NRHS=1, LDA=A->size1, LDB=b->size, INFO;
 	char UPLO='L';
-	
+
+
 	if (N!=(int)A->size2 || N!=LDB) {
-	  cout << "Matrix needs to be symmetric and same dimension in " <<cout
+	  cout << "Matrix needs to be symmetric and same dimension in " <<
 	    "lapack_cholesky_solve." << endl;
 	  return;
 	}
-	
+
 	gsl_vector_float_memcpy (x, b);
 	spotrs_(&UPLO, &N, &NRHS, A->data, &LDA, x->data, &LDB, &INFO);
 	if (INFO!=0) {
@@ -118,7 +119,7 @@ void lapack_float_cholesky_solve (gsl_matrix_float *A,
 	    endl;
 	  return;
 	}
-	
+
 	return;
 }
 
@@ -127,13 +128,13 @@ void lapack_cholesky_solve (gsl_matrix *A, const gsl_vector *b,
 			    gsl_vector *x) {
 	int N=A->size1, NRHS=1, LDA=A->size1, LDB=b->size, INFO;
 	char UPLO='L';
-	
+
 	if (N!=(int)A->size2 || N!=LDB) {
 	  cout << "Matrix needs to be symmetric and same dimension in " <<
 	    "lapack_cholesky_solve." << endl;
 	  return;
 	}
-	
+
 	gsl_vector_memcpy (x, b);
 	dpotrs_(&UPLO, &N, &NRHS, A->data, &LDA, x->data, &LDB, &INFO);
 	if (INFO!=0) {
@@ -141,7 +142,7 @@ void lapack_cholesky_solve (gsl_matrix *A, const gsl_vector *b,
 	    endl;
 	  return;
 	}
-	
+
 	return;
 }
 
@@ -149,15 +150,15 @@ void lapack_sgemm (char *TransA, char *TransB, float alpha,
 		   const gsl_matrix_float *A, const gsl_matrix_float *B,
 		   float beta, gsl_matrix_float *C) {
 	int M, N, K1, K2, LDA=A->size1, LDB=B->size1, LDC=C->size2;
-	
+
 	if (*TransA=='N' || *TransA=='n') {M=A->size1; K1=A->size2;}
 	else if (*TransA=='T' || *TransA=='t') {M=A->size2; K1=A->size1;}
 	else {cout<<"need 'N' or 'T' in lapack_sgemm"<<endl; return;}
-	
+
 	if (*TransB=='N' || *TransB=='n') {N=B->size2; K2=B->size1;}
 	else if (*TransB=='T' || *TransB=='t')  {N=B->size1; K2=B->size2;}
 	else {cout<<"need 'N' or 'T' in lapack_sgemm"<<endl;  return;}
-	
+
 	if (K1!=K2) {
 	  cout<<"A and B not compatible in lapack_sgemm"<<endl;
 	  return;
@@ -166,18 +167,18 @@ void lapack_sgemm (char *TransA, char *TransB, float alpha,
 	  cout<<"C not compatible in lapack_sgemm"<<endl;
 	  return;
 	}
-	
+
 	gsl_matrix_float *A_t=gsl_matrix_float_alloc (A->size2, A->size1);
 	gsl_matrix_float_transpose_memcpy (A_t, A);
 	gsl_matrix_float *B_t=gsl_matrix_float_alloc (B->size2, B->size1);
 	gsl_matrix_float_transpose_memcpy (B_t, B);
 	gsl_matrix_float *C_t=gsl_matrix_float_alloc (C->size2, C->size1);
 	gsl_matrix_float_transpose_memcpy (C_t, C);
-	
+
 	sgemm_(TransA, TransB, &M, &N, &K1, &alpha, A_t->data, &LDA,
 	       B_t->data, &LDB, &beta, C_t->data, &LDC);
 	gsl_matrix_float_transpose_memcpy (C, C_t);
-	
+
 	gsl_matrix_float_free (A_t);
 	gsl_matrix_float_free (B_t);
 	gsl_matrix_float_free (C_t);
@@ -190,15 +191,15 @@ void lapack_dgemm (char *TransA, char *TransB, double alpha,
 		   const gsl_matrix *A, const gsl_matrix *B,
 		   double beta, gsl_matrix *C) {
 	int M, N, K1, K2, LDA=A->size1, LDB=B->size1, LDC=C->size2;
-	
+
 	if (*TransA=='N' || *TransA=='n') {M=A->size1; K1=A->size2;}
 	else if (*TransA=='T' || *TransA=='t') {M=A->size2; K1=A->size1;}
 	else {cout<<"need 'N' or 'T' in lapack_dgemm"<<endl; return;}
-	
+
 	if (*TransB=='N' || *TransB=='n') {N=B->size2; K2=B->size1;}
 	else if (*TransB=='T' || *TransB=='t')  {N=B->size1; K2=B->size2;}
 	else {cout<<"need 'N' or 'T' in lapack_dgemm"<<endl;  return;}
-	
+
 	if (K1!=K2) {
 	  cout << "A and B not compatible in lapack_dgemm"<<endl;
 	  return;
@@ -207,7 +208,7 @@ void lapack_dgemm (char *TransA, char *TransB, double alpha,
 	  cout<<"C not compatible in lapack_dgemm"<<endl;
 	  return;
 	}
-	
+
 	gsl_matrix *A_t=gsl_matrix_alloc (A->size2, A->size1);
 	gsl_matrix_transpose_memcpy (A_t, A);
 	gsl_matrix *B_t=gsl_matrix_alloc (B->size2, B->size1);
@@ -219,7 +220,7 @@ void lapack_dgemm (char *TransA, char *TransB, double alpha,
 	       B_t->data, &LDB, &beta, C_t->data, &LDC);
 
 	gsl_matrix_transpose_memcpy (C, C_t);
-	
+
 	gsl_matrix_free (A_t);
 	gsl_matrix_free (B_t);
 	gsl_matrix_free (C_t);
@@ -234,15 +235,15 @@ void lapack_float_eigen_symmv (gsl_matrix_float *A, gsl_vector_float *eval,
 	if (flag_largematrix==1) {
 		int N=A->size1, LDA=A->size1, INFO, LWORK=-1;
 		char JOBZ='V', UPLO='L';
-				
+
 		if (N!=(int)A->size2 || N!=(int)eval->size) {
 		  cout << "Matrix needs to be symmetric and same " <<
 		    "dimension in lapack_eigen_symmv."<<endl;
 		  return;
 		}
-		
+
 		LWORK=3*N;
-		float *WORK=new float [LWORK];	
+		float *WORK=new float [LWORK];
 		ssyev_(&JOBZ, &UPLO, &N, A->data, &LDA, eval->data, WORK,
 		       &LWORK, &INFO);
 		if (INFO!=0) {
@@ -250,31 +251,31 @@ void lapack_float_eigen_symmv (gsl_matrix_float *A, gsl_vector_float *eval,
 		    "lapack_eigen_symmv."<<endl;
 		  return;
 		}
-		
+
 		gsl_matrix_float_view A_sub =
 		  gsl_matrix_float_submatrix(A, 0, 0, N, N);
 		gsl_matrix_float_memcpy (evec, &A_sub.matrix);
 		gsl_matrix_float_transpose (evec);
-		
+
 		delete [] WORK;
-	} else {	
+	} else {
 		int N=A->size1, LDA=A->size1, LDZ=A->size1, INFO,
 		  LWORK=-1, LIWORK=-1;
 		char JOBZ='V', UPLO='L', RANGE='A';
 		float ABSTOL=1.0E-7;
-		
+
 		// VL, VU, IL, IU are not referenced; M equals N if RANGE='A'.
 		float VL=0.0, VU=0.0;
 		int IL=0, IU=0, M;
-		
+
 		if (N!=(int)A->size2 || N!=(int)eval->size) {
 		  cout << "Matrix needs to be symmetric and same " <<
 		    "dimension in lapack_float_eigen_symmv." << endl;
 		  return;
 		}
-		
+
 		int *ISUPPZ=new int [2*N];
-				
+
 		float WORK_temp[1];
 		int IWORK_temp[1];
 		ssyevr_(&JOBZ, &RANGE, &UPLO, &N, A->data, &LDA, &VL,
@@ -286,11 +287,11 @@ void lapack_float_eigen_symmv (gsl_matrix_float *A, gsl_vector_float *eval,
 		    "lapack_float_eigen_symmv." << endl;
 		  return;
 		}
-		LWORK=(int)WORK_temp[0]; LIWORK=(int)IWORK_temp[0];	
-		 
+		LWORK=(int)WORK_temp[0]; LIWORK=(int)IWORK_temp[0];
+
 		float *WORK=new float [LWORK];
 		int *IWORK=new int [LIWORK];
-		
+
 		ssyevr_(&JOBZ, &RANGE, &UPLO, &N, A->data, &LDA, &VL,
 			&VU, &IL, &IU, &ABSTOL, &M, eval->data, evec->data,
 			&LDZ, ISUPPZ, WORK, &LWORK, IWORK, &LIWORK, &INFO);
@@ -299,15 +300,15 @@ void lapack_float_eigen_symmv (gsl_matrix_float *A, gsl_vector_float *eval,
 		    "lapack_float_eigen_symmv." << endl;
 		  return;
 		}
-		
+
 		gsl_matrix_float_transpose (evec);
-		
+
 		delete [] ISUPPZ;
 		delete [] WORK;
 		delete [] IWORK;
 	}
-	
-	
+
+
 	return;
 }
 
@@ -318,16 +319,16 @@ void lapack_eigen_symmv (gsl_matrix *A, gsl_vector *eval, gsl_matrix *evec,
 			 const size_t flag_largematrix) {
 	if (flag_largematrix==1) {
 		int N=A->size1, LDA=A->size1, INFO, LWORK=-1;
-		char JOBZ='V', UPLO='L';		
-		
+		char JOBZ='V', UPLO='L';
+
 		if (N!=(int)A->size2 || N!=(int)eval->size) {
 		  cout << "Matrix needs to be symmetric and same " <<
 		    "dimension in lapack_eigen_symmv." << endl;
 		  return;
 		}
-		
+
 		LWORK=3*N;
-		double *WORK=new double [LWORK];	
+		double *WORK=new double [LWORK];
 		dsyev_(&JOBZ, &UPLO, &N, A->data, &LDA, eval->data, WORK,
 		       &LWORK, &INFO);
 		if (INFO!=0) {
@@ -335,30 +336,30 @@ void lapack_eigen_symmv (gsl_matrix *A, gsl_vector *eval, gsl_matrix *evec,
 		    "lapack_eigen_symmv." << endl;
 		  return;
 		}
-		
+
 		gsl_matrix_view A_sub=gsl_matrix_submatrix(A, 0, 0, N, N);
 		gsl_matrix_memcpy (evec, &A_sub.matrix);
 		gsl_matrix_transpose (evec);
-		
+
 		delete [] WORK;
-	} else {	
+	} else {
    	        int N=A->size1, LDA=A->size1, LDZ=A->size1, INFO;
 		int LWORK=-1, LIWORK=-1;
 		char JOBZ='V', UPLO='L', RANGE='A';
 		double ABSTOL=1.0E-7;
-		
+
 		// VL, VU, IL, IU are not referenced; M equals N if RANGE='A'.
 		double VL=0.0, VU=0.0;
 		int IL=0, IU=0, M;
-		
+
 		if (N!=(int)A->size2 || N!=(int)eval->size) {
 		  cout << "Matrix needs to be symmetric and same " <<
 		    "dimension in lapack_eigen_symmv." << endl;
 		  return;
 		}
-		
+
 		int *ISUPPZ=new int [2*N];
-		
+
 		double WORK_temp[1];
 		int IWORK_temp[1];
 
@@ -370,12 +371,12 @@ void lapack_eigen_symmv (gsl_matrix *A, gsl_vector *eval, gsl_matrix *evec,
 		  cout << "Work space estimate unsuccessful in " <<
 		    "lapack_eigen_symmv." << endl;
 		  return;
-		}	
-		LWORK=(int)WORK_temp[0]; LIWORK=(int)IWORK_temp[0];	
+		}
+		LWORK=(int)WORK_temp[0]; LIWORK=(int)IWORK_temp[0];
 
 		double *WORK=new double [LWORK];
 		int *IWORK=new int [LIWORK];
-		
+
 		dsyevr_(&JOBZ, &RANGE, &UPLO, &N, A->data, &LDA, &VL, &VU,
 			&IL, &IU, &ABSTOL, &M, eval->data, evec->data,
 			&LDZ, ISUPPZ, WORK, &LWORK, IWORK, &LIWORK, &INFO);
@@ -386,12 +387,12 @@ void lapack_eigen_symmv (gsl_matrix *A, gsl_vector *eval, gsl_matrix *evec,
 		}
 
 		gsl_matrix_transpose (evec);
-		
+
 		delete [] ISUPPZ;
 		delete [] WORK;
 		delete [] IWORK;
 	}
-	
+
 	return;
 }
 
@@ -406,7 +407,7 @@ double EigenDecomp (gsl_matrix *G, gsl_matrix *U, gsl_vector *eval,
 		d+=gsl_vector_get(eval, i);
 	}
 	d/=(double)eval->size;
-	
+
 	return d;
 }
 
@@ -422,21 +423,21 @@ double EigenDecomp (gsl_matrix_float *G, gsl_matrix_float *U,
 		d+=gsl_vector_float_get(eval, i);
 	}
 	d/=(double)eval->size;
-	
+
 	return d;
 }
 
 
 double CholeskySolve(gsl_matrix *Omega, gsl_vector *Xty, gsl_vector *OiXty) {
 	double logdet_O=0.0;
-	
+
 	lapack_cholesky_decomp(Omega);
 	for (size_t i=0; i<Omega->size1; ++i) {
 		logdet_O+=log(gsl_matrix_get (Omega, i, i));
-	}	
-	logdet_O*=2.0;	
-	lapack_cholesky_solve(Omega, Xty, OiXty);	
-	
+	}
+	logdet_O*=2.0;
+	lapack_cholesky_solve(Omega, Xty, OiXty);
+
 	return logdet_O;
 }
 
@@ -444,16 +445,16 @@ double CholeskySolve(gsl_matrix *Omega, gsl_vector *Xty, gsl_vector *OiXty) {
 double CholeskySolve(gsl_matrix_float *Omega, gsl_vector_float *Xty,
 		     gsl_vector_float *OiXty) {
 	double logdet_O=0.0;
-	
+
 	lapack_float_cholesky_decomp(Omega);
 	for (size_t i=0; i<Omega->size1; ++i) {
 		logdet_O+=log(gsl_matrix_float_get (Omega, i, i));
-	}	
-	logdet_O*=2.0;	
-	lapack_float_cholesky_solve(Omega, Xty, OiXty);	
-	
+	}
+	logdet_O*=2.0;
+	lapack_float_cholesky_solve(Omega, Xty, OiXty);
+
 	return logdet_O;
-}	
+}
 
 
 // LU decomposition.
@@ -464,18 +465,18 @@ void LUDecomp (gsl_matrix *LU, gsl_permutation *p, int *signum) {
 
 void LUDecomp (gsl_matrix_float *LU, gsl_permutation *p, int *signum) {
 	gsl_matrix *LU_double=gsl_matrix_alloc (LU->size1, LU->size2);
-	
-	// Copy float matrix to double.	
+
+	// Copy float matrix to double.
 	for (size_t i=0; i<LU->size1; i++) {
 		for (size_t j=0; j<LU->size2; j++) {
 			gsl_matrix_set (LU_double, i, j,
 					gsl_matrix_float_get(LU, i, j));
 		}
 	}
-	
+
 	// LU decomposition.
 	gsl_linalg_LU_decomp (LU_double, p, signum);
-	
+
 	// Copy float matrix to double.
 	for (size_t i=0; i<LU->size1; i++) {
 		for (size_t j=0; j<LU->size2; j++) {
@@ -483,7 +484,7 @@ void LUDecomp (gsl_matrix_float *LU, gsl_permutation *p, int *signum) {
 					      gsl_matrix_get(LU_double, i, j));
 		}
 	}
-	
+
 	// Free matrix.
 	gsl_matrix_free (LU_double);
 	return;
@@ -502,18 +503,18 @@ void LUInvert (const gsl_matrix_float *LU, const gsl_permutation *p,
 	gsl_matrix *LU_double=gsl_matrix_alloc (LU->size1, LU->size2);
 	gsl_matrix *inverse_double=gsl_matrix_alloc (inverse->size1,
 						     inverse->size2);
-	
-	// Copy float matrix to double.	
+
+	// Copy float matrix to double.
 	for (size_t i=0; i<LU->size1; i++) {
 		for (size_t j=0; j<LU->size2; j++) {
 			gsl_matrix_set (LU_double, i, j,
 					gsl_matrix_float_get(LU, i, j));
 		}
 	}
-	
+
 	// LU decomposition.
 	gsl_linalg_LU_invert (LU_double, p, inverse_double);
-	
+
 	// Copy float matrix to double.
 	for (size_t i=0; i<inverse->size1; i++) {
 		for (size_t j=0; j<inverse->size2; j++) {
@@ -522,7 +523,7 @@ void LUInvert (const gsl_matrix_float *LU, const gsl_permutation *p,
 							     i, j));
 		}
 	}
-	
+
 	// Free matrix.
 	gsl_matrix_free (LU_double);
 	gsl_matrix_free (inverse_double);
@@ -539,17 +540,17 @@ double LULndet (gsl_matrix *LU) {
 double LULndet (gsl_matrix_float *LU) {
 	gsl_matrix *LU_double=gsl_matrix_alloc (LU->size1, LU->size2);
 	double d;
-	
-	// Copy float matrix to double.	
+
+	// Copy float matrix to double.
 	for (size_t i=0; i<LU->size1; i++) {
 		for (size_t j=0; j<LU->size2; j++) {
 			gsl_matrix_set (LU_double, i, j, gsl_matrix_float_get(LU, i, j));
 		}
 	}
-	
+
 	// LU decomposition.
 	d=gsl_linalg_LU_lndet (LU_double);
-	
+
 	// Free matrix
 	gsl_matrix_free (LU_double);
 	return d;
@@ -567,8 +568,8 @@ void LUSolve (const gsl_matrix_float *LU, const gsl_permutation *p,
 	      const gsl_vector_float *b, gsl_vector_float *x) {
 	gsl_matrix *LU_double=gsl_matrix_alloc (LU->size1, LU->size2);
 	gsl_vector *b_double=gsl_vector_alloc (b->size);
-	gsl_vector *x_double=gsl_vector_alloc (x->size);	
-	
+	gsl_vector *x_double=gsl_vector_alloc (x->size);
+
 	// Copy float matrix to double.
 	for (size_t i=0; i<LU->size1; i++) {
 		for (size_t j=0; j<LU->size2; j++) {
@@ -576,23 +577,23 @@ void LUSolve (const gsl_matrix_float *LU, const gsl_permutation *p,
 					gsl_matrix_float_get(LU, i, j));
 		}
 	}
-	
+
 	for (size_t i=0; i<b->size; i++) {
 		gsl_vector_set (b_double, i, gsl_vector_float_get(b, i));
 	}
-	
+
 	for (size_t i=0; i<x->size; i++) {
 		gsl_vector_set (x_double, i, gsl_vector_float_get(x, i));
 	}
-	
+
 	// LU decomposition.
 	gsl_linalg_LU_solve (LU_double, p, b_double, x_double);
-	
+
 	// Copy float matrix to double.
 	for (size_t i=0; i<x->size; i++) {
 		gsl_vector_float_set (x, i, gsl_vector_get(x_double, i));
 	}
-	
+
 	// Free matrix.
 	gsl_matrix_free (LU_double);
 	gsl_vector_free (b_double);
