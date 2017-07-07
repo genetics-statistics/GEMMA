@@ -50,7 +50,7 @@ MQS algorithm to estimate variance components.
 
 ## Quick start
 
-1. Download and install the software. *Give more details here.*
+1. Download and install the software. See [INSTALL.md](INSTALL.md).
 
 2. Work through the demo. *Give more details here.*
 
