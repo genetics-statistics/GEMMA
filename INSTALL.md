@@ -36,5 +36,13 @@ using the following command
 
     guix package -i gemma
 
-
 ### Install from source
+
+Install listed dependencies and run
+
+    make
+
+if you get an Eigen error you may need to override the include
+path. E.g. on GNU Guix with shared libs this may work
+
+    make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 FORCE_DYNAMIC=1
