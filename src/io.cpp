@@ -114,7 +114,7 @@ std::istream& safeGetline(std::istream& is, std::string& t) {
                 sb->sbumpc();
             return is;
         case EOF:
-	  
+
             // Also handle the case when the last line has no line
             // ending.
             if(t.empty())
@@ -312,7 +312,7 @@ bool ReadFile_column (const string &file_pheno, vector<int> &indicator_idv,
 		if (strcmp(ch_ptr, "NA")==0) {
 		  indicator_idv.push_back(0);
 		  pheno.push_back(-9);
-		} 
+		}
 		else {
 
 		  // Pheno is different from pimass2.
@@ -800,7 +800,7 @@ bool ReadFile_bed (const string &file_bed, const set<string> &setSnps,
 	for (size_t t=0; t<ns_total; ++t) {
 
 	  // n_bit, and 3 is the number of magic numbers.
-	  infile.seekg(t*n_bit+3); 
+	  infile.seekg(t*n_bit+3);
 
 		if (setSnps.size()!=0 &&
 		    setSnps.count(snpInfo[t].rs_number) == 0) {
@@ -978,7 +978,7 @@ void Plink_ReadOneSNP (const int pos, const vector<int> &indicator_idv,
   else {n_bit=ni_total/4+1;}
 
   // n_bit, and 3 is the number of magic numbers.
-  infile.seekg(pos*n_bit+3); 
+  infile.seekg(pos*n_bit+3);
 
   // Read genotypes.
   char ch[1];
@@ -993,7 +993,7 @@ void Plink_ReadOneSNP (const int pos, const vector<int> &indicator_idv,
     b=ch[0];
 
     // Minor allele homozygous: 2.0; major: 0.0.
-    for (size_t j=0; j<4; ++j) { 
+    for (size_t j=0; j<4; ++j) {
       if ((i==(n_bit-1)) && c==ni_total) {break;}
       if (indicator_idv[c]==0) {c++; continue;}
       c++;
@@ -1406,7 +1406,7 @@ bool PlinkKin (const string &file_bed, vector<int> &indicator_snp,
 		if (indicator_snp[t]==0) {continue;}
 
 		// n_bit, and 3 is the number of magic numbers.
-		infile.seekg(t*n_bit+3);		
+		infile.seekg(t*n_bit+3);
 
 		// Read genotypes.
 		geno_mean=0.0;	n_miss=0; ci_total=0; geno_var=0.0;
@@ -1415,7 +1415,7 @@ bool PlinkKin (const string &file_bed, vector<int> &indicator_snp,
 			b=ch[0];
 
 			// Minor allele homozygous: 2.0; major: 0.0.
-			for (size_t j=0; j<4; ++j) {                
+			for (size_t j=0; j<4; ++j) {
 				if ((i==(n_bit-1)) && ci_total==ni_total) {
 				  break;
 				}
@@ -1734,7 +1734,7 @@ bool ReadFile_bed (const string &file_bed, vector<int> &indicator_idv,
 		if (indicator_snp[t]==0) {continue;}
 
 		// n_bit, and 3 is the number of magic numbers.
-		infile.seekg(t*n_bit+3);		
+		infile.seekg(t*n_bit+3);
 
 		// Read genotypes.
 		c_idv=0; geno_mean=0.0; n_miss=0; c=0;
@@ -1855,7 +1855,7 @@ bool ReadFile_bed (const string &file_bed, vector<int> &indicator_idv,
 		if (indicator_snp[t]==0) {continue;}
 
 		// n_bit, and 3 is the number of magic numbers.
-		infile.seekg(t*n_bit+3);		
+		infile.seekg(t*n_bit+3);
 
 		// Read genotypes.
 		c_idv=0; geno_mean=0.0; n_miss=0; c=0;
@@ -1864,7 +1864,7 @@ bool ReadFile_bed (const string &file_bed, vector<int> &indicator_idv,
 			b=ch[0];
 
 			// Minor allele homozygous: 2.0; major: 0.0.
-			for (size_t j=0; j<4; ++j) {                
+			for (size_t j=0; j<4; ++j) {
 			  if ((i==(n_bit-1)) && c==ni_total) {break;}
 				if (indicator_idv[c]==0) {c++; continue;}
 				c++;
@@ -2113,7 +2113,7 @@ bool ReadFile_sample (const string &file_sample,
 	vector<map<uint32_t, size_t> > cvt_factor_levels;
 
 	char col_type[num_cols];
-	
+
 	// Read header line2.
 	if(!safeGetline(infile, line).eof()) {
 		ch_ptr=strtok ((char *)line.c_str(), " \t");
@@ -2168,7 +2168,7 @@ bool ReadFile_sample (const string &file_sample,
 			}
 			if(col_type[i]=='D')
 			{
-			  
+
 			  // NOTE THIS DOES NOT CHECK TO BE SURE LEVEL
 			  // IS INTEGRAL i.e for atoi error.
 			  if (strcmp(ch_ptr, "NA")!=0) {
@@ -2189,7 +2189,7 @@ bool ReadFile_sample (const string &file_sample,
 		pheno.push_back(pheno_row);
 
 	}
-	
+
 	// Close and reopen the file.
  	infile.close();
  	infile.clear();
@@ -2202,7 +2202,7 @@ bool ReadFile_sample (const string &file_sample,
 		    file_sample<<endl;
 		  return false;
 		}
-		
+
 		// Skip header.
 		safeGetline(infile2, line);
 		safeGetline(infile2, line);
@@ -2220,16 +2220,16 @@ bool ReadFile_sample (const string &file_sample,
 			size_t fac_cvt_i=0;
 			size_t num_fac_levels;
 			while (i<num_cols) {
-			  
+
 			  if(col_type[i]=='C') {
 			    if (strcmp(ch_ptr, "NA")==0) {flag_na=1; d=-9;}
 			    else {d=atof(ch_ptr);}
-			    
+
 			    v_d.push_back(d);
 			  }
-			  
+
 			  if(col_type[i]=='D') {
-			    
+
 			    // NOTE THIS DOES NOT CHECK TO BE SURE
 			    // LEVEL IS INTEGRAL i.e for atoi error.
 			    num_fac_levels=cvt_factor_levels[fac_cvt_i].size();
@@ -2251,7 +2251,7 @@ bool ReadFile_sample (const string &file_sample,
 			    }
 			    fac_cvt_i++;
 			  }
-			  
+
 			  ch_ptr=strtok (NULL, " \t");
 			  i++;
 			}
@@ -2321,7 +2321,7 @@ bool ReadFile_bgen(const string &file_bgen, const set<string> &setSnps,
 	int sig;
 	LUDecomp (WtW, pmt, &sig);
 	LUInvert (WtW, pmt, WtWi);
-	
+
 	// Read in header.
 	uint32_t bgen_snp_block_offset;
 	uint32_t bgen_header_length;
@@ -2373,7 +2373,7 @@ bool ReadFile_bgen(const string &file_bgen, const set<string> &setSnps,
 	size_t ni_total=indicator_idv.size();
 
 	// Number of samples to use in test.
-	size_t ni_test=0;   
+	size_t ni_test=0;
 
 	uint32_t bgen_N;
 	uint16_t bgen_LS;
@@ -2434,7 +2434,7 @@ bool ReadFile_bgen(const string &file_bgen, const set<string> &setSnps,
 		if (setSnps.size()!=0 && setSnps.count(rs)==0) {
 		  SNPINFO sInfo={"-9", rs, -9, -9, minor, major,
 				 static_cast<size_t>(-9), -9, (long int) -9};
-		  
+
 			snpInfo.push_back(sInfo);
 			indicator_snp.push_back(0);
 			if(CompressedSNPBlocks)
@@ -2476,7 +2476,7 @@ bool ReadFile_bgen(const string &file_bgen, const set<string> &setSnps,
 		c_idv=0;
 		gsl_vector_set_zero (genotype_miss);
 		for (size_t i=0; i<bgen_N; ++i) {
-		  
+
 			// CHECK this set correctly!
 			if (indicator_idv[i]==0) {continue;}
 
@@ -2665,7 +2665,7 @@ bool bgenKin (const string &file_oxford, vector<int> &indicator_snp,
 		infile.read(reinterpret_cast<char*>(&bgen_LB),4);
 		bgen_B_allele.resize(bgen_LB);
 		infile.read(&bgen_B_allele[0], bgen_LB);
-		
+
 		uint16_t unzipped_data[3*bgen_N];
 
 		if (indicator_snp[t]==0) {
@@ -2683,11 +2683,11 @@ bool bgenKin (const string &file_oxford, vector<int> &indicator_snp,
 		{
 		  infile.read(reinterpret_cast<char*>(&bgen_P),4);
 		  uint8_t zipped_data[bgen_P];
-		  
+
 		  unzipped_data_size=6*bgen_N;
-		  
+
 		  infile.read(reinterpret_cast<char*>(zipped_data),bgen_P);
-		  
+
 		  int result=
 		    uncompress(reinterpret_cast<Bytef*>(unzipped_data),
 			       reinterpret_cast<uLongf*>(&unzipped_data_size),
@@ -2698,7 +2698,7 @@ bool bgenKin (const string &file_oxford, vector<int> &indicator_snp,
 		}
 		else
 		{
-		  
+
 		  bgen_P=6*bgen_N;
 		  infile.read(reinterpret_cast<char*>(unzipped_data),bgen_P);
 		}
@@ -2708,7 +2708,7 @@ bool bgenKin (const string &file_oxford, vector<int> &indicator_snp,
 
 		for (size_t i=0; i<bgen_N; ++i) {
 
-		  
+
 		  bgen_geno_prob_AA=
 		    static_cast<double>(unzipped_data[i*3])/32768.0;
 		  bgen_geno_prob_AB=
@@ -2723,13 +2723,13 @@ bool bgenKin (const string &file_oxford, vector<int> &indicator_snp,
 		    n_miss++;
 		  }
 		  else {
-		    
+
 		    bgen_geno_prob_AA/=bgen_geno_prob_non_miss;
 		    bgen_geno_prob_AB/=bgen_geno_prob_non_miss;
 		    bgen_geno_prob_BB/=bgen_geno_prob_non_miss;
-		    
+
 		    genotype=2.0*bgen_geno_prob_BB+bgen_geno_prob_AB;
-		    
+
 		    gsl_vector_set(geno, i, genotype);
 		    gsl_vector_set(geno_miss, i, 1.0);
 		    geno_mean+=genotype;
@@ -2936,8 +2936,7 @@ bool ReadHeader_io (const string &line, HEADER &header)
 	header.n_col=header.coln+1;
       } else {
 	cout<<"error! more than two n_total columns in the file."<<endl;
-	n_
-	  error++;}
+	n_error++;}
     } else if (nmis_set.count(type)!=0) {
       if (header.nmis_col==0) {header.nmis_col=header.coln+1;} else {
 	cout<<"error! more than two n_mis columns in the file."<<endl;
@@ -2988,7 +2987,7 @@ bool ReadHeader_io (const string &line, HEADER &header)
     } else {
       string str = ch_ptr;
       string cat = str.substr(str.size()-2, 2);
-      
+
       if(cat == "_c" || cat =="_C"){
 
         // continuous
@@ -2999,7 +2998,7 @@ bool ReadHeader_io (const string &line, HEADER &header)
 	header.catd_col.insert(header.coln+1);
       }
     }
-    
+
     ch_ptr=strtok (NULL, " , \t");
     header.coln++;
   }
@@ -3396,7 +3395,7 @@ bool PlinkKin (const string &file_bed, const int display_pace,
 		  for (size_t j=0; j<4; ++j) {
 		    if ((i==(n_bit-1)) && ci_total==ni_total) {break;}
 		    if (indicator_idv[ci_total]==0) {ci_total++; continue;}
-		    
+
 		    if (b[2*j]==0) {
 		      if (b[2*j+1]==0) {
 			gsl_vector_set(geno, ci_test, 2.0);
@@ -3412,7 +3411,7 @@ bool PlinkKin (const string &file_bed, const int display_pace,
 		      if (b[2*j+1]==1) {gsl_vector_set(geno, ci_test, 0.0); }
 		      else {gsl_vector_set(geno, ci_test, -9.0); n_miss++; }
 		    }
-		    
+
 		    ci_test++;
 		    ci_total++;
 		  }
@@ -3561,7 +3560,7 @@ bool MFILEKin (const size_t mfile_mode, const string &file_mfile,
     } else {
       BimbamKin (file_name, display_pace, indicator_idv, mindicator_snp[l], mapRS2weight, mapRS2cat, msnpInfo[l], W, kin_tmp, ns_tmp);
     }
-    
+
     // Add ns.
     gsl_vector_add(vector_ns, ns_tmp);
 
@@ -3647,7 +3646,7 @@ bool ReadFile_wsnp (const string &file_wcat, const size_t n_vc,
   }
 
   string line, rs, chr, a1, a0, pos, cm;
-  
+
   // Read header.
   HEADER header;
   !safeGetline(infile, line).eof();
@@ -3978,7 +3977,7 @@ void Calcq (const size_t n_block, const vector<size_t> &vec_cat,
 
   // Compute q and s.
   for (size_t i=0; i<vec_cat.size(); i++) {
-    
+
     // Extract quantities.
     cat=vec_cat[i];
     n_total=vec_ni[i];
@@ -4017,7 +4016,7 @@ void Calcq (const size_t n_block, const vector<size_t> &vec_cat,
 
     // Record values.
     for (size_t i=0; i<vec_cat.size(); i++) {
-      
+
       // Extract quantities.
       cat=vec_cat[i];
       n_total=vec_ni[i];
@@ -4369,7 +4368,7 @@ void ReadFile_mref (const string &file_mref, gsl_matrix *S_mat,
       if (i!=j) {gsl_matrix_set(Svar_mat, j, i, d);}
     }
   }
-  
+
   // Free matrices.
   gsl_matrix_free(S_sub);
   gsl_matrix_free(Svar_sub);
