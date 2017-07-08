@@ -50,7 +50,7 @@ MQS algorithm to estimate variance components.
 
 ## Quick start
 
-1. Download and install the software. *Give more details here.*
+1. Download and install the software. See [INSTALL.md](INSTALL.md).
 
 2. Work through the demo. *Give more details here.*
 
@@ -120,21 +120,20 @@ of this.*
 
 ## Setup
 
-There are two ways to install GEMMA:
+To install GEMMA you can
 
 1. Download the precompiled binaries (64-bit Linux and Mac only).
 
-2. Compile the GEMMA executable from source.
+2. Use existing package managers, see [INSTALL.md](INSTALL.md).
 
-The first option is simpler, and is therefore recommended for
-most users.
+3. Compile the GEMMA executable from source.
 
 Compiling from source takes more work, but can boost performance of
 the program, especially when using specialized C++ compilers and
 numerical libraries.
 
-In both cases, we recommend downloading the
-[latest stable release][latest_release] instead of the Github repository.
+Source code and [latest stable release][latest_release] are available
+from the Github repository.
 
 ### Precompiled binaries
 
@@ -162,8 +161,6 @@ errors.
 
 ### Building from source
 
-*Provde a brief list the dependencies here.*
-
 *We provide a simple Makefile which will need to be customized; please
 see the comments at the top of the Makefile. Explain why we
 automatically generate a Makefile using programs such as CMake or
@@ -178,6 +175,9 @@ change the library paths in the Makefile accordingly.
 [Eigen C++ library](http://eigen.tuxfamily.org), and copy the `Eigen`
 subdirectory into the `src` directory of the GEMMA repository. (It was
 last tested using Eigen version 3.3.3.)
+
+More information on source code, dependencies and installation can be
+found in [INSTALL.md](INSTALL.md).
 
 ## Credits
 
