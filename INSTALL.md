@@ -23,6 +23,8 @@ dependencies:
 
 ### Bioconda
 
+(Note Bioconda install is a work in [progress](https://github.com/xiangzhou/GEMMA/issues/52)
+
 Recent versions of GEMMA can be installed with
 [BioConda](http://ddocent.com/bioconda/) without root permissions using the following
 command
@@ -31,7 +33,7 @@ command
 
 ### GNU Guix
 
-The GNU Guix package manager can install recent versions of GEMMA
+The GNU Guix package manager can install recent versions of [GEMMA](https://www.gnu.org/software/guix/packages/g.html)
 using the following command
 
     guix package -i gemma
