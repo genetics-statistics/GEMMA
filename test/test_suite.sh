@@ -5,6 +5,9 @@ gemma=../bin/gemma
 testCenteredRelatednessMatrixK() {
     $gemma -g ../example/mouse_hs1940.geno.txt.gz -p ../example/mouse_hs1940.pheno.txt \
            -a ../example/mouse_hs1940.anno.txt -gk -o mouse_hs1940
+    assertEquals 0 $?
+    grep "total computation time" < output/mouse_hs1940.log.txt
+    assertEquals 0 $?
     assertEquals "3763600" `wc -w < output/mouse_hs1940.cXX.txt`
     # assertEquals "15f680c" `md5sum < output/mouse_hs1940.cXX.txt | head -c 7`
     assertEquals "0.335" `head -c 5 output/mouse_hs1940.cXX.txt`
@@ -15,6 +18,9 @@ testUnivariateLinearMixedModel() {
     $gemma -g ../example/mouse_hs1940.geno.txt.gz -p ../example/mouse_hs1940.pheno.txt -n 1 \
            -a ../example/mouse_hs1940.anno.txt -k ./output/mouse_hs1940.cXX.txt -lmm \
            -o mouse_hs1940_CD8_lmm
+    assertEquals 0 $?
+    grep "total computation time" < output/mouse_hs1940_CD8_lmm.log.txt
+    assertEquals 0 $?
     assertEquals "118459" `wc -w < output/mouse_hs1940_CD8_lmm.assoc.txt`
     assertEquals "92047" `awk '{s+=substr($1,0,6)}END{print s}' output/mouse_hs1940_CD8_lmm.assoc.txt`
 }
@@ -23,6 +29,10 @@ testMultivariateLinearMixedModel() {
     $gemma -g ../example/mouse_hs1940.geno.txt.gz -p ../example/mouse_hs1940.pheno.txt \
            -n 1 6 -a ../example/mouse_hs1940.anno.txt -k ./output/mouse_hs1940.cXX.txt \
            -lmm -o mouse_hs1940_CD8MCH_lmm
+    assertEquals 0 $?
+    grep "total computation time" < output/mouse_hs1940_CD8MCH_lmm.log.txt
+    assertEquals 0 $?
+
     outfn=output/mouse_hs1940_CD8MCH_lmm.assoc.txt
     assertEquals "139867" `wc -w < $outfn`
     assertEquals "92079" `awk '{s+=substr($1,0,6)}END{print s}' $outfn`
