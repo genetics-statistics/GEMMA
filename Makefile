@@ -95,6 +95,8 @@ $(OBJS) : $(HDR)
 	$(CPP) $(CPPFLAGS) $(HEADERS) -c $*.cpp -o $*.o
 .SUFFIXES : .cpp .c .o $(SUFFIXES)
 
+check:
+	./run_tests.sh
 
 clean:
 	rm -rf ${SRC_DIR}/*.o ${SRC_DIR}/*~ *~ $(OUTPUT)

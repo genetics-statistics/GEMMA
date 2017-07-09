@@ -2,6 +2,8 @@
 *.tar.gz
 src/Eigen
 example/output
+test/output
+./output
 doc/manual.aux
 doc/manual.bbl
 doc/manual.blg
