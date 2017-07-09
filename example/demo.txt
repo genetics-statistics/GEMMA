@@ -67,17 +67,17 @@ chr	rs	ps	n_miss	allele1	allele0	af	beta_1	beta_2	Vbeta_1_1	Vbeta_1_2	Vbeta_2_2	
 1	rs13475700	4098402	0	A	C	0.128	-6.727883e-02	1.685363e-01	5.597160e-03	-1.366799e-04	7.574216e-03	1.060482e-01
 
 # The log file also contains Vg and Ve estimates and their standard errors
-## REMLE estimate for Vg in the null model: 
-1.39398	
--0.226714	2.08168	
-## se(Vg): 
-0.156661	
-0.136319	0.235858	
-## REMLE estimate for Ve in the null model: 
-0.348882	
-0.0490525	0.414433	
-## se(Ve): 
-0.0206226	
+## REMLE estimate for Vg in the null model:
+1.39398
+-0.226714	2.08168
+## se(Vg):
+0.156661
+0.136319	0.235858
+## REMLE estimate for Ve in the null model:
+0.348882
+0.0490525	0.414433
+## se(Ve):
+0.0206226
 0.0166233	0.0266869
 
 # Since there are individuals with partially missing phenotypes, one can impute these missing values before association tests
