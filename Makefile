@@ -102,7 +102,8 @@ $(OBJS) : $(HDR)
 .SUFFIXES : .cpp .c .o $(SUFFIXES)
 
 check: all
-	cd test && ./test_suite.sh | grep -q 'success rate: 100%'
+	cd test && ./test_suite.sh | tee ../test.log
+	grep -q 'success rate: 100%' test.log
 clean:
 	rm -rf ${SRC_DIR}/*.o ${SRC_DIR}/*~ *~ $(OUTPUT)
 
