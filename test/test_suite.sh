@@ -11,6 +11,7 @@ testCenteredRelatednessMatrixK() {
     assertEquals "3763600" `wc -w < output/mouse_hs1940.cXX.txt`
     # assertEquals "15f680c" `md5sum < output/mouse_hs1940.cXX.txt | head -c 7`
     assertEquals "0.335" `head -c 5 output/mouse_hs1940.cXX.txt`
+    # FIXME: The following test fails in the Guix build system (https://github.com/xiangzhou/GEMMA/issues/55)
     assertEquals "29.691" `awk '{s+=substr($1,0,6)}END{print s}' output/mouse_hs1940.cXX.txt`
 }
 
