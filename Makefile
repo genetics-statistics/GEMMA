@@ -102,7 +102,7 @@ $(OBJS) : $(HDR)
 .SUFFIXES : .cpp .c .o $(SUFFIXES)
 
 check: all
-	./run_tests.sh
+	cd test && ./test_suite.sh
 
 clean:
 	rm -rf ${SRC_DIR}/*.o ${SRC_DIR}/*~ *~ $(OUTPUT)
