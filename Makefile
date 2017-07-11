@@ -10,6 +10,7 @@
 # Set this variable to either LNX or MAC
 SYS = LNX
 # Leave blank after "=" to disable; put "= 1" to enable
+SHOW_COMPILER_WARNINGS   =
 WITH_LAPACK     = 1
 WITH_OPENBLAS   =
 NO_INTEL_COMPAT =
@@ -29,12 +30,16 @@ SRC_DIR  = ./src
 
 CPP = g++
 
-CPPFLAGS = -Wall -O3 -std=gnu++11 -I$(EIGEN_INCLUDE_PATH)
+CPPFLAGS = -O3 -std=gnu++11 -I$(EIGEN_INCLUDE_PATH)
+
+ifdef SHOW_COMPILER_WARNINGS
+  CPPFLAGS += -Wall
+endif
 
 ifdef FORCE_DYNAMIC
-LIBS = -lgsl -lgslcblas -pthread -lz
+  LIBS = -lgsl -lgslcblas -pthread -lz
 else
-LIBS = -lgsl -lgslcblas -pthread -lz
+  LIBS = -lgsl -lgslcblas -pthread -lz
 endif
 
 OUTPUT = $(BIN_DIR)/gemma
