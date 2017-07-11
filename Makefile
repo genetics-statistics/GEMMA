@@ -29,7 +29,7 @@ SRC_DIR  = ./src
 
 CPP = g++
 
-CPPFLAGS = -Wall -Weffc++ -O3 -std=gnu++11 -I$(EIGEN_INCLUDE_PATH)
+CPPFLAGS = -Wall -O3 -std=gnu++11 -I$(EIGEN_INCLUDE_PATH)
 
 ifdef FORCE_DYNAMIC
 LIBS = -lgsl -lgslcblas -pthread -lz
@@ -104,6 +104,7 @@ $(OBJS) : $(HDR)
 check: all
 	cd test && ./test_suite.sh | tee ../test.log
 	grep -q 'success rate: 100%' test.log
+
 clean:
 	rm -rf ${SRC_DIR}/*.o ${SRC_DIR}/*~ *~ $(OUTPUT)
 
