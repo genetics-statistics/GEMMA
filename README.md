@@ -84,7 +84,7 @@ statistics, please cite:
 
 + Xiang Zhou (2016). [A unified framework for variance component
 estimation with summary statistics in genome-wide association
-studies.](https://doi.org/10.1101/042846) *bioRxiv* 042846.
+studies.](https://doi.org/10.1101/042846) *Annals of Applied Statistics*, in press.
 
 ## License
 
