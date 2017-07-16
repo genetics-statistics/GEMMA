@@ -52,3 +52,20 @@ path. E.g. on GNU Guix with shared libs this may work
 to run GEMMA tests
 
     make check
+
+## Run tests
+
+GEMMA uses the shunit2 test framework (version 2.0) and can be found
+[here](https://github.com/genenetwork/shunit2)
+
+In the source tree:
+
+    git clone https://github.com/genenetwork/shunit2 contrib/shunit2
+
+and run
+
+    make check
+
+or
+
+    ./run_tests.sh
