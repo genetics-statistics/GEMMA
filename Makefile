@@ -30,7 +30,7 @@ SRC_DIR  = ./src
 
 CPP = g++
 
-CPPFLAGS = -O3 -std=gnu++11 -isystem$(EIGEN_INCLUDE_PATH)
+CPPFLAGS = -O3 -std=gnu++11 -isystem/$(EIGEN_INCLUDE_PATH)
 
 ifdef SHOW_COMPILER_WARNINGS
   CPPFLAGS += -Wall
