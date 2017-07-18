@@ -10,11 +10,13 @@
 # Set this variable to either LNX or MAC
 SYS = LNX
 # Leave blank after "=" to disable; put "= 1" to enable
-WITH_LAPACK = 1
+SHOW_COMPILER_WARNINGS   =
+WITH_LAPACK     = 1
+WITH_OPENBLAS   =
 NO_INTEL_COMPAT =
-FORCE_32BIT =
-FORCE_DYNAMIC =
-DIST_NAME = gemma-0.97
+FORCE_32BIT     =
+FORCE_DYNAMIC   =
+DIST_NAME       = gemma-0.97
 
 # --------------------------------------------------------------------
 # Edit below this line with caution
@@ -28,12 +30,16 @@ SRC_DIR  = ./src
 
 CPP = g++
 
-CPPFLAGS = -Wall -Weffc++ -O3 -std=gnu++11 -I$(EIGEN_INCLUDE_PATH)
+CPPFLAGS = -O3 -std=gnu++11 -isystem$(EIGEN_INCLUDE_PATH)
+
+ifdef SHOW_COMPILER_WARNINGS
+  CPPFLAGS += -Wall
+endif
 
 ifdef FORCE_DYNAMIC
-LIBS = -lgsl -lgslcblas -lblas -pthread -lz
+  LIBS = -lgsl -lgslcblas -pthread -lz
 else
-LIBS = -lgsl -lgslcblas -pthread -lz
+  LIBS = -lgsl -lgslcblas -pthread -lz
 endif
 
 OUTPUT = $(BIN_DIR)/gemma
@@ -45,6 +51,8 @@ HDR =
 # Detailed libary paths, D for dynamic and S for static
 
 LIBS_LNX_D_LAPACK = -llapack
+LIBS_LNX_D_BLAS = -lblas
+LIBS_LNX_D_OPENBLAS = -lopenblas
 LIBS_MAC_D_LAPACK = -framework Veclib
 LIBS_LNX_S_LAPACK = /usr/lib/lapack/liblapack.a -lgfortran  /usr/lib/atlas-base/libatlas.a /usr/lib/libblas/libblas.a -Wl,--allow-multiple-definition
 
@@ -56,11 +64,14 @@ ifdef WITH_LAPACK
 ifeq ($(SYS), MAC)
   LIBS += $(LIBS_MAC_D_LAPACK)
 else
-ifdef FORCE_DYNAMIC
-  LIBS += $(LIBS_LNX_D_LAPACK)
-else
-  LIBS += $(LIBS_LNX_S_LAPACK)
-endif
+  ifdef FORCE_DYNAMIC
+    ifdef WITH_OPENBLAS
+      LIBS += $(LIBS_LNX_D_OPENBLAS)
+    else
+      LIBS += $(LIBS_LNX_D_BLAS)
+    endif
+    LIBS += $(LIBS_LNX_D_LAPACK)
+  endif
 endif
   SOURCES += $(SRC_DIR)/lapack.cpp
   HDR += $(SRC_DIR)/lapack.h
@@ -95,6 +106,9 @@ $(OBJS) : $(HDR)
 	$(CPP) $(CPPFLAGS) $(HEADERS) -c $*.cpp -o $*.o
 .SUFFIXES : .cpp .c .o $(SUFFIXES)
 
+check: all
+	cd test && ./test_suite.sh | tee ../test.log
+	grep -q 'success rate: 100%' test.log
 
 clean:
 	rm -rf ${SRC_DIR}/*.o ${SRC_DIR}/*~ *~ $(OUTPUT)
