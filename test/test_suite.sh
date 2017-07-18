@@ -43,9 +43,9 @@ shunit2=`which shunit2`
 if [ -e "../contrib/shunit2/source/2.0/src/shell/shunit2" ]; then
     echo try to run the locally installed shunit2
     . ../contrib/shunit2/source/2.0/src/shell/shunit2
-elif [ -e "../shunit2-2.0.3/src/shell/shunit2" ]; then
+elif [ -e "shunit2-2.0.3/src/shell/shunit2" ]; then
     echo try to run the older locally installed shunit2
-    . ../shunit2-2.0.3/src/shell/shunit2
+    . shunit2-2.0.3/src/shell/shunit2
 elif [ -x "$shunit2" ]; then
     echo run system shunit2
     . $shunit2
