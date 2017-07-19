@@ -27,12 +27,12 @@
 #include <stdlib.h>
 #include <bitset>
 #include <cstring>
+#include <assert.h>
 
 #include "gsl/gsl_vector.h"
 #include "gsl/gsl_matrix.h"
 #include "gsl/gsl_linalg.h"
 #include "gsl/gsl_blas.h"
-
 #include "gsl/gsl_cdf.h"
 #include "gsl/gsl_roots.h"
 #include "gsl/gsl_min.h"
@@ -953,8 +953,9 @@ void CalcHiQi (const gsl_vector *eval, const gsl_matrix *X,
 			       mat_dd, 0.0, &Hi_k.matrix);
 	}
 
-	// Calculate Qi, and multiply I\otimes UtVeh on both side
-	// and calculate logdet_Q, don't forget to substract c_size*logdet_Ve.
+	// Calculate Qi, and multiply I\o times UtVeh on both side and
+	// calculate logdet_Q, don't forget to substract
+	// c_size*logdet_Ve.
 	logdet_Q=CalcQi (eval, D_l, X, Qi)-(double)c_size*logdet_Ve;
 
 	for (size_t i=0; i<c_size; i++) {
@@ -1262,59 +1263,83 @@ void Calc_xHiDHiDHiy (const gsl_vector *eval, const gsl_matrix *Hi,
 
 	size_t n_size=eval->size, d_size=Hiy->size1;
 
-	double delta, d_Hiy_i, d_Hiy_j, d_Hi_i1i2, d_Hi_i1j2, d_Hi_j1i2, d_Hi_j1j2;
+	double delta, d_Hiy_i, d_Hiy_j, d_Hi_i1i2, d_Hi_i1j2;
+	double d_Hi_j1i2, d_Hi_j1j2;
 
 	for (size_t k=0; k<n_size; k++) {
-		delta=gsl_vector_get (eval, k);
-
-		gsl_vector_const_view xHi_col_i=gsl_matrix_const_column (xHi, k*d_size+i1);
-		gsl_vector_const_view xHi_col_j=gsl_matrix_const_column (xHi, k*d_size+j1);
-
-		d_Hiy_i=gsl_matrix_get (Hiy, i2, k);
-		d_Hiy_j=gsl_matrix_get (Hiy, j2, k);
-
-		d_Hi_i1i2=gsl_matrix_get (Hi, i1, k*d_size+i2);
-		d_Hi_i1j2=gsl_matrix_get (Hi, i1, k*d_size+j2);
-		d_Hi_j1i2=gsl_matrix_get (Hi, j1, k*d_size+i2);
-		d_Hi_j1j2=gsl_matrix_get (Hi, j1, k*d_size+j2);
-
-		if (i1==j1) {
-			gsl_blas_daxpy (delta*delta*d_Hi_j1i2*d_Hiy_j, &xHi_col_i.vector, xHiDHiDHiy_gg);
-			gsl_blas_daxpy (d_Hi_j1i2*d_Hiy_j, &xHi_col_i.vector, xHiDHiDHiy_ee);
-			gsl_blas_daxpy (delta*d_Hi_j1i2*d_Hiy_j, &xHi_col_i.vector, xHiDHiDHiy_ge);
-
-			if (i2!=j2) {
-				gsl_blas_daxpy (delta*delta*d_Hi_j1j2*d_Hiy_i, &xHi_col_i.vector, xHiDHiDHiy_gg);
-				gsl_blas_daxpy (d_Hi_j1j2*d_Hiy_i, &xHi_col_i.vector, xHiDHiDHiy_ee);
-				gsl_blas_daxpy (delta*d_Hi_j1j2*d_Hiy_i, &xHi_col_i.vector, xHiDHiDHiy_ge);
-			}
-		} else {
-			gsl_blas_daxpy (delta*delta*d_Hi_j1i2*d_Hiy_j, &xHi_col_i.vector, xHiDHiDHiy_gg);
-			gsl_blas_daxpy (d_Hi_j1i2*d_Hiy_j, &xHi_col_i.vector, xHiDHiDHiy_ee);
-			gsl_blas_daxpy (delta*d_Hi_j1i2*d_Hiy_j, &xHi_col_i.vector, xHiDHiDHiy_ge);
-
-			gsl_blas_daxpy (delta*delta*d_Hi_i1i2*d_Hiy_j, &xHi_col_j.vector, xHiDHiDHiy_gg);
-			gsl_blas_daxpy (d_Hi_i1i2*d_Hiy_j, &xHi_col_j.vector, xHiDHiDHiy_ee);
-			gsl_blas_daxpy (delta*d_Hi_i1i2*d_Hiy_j, &xHi_col_j.vector, xHiDHiDHiy_ge);
-
-			if (i2!=j2) {
-				gsl_blas_daxpy (delta*delta*d_Hi_j1j2*d_Hiy_i, &xHi_col_i.vector, xHiDHiDHiy_gg);
-				gsl_blas_daxpy (d_Hi_j1j2*d_Hiy_i, &xHi_col_i.vector, xHiDHiDHiy_ee);
-				gsl_blas_daxpy (delta*d_Hi_j1j2*d_Hiy_i, &xHi_col_i.vector, xHiDHiDHiy_ge);
-
-				gsl_blas_daxpy (delta*delta*d_Hi_i1j2*d_Hiy_i, &xHi_col_j.vector, xHiDHiDHiy_gg);
-				gsl_blas_daxpy (d_Hi_i1j2*d_Hiy_i, &xHi_col_j.vector, xHiDHiDHiy_ee);
-				gsl_blas_daxpy (delta*d_Hi_i1j2*d_Hiy_i, &xHi_col_j.vector, xHiDHiDHiy_ge);
-			}
-		}
+	  delta=gsl_vector_get (eval, k);
+	  
+	  gsl_vector_const_view xHi_col_i=
+	    gsl_matrix_const_column (xHi, k*d_size+i1);
+	  gsl_vector_const_view xHi_col_j=
+	    gsl_matrix_const_column (xHi, k*d_size+j1);
+	  
+	  d_Hiy_i=gsl_matrix_get (Hiy, i2, k);
+	  d_Hiy_j=gsl_matrix_get (Hiy, j2, k);
+	  
+	  d_Hi_i1i2=gsl_matrix_get (Hi, i1, k*d_size+i2);
+	  d_Hi_i1j2=gsl_matrix_get (Hi, i1, k*d_size+j2);
+	  d_Hi_j1i2=gsl_matrix_get (Hi, j1, k*d_size+i2);
+	  d_Hi_j1j2=gsl_matrix_get (Hi, j1, k*d_size+j2);
+	  
+	  if (i1==j1) {
+	    gsl_blas_daxpy (delta*delta*d_Hi_j1i2*d_Hiy_j, &xHi_col_i.vector,
+			    xHiDHiDHiy_gg);
+	    gsl_blas_daxpy (d_Hi_j1i2*d_Hiy_j, &xHi_col_i.vector,
+			    xHiDHiDHiy_ee);
+	    gsl_blas_daxpy (delta*d_Hi_j1i2*d_Hiy_j, &xHi_col_i.vector,
+			    xHiDHiDHiy_ge);
+		  
+	    if (i2!=j2) {
+	      gsl_blas_daxpy (delta*delta*d_Hi_j1j2*d_Hiy_i,
+			      &xHi_col_i.vector, xHiDHiDHiy_gg);
+	      gsl_blas_daxpy (d_Hi_j1j2*d_Hiy_i, &xHi_col_i.vector,
+			      xHiDHiDHiy_ee);
+	      gsl_blas_daxpy (delta*d_Hi_j1j2*d_Hiy_i, &xHi_col_i.vector,
+			      xHiDHiDHiy_ge);
+	    }
+	  } else {
+	    gsl_blas_daxpy (delta*delta*d_Hi_j1i2*d_Hiy_j, &xHi_col_i.vector,
+			    xHiDHiDHiy_gg);
+	    gsl_blas_daxpy (d_Hi_j1i2*d_Hiy_j, &xHi_col_i.vector,
+			    xHiDHiDHiy_ee);
+	    gsl_blas_daxpy (delta*d_Hi_j1i2*d_Hiy_j, &xHi_col_i.vector,
+			    xHiDHiDHiy_ge);
+	    
+	    gsl_blas_daxpy (delta*delta*d_Hi_i1i2*d_Hiy_j, &xHi_col_j.vector,
+			    xHiDHiDHiy_gg);
+	    gsl_blas_daxpy (d_Hi_i1i2*d_Hiy_j, &xHi_col_j.vector,
+			    xHiDHiDHiy_ee);
+	    gsl_blas_daxpy (delta*d_Hi_i1i2*d_Hiy_j, &xHi_col_j.vector,
+			    xHiDHiDHiy_ge);
+	    
+	    if (i2!=j2) {
+	      gsl_blas_daxpy (delta*delta*d_Hi_j1j2*d_Hiy_i,
+			      &xHi_col_i.vector, xHiDHiDHiy_gg);
+	      gsl_blas_daxpy (d_Hi_j1j2*d_Hiy_i, &xHi_col_i.vector,
+			      xHiDHiDHiy_ee);
+	      gsl_blas_daxpy (delta*d_Hi_j1j2*d_Hiy_i, &xHi_col_i.vector,
+			      xHiDHiDHiy_ge);
+	      
+	      gsl_blas_daxpy (delta*delta*d_Hi_i1j2*d_Hiy_i,
+			      &xHi_col_j.vector, xHiDHiDHiy_gg);
+	      gsl_blas_daxpy (d_Hi_i1j2*d_Hiy_i, &xHi_col_j.vector,
+			      xHiDHiDHiy_ee);
+	      gsl_blas_daxpy (delta*d_Hi_i1j2*d_Hiy_i, &xHi_col_j.vector,
+			      xHiDHiDHiy_ge);
+	    }
+	  }
 	}
-
+	
 	return;
 }
 
 
-void Calc_xHiDHiDHix (const gsl_vector *eval, const gsl_matrix *Hi, const gsl_matrix *xHi, const size_t i1, const size_t j1, const size_t i2, const size_t j2, gsl_matrix *xHiDHiDHix_gg, gsl_matrix *xHiDHiDHix_ee, gsl_matrix *xHiDHiDHix_ge)
-{
+void Calc_xHiDHiDHix (const gsl_vector *eval, const gsl_matrix *Hi,
+		      const gsl_matrix *xHi, const size_t i1, const size_t j1,
+		      const size_t i2, const size_t j2,
+		      gsl_matrix *xHiDHiDHix_gg, gsl_matrix *xHiDHiDHix_ee,
+		      gsl_matrix *xHiDHiDHix_ge) {
 	gsl_matrix_set_zero(xHiDHiDHix_gg);
 	gsl_matrix_set_zero(xHiDHiDHix_ee);
 	gsl_matrix_set_zero(xHiDHiDHix_ge);
@@ -1328,10 +1353,14 @@ void Calc_xHiDHiDHix (const gsl_vector *eval, const gsl_matrix *Hi, const gsl_ma
 	for (size_t k=0; k<n_size; k++) {
 		delta=gsl_vector_get (eval, k);
 
-		gsl_vector_const_view xHi_col_i1=gsl_matrix_const_column (xHi, k*d_size+i1);
-		gsl_vector_const_view xHi_col_j1=gsl_matrix_const_column (xHi, k*d_size+j1);
-		gsl_vector_const_view xHi_col_i2=gsl_matrix_const_column (xHi, k*d_size+i2);
-		gsl_vector_const_view xHi_col_j2=gsl_matrix_const_column (xHi, k*d_size+j2);
+		gsl_vector_const_view xHi_col_i1=
+		  gsl_matrix_const_column (xHi, k*d_size+i1);
+		gsl_vector_const_view xHi_col_j1=
+		  gsl_matrix_const_column (xHi, k*d_size+j1);
+		gsl_vector_const_view xHi_col_i2=
+		  gsl_matrix_const_column (xHi, k*d_size+i2);
+		gsl_vector_const_view xHi_col_j2=
+		  gsl_matrix_const_column (xHi, k*d_size+j2);
 
 		d_Hi_i1i2=gsl_matrix_get (Hi, i1, k*d_size+i2);
 		d_Hi_i1j2=gsl_matrix_get (Hi, i1, k*d_size+j2);
@@ -1339,37 +1368,41 @@ void Calc_xHiDHiDHix (const gsl_vector *eval, const gsl_matrix *Hi, const gsl_ma
 		d_Hi_j1j2=gsl_matrix_get (Hi, j1, k*d_size+j2);
 
 		if (i1==j1) {
-			gsl_matrix_set_zero (mat_dcdc);
-			gsl_blas_dger (d_Hi_j1i2, &xHi_col_i1.vector, &xHi_col_j2.vector, mat_dcdc);
+		  gsl_matrix_set_zero (mat_dcdc);
+		  gsl_blas_dger (d_Hi_j1i2, &xHi_col_i1.vector,
+				 &xHi_col_j2.vector, mat_dcdc);
 
-			gsl_matrix_add(xHiDHiDHix_ee, mat_dcdc);
-			gsl_matrix_scale(mat_dcdc, delta);
-			gsl_matrix_add(xHiDHiDHix_ge, mat_dcdc);
-			gsl_matrix_scale(mat_dcdc, delta);
-			gsl_matrix_add(xHiDHiDHix_gg, mat_dcdc);
-
-			if (i2!=j2) {
-				gsl_matrix_set_zero (mat_dcdc);
-				gsl_blas_dger (d_Hi_j1j2, &xHi_col_i1.vector, &xHi_col_i2.vector, mat_dcdc);
-
-				gsl_matrix_add(xHiDHiDHix_ee, mat_dcdc);
-				gsl_matrix_scale(mat_dcdc, delta);
-				gsl_matrix_add(xHiDHiDHix_ge, mat_dcdc);
-				gsl_matrix_scale(mat_dcdc, delta);
-				gsl_matrix_add(xHiDHiDHix_gg, mat_dcdc);
-			}
+		  gsl_matrix_add(xHiDHiDHix_ee, mat_dcdc);
+		  gsl_matrix_scale(mat_dcdc, delta);
+		  gsl_matrix_add(xHiDHiDHix_ge, mat_dcdc);
+		  gsl_matrix_scale(mat_dcdc, delta);
+		  gsl_matrix_add(xHiDHiDHix_gg, mat_dcdc);
+		  
+		  if (i2!=j2) {
+		    gsl_matrix_set_zero (mat_dcdc);
+		    gsl_blas_dger (d_Hi_j1j2, &xHi_col_i1.vector,
+				   &xHi_col_i2.vector, mat_dcdc);
+		    
+		    gsl_matrix_add(xHiDHiDHix_ee, mat_dcdc);
+		    gsl_matrix_scale(mat_dcdc, delta);
+		    gsl_matrix_add(xHiDHiDHix_ge, mat_dcdc);
+		    gsl_matrix_scale(mat_dcdc, delta);
+		    gsl_matrix_add(xHiDHiDHix_gg, mat_dcdc);
+		  }
 		} else {
-			gsl_matrix_set_zero (mat_dcdc);
-			gsl_blas_dger (d_Hi_j1i2, &xHi_col_i1.vector, &xHi_col_j2.vector, mat_dcdc);
-
-			gsl_matrix_add(xHiDHiDHix_ee, mat_dcdc);
-			gsl_matrix_scale(mat_dcdc, delta);
-			gsl_matrix_add(xHiDHiDHix_ge, mat_dcdc);
-			gsl_matrix_scale(mat_dcdc, delta);
-			gsl_matrix_add(xHiDHiDHix_gg, mat_dcdc);
-
-			gsl_matrix_set_zero (mat_dcdc);
-			gsl_blas_dger (d_Hi_i1i2, &xHi_col_j1.vector, &xHi_col_j2.vector, mat_dcdc);
+		  gsl_matrix_set_zero (mat_dcdc);
+		  gsl_blas_dger (d_Hi_j1i2, &xHi_col_i1.vector,
+				 &xHi_col_j2.vector, mat_dcdc);
+		  
+		  gsl_matrix_add(xHiDHiDHix_ee, mat_dcdc);
+		  gsl_matrix_scale(mat_dcdc, delta);
+		  gsl_matrix_add(xHiDHiDHix_ge, mat_dcdc);
+		  gsl_matrix_scale(mat_dcdc, delta);
+		  gsl_matrix_add(xHiDHiDHix_gg, mat_dcdc);
+		  
+		  gsl_matrix_set_zero (mat_dcdc);
+		  gsl_blas_dger (d_Hi_i1i2, &xHi_col_j1.vector,
+				 &xHi_col_j2.vector, mat_dcdc);
 
 			gsl_matrix_add(xHiDHiDHix_ee, mat_dcdc);
 			gsl_matrix_scale(mat_dcdc, delta);
@@ -1378,23 +1411,25 @@ void Calc_xHiDHiDHix (const gsl_vector *eval, const gsl_matrix *Hi, const gsl_ma
 			gsl_matrix_add(xHiDHiDHix_gg, mat_dcdc);
 
 			if (i2!=j2) {
-				gsl_matrix_set_zero (mat_dcdc);
-				gsl_blas_dger (d_Hi_j1j2, &xHi_col_i1.vector, &xHi_col_i2.vector, mat_dcdc);
-
-				gsl_matrix_add(xHiDHiDHix_ee, mat_dcdc);
-				gsl_matrix_scale(mat_dcdc, delta);
-				gsl_matrix_add(xHiDHiDHix_ge, mat_dcdc);
-				gsl_matrix_scale(mat_dcdc, delta);
-				gsl_matrix_add(xHiDHiDHix_gg, mat_dcdc);
-
-				gsl_matrix_set_zero (mat_dcdc);
-				gsl_blas_dger (d_Hi_i1j2, &xHi_col_j1.vector, &xHi_col_i2.vector, mat_dcdc);
-
-				gsl_matrix_add(xHiDHiDHix_ee, mat_dcdc);
-				gsl_matrix_scale(mat_dcdc, delta);
-				gsl_matrix_add(xHiDHiDHix_ge, mat_dcdc);
-				gsl_matrix_scale(mat_dcdc, delta);
-				gsl_matrix_add(xHiDHiDHix_gg, mat_dcdc);
+			  gsl_matrix_set_zero (mat_dcdc);
+			  gsl_blas_dger (d_Hi_j1j2, &xHi_col_i1.vector,
+					 &xHi_col_i2.vector, mat_dcdc);
+			  
+			  gsl_matrix_add(xHiDHiDHix_ee, mat_dcdc);
+			  gsl_matrix_scale(mat_dcdc, delta);
+			  gsl_matrix_add(xHiDHiDHix_ge, mat_dcdc);
+			  gsl_matrix_scale(mat_dcdc, delta);
+			  gsl_matrix_add(xHiDHiDHix_gg, mat_dcdc);
+			  
+			  gsl_matrix_set_zero (mat_dcdc);
+			  gsl_blas_dger (d_Hi_i1j2, &xHi_col_j1.vector,
+					 &xHi_col_i2.vector, mat_dcdc);
+			  
+			  gsl_matrix_add(xHiDHiDHix_ee, mat_dcdc);
+			  gsl_matrix_scale(mat_dcdc, delta);
+			  gsl_matrix_add(xHiDHiDHix_ge, mat_dcdc);
+			  gsl_matrix_scale(mat_dcdc, delta);
+			  gsl_matrix_add(xHiDHiDHix_gg, mat_dcdc);
 			}
 		}
 	}
@@ -1404,10 +1439,9 @@ void Calc_xHiDHiDHix (const gsl_vector *eval, const gsl_matrix *Hi, const gsl_ma
 	return;
 }
 
-
-
-void Calc_traceHiD (const gsl_vector *eval, const gsl_matrix *Hi, const size_t i, const size_t j, double &tHiD_g, double &tHiD_e)
-{
+void Calc_traceHiD (const gsl_vector *eval, const gsl_matrix *Hi,
+		    const size_t i, const size_t j, double &tHiD_g,
+		    double &tHiD_e) {
 	tHiD_g=0.0;
 	tHiD_e=0.0;
 
@@ -1430,9 +1464,10 @@ void Calc_traceHiD (const gsl_vector *eval, const gsl_matrix *Hi, const size_t i
 	return;
 }
 
-
-void Calc_traceHiDHiD (const gsl_vector *eval, const gsl_matrix *Hi, const size_t i1, const size_t j1, const size_t i2, const size_t j2, double &tHiDHiD_gg, double &tHiDHiD_ee, double &tHiDHiD_ge)
-{
+void Calc_traceHiDHiD (const gsl_vector *eval, const gsl_matrix *Hi,
+		       const size_t i1, const size_t j1, const size_t i2,
+		       const size_t j2, double &tHiDHiD_gg, double &tHiDHiD_ee,
+		       double &tHiDHiD_ge) {
 	tHiDHiD_gg=0.0;
 	tHiDHiD_ee=0.0;
 	tHiDHiD_ge=0.0;
@@ -1449,48 +1484,54 @@ void Calc_traceHiDHiD (const gsl_vector *eval, const gsl_matrix *Hi, const size_
 		d_Hi_j1j2=gsl_matrix_get (Hi, j1, k*d_size+j2);
 
 		if (i1==j1) {
-			tHiDHiD_gg+=delta*delta*d_Hi_i1j2*d_Hi_j1i2;
-			tHiDHiD_ee+=d_Hi_i1j2*d_Hi_j1i2;
-			tHiDHiD_ge+=delta*d_Hi_i1j2*d_Hi_j1i2;
-
-			if (i2!=j2) {
-				tHiDHiD_gg+=delta*delta*d_Hi_i1i2*d_Hi_j1j2;
-				tHiDHiD_ee+=d_Hi_i1i2*d_Hi_j1j2;
-				tHiDHiD_ge+=delta*d_Hi_i1i2*d_Hi_j1j2;
-			}
+		  tHiDHiD_gg+=delta*delta*d_Hi_i1j2*d_Hi_j1i2;
+		  tHiDHiD_ee+=d_Hi_i1j2*d_Hi_j1i2;
+		  tHiDHiD_ge+=delta*d_Hi_i1j2*d_Hi_j1i2;
+		  
+		  if (i2!=j2) {
+		    tHiDHiD_gg+=delta*delta*d_Hi_i1i2*d_Hi_j1j2;
+		    tHiDHiD_ee+=d_Hi_i1i2*d_Hi_j1j2;
+		    tHiDHiD_ge+=delta*d_Hi_i1i2*d_Hi_j1j2;
+		  }
 		} else {
-			tHiDHiD_gg+=delta*delta*(d_Hi_i1j2*d_Hi_j1i2+d_Hi_j1j2*d_Hi_i1i2);
-			tHiDHiD_ee+=(d_Hi_i1j2*d_Hi_j1i2+d_Hi_j1j2*d_Hi_i1i2);
-			tHiDHiD_ge+=delta*(d_Hi_i1j2*d_Hi_j1i2+d_Hi_j1j2*d_Hi_i1i2);
-
-			if (i2!=j2) {
-				tHiDHiD_gg+=delta*delta*(d_Hi_i1i2*d_Hi_j1j2+d_Hi_j1i2*d_Hi_i1j2);
-				tHiDHiD_ee+=(d_Hi_i1i2*d_Hi_j1j2+d_Hi_j1i2*d_Hi_i1j2);
-				tHiDHiD_ge+=delta*(d_Hi_i1i2*d_Hi_j1j2+d_Hi_j1i2*d_Hi_i1j2);
-			}
+		  tHiDHiD_gg+=delta*delta*(d_Hi_i1j2*d_Hi_j1i2+d_Hi_j1j2*
+					   d_Hi_i1i2);
+		  tHiDHiD_ee+=(d_Hi_i1j2*d_Hi_j1i2+d_Hi_j1j2*d_Hi_i1i2);
+		  tHiDHiD_ge+=delta*(d_Hi_i1j2*d_Hi_j1i2+d_Hi_j1j2*d_Hi_i1i2);
+		  
+		  if (i2!=j2) {
+		    tHiDHiD_gg+=delta*delta*(d_Hi_i1i2*d_Hi_j1j2+d_Hi_j1i2*
+					     d_Hi_i1j2);
+		    tHiDHiD_ee+=(d_Hi_i1i2*d_Hi_j1j2+d_Hi_j1i2*d_Hi_i1j2);
+		    tHiDHiD_ge+=delta*(d_Hi_i1i2*d_Hi_j1j2 +
+				       d_Hi_j1i2*d_Hi_i1j2);
+		  }
 		}
 	}
 
 	return;
 }
 
-
-//trace(PD)=trace((Hi-HixQixHi)D)=trace(HiD)-trace(HixQixHiD)
-void Calc_tracePD (const gsl_vector *eval, const gsl_matrix *Qi, const gsl_matrix *Hi, const gsl_matrix *xHiDHix_all_g, const gsl_matrix *xHiDHix_all_e, const size_t i, const size_t j, double &tPD_g, double &tPD_e)
-{
+// trace(PD) = trace((Hi-HixQixHi)D)=trace(HiD) - trace(HixQixHiD)
+void Calc_tracePD (const gsl_vector *eval, const gsl_matrix *Qi,
+		   const gsl_matrix *Hi, const gsl_matrix *xHiDHix_all_g,
+		   const gsl_matrix *xHiDHix_all_e, const size_t i,
+		   const size_t j, double &tPD_g, double &tPD_e) {
 	size_t dc_size=Qi->size1, d_size=Hi->size1;
 	size_t v=GetIndex(i, j, d_size);
 
 	double d;
 
-	//calculate the first part: trace(HiD)
+	// Calculate the first part: trace(HiD).
 	Calc_traceHiD (eval, Hi, i, j, tPD_g, tPD_e);
 
-	//calculate the second part: -trace(HixQixHiD)
+	// Calculate the second part: -trace(HixQixHiD).
 	for (size_t k=0; k<dc_size; k++) {
 		gsl_vector_const_view Qi_row=gsl_matrix_const_row (Qi, k);
-		gsl_vector_const_view xHiDHix_g_col=gsl_matrix_const_column (xHiDHix_all_g, v*dc_size+k);
-		gsl_vector_const_view xHiDHix_e_col=gsl_matrix_const_column (xHiDHix_all_e, v*dc_size+k);
+		gsl_vector_const_view xHiDHix_g_col =
+		  gsl_matrix_const_column (xHiDHix_all_g, v*dc_size+k);
+		gsl_vector_const_view xHiDHix_e_col =
+		  gsl_matrix_const_column (xHiDHix_all_e, v*dc_size+k);
 
 		gsl_blas_ddot(&Qi_row.vector, &xHiDHix_g_col.vector, &d);
 		tPD_g-=d;
@@ -1501,77 +1542,86 @@ void Calc_tracePD (const gsl_vector *eval, const gsl_matrix *Qi, const gsl_matri
 	return;
 }
 
-
-
-//trace(PDPD)=trace((Hi-HixQixHi)D(Hi-HixQixHi)D)
-//=trace(HiDHiD)-trace(HixQixHiDHiD)-trace(HiDHixQixHiD)+trace(HixQixHiDHixQixHiD)
-void Calc_tracePDPD (const gsl_vector *eval, const gsl_matrix *Qi, const gsl_matrix *Hi, const gsl_matrix *xHi, const gsl_matrix *QixHiDHix_all_g, const gsl_matrix *QixHiDHix_all_e, const gsl_matrix *xHiDHiDHix_all_gg, const gsl_matrix *xHiDHiDHix_all_ee, const gsl_matrix *xHiDHiDHix_all_ge, const size_t i1, const size_t j1, const size_t i2, const size_t j2, double &tPDPD_gg, double &tPDPD_ee, double &tPDPD_ge)
-{
+// trace(PDPD) = trace((Hi-HixQixHi)D(Hi-HixQixHi)D)
+//             = trace(HiDHiD) - trace(HixQixHiDHiD)
+//               - trace(HiDHixQixHiD) + trace(HixQixHiDHixQixHiD)
+void Calc_tracePDPD (const gsl_vector *eval, const gsl_matrix *Qi,
+		     const gsl_matrix *Hi, const gsl_matrix *xHi,
+		     const gsl_matrix *QixHiDHix_all_g,
+		     const gsl_matrix *QixHiDHix_all_e,
+		     const gsl_matrix *xHiDHiDHix_all_gg,
+		     const gsl_matrix *xHiDHiDHix_all_ee,
+		     const gsl_matrix *xHiDHiDHix_all_ge,
+		     const size_t i1, const size_t j1,
+		     const size_t i2, const size_t j2,
+		     double &tPDPD_gg, double &tPDPD_ee,
+		     double &tPDPD_ge) {
 	size_t dc_size=Qi->size1, d_size=Hi->size1;
 	size_t v_size=d_size*(d_size+1)/2;
 	size_t v1=GetIndex(i1, j1, d_size), v2=GetIndex(i2, j2, d_size);
 
 	double d;
 
-	//calculate the first part: trace(HiDHiD)
-	Calc_traceHiDHiD (eval, Hi, i1, j1, i2, j2, tPDPD_gg, tPDPD_ee, tPDPD_ge);
+	// Calculate the first part: trace(HiDHiD).
+	Calc_traceHiDHiD (eval, Hi, i1, j1, i2, j2, tPDPD_gg, tPDPD_ee,
+			  tPDPD_ge);
 
-	//calculate the second and third parts: -trace(HixQixHiDHiD)-trace(HiDHixQixHiD)
+	// Calculate the second and third parts:
+	// -trace(HixQixHiDHiD) - trace(HiDHixQixHiD)
 	for (size_t i=0; i<dc_size; i++) {
-		gsl_vector_const_view Qi_row=gsl_matrix_const_row (Qi, i);
-		gsl_vector_const_view xHiDHiDHix_gg_col=gsl_matrix_const_column (xHiDHiDHix_all_gg, (v1*v_size+v2)*dc_size+i);
-		gsl_vector_const_view xHiDHiDHix_ee_col=gsl_matrix_const_column (xHiDHiDHix_all_ee, (v1*v_size+v2)*dc_size+i);
-		gsl_vector_const_view xHiDHiDHix_ge_col=gsl_matrix_const_column (xHiDHiDHix_all_ge, (v1*v_size+v2)*dc_size+i);
-
-		gsl_blas_ddot(&Qi_row.vector, &xHiDHiDHix_gg_col.vector, &d);
-		tPDPD_gg-=d*2.0;
-		gsl_blas_ddot(&Qi_row.vector, &xHiDHiDHix_ee_col.vector, &d);
-		tPDPD_ee-=d*2.0;
-		gsl_blas_ddot(&Qi_row.vector, &xHiDHiDHix_ge_col.vector, &d);
-		tPDPD_ge-=d*2.0;
-		/*
-		gsl_vector_const_view xHiDHiDHix_gg_row=gsl_matrix_const_row (xHiDHiDHix_gg, i);
-		gsl_vector_const_view xHiDHiDHix_ee_row=gsl_matrix_const_row (xHiDHiDHix_ee, i);
-		gsl_vector_const_view xHiDHiDHix_ge_row=gsl_matrix_const_row (xHiDHiDHix_ge, i);
-
-		gsl_blas_ddot(&Qi_row.vector, &xHiDHiDHix_gg_row.vector, &d);
-		tPDPD_gg-=d;
-		gsl_blas_ddot(&Qi_row.vector, &xHiDHiDHix_ee_row.vector, &d);
-		tPDPD_ee-=d;
-		gsl_blas_ddot(&Qi_row.vector, &xHiDHiDHix_ge_row.vector, &d);
-		tPDPD_ge-=d;
-		 */
+	  gsl_vector_const_view Qi_row=gsl_matrix_const_row (Qi, i);
+	  gsl_vector_const_view xHiDHiDHix_gg_col=
+	    gsl_matrix_const_column(xHiDHiDHix_all_gg,
+				    (v1*v_size+v2)*dc_size+i);
+	  gsl_vector_const_view xHiDHiDHix_ee_col =
+	    gsl_matrix_const_column(xHiDHiDHix_all_ee,
+				    (v1*v_size+v2)*dc_size+i);
+	  gsl_vector_const_view xHiDHiDHix_ge_col =
+	    gsl_matrix_const_column(xHiDHiDHix_all_ge,
+				    (v1*v_size+v2)*dc_size+i);
+	  
+	  gsl_blas_ddot(&Qi_row.vector, &xHiDHiDHix_gg_col.vector, &d);
+	  tPDPD_gg-=d*2.0;
+	  gsl_blas_ddot(&Qi_row.vector, &xHiDHiDHix_ee_col.vector, &d);
+	  tPDPD_ee-=d*2.0;
+	  gsl_blas_ddot(&Qi_row.vector, &xHiDHiDHix_ge_col.vector, &d);
+	  tPDPD_ge-=d*2.0;
 	}
 
-	//calculate the fourth part: trace(HixQixHiDHixQixHiD)
+	// Calculate the fourth part: trace(HixQixHiDHixQixHiD).
 	for (size_t i=0; i<dc_size; i++) {
-		//gsl_vector_const_view QixHiDHix_g_row1=gsl_matrix_const_subrow (QixHiDHix_all_g, i, v1*dc_size, dc_size);
-		//gsl_vector_const_view QixHiDHix_e_row1=gsl_matrix_const_subrow (QixHiDHix_all_e, i, v1*dc_size, dc_size);
 
-		gsl_vector_const_view QixHiDHix_g_fullrow1=gsl_matrix_const_row (QixHiDHix_all_g, i);
-		gsl_vector_const_view QixHiDHix_e_fullrow1=gsl_matrix_const_row (QixHiDHix_all_e, i);
-		gsl_vector_const_view QixHiDHix_g_row1=gsl_vector_const_subvector (&QixHiDHix_g_fullrow1.vector, v1*dc_size, dc_size);
-		gsl_vector_const_view QixHiDHix_e_row1=gsl_vector_const_subvector (&QixHiDHix_e_fullrow1.vector, v1*dc_size, dc_size);
-
-		gsl_vector_const_view QixHiDHix_g_col2=gsl_matrix_const_column (QixHiDHix_all_g, v2*dc_size+i);
-		gsl_vector_const_view QixHiDHix_e_col2=gsl_matrix_const_column (QixHiDHix_all_e, v2*dc_size+i);
-
-		gsl_blas_ddot(&QixHiDHix_g_row1.vector, &QixHiDHix_g_col2.vector, &d);
-		tPDPD_gg+=d;
-		gsl_blas_ddot(&QixHiDHix_e_row1.vector, &QixHiDHix_e_col2.vector, &d);
-		tPDPD_ee+=d;
-		gsl_blas_ddot(&QixHiDHix_g_row1.vector, &QixHiDHix_e_col2.vector, &d);
-		tPDPD_ge+=d;
+	  gsl_vector_const_view QixHiDHix_g_fullrow1 =
+	    gsl_matrix_const_row (QixHiDHix_all_g, i);
+	  gsl_vector_const_view QixHiDHix_e_fullrow1 =
+	    gsl_matrix_const_row (QixHiDHix_all_e, i);
+	  gsl_vector_const_view QixHiDHix_g_row1 =
+	    gsl_vector_const_subvector (&QixHiDHix_g_fullrow1.vector,
+					v1*dc_size, dc_size);
+	  gsl_vector_const_view QixHiDHix_e_row1 =
+	    gsl_vector_const_subvector (&QixHiDHix_e_fullrow1.vector,
+					v1*dc_size, dc_size);
+	  
+	  gsl_vector_const_view QixHiDHix_g_col2 =
+	    gsl_matrix_const_column (QixHiDHix_all_g, v2*dc_size+i);
+	  gsl_vector_const_view QixHiDHix_e_col2 =
+	    gsl_matrix_const_column (QixHiDHix_all_e, v2*dc_size+i);
+	  
+	  gsl_blas_ddot(&QixHiDHix_g_row1.vector,&QixHiDHix_g_col2.vector,&d);
+	  tPDPD_gg+=d;
+	  gsl_blas_ddot(&QixHiDHix_e_row1.vector,&QixHiDHix_e_col2.vector,&d);
+	  tPDPD_ee+=d;
+	  gsl_blas_ddot(&QixHiDHix_g_row1.vector,&QixHiDHix_e_col2.vector,&d);
+	  tPDPD_ge+=d;
 	}
 
 	return;
 }
 
-
-
-//calculate (xHiDHiy) for every pair of i j
-void Calc_xHiDHiy_all (const gsl_vector *eval, const gsl_matrix *xHi, const gsl_matrix *Hiy, gsl_matrix *xHiDHiy_all_g, gsl_matrix *xHiDHiy_all_e)
-{
+// Calculate (xHiDHiy) for every pair (i,j).
+void Calc_xHiDHiy_all (const gsl_vector *eval, const gsl_matrix *xHi,
+		       const gsl_matrix *Hiy, gsl_matrix *xHiDHiy_all_g,
+		       gsl_matrix *xHiDHiy_all_e) {
 	gsl_matrix_set_zero(xHiDHiy_all_g);
 	gsl_matrix_set_zero(xHiDHiy_all_e);
 
@@ -1579,48 +1629,51 @@ void Calc_xHiDHiy_all (const gsl_vector *eval, const gsl_matrix *xHi, const gsl_
 	size_t v;
 
 	for (size_t i=0; i<d_size; i++) {
-		for (size_t j=0; j<d_size; j++) {
-			if (j<i) {continue;}
-			v=GetIndex(i, j, d_size);
-
-			gsl_vector_view xHiDHiy_g=gsl_matrix_column (xHiDHiy_all_g, v);
-			gsl_vector_view xHiDHiy_e=gsl_matrix_column (xHiDHiy_all_e, v);
-
-			Calc_xHiDHiy (eval, xHi, Hiy, i, j, &xHiDHiy_g.vector, &xHiDHiy_e.vector);
-		}
+	  for (size_t j=0; j<d_size; j++) {
+	    if (j<i) {continue;}
+	    v=GetIndex(i, j, d_size);
+	    
+	    gsl_vector_view xHiDHiy_g=gsl_matrix_column (xHiDHiy_all_g, v);
+	    gsl_vector_view xHiDHiy_e=gsl_matrix_column (xHiDHiy_all_e, v);
+	    
+	    Calc_xHiDHiy (eval, xHi, Hiy, i, j, &xHiDHiy_g.vector,
+			  &xHiDHiy_e.vector);
+	  }
 	}
 	return;
 }
 
-
-//calculate (xHiDHix) for every pair of i j
-void Calc_xHiDHix_all (const gsl_vector *eval, const gsl_matrix *xHi, gsl_matrix *xHiDHix_all_g, gsl_matrix *xHiDHix_all_e)
-{
-	gsl_matrix_set_zero(xHiDHix_all_g);
-	gsl_matrix_set_zero(xHiDHix_all_e);
-
-	size_t d_size=xHi->size2/eval->size, dc_size=xHi->size1;
-	size_t v;
-
-	for (size_t i=0; i<d_size; i++) {
-		for (size_t j=0; j<d_size; j++) {
-			if (j<i) {continue;}
-			v=GetIndex(i, j, d_size);
-
-			gsl_matrix_view xHiDHix_g=gsl_matrix_submatrix (xHiDHix_all_g, 0, v*dc_size, dc_size, dc_size);
-			gsl_matrix_view xHiDHix_e=gsl_matrix_submatrix (xHiDHix_all_e, 0, v*dc_size, dc_size, dc_size);
-
-			Calc_xHiDHix (eval, xHi, i, j, &xHiDHix_g.matrix, &xHiDHix_e.matrix);
-		}
-	}
-	return;
+// Calculate (xHiDHix) for every pair (i,j).
+void Calc_xHiDHix_all (const gsl_vector *eval, const gsl_matrix *xHi,
+		       gsl_matrix *xHiDHix_all_g, gsl_matrix *xHiDHix_all_e) {
+  gsl_matrix_set_zero(xHiDHix_all_g);
+  gsl_matrix_set_zero(xHiDHix_all_e);
+  
+  size_t d_size=xHi->size2/eval->size, dc_size=xHi->size1;
+  size_t v;
+  
+  for (size_t i=0; i<d_size; i++) {
+    for (size_t j=0; j<d_size; j++) {
+      if (j<i) {continue;}
+      v=GetIndex(i, j, d_size);
+      
+      gsl_matrix_view xHiDHix_g =
+	gsl_matrix_submatrix (xHiDHix_all_g, 0, v*dc_size, dc_size, dc_size);
+      gsl_matrix_view xHiDHix_e =
+	gsl_matrix_submatrix (xHiDHix_all_e, 0, v*dc_size, dc_size, dc_size);
+      
+      Calc_xHiDHix (eval, xHi, i, j, &xHiDHix_g.matrix, &xHiDHix_e.matrix);
+    }
+  }
+  return;
 }
 
-
-
-//calculate (xHiDHiy) for every pair of i j
-void Calc_xHiDHiDHiy_all (const size_t v_size, const gsl_vector *eval, const gsl_matrix *Hi, const gsl_matrix *xHi, const gsl_matrix *Hiy, gsl_matrix *xHiDHiDHiy_all_gg, gsl_matrix *xHiDHiDHiy_all_ee, gsl_matrix *xHiDHiDHiy_all_ge)
-{
+// Calculate (xHiDHiy) for every pair (i,j).
+void Calc_xHiDHiDHiy_all (const size_t v_size, const gsl_vector *eval,
+			  const gsl_matrix *Hi, const gsl_matrix *xHi,
+			  const gsl_matrix *Hiy, gsl_matrix *xHiDHiDHiy_all_gg,
+			  gsl_matrix *xHiDHiDHiy_all_ee,
+			  gsl_matrix *xHiDHiDHiy_all_ge) {
 	gsl_matrix_set_zero(xHiDHiDHiy_all_gg);
 	gsl_matrix_set_zero(xHiDHiDHiy_all_ee);
 	gsl_matrix_set_zero(xHiDHiDHiy_all_ge);
@@ -1629,31 +1682,36 @@ void Calc_xHiDHiDHiy_all (const size_t v_size, const gsl_vector *eval, const gsl
 	size_t v1, v2;
 
 	for (size_t i1=0; i1<d_size; i1++) {
-		for (size_t j1=0; j1<d_size; j1++) {
-			if (j1<i1) {continue;}
-			v1=GetIndex(i1, j1, d_size);
-
-			for (size_t i2=0; i2<d_size; i2++) {
-				for (size_t j2=0; j2<d_size; j2++) {
-					if (j2<i2) {continue;}
-					v2=GetIndex(i2, j2, d_size);
-
-					gsl_vector_view xHiDHiDHiy_gg=gsl_matrix_column (xHiDHiDHiy_all_gg, v1*v_size+v2);
-					gsl_vector_view xHiDHiDHiy_ee=gsl_matrix_column (xHiDHiDHiy_all_ee, v1*v_size+v2);
-					gsl_vector_view xHiDHiDHiy_ge=gsl_matrix_column (xHiDHiDHiy_all_ge, v1*v_size+v2);
-
-					Calc_xHiDHiDHiy (eval, Hi, xHi, Hiy, i1, j1, i2, j2, &xHiDHiDHiy_gg.vector, &xHiDHiDHiy_ee.vector, &xHiDHiDHiy_ge.vector);
-				}
-			}
-		}
+	  for (size_t j1=0; j1<d_size; j1++) {
+	    if (j1<i1) {continue;}
+	    v1=GetIndex(i1, j1, d_size);
+	    
+	    for (size_t i2=0; i2<d_size; i2++) {
+	      for (size_t j2=0; j2<d_size; j2++) {
+		if (j2<i2) {continue;}
+		v2=GetIndex(i2, j2, d_size);
+		
+		gsl_vector_view xHiDHiDHiy_gg =
+		  gsl_matrix_column (xHiDHiDHiy_all_gg, v1*v_size+v2);
+		gsl_vector_view xHiDHiDHiy_ee =
+		  gsl_matrix_column (xHiDHiDHiy_all_ee, v1*v_size+v2);
+		gsl_vector_view xHiDHiDHiy_ge =
+		  gsl_matrix_column (xHiDHiDHiy_all_ge, v1*v_size+v2);
+		
+		Calc_xHiDHiDHiy (eval, Hi, xHi, Hiy, i1, j1, i2, j2, &xHiDHiDHiy_gg.vector, &xHiDHiDHiy_ee.vector, &xHiDHiDHiy_ge.vector);
+	      }
+	    }
+	  }
 	}
 	return;
 }
 
-
-//calculate (xHiDHix) for every pair of i j
-void Calc_xHiDHiDHix_all (const size_t v_size, const gsl_vector *eval, const gsl_matrix *Hi, const gsl_matrix *xHi, gsl_matrix *xHiDHiDHix_all_gg, gsl_matrix *xHiDHiDHix_all_ee, gsl_matrix *xHiDHiDHix_all_ge)
-{
+// Calculate (xHiDHix) for every pair (i,j).
+void Calc_xHiDHiDHix_all (const size_t v_size, const gsl_vector *eval,
+			  const gsl_matrix *Hi, const gsl_matrix *xHi,
+			  gsl_matrix *xHiDHiDHix_all_gg,
+			  gsl_matrix *xHiDHiDHix_all_ee,
+			  gsl_matrix *xHiDHiDHix_all_ge) {
 	gsl_matrix_set_zero(xHiDHiDHix_all_gg);
 	gsl_matrix_set_zero(xHiDHiDHix_all_ee);
 	gsl_matrix_set_zero(xHiDHiDHix_all_ge);
@@ -1662,205 +1720,181 @@ void Calc_xHiDHiDHix_all (const size_t v_size, const gsl_vector *eval, const gsl
 	size_t v1, v2;
 
 	for (size_t i1=0; i1<d_size; i1++) {
-		for (size_t j1=0; j1<d_size; j1++) {
-			if (j1<i1) {continue;}
-			v1=GetIndex(i1, j1, d_size);
+	  for (size_t j1=0; j1<d_size; j1++) {
+	    if (j1<i1) {continue;}
+	    v1=GetIndex(i1, j1, d_size);
+	    
+	    for (size_t i2=0; i2<d_size; i2++) {
+	      for (size_t j2=0; j2<d_size; j2++) {
+		if (j2<i2) {continue;}
+		v2=GetIndex(i2, j2, d_size);
+		
+		if (v2<v1) {continue;}
+		
+		gsl_matrix_view xHiDHiDHix_gg1 =
+		  gsl_matrix_submatrix (xHiDHiDHix_all_gg, 0,
+					(v1*v_size+v2)*dc_size,
+					dc_size, dc_size);
+		gsl_matrix_view xHiDHiDHix_ee1 =
+		  gsl_matrix_submatrix (xHiDHiDHix_all_ee, 0,
+					(v1*v_size+v2)*dc_size,
+					dc_size, dc_size);
+		gsl_matrix_view xHiDHiDHix_ge1 =
+		  gsl_matrix_submatrix (xHiDHiDHix_all_ge, 0,
+					(v1*v_size+v2)*dc_size,
+					dc_size, dc_size);
+		
+		Calc_xHiDHiDHix (eval, Hi, xHi, i1, j1, i2, j2,
+				 &xHiDHiDHix_gg1.matrix,
+				 &xHiDHiDHix_ee1.matrix,
+				 &xHiDHiDHix_ge1.matrix);
+		
+		if (v2!=v1) {
+		  gsl_matrix_view xHiDHiDHix_gg2 =
+		    gsl_matrix_submatrix (xHiDHiDHix_all_gg, 0,
+					  (v2*v_size+v1)*dc_size,
+					  dc_size, dc_size);
+		  gsl_matrix_view xHiDHiDHix_ee2 =
+		    gsl_matrix_submatrix (xHiDHiDHix_all_ee, 0,
+					  (v2*v_size+v1)*dc_size,
+					  dc_size, dc_size);
+		  gsl_matrix_view xHiDHiDHix_ge2 =
+		    gsl_matrix_submatrix (xHiDHiDHix_all_ge, 0,
+					  (v2*v_size+v1)*dc_size,
+					  dc_size, dc_size);
 
-			for (size_t i2=0; i2<d_size; i2++) {
-				for (size_t j2=0; j2<d_size; j2++) {
-					if (j2<i2) {continue;}
-					v2=GetIndex(i2, j2, d_size);
-
-					if (v2<v1) {continue;}
-
-					gsl_matrix_view xHiDHiDHix_gg1=gsl_matrix_submatrix (xHiDHiDHix_all_gg, 0, (v1*v_size+v2)*dc_size, dc_size, dc_size);
-					gsl_matrix_view xHiDHiDHix_ee1=gsl_matrix_submatrix (xHiDHiDHix_all_ee, 0, (v1*v_size+v2)*dc_size, dc_size, dc_size);
-					gsl_matrix_view xHiDHiDHix_ge1=gsl_matrix_submatrix (xHiDHiDHix_all_ge, 0, (v1*v_size+v2)*dc_size, dc_size, dc_size);
-
-					Calc_xHiDHiDHix (eval, Hi, xHi, i1, j1, i2, j2, &xHiDHiDHix_gg1.matrix, &xHiDHiDHix_ee1.matrix, &xHiDHiDHix_ge1.matrix);
-
-					if (v2!=v1) {
-						gsl_matrix_view xHiDHiDHix_gg2=gsl_matrix_submatrix (xHiDHiDHix_all_gg, 0, (v2*v_size+v1)*dc_size, dc_size, dc_size);
-						gsl_matrix_view xHiDHiDHix_ee2=gsl_matrix_submatrix (xHiDHiDHix_all_ee, 0, (v2*v_size+v1)*dc_size, dc_size, dc_size);
-						gsl_matrix_view xHiDHiDHix_ge2=gsl_matrix_submatrix (xHiDHiDHix_all_ge, 0, (v2*v_size+v1)*dc_size, dc_size, dc_size);
-
-						gsl_matrix_memcpy (&xHiDHiDHix_gg2.matrix, &xHiDHiDHix_gg1.matrix);
-						gsl_matrix_memcpy (&xHiDHiDHix_ee2.matrix, &xHiDHiDHix_ee1.matrix);
-						gsl_matrix_memcpy (&xHiDHiDHix_ge2.matrix, &xHiDHiDHix_ge1.matrix);
-					}
-				}
-			}
+		  gsl_matrix_memcpy (&xHiDHiDHix_gg2.matrix,
+				     &xHiDHiDHix_gg1.matrix);
+		  gsl_matrix_memcpy (&xHiDHiDHix_ee2.matrix,
+				     &xHiDHiDHix_ee1.matrix);
+		  gsl_matrix_memcpy (&xHiDHiDHix_ge2.matrix,
+				     &xHiDHiDHix_ge1.matrix);
 		}
+	      }
+	    }
+	  }
 	}
-
-
-	/*
-	size_t n_size=eval->size;
-	double delta, d_Hi_ij;
-
-	gsl_matrix *mat_dcdc=gsl_matrix_alloc (dc_size, dc_size);
-	gsl_matrix *mat_dcdc_temp=gsl_matrix_alloc (dc_size, dc_size);
-
-	for (size_t k=0; k<n_size; k++) {
-		delta=gsl_vector_get (eval, k);
-
-		for (size_t i1=0; i1<d_size; i1++) {
-			for (size_t j2=0; j2<d_size; j2++) {
-				gsl_vector_const_view xHi_col_i=gsl_matrix_const_column (xHi, k*d_size+i1);
-				gsl_vector_const_view xHi_col_j=gsl_matrix_const_column (xHi, k*d_size+j2);
-
-				gsl_matrix_set_zero (mat_dcdc);
-				gsl_blas_dger (1.0, &xHi_col_i.vector, &xHi_col_j.vector, mat_dcdc);
-
-				for (size_t j1=0; j1<d_size; j1++) {
-					for (size_t i2=0; i2<d_size; i2++) {
-						d_Hi_ij=gsl_matrix_get (Hi, j1, k*d_size+i2);
-
-						v1=GetIndex(i1, j1, d_size);
-						v2=GetIndex(i2, j2, d_size);
-
-						gsl_matrix_view xHiDHiDHix_gg=gsl_matrix_submatrix (xHiDHiDHix_all_gg, 0, (v1*v_size+v2)*dc_size, dc_size, dc_size);
-						gsl_matrix_view xHiDHiDHix_ee=gsl_matrix_submatrix (xHiDHiDHix_all_ee, 0, (v1*v_size+v2)*dc_size, dc_size, dc_size);
-						gsl_matrix_view xHiDHiDHix_ge=gsl_matrix_submatrix (xHiDHiDHix_all_ge, 0, (v1*v_size+v2)*dc_size, dc_size, dc_size);
-
-						gsl_matrix_memcpy (mat_dcdc_temp, mat_dcdc);
-
-						gsl_matrix_scale (mat_dcdc_temp, d_Hi_ij);
-						gsl_matrix_add(&xHiDHiDHix_ee.matrix, mat_dcdc_temp);
-						gsl_matrix_scale(mat_dcdc_temp, delta);
-						gsl_matrix_add(&xHiDHiDHix_ge.matrix, mat_dcdc_temp);
-						gsl_matrix_scale(mat_dcdc_temp, delta);
-						gsl_matrix_add(&xHiDHiDHix_gg.matrix, mat_dcdc_temp);
-					}
-				}
-			}
-		}
-	}
-
-	for (size_t i1=0; i1<d_size; i1++) {
-		for (size_t j1=0; j1<d_size; j1++) {
-			v1=GetIndex(i1, j1, d_size);
-
-			for (size_t i2=0; i2<d_size; i2++) {
-				for (size_t j2=0; j2<d_size; j2++) {
-					v2=GetIndex(i2, j2, d_size);
-
-					if (i1!=j1 && i2!=j2) {continue;}
-
-					gsl_matrix_view xHiDHiDHix_gg=gsl_matrix_submatrix (xHiDHiDHix_all_gg, 0, (v1*v_size+v2)*dc_size, dc_size, dc_size);
-					gsl_matrix_view xHiDHiDHix_ee=gsl_matrix_submatrix (xHiDHiDHix_all_ee, 0, (v1*v_size+v2)*dc_size, dc_size, dc_size);
-					gsl_matrix_view xHiDHiDHix_ge=gsl_matrix_submatrix (xHiDHiDHix_all_ge, 0, (v1*v_size+v2)*dc_size, dc_size, dc_size);
-
-					if ( (i1==j1 && i2!=j2) || (i1!=j1 && i2==j2) ) {
-						gsl_matrix_scale (&xHiDHiDHix_gg.matrix, 0.5);
-						gsl_matrix_scale (&xHiDHiDHix_ee.matrix, 0.5);
-						gsl_matrix_scale (&xHiDHiDHix_ge.matrix, 0.5);
-					} else {
-						gsl_matrix_scale (&xHiDHiDHix_gg.matrix, 0.25);
-						gsl_matrix_scale (&xHiDHiDHix_ee.matrix, 0.25);
-						gsl_matrix_scale (&xHiDHiDHix_ge.matrix, 0.25);
-					}
-				}
-			}
-		}
-	}
-
-	gsl_matrix_free (mat_dcdc);
-	gsl_matrix_free (mat_dcdc_temp);
-	*/
 
 	return;
 }
 
-
-
-//calculate (xHiDHix)Qi(xHiy) for every pair of i, j
-void Calc_xHiDHixQixHiy_all (const gsl_matrix *xHiDHix_all_g, const gsl_matrix *xHiDHix_all_e, const gsl_vector *QixHiy, gsl_matrix *xHiDHixQixHiy_all_g, gsl_matrix *xHiDHixQixHiy_all_e)
-{
+// Calculate (xHiDHix)Qi(xHiy) for every pair (i,j).
+void Calc_xHiDHixQixHiy_all (const gsl_matrix *xHiDHix_all_g,
+			     const gsl_matrix *xHiDHix_all_e,
+			     const gsl_vector *QixHiy,
+			     gsl_matrix *xHiDHixQixHiy_all_g,
+			     gsl_matrix *xHiDHixQixHiy_all_e) {
 	size_t dc_size=xHiDHix_all_g->size1;
 	size_t v_size=xHiDHix_all_g->size2/dc_size;
 
 	for (size_t i=0; i<v_size; i++) {
-		gsl_matrix_const_view xHiDHix_g=gsl_matrix_const_submatrix (xHiDHix_all_g, 0, i*dc_size, dc_size, dc_size);
-		gsl_matrix_const_view xHiDHix_e=gsl_matrix_const_submatrix (xHiDHix_all_e, 0, i*dc_size, dc_size, dc_size);
+		gsl_matrix_const_view xHiDHix_g =
+		  gsl_matrix_const_submatrix (xHiDHix_all_g, 0, i*dc_size,
+					      dc_size, dc_size);
+		gsl_matrix_const_view xHiDHix_e =
+		  gsl_matrix_const_submatrix (xHiDHix_all_e, 0, i*dc_size,
+					      dc_size, dc_size);
 
-		gsl_vector_view xHiDHixQixHiy_g=gsl_matrix_column (xHiDHixQixHiy_all_g, i);
-		gsl_vector_view xHiDHixQixHiy_e=gsl_matrix_column (xHiDHixQixHiy_all_e, i);
+		gsl_vector_view xHiDHixQixHiy_g =
+		  gsl_matrix_column (xHiDHixQixHiy_all_g, i);
+		gsl_vector_view xHiDHixQixHiy_e =
+		  gsl_matrix_column (xHiDHixQixHiy_all_e, i);
 
-		gsl_blas_dgemv (CblasNoTrans, 1.0, &xHiDHix_g.matrix, QixHiy, 0.0, &xHiDHixQixHiy_g.vector);
-		gsl_blas_dgemv (CblasNoTrans, 1.0, &xHiDHix_e.matrix, QixHiy, 0.0, &xHiDHixQixHiy_e.vector);
+		gsl_blas_dgemv (CblasNoTrans, 1.0, &xHiDHix_g.matrix,
+				QixHiy, 0.0, &xHiDHixQixHiy_g.vector);
+		gsl_blas_dgemv (CblasNoTrans, 1.0, &xHiDHix_e.matrix,
+				QixHiy, 0.0, &xHiDHixQixHiy_e.vector);
 	}
 
 	return;
 }
 
-//calculate Qi(xHiDHiy) and Qi(xHiDHix)Qi(xHiy) for each pair of i j (i<=j)
-void Calc_QiVec_all (const gsl_matrix *Qi, const gsl_matrix *vec_all_g, const gsl_matrix *vec_all_e, gsl_matrix *Qivec_all_g, gsl_matrix *Qivec_all_e)
-{
+// Calculate Qi(xHiDHiy) and Qi(xHiDHix)Qi(xHiy) for each pair of i,j (i<=j).
+void Calc_QiVec_all (const gsl_matrix *Qi, const gsl_matrix *vec_all_g,
+		     const gsl_matrix *vec_all_e, gsl_matrix *Qivec_all_g,
+		     gsl_matrix *Qivec_all_e) {
 	for (size_t i=0; i<vec_all_g->size2; i++) {
-		gsl_vector_const_view vec_g=gsl_matrix_const_column (vec_all_g, i);
-		gsl_vector_const_view vec_e=gsl_matrix_const_column (vec_all_e, i);
-
-		gsl_vector_view Qivec_g=gsl_matrix_column (Qivec_all_g, i);
-		gsl_vector_view Qivec_e=gsl_matrix_column (Qivec_all_e, i);
-
-		gsl_blas_dgemv (CblasNoTrans, 1.0, Qi, &vec_g.vector, 0.0, &Qivec_g.vector);
-		gsl_blas_dgemv (CblasNoTrans, 1.0, Qi, &vec_e.vector, 0.0, &Qivec_e.vector);
+	  gsl_vector_const_view vec_g=gsl_matrix_const_column (vec_all_g, i);
+	  gsl_vector_const_view vec_e=gsl_matrix_const_column (vec_all_e, i);
+	  
+	  gsl_vector_view Qivec_g=gsl_matrix_column (Qivec_all_g, i);
+	  gsl_vector_view Qivec_e=gsl_matrix_column (Qivec_all_e, i);
+	  
+	  gsl_blas_dgemv(CblasNoTrans,1.0,Qi,&vec_g.vector,0.0,
+			 &Qivec_g.vector);
+	  gsl_blas_dgemv(CblasNoTrans,1.0,Qi,&vec_e.vector,0.0,
+			 &Qivec_e.vector);
 	}
 
 	return;
 }
 
-
-//calculate Qi(xHiDHix) for each pair of i j (i<=j)
-void Calc_QiMat_all (const gsl_matrix *Qi, const gsl_matrix *mat_all_g, const gsl_matrix *mat_all_e, gsl_matrix *Qimat_all_g, gsl_matrix *Qimat_all_e)
-{
+// Calculate Qi(xHiDHix) for each pair of i,j (i<=j).
+void Calc_QiMat_all (const gsl_matrix *Qi, const gsl_matrix *mat_all_g,
+		     const gsl_matrix *mat_all_e, gsl_matrix *Qimat_all_g,
+		     gsl_matrix *Qimat_all_e) {
 	size_t dc_size=Qi->size1;
 	size_t v_size=mat_all_g->size2/mat_all_g->size1;
 
 	for (size_t i=0; i<v_size; i++) {
-		gsl_matrix_const_view mat_g=gsl_matrix_const_submatrix (mat_all_g, 0, i*dc_size, dc_size, dc_size);
-		gsl_matrix_const_view mat_e=gsl_matrix_const_submatrix (mat_all_e, 0, i*dc_size, dc_size, dc_size);
+		gsl_matrix_const_view mat_g =
+		  gsl_matrix_const_submatrix (mat_all_g, 0, i*dc_size,
+					      dc_size, dc_size);
+		gsl_matrix_const_view mat_e =
+		  gsl_matrix_const_submatrix (mat_all_e, 0, i*dc_size,
+					      dc_size, dc_size);
 
-		gsl_matrix_view Qimat_g=gsl_matrix_submatrix (Qimat_all_g, 0, i*dc_size, dc_size, dc_size);
-		gsl_matrix_view Qimat_e=gsl_matrix_submatrix (Qimat_all_e, 0, i*dc_size, dc_size, dc_size);
+		gsl_matrix_view Qimat_g =
+		  gsl_matrix_submatrix (Qimat_all_g, 0, i*dc_size, dc_size,
+					dc_size);
+		gsl_matrix_view Qimat_e =
+		  gsl_matrix_submatrix (Qimat_all_e, 0, i*dc_size, dc_size,
+					dc_size);
 
-		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, Qi, &mat_g.matrix, 0.0, &Qimat_g.matrix);
-		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, Qi, &mat_e.matrix, 0.0, &Qimat_e.matrix);
+		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, Qi,
+				&mat_g.matrix, 0.0, &Qimat_g.matrix);
+		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, Qi,
+				&mat_e.matrix, 0.0, &Qimat_e.matrix);
 	}
 
 	return;
 }
 
-
-
-//calculate yPDPy
-//yPDPy=y(Hi-HixQixHi)D(Hi-HixQixHi)y
-//=ytHiDHiy
-//-(yHix)Qi(xHiDHiy)-(yHiDHix)Qi(xHiy)
-//+(yHix)Qi(xHiDHix)Qi(xtHiy)
-void Calc_yPDPy (const gsl_vector *eval, const gsl_matrix *Hiy, const gsl_vector *QixHiy, const gsl_matrix *xHiDHiy_all_g, const gsl_matrix *xHiDHiy_all_e, const gsl_matrix *xHiDHixQixHiy_all_g, const gsl_matrix *xHiDHixQixHiy_all_e, const size_t i, const size_t j, double &yPDPy_g, double &yPDPy_e)
-{
+// Calculate yPDPy
+// yPDPy = y(Hi-HixQixHi)D(Hi-HixQixHi)y
+//       = ytHiDHiy - (yHix)Qi(xHiDHiy) - (yHiDHix)Qi(xHiy)
+//         + (yHix)Qi(xHiDHix)Qi(xtHiy)
+void Calc_yPDPy (const gsl_vector *eval, const gsl_matrix *Hiy,
+		 const gsl_vector *QixHiy, const gsl_matrix *xHiDHiy_all_g,
+		 const gsl_matrix *xHiDHiy_all_e,
+		 const gsl_matrix *xHiDHixQixHiy_all_g,
+		 const gsl_matrix *xHiDHixQixHiy_all_e,
+		 const size_t i, const size_t j,
+		 double &yPDPy_g, double &yPDPy_e) {
 	size_t d_size=Hiy->size1;
 	size_t v=GetIndex(i, j, d_size);
 
 	double d;
 
-	//first part: ytHiDHiy
+	// First part: ytHiDHiy.
 	Calc_yHiDHiy (eval, Hiy, i, j, yPDPy_g, yPDPy_e);
 
-	//second and third parts: -(yHix)Qi(xHiDHiy)-(yHiDHix)Qi(xHiy)
-	gsl_vector_const_view xHiDHiy_g=gsl_matrix_const_column (xHiDHiy_all_g, v);
-	gsl_vector_const_view xHiDHiy_e=gsl_matrix_const_column (xHiDHiy_all_e, v);
+	// Second and third parts: -(yHix)Qi(xHiDHiy)-(yHiDHix)Qi(xHiy)
+	gsl_vector_const_view xHiDHiy_g =
+	  gsl_matrix_const_column (xHiDHiy_all_g, v);
+	gsl_vector_const_view xHiDHiy_e =
+	  gsl_matrix_const_column (xHiDHiy_all_e, v);
 
 	gsl_blas_ddot(QixHiy, &xHiDHiy_g.vector, &d);
 	yPDPy_g-=d*2.0;
 	gsl_blas_ddot(QixHiy, &xHiDHiy_e.vector, &d);
 	yPDPy_e-=d*2.0;
 
-	//fourth part: +(yHix)Qi(xHiDHix)Qi(xHiy)
-	gsl_vector_const_view xHiDHixQixHiy_g=gsl_matrix_const_column (xHiDHixQixHiy_all_g, v);
-	gsl_vector_const_view xHiDHixQixHiy_e=gsl_matrix_const_column (xHiDHixQixHiy_all_e, v);
+	// Fourth part: +(yHix)Qi(xHiDHix)Qi(xHiy).
+	gsl_vector_const_view xHiDHixQixHiy_g =
+	  gsl_matrix_const_column (xHiDHixQixHiy_all_g, v);
+	gsl_vector_const_view xHiDHixQixHiy_e =
+	  gsl_matrix_const_column (xHiDHixQixHiy_all_e, v);
 
 	gsl_blas_ddot(QixHiy, &xHiDHixQixHiy_g.vector, &d);
 	yPDPy_g+=d;
@@ -1870,15 +1904,33 @@ void Calc_yPDPy (const gsl_vector *eval, const gsl_matrix *Hiy, const gsl_vector
 	return;
 }
 
-//calculate yPDPDPy=y(Hi-HixQixHi)D(Hi-HixQixHi)D(Hi-HixQixHi)y
-//yPDPDPy=yHiDHiDHiy
-//-(yHix)Qi(xHiDHiDHiy)-(yHiDHiDHix)Qi(xHiy)
-//-(yHiDHix)Qi(xHiDHiy)
-//+(yHix)Qi(xHiDHix)Qi(xHiDHiy)+(yHiDHix)Qi(xHiDHix)Qi(xHiy)
-//+(yHix)Qi(xHiDHiDHix)Qi(xHiy)
-//-(yHix)Qi(xHiDHix)Qi(xHiDHix)Qi(xHiy)
-void Calc_yPDPDPy (const gsl_vector *eval, const gsl_matrix *Hi, const gsl_matrix *xHi, const gsl_matrix *Hiy, const gsl_vector *QixHiy, const gsl_matrix *xHiDHiy_all_g, const gsl_matrix *xHiDHiy_all_e, const gsl_matrix *QixHiDHiy_all_g, const gsl_matrix *QixHiDHiy_all_e, const gsl_matrix *xHiDHixQixHiy_all_g, const gsl_matrix *xHiDHixQixHiy_all_e, const gsl_matrix *QixHiDHixQixHiy_all_g, const gsl_matrix *QixHiDHixQixHiy_all_e, const gsl_matrix *xHiDHiDHiy_all_gg, const gsl_matrix *xHiDHiDHiy_all_ee, const gsl_matrix *xHiDHiDHiy_all_ge, const gsl_matrix *xHiDHiDHix_all_gg, const gsl_matrix *xHiDHiDHix_all_ee, const gsl_matrix *xHiDHiDHix_all_ge, const size_t i1, const size_t j1, const size_t i2, const size_t j2, double &yPDPDPy_gg, double &yPDPDPy_ee, double &yPDPDPy_ge)
-{
+// calculate yPDPDPy = y(Hi-HixQixHi)D(Hi-HixQixHi)D(Hi-HixQixHi)y
+//           yPDPDPy = yHiDHiDHiy
+//                     - (yHix)Qi(xHiDHiDHiy)-(yHiDHiDHix)Qi(xHiy)
+//                     - (yHiDHix)Qi(xHiDHiy)
+//                     + (yHix)Qi(xHiDHix)Qi(xHiDHiy)
+//                     + (yHiDHix)Qi(xHiDHix)Qi(xHiy)
+//                     + (yHix)Qi(xHiDHiDHix)Qi(xHiy)
+//                     - (yHix)Qi(xHiDHix)Qi(xHiDHix)Qi(xHiy)
+void Calc_yPDPDPy (const gsl_vector *eval, const gsl_matrix *Hi,
+		   const gsl_matrix *xHi, const gsl_matrix *Hiy,
+		   const gsl_vector *QixHiy, const gsl_matrix *xHiDHiy_all_g,
+		   const gsl_matrix *xHiDHiy_all_e,
+		   const gsl_matrix *QixHiDHiy_all_g,
+		   const gsl_matrix *QixHiDHiy_all_e,
+		   const gsl_matrix *xHiDHixQixHiy_all_g,
+		   const gsl_matrix *xHiDHixQixHiy_all_e,
+		   const gsl_matrix *QixHiDHixQixHiy_all_g,
+		   const gsl_matrix *QixHiDHixQixHiy_all_e,
+		   const gsl_matrix *xHiDHiDHiy_all_gg,
+		   const gsl_matrix *xHiDHiDHiy_all_ee,
+		   const gsl_matrix *xHiDHiDHiy_all_ge,
+		   const gsl_matrix *xHiDHiDHix_all_gg,
+		   const gsl_matrix *xHiDHiDHix_all_ee,
+		   const gsl_matrix *xHiDHiDHix_all_ge,
+		   const size_t i1, const size_t j1, const size_t i2,
+		   const size_t j2, double &yPDPDPy_gg, double &yPDPDPy_ee,
+		   double &yPDPDPy_ge) {
 	size_t d_size=Hi->size1, dc_size=xHi->size1;
 	size_t v1=GetIndex(i1, j1, d_size), v2=GetIndex(i2, j2, d_size);
 	size_t v_size=d_size*(d_size+1)/2;
@@ -1887,17 +1939,25 @@ void Calc_yPDPDPy (const gsl_vector *eval, const gsl_matrix *Hi, const gsl_matri
 
 	gsl_vector *xHiDHiDHixQixHiy=gsl_vector_alloc (dc_size);
 
-	//first part: yHiDHiDHiy
-	Calc_yHiDHiDHiy (eval, Hi, Hiy, i1, j1, i2, j2, yPDPDPy_gg, yPDPDPy_ee, yPDPDPy_ge);
+	// First part: yHiDHiDHiy.
+	Calc_yHiDHiDHiy (eval, Hi, Hiy, i1, j1, i2, j2, yPDPDPy_gg,
+			 yPDPDPy_ee, yPDPDPy_ge);
 
-	//second and third parts: -(yHix)Qi(xHiDHiDHiy)-(yHiDHiDHix)Qi(xHiy)
-	gsl_vector_const_view xHiDHiDHiy_gg1=gsl_matrix_const_column (xHiDHiDHiy_all_gg, v1*v_size+v2);
-	gsl_vector_const_view xHiDHiDHiy_ee1=gsl_matrix_const_column (xHiDHiDHiy_all_ee, v1*v_size+v2);
-	gsl_vector_const_view xHiDHiDHiy_ge1=gsl_matrix_const_column (xHiDHiDHiy_all_ge, v1*v_size+v2);
+	// Second and third parts:
+	// -(yHix)Qi(xHiDHiDHiy) - (yHiDHiDHix)Qi(xHiy).
+	gsl_vector_const_view xHiDHiDHiy_gg1 =
+	  gsl_matrix_const_column (xHiDHiDHiy_all_gg, v1*v_size+v2);
+	gsl_vector_const_view xHiDHiDHiy_ee1 =
+	  gsl_matrix_const_column (xHiDHiDHiy_all_ee, v1*v_size+v2);
+	gsl_vector_const_view xHiDHiDHiy_ge1 =
+	  gsl_matrix_const_column (xHiDHiDHiy_all_ge, v1*v_size+v2);
 
-	gsl_vector_const_view xHiDHiDHiy_gg2=gsl_matrix_const_column (xHiDHiDHiy_all_gg, v2*v_size+v1);
-	gsl_vector_const_view xHiDHiDHiy_ee2=gsl_matrix_const_column (xHiDHiDHiy_all_ee, v2*v_size+v1);
-	gsl_vector_const_view xHiDHiDHiy_ge2=gsl_matrix_const_column (xHiDHiDHiy_all_ge, v2*v_size+v1);
+	gsl_vector_const_view xHiDHiDHiy_gg2 =
+	  gsl_matrix_const_column (xHiDHiDHiy_all_gg, v2*v_size+v1);
+	gsl_vector_const_view xHiDHiDHiy_ee2 =
+	  gsl_matrix_const_column (xHiDHiDHiy_all_ee, v2*v_size+v1);
+	gsl_vector_const_view xHiDHiDHiy_ge2 =
+	  gsl_matrix_const_column (xHiDHiDHiy_all_ge, v2*v_size+v1);
 
 	gsl_blas_ddot(QixHiy, &xHiDHiDHiy_gg1.vector, &d);
 	yPDPDPy_gg-=d;
@@ -1913,11 +1973,15 @@ void Calc_yPDPDPy (const gsl_vector *eval, const gsl_matrix *Hi, const gsl_matri
 	gsl_blas_ddot(QixHiy, &xHiDHiDHiy_ge2.vector, &d);
 	yPDPDPy_ge-=d;
 
-	//fourth part: -(yHiDHix)Qi(xHiDHiy)
-	gsl_vector_const_view xHiDHiy_g1=gsl_matrix_const_column (xHiDHiy_all_g, v1);
-	gsl_vector_const_view xHiDHiy_e1=gsl_matrix_const_column (xHiDHiy_all_e, v1);
-	gsl_vector_const_view QixHiDHiy_g2=gsl_matrix_const_column (QixHiDHiy_all_g, v2);
-	gsl_vector_const_view QixHiDHiy_e2=gsl_matrix_const_column (QixHiDHiy_all_e, v2);
+	// Fourth part: - (yHiDHix)Qi(xHiDHiy).
+	gsl_vector_const_view xHiDHiy_g1 =
+	  gsl_matrix_const_column (xHiDHiy_all_g, v1);
+	gsl_vector_const_view xHiDHiy_e1 =
+	  gsl_matrix_const_column (xHiDHiy_all_e, v1);
+	gsl_vector_const_view QixHiDHiy_g2 =
+	  gsl_matrix_const_column (QixHiDHiy_all_g, v2);
+	gsl_vector_const_view QixHiDHiy_e2 =
+	  gsl_matrix_const_column (QixHiDHiy_all_e, v2);
 
 	gsl_blas_ddot(&xHiDHiy_g1.vector, &QixHiDHiy_g2.vector, &d);
 	yPDPDPy_gg-=d;
@@ -1926,14 +1990,22 @@ void Calc_yPDPDPy (const gsl_vector *eval, const gsl_matrix *Hi, const gsl_matri
 	gsl_blas_ddot(&xHiDHiy_g1.vector, &QixHiDHiy_e2.vector, &d);
 	yPDPDPy_ge-=d;
 
-	//fifth and sixth parts: +(yHix)Qi(xHiDHix)Qi(xHiDHiy)+(yHiDHix)Qi(xHiDHix)Qi(xHiy)
-	gsl_vector_const_view QixHiDHiy_g1=gsl_matrix_const_column (QixHiDHiy_all_g, v1);
-	gsl_vector_const_view QixHiDHiy_e1=gsl_matrix_const_column (QixHiDHiy_all_e, v1);
+	// Fifth and sixth parts:
+	//   + (yHix)Qi(xHiDHix)Qi(xHiDHiy) +
+	//   (yHiDHix)Qi(xHiDHix)Qi(xHiy)
+	gsl_vector_const_view QixHiDHiy_g1 =
+	  gsl_matrix_const_column (QixHiDHiy_all_g, v1);
+	gsl_vector_const_view QixHiDHiy_e1 =
+	  gsl_matrix_const_column (QixHiDHiy_all_e, v1);
 
-	gsl_vector_const_view xHiDHixQixHiy_g1=gsl_matrix_const_column (xHiDHixQixHiy_all_g, v1);
-	gsl_vector_const_view xHiDHixQixHiy_e1=gsl_matrix_const_column (xHiDHixQixHiy_all_e, v1);
-	gsl_vector_const_view xHiDHixQixHiy_g2=gsl_matrix_const_column (xHiDHixQixHiy_all_g, v2);
-	gsl_vector_const_view xHiDHixQixHiy_e2=gsl_matrix_const_column (xHiDHixQixHiy_all_e, v2);
+	gsl_vector_const_view xHiDHixQixHiy_g1 =
+	  gsl_matrix_const_column (xHiDHixQixHiy_all_g, v1);
+	gsl_vector_const_view xHiDHixQixHiy_e1 =
+	  gsl_matrix_const_column (xHiDHixQixHiy_all_e, v1);
+	gsl_vector_const_view xHiDHixQixHiy_g2 =
+	  gsl_matrix_const_column (xHiDHixQixHiy_all_g, v2);
+	gsl_vector_const_view xHiDHixQixHiy_e2 =
+	  gsl_matrix_const_column (xHiDHixQixHiy_all_e, v2);
 
 	gsl_blas_ddot(&xHiDHixQixHiy_g1.vector, &QixHiDHiy_g2.vector, &d);
 	yPDPDPy_gg+=d;
@@ -1950,50 +2022,70 @@ void Calc_yPDPDPy (const gsl_vector *eval, const gsl_matrix *Hi, const gsl_matri
 	gsl_blas_ddot(&xHiDHixQixHiy_e2.vector, &QixHiDHiy_g1.vector, &d);
 	yPDPDPy_ge+=d;
 
-	//seventh part: +(yHix)Qi(xHiDHiDHix)Qi(xHiy)
-	gsl_matrix_const_view xHiDHiDHix_gg=gsl_matrix_const_submatrix (xHiDHiDHix_all_gg, 0, (v1*v_size+v2)*dc_size, dc_size, dc_size);
-	gsl_matrix_const_view xHiDHiDHix_ee=gsl_matrix_const_submatrix (xHiDHiDHix_all_ee, 0, (v1*v_size+v2)*dc_size, dc_size, dc_size);
-	gsl_matrix_const_view xHiDHiDHix_ge=gsl_matrix_const_submatrix (xHiDHiDHix_all_ge, 0, (v1*v_size+v2)*dc_size, dc_size, dc_size);
+	// Seventh part: + (yHix)Qi(xHiDHiDHix)Qi(xHiy)
+	gsl_matrix_const_view xHiDHiDHix_gg =
+	  gsl_matrix_const_submatrix (xHiDHiDHix_all_gg, 0,
+				      (v1*v_size+v2)*dc_size,
+				      dc_size, dc_size);
+	gsl_matrix_const_view xHiDHiDHix_ee =
+	  gsl_matrix_const_submatrix (xHiDHiDHix_all_ee, 0,
+				      (v1*v_size+v2)*dc_size,
+				      dc_size, dc_size);
+	gsl_matrix_const_view xHiDHiDHix_ge =
+	  gsl_matrix_const_submatrix (xHiDHiDHix_all_ge, 0,
+				      (v1*v_size+v2)*dc_size,
+				      dc_size, dc_size);
 
-	gsl_blas_dgemv (CblasNoTrans, 1.0, &xHiDHiDHix_gg.matrix, QixHiy, 0.0, xHiDHiDHixQixHiy);
+	gsl_blas_dgemv (CblasNoTrans, 1.0, &xHiDHiDHix_gg.matrix,
+			QixHiy, 0.0, xHiDHiDHixQixHiy);
 	gsl_blas_ddot(xHiDHiDHixQixHiy, QixHiy, &d);
 	yPDPDPy_gg+=d;
-	gsl_blas_dgemv (CblasNoTrans, 1.0, &xHiDHiDHix_ee.matrix, QixHiy, 0.0, xHiDHiDHixQixHiy);
+	gsl_blas_dgemv (CblasNoTrans, 1.0, &xHiDHiDHix_ee.matrix,
+			QixHiy, 0.0, xHiDHiDHixQixHiy);
 	gsl_blas_ddot(xHiDHiDHixQixHiy, QixHiy, &d);
 	yPDPDPy_ee+=d;
-	gsl_blas_dgemv (CblasNoTrans, 1.0, &xHiDHiDHix_ge.matrix, QixHiy, 0.0, xHiDHiDHixQixHiy);
+	gsl_blas_dgemv (CblasNoTrans, 1.0, &xHiDHiDHix_ge.matrix,
+			QixHiy, 0.0, xHiDHiDHixQixHiy);
 	gsl_blas_ddot(xHiDHiDHixQixHiy, QixHiy, &d);
 	yPDPDPy_ge+=d;
 
-	//eighth part: -(yHix)Qi(xHiDHix)Qi(xHiDHix)Qi(xHiy)
-	gsl_vector_const_view QixHiDHixQixHiy_g1=gsl_matrix_const_column (QixHiDHixQixHiy_all_g, v1);
-	gsl_vector_const_view QixHiDHixQixHiy_e1=gsl_matrix_const_column (QixHiDHixQixHiy_all_e, v1);
+	// Eighth part: - (yHix)Qi(xHiDHix)Qi(xHiDHix)Qi(xHiy).
+	gsl_vector_const_view QixHiDHixQixHiy_g1 =
+	  gsl_matrix_const_column (QixHiDHixQixHiy_all_g, v1);
+	gsl_vector_const_view QixHiDHixQixHiy_e1 =
+	  gsl_matrix_const_column (QixHiDHixQixHiy_all_e, v1);
 
-	gsl_blas_ddot(&QixHiDHixQixHiy_g1.vector, &xHiDHixQixHiy_g2.vector, &d);
+	gsl_blas_ddot(&QixHiDHixQixHiy_g1.vector,&xHiDHixQixHiy_g2.vector,&d);
 	yPDPDPy_gg-=d;
-	gsl_blas_ddot(&QixHiDHixQixHiy_e1.vector, &xHiDHixQixHiy_e2.vector, &d);
+	gsl_blas_ddot(&QixHiDHixQixHiy_e1.vector,&xHiDHixQixHiy_e2.vector,&d);
 	yPDPDPy_ee-=d;
-	gsl_blas_ddot(&QixHiDHixQixHiy_g1.vector, &xHiDHixQixHiy_e2.vector, &d);
+	gsl_blas_ddot(&QixHiDHixQixHiy_g1.vector,&xHiDHixQixHiy_e2.vector,&d);
 	yPDPDPy_ge-=d;
 
-	//free memory
+	// Free memory.
 	gsl_vector_free(xHiDHiDHixQixHiy);
 
 	return;
 }
 
-
-//calculate Edgeworth correctation factors for small samples
-//notation and method follows Thomas J. Rothenberg, Econometirca 1984; 52 (4)
-//M=xHiDHix
-void CalcCRT (const gsl_matrix *Hessian_inv, const gsl_matrix *Qi, const gsl_matrix *QixHiDHix_all_g, const gsl_matrix *QixHiDHix_all_e, const gsl_matrix *xHiDHiDHix_all_gg, const gsl_matrix *xHiDHiDHix_all_ee, const gsl_matrix *xHiDHiDHix_all_ge, const size_t d_size, double &crt_a, double &crt_b, double &crt_c)
-{
+// Calculate Edgeworth correctation factors for small samples notation
+// and method follows Thomas J. Rothenberg, Econometirca 1984; 52 (4)
+// M=xHiDHix
+void CalcCRT (const gsl_matrix *Hessian_inv, const gsl_matrix *Qi,
+	      const gsl_matrix *QixHiDHix_all_g,
+	      const gsl_matrix *QixHiDHix_all_e,
+	      const gsl_matrix *xHiDHiDHix_all_gg,
+	      const gsl_matrix *xHiDHiDHix_all_ee,
+	      const gsl_matrix *xHiDHiDHix_all_ge,
+	      const size_t d_size, double &crt_a,
+	      double &crt_b, double &crt_c) {
 	crt_a=0.0; crt_b=0.0; crt_c=0.0;
 
 	size_t dc_size=Qi->size1, v_size=Hessian_inv->size1/2;
 	size_t c_size=dc_size/d_size;
 	double h_gg, h_ge, h_ee, d, B=0.0, C=0.0, D=0.0;
-	double trCg1, trCe1, trCg2, trCe2, trB_gg, trB_ge, trB_ee, trCC_gg, trCC_ge, trCC_ee, trD_gg=0.0, trD_ge=0.0, trD_ee=0.0;
+	double trCg1, trCe1, trCg2, trCe2, trB_gg, trB_ge, trB_ee;
+	double trCC_gg, trCC_ge, trCC_ee, trD_gg=0.0, trD_ge=0.0, trD_ee=0.0;
 
 	gsl_matrix *QiMQi_g1=gsl_matrix_alloc (dc_size, dc_size);
 	gsl_matrix *QiMQi_e1=gsl_matrix_alloc (dc_size, dc_size);
@@ -2018,10 +2110,12 @@ void CalcCRT (const gsl_matrix *Hessian_inv, const gsl_matrix *Qi, const gsl_mat
 	gsl_matrix *M_dd=gsl_matrix_alloc (d_size, d_size);
 	gsl_matrix *M_dcdc=gsl_matrix_alloc (dc_size, dc_size);
 
-	//invert Qi_sub to Qi_si
+	// Invert Qi_sub to Qi_si.
 	gsl_matrix *Qi_sub=gsl_matrix_alloc (d_size, d_size);
 
-	gsl_matrix_const_view Qi_s=gsl_matrix_const_submatrix (Qi, (c_size-1)*d_size, (c_size-1)*d_size, d_size, d_size);
+	gsl_matrix_const_view Qi_s =
+	  gsl_matrix_const_submatrix (Qi, (c_size-1)*d_size,
+				      (c_size-1)*d_size, d_size, d_size);
 
 	int sig;
 	gsl_permutation * pmt=gsl_permutation_alloc (d_size);
@@ -2033,191 +2127,240 @@ void CalcCRT (const gsl_matrix *Hessian_inv, const gsl_matrix *Qi, const gsl_mat
 	gsl_permutation_free(pmt);
 	gsl_matrix_free(Qi_sub);
 
-	//calculate correctation factors
+	// Calculate correction factors.
 	for (size_t v1=0; v1<v_size; v1++) {
-		//calculate Qi(xHiDHix)Qi, and subpart of it
-		gsl_matrix_const_view QiM_g1=gsl_matrix_const_submatrix (QixHiDHix_all_g, 0, v1*dc_size, dc_size, dc_size);
-		gsl_matrix_const_view QiM_e1=gsl_matrix_const_submatrix (QixHiDHix_all_e, 0, v1*dc_size, dc_size, dc_size);
+	  
+	  // Calculate Qi(xHiDHix)Qi, and subpart of it.
+	  gsl_matrix_const_view QiM_g1 =
+	    gsl_matrix_const_submatrix (QixHiDHix_all_g, 0, v1*dc_size,
+					dc_size, dc_size);
+	  gsl_matrix_const_view QiM_e1 =
+	    gsl_matrix_const_submatrix (QixHiDHix_all_e, 0, v1*dc_size,
+					dc_size, dc_size);
+	  
+	  gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &QiM_g1.matrix,
+			 Qi, 0.0, QiMQi_g1);
+	  gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &QiM_e1.matrix,
+			 Qi, 0.0, QiMQi_e1);
+	  
+	  gsl_matrix_view QiMQi_g1_s =
+	    gsl_matrix_submatrix (QiMQi_g1, (c_size-1)*d_size,
+				  (c_size-1)*d_size, d_size, d_size);
+	  gsl_matrix_view QiMQi_e1_s =
+	    gsl_matrix_submatrix (QiMQi_e1, (c_size-1)*d_size,
+				  (c_size-1)*d_size, d_size, d_size);
 
-		gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &QiM_g1.matrix, Qi, 0.0, QiMQi_g1);
-		gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &QiM_e1.matrix, Qi, 0.0, QiMQi_e1);
+	  // Calculate trCg1 and trCe1.
+	  gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &QiMQi_g1_s.matrix,
+			 Qi_si, 0.0, QiMQisQisi_g1);
+	  trCg1=0.0;
+	  for (size_t k=0; k<d_size; k++) {
+	    trCg1-=gsl_matrix_get (QiMQisQisi_g1, k, k);
+	  }
 
-		gsl_matrix_view QiMQi_g1_s=gsl_matrix_submatrix (QiMQi_g1, (c_size-1)*d_size, (c_size-1)*d_size, d_size, d_size);
-		gsl_matrix_view QiMQi_e1_s=gsl_matrix_submatrix (QiMQi_e1, (c_size-1)*d_size, (c_size-1)*d_size, d_size, d_size);
+	  gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &QiMQi_e1_s.matrix,
+			 Qi_si, 0.0, QiMQisQisi_e1);
+	  trCe1=0.0;
+	  for (size_t k=0; k<d_size; k++) {
+	    trCe1-=gsl_matrix_get (QiMQisQisi_e1, k, k);
+	  }
 
-		/*
-		for (size_t i=0; i<d_size; i++) {
-			for (size_t j=0; j<d_size; j++) {
-				cout<<setprecision(6)<<gsl_matrix_get(&QiMQi_g1_s.matrix, i, j)<<"\t";
-			}
-			cout<<endl;
-		}
-*/
-		//calculate trCg1 and trCe1
-		gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &QiMQi_g1_s.matrix, Qi_si, 0.0, QiMQisQisi_g1);
-		trCg1=0.0;
-		for (size_t k=0; k<d_size; k++) {
-			trCg1-=gsl_matrix_get (QiMQisQisi_g1, k, k);
-		}
-
-		gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &QiMQi_e1_s.matrix, Qi_si, 0.0, QiMQisQisi_e1);
-		trCe1=0.0;
-		for (size_t k=0; k<d_size; k++) {
-			trCe1-=gsl_matrix_get (QiMQisQisi_e1, k, k);
-		}
-		/*
-		cout<<v1<<endl;
-		cout<<"trCg1 = "<<trCg1<<", trCe1 = "<<trCe1<<endl;
-		*/
-		for (size_t v2=0; v2<v_size; v2++) {
-			if (v2<v1) {continue;}
-
-			//calculate Qi(xHiDHix)Qi, and subpart of it
-			gsl_matrix_const_view QiM_g2=gsl_matrix_const_submatrix (QixHiDHix_all_g, 0, v2*dc_size, dc_size, dc_size);
-			gsl_matrix_const_view QiM_e2=gsl_matrix_const_submatrix (QixHiDHix_all_e, 0, v2*dc_size, dc_size, dc_size);
-
-			gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &QiM_g2.matrix, Qi, 0.0, QiMQi_g2);
-			gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &QiM_e2.matrix, Qi, 0.0, QiMQi_e2);
-
-			gsl_matrix_view QiMQi_g2_s=gsl_matrix_submatrix (QiMQi_g2, (c_size-1)*d_size, (c_size-1)*d_size, d_size, d_size);
-			gsl_matrix_view QiMQi_e2_s=gsl_matrix_submatrix (QiMQi_e2, (c_size-1)*d_size, (c_size-1)*d_size, d_size, d_size);
-
-			//calculate trCg2 and trCe2
-			gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &QiMQi_g2_s.matrix, Qi_si, 0.0, QiMQisQisi_g2);
-			trCg2=0.0;
-			for (size_t k=0; k<d_size; k++) {
-				trCg2-=gsl_matrix_get (QiMQisQisi_g2, k, k);
-			}
-
-			gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &QiMQi_e2_s.matrix, Qi_si, 0.0, QiMQisQisi_e2);
-			trCe2=0.0;
-			for (size_t k=0; k<d_size; k++) {
-				trCe2-=gsl_matrix_get (QiMQisQisi_e2, k, k);
-			}
-
-			//calculate trCC_gg, trCC_ge, trCC_ee
-			gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, QiMQisQisi_g1, QiMQisQisi_g2, 0.0, M_dd);
-			trCC_gg=0.0;
-			for (size_t k=0; k<d_size; k++) {
-				trCC_gg+=gsl_matrix_get (M_dd, k, k);
-			}
-
-			gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, QiMQisQisi_g1, QiMQisQisi_e2, 0.0, M_dd);
-			gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, QiMQisQisi_e1, QiMQisQisi_g2, 1.0, M_dd);
-			trCC_ge=0.0;
-			for (size_t k=0; k<d_size; k++) {
-				trCC_ge+=gsl_matrix_get (M_dd, k, k);
-			}
-
-			gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, QiMQisQisi_e1, QiMQisQisi_e2, 0.0, M_dd);
-			trCC_ee=0.0;
-			for (size_t k=0; k<d_size; k++) {
-				trCC_ee+=gsl_matrix_get (M_dd, k, k);
-			}
-
-			//calculate Qi(xHiDHix)Qi(xHiDHix)Qi, and subpart of it
-			gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &QiM_g1.matrix, QiMQi_g2, 0.0, QiMQiMQi_gg);
-			gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &QiM_g1.matrix, QiMQi_e2, 0.0, QiMQiMQi_ge);
-			gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &QiM_e1.matrix, QiMQi_g2, 1.0, QiMQiMQi_ge);
-			gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &QiM_e1.matrix, QiMQi_e2, 0.0, QiMQiMQi_ee);
-
-			gsl_matrix_view QiMQiMQi_gg_s=gsl_matrix_submatrix (QiMQiMQi_gg, (c_size-1)*d_size, (c_size-1)*d_size, d_size, d_size);
-			gsl_matrix_view QiMQiMQi_ge_s=gsl_matrix_submatrix (QiMQiMQi_ge, (c_size-1)*d_size, (c_size-1)*d_size, d_size, d_size);
-			gsl_matrix_view QiMQiMQi_ee_s=gsl_matrix_submatrix (QiMQiMQi_ee, (c_size-1)*d_size, (c_size-1)*d_size, d_size, d_size);
-
-			//and part of trB_gg, trB_ge, trB_ee
-			gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &QiMQiMQi_gg_s.matrix, Qi_si, 0.0, M_dd);
-			trB_gg=0.0;
-			for (size_t k=0; k<d_size; k++) {
-				d=gsl_matrix_get (M_dd, k, k);
-				trB_gg-=d;
-			}
-
-			gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &QiMQiMQi_ge_s.matrix, Qi_si, 0.0, M_dd);
-			trB_ge=0.0;
-			for (size_t k=0; k<d_size; k++) {
-				d=gsl_matrix_get (M_dd, k, k);
-				trB_ge-=d;
-			}
-
-			gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &QiMQiMQi_ee_s.matrix, Qi_si, 0.0, M_dd);
-			trB_ee=0.0;
-			for (size_t k=0; k<d_size; k++) {
-				d=gsl_matrix_get (M_dd, k, k);
-				trB_ee-=d;
-			}
-
-			//calculate Qi(xHiDHiDHix)Qi, and subpart of it
-			gsl_matrix_const_view MM_gg=gsl_matrix_const_submatrix (xHiDHiDHix_all_gg, 0, (v1*v_size+v2)*dc_size, dc_size, dc_size);
-			gsl_matrix_const_view MM_ge=gsl_matrix_const_submatrix (xHiDHiDHix_all_ge, 0, (v1*v_size+v2)*dc_size, dc_size, dc_size);
-			gsl_matrix_const_view MM_ee=gsl_matrix_const_submatrix (xHiDHiDHix_all_ee, 0, (v1*v_size+v2)*dc_size, dc_size, dc_size);
-
-			gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, Qi, &MM_gg.matrix, 0.0, M_dcdc);
-			gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, M_dcdc, Qi, 0.0, QiMMQi_gg);
-			gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, Qi, &MM_ge.matrix, 0.0, M_dcdc);
-			gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, M_dcdc, Qi, 0.0, QiMMQi_ge);
-			gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, Qi, &MM_ee.matrix, 0.0, M_dcdc);
-			gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, M_dcdc, Qi, 0.0, QiMMQi_ee);
-
-			gsl_matrix_view QiMMQi_gg_s=gsl_matrix_submatrix (QiMMQi_gg, (c_size-1)*d_size, (c_size-1)*d_size, d_size, d_size);
-			gsl_matrix_view QiMMQi_ge_s=gsl_matrix_submatrix (QiMMQi_ge, (c_size-1)*d_size, (c_size-1)*d_size, d_size, d_size);
-			gsl_matrix_view QiMMQi_ee_s=gsl_matrix_submatrix (QiMMQi_ee, (c_size-1)*d_size, (c_size-1)*d_size, d_size, d_size);
-
-			//calculate the other part of trB_gg, trB_ge, trB_ee
-			gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &QiMMQi_gg_s.matrix, Qi_si, 0.0, M_dd);
-			for (size_t k=0; k<d_size; k++) {
-				trB_gg+=gsl_matrix_get (M_dd, k, k);
-			}
-			gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &QiMMQi_ge_s.matrix, Qi_si, 0.0, M_dd);
-			for (size_t k=0; k<d_size; k++) {
-				trB_ge+=2.0*gsl_matrix_get (M_dd, k, k);
-			}
-			gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &QiMMQi_ee_s.matrix, Qi_si, 0.0, M_dd);
-			for (size_t k=0; k<d_size; k++) {
-				trB_ee+=gsl_matrix_get (M_dd, k, k);
-			}
-
-
-			//calculate trD_gg, trD_ge, trD_ee
-			trD_gg=2.0*trB_gg;
-			trD_ge=2.0*trB_ge;
-			trD_ee=2.0*trB_ee;
-
-			//calculate B, C and D
-			h_gg=-1.0*gsl_matrix_get (Hessian_inv, v1, v2);
-			h_ge=-1.0*gsl_matrix_get (Hessian_inv, v1, v2+v_size);
-			h_ee=-1.0*gsl_matrix_get (Hessian_inv, v1+v_size, v2+v_size);
-
-			B+=h_gg*trB_gg+h_ge*trB_ge+h_ee*trB_ee;
-			C+=h_gg*(trCC_gg+0.5*trCg1*trCg2)+h_ge*(trCC_ge+0.5*trCg1*trCe2+0.5*trCe1*trCg2)+h_ee*(trCC_ee+0.5*trCe1*trCe2);
-			D+=h_gg*(trCC_gg+0.5*trD_gg)+h_ge*(trCC_ge+0.5*trD_ge)+h_ee*(trCC_ee+0.5*trD_ee);
-
-			if (v1!=v2) {
-				B+=h_gg*trB_gg+h_ge*trB_ge+h_ee*trB_ee;
-				C+=h_gg*(trCC_gg+0.5*trCg1*trCg2)+h_ge*(trCC_ge+0.5*trCg1*trCe2+0.5*trCe1*trCg2)+h_ee*(trCC_ee+0.5*trCe1*trCe2);
-				D+=h_gg*(trCC_gg+0.5*trD_gg)+h_ge*(trCC_ge+0.5*trD_ge)+h_ee*(trCC_ee+0.5*trD_ee);
-			}
-
-			/*
-			cout<<v1<<"\t"<<v2<<endl;
-			cout<<h_gg<<"\t"<<h_ge<<"\t"<<h_ee<<endl;
-			cout<<trB_gg<<"\t"<<trB_ge<<"\t"<<trB_ee<<endl;
-			cout<<trCg1<<"\t"<<trCe1<<"\t"<<trCg2<<"\t"<<trCe2<<endl;
-			cout<<trCC_gg<<"\t"<<trCC_ge<<"\t"<<trCC_ee<<endl;
-			cout<<trD_gg<<"\t"<<trD_ge<<"\t"<<trD_ee<<endl;
-			*/
-		}
+	  for (size_t v2=0; v2<v_size; v2++) {
+	    if (v2<v1) {continue;}
+	    
+	    // Calculate Qi(xHiDHix)Qi, and subpart of it.
+	    gsl_matrix_const_view QiM_g2 =
+	      gsl_matrix_const_submatrix (QixHiDHix_all_g, 0, v2*dc_size,
+					  dc_size, dc_size);
+	    gsl_matrix_const_view QiM_e2 =
+	      gsl_matrix_const_submatrix (QixHiDHix_all_e, 0, v2*dc_size,
+					  dc_size, dc_size);
+	    
+	    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &QiM_g2.matrix,
+			   Qi, 0.0, QiMQi_g2);
+	    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &QiM_e2.matrix,
+			   Qi, 0.0, QiMQi_e2);
+	    
+	    gsl_matrix_view QiMQi_g2_s =
+	      gsl_matrix_submatrix (QiMQi_g2, (c_size-1)*d_size,
+				    (c_size-1)*d_size, d_size, d_size);
+	    gsl_matrix_view QiMQi_e2_s =
+	      gsl_matrix_submatrix (QiMQi_e2, (c_size-1)*d_size,
+				    (c_size-1)*d_size, d_size, d_size);
+	    
+	    // Calculate trCg2 and trCe2.
+	    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
+			   &QiMQi_g2_s.matrix, Qi_si, 0.0, QiMQisQisi_g2);
+	    trCg2=0.0;
+	    for (size_t k=0; k<d_size; k++) {
+	      trCg2-=gsl_matrix_get (QiMQisQisi_g2, k, k);
+	    }
+	    
+	    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
+			   &QiMQi_e2_s.matrix, Qi_si, 0.0, QiMQisQisi_e2);
+	    trCe2=0.0;
+	    for (size_t k=0; k<d_size; k++) {
+	      trCe2-=gsl_matrix_get (QiMQisQisi_e2, k, k);
+	    }
+	    
+	    // Calculate trCC_gg, trCC_ge, trCC_ee.
+	    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
+			   QiMQisQisi_g1, QiMQisQisi_g2, 0.0, M_dd);
+	    trCC_gg=0.0;
+	    for (size_t k=0; k<d_size; k++) {
+	      trCC_gg+=gsl_matrix_get (M_dd, k, k);
+	    }
+	    
+	    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, QiMQisQisi_g1,
+			   QiMQisQisi_e2, 0.0, M_dd);
+	    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, QiMQisQisi_e1,
+			   QiMQisQisi_g2, 1.0, M_dd);
+	    trCC_ge=0.0;
+	    for (size_t k=0; k<d_size; k++) {
+	      trCC_ge+=gsl_matrix_get (M_dd, k, k);
+	    }
+	    
+	    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, QiMQisQisi_e1,
+			   QiMQisQisi_e2, 0.0, M_dd);
+	    trCC_ee=0.0;
+	    for (size_t k=0; k<d_size; k++) {
+	      trCC_ee+=gsl_matrix_get (M_dd, k, k);
+	    }
+	    
+	    // Calculate Qi(xHiDHix)Qi(xHiDHix)Qi, and subpart of it.
+	    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &QiM_g1.matrix,
+			   QiMQi_g2, 0.0, QiMQiMQi_gg);
+	    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &QiM_g1.matrix,
+			   QiMQi_e2, 0.0, QiMQiMQi_ge);
+	    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &QiM_e1.matrix,
+			   QiMQi_g2, 1.0, QiMQiMQi_ge);
+	    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &QiM_e1.matrix,
+			   QiMQi_e2, 0.0, QiMQiMQi_ee);
+	    
+	    gsl_matrix_view QiMQiMQi_gg_s =
+	      gsl_matrix_submatrix (QiMQiMQi_gg, (c_size-1)*d_size,
+				    (c_size-1)*d_size, d_size, d_size);
+	    gsl_matrix_view QiMQiMQi_ge_s =
+	      gsl_matrix_submatrix (QiMQiMQi_ge, (c_size-1)*d_size,
+				    (c_size-1)*d_size, d_size, d_size);
+	    gsl_matrix_view QiMQiMQi_ee_s =
+	      gsl_matrix_submatrix (QiMQiMQi_ee, (c_size-1)*d_size,
+				    (c_size-1)*d_size, d_size, d_size);
+	    
+	    // and part of trB_gg, trB_ge, trB_ee.
+	    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
+			   &QiMQiMQi_gg_s.matrix, Qi_si, 0.0, M_dd);
+	    trB_gg=0.0;
+	    for (size_t k=0; k<d_size; k++) {
+	      d=gsl_matrix_get (M_dd, k, k);
+	      trB_gg-=d;
+	    }
+	    
+	    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
+			   &QiMQiMQi_ge_s.matrix, Qi_si, 0.0, M_dd);
+	    trB_ge=0.0;
+	    for (size_t k=0; k<d_size; k++) {
+	      d=gsl_matrix_get (M_dd, k, k);
+	      trB_ge-=d;
+	    }
+	    
+	    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
+			   &QiMQiMQi_ee_s.matrix, Qi_si, 0.0, M_dd);
+	    trB_ee=0.0;
+	    for (size_t k=0; k<d_size; k++) {
+	      d=gsl_matrix_get (M_dd, k, k);
+	      trB_ee-=d;
+	    }
+	    
+	    // Calculate Qi(xHiDHiDHix)Qi, and subpart of it.
+	    gsl_matrix_const_view MM_gg =
+	      gsl_matrix_const_submatrix (xHiDHiDHix_all_gg, 0,
+					  (v1*v_size+v2)*dc_size, dc_size,
+					  dc_size);
+	    gsl_matrix_const_view MM_ge =
+	      gsl_matrix_const_submatrix (xHiDHiDHix_all_ge, 0,
+					  (v1*v_size+v2)*dc_size, dc_size,
+					  dc_size);
+	    gsl_matrix_const_view MM_ee =
+	      gsl_matrix_const_submatrix (xHiDHiDHix_all_ee, 0,
+					  (v1*v_size+v2)*dc_size, dc_size,
+					  dc_size);
+	    
+	    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, Qi,
+			   &MM_gg.matrix, 0.0, M_dcdc);
+	    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, M_dcdc, Qi, 0.0,
+			   QiMMQi_gg);
+	    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, Qi,
+			   &MM_ge.matrix, 0.0, M_dcdc);
+	    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, M_dcdc,
+			   Qi, 0.0, QiMMQi_ge);
+	    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, Qi,
+			   &MM_ee.matrix, 0.0, M_dcdc);
+	    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, M_dcdc, Qi,
+			   0.0, QiMMQi_ee);
+	    
+	    gsl_matrix_view QiMMQi_gg_s =
+	      gsl_matrix_submatrix (QiMMQi_gg, (c_size-1)*d_size,
+				    (c_size-1)*d_size, d_size, d_size);
+	    gsl_matrix_view QiMMQi_ge_s =
+	      gsl_matrix_submatrix (QiMMQi_ge, (c_size-1)*d_size,
+				    (c_size-1)*d_size, d_size, d_size);
+	    gsl_matrix_view QiMMQi_ee_s =
+	      gsl_matrix_submatrix (QiMMQi_ee, (c_size-1)*d_size,
+				    (c_size-1)*d_size, d_size, d_size);
+	    
+	    // Calculate the other part of trB_gg, trB_ge, trB_ee.
+	    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
+			   &QiMMQi_gg_s.matrix, Qi_si, 0.0, M_dd);
+	    for (size_t k=0; k<d_size; k++) {
+	      trB_gg+=gsl_matrix_get (M_dd, k, k);
+	    }
+	    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
+			   &QiMMQi_ge_s.matrix, Qi_si, 0.0, M_dd);
+	    for (size_t k=0; k<d_size; k++) {
+	      trB_ge+=2.0*gsl_matrix_get (M_dd, k, k);
+	    }
+	    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
+			   &QiMMQi_ee_s.matrix, Qi_si, 0.0, M_dd);
+	    for (size_t k=0; k<d_size; k++) {
+	      trB_ee+=gsl_matrix_get (M_dd, k, k);
+	    }
+	    
+	    // Calculate trD_gg, trD_ge, trD_ee.
+	    trD_gg=2.0*trB_gg;
+	    trD_ge=2.0*trB_ge;
+	    trD_ee=2.0*trB_ee;
+	    
+	    //calculate B, C and D
+	    h_gg=-1.0*gsl_matrix_get (Hessian_inv, v1, v2);
+	    h_ge=-1.0*gsl_matrix_get (Hessian_inv, v1, v2+v_size);
+	    h_ee=-1.0*gsl_matrix_get (Hessian_inv, v1+v_size, v2+v_size);
+	    
+	    B+=h_gg*trB_gg+h_ge*trB_ge+h_ee*trB_ee;
+	    C+=h_gg*(trCC_gg+0.5*trCg1*trCg2) +
+	      h_ge*(trCC_ge+0.5*trCg1*trCe2+0.5*trCe1*trCg2) +
+	      h_ee*(trCC_ee+0.5*trCe1*trCe2);
+	    D+=h_gg*(trCC_gg+0.5*trD_gg) +
+	      h_ge*(trCC_ge+0.5*trD_ge) + h_ee*(trCC_ee+0.5*trD_ee);
+	    
+	    if (v1!=v2) {
+	      B+=h_gg*trB_gg+h_ge*trB_ge+h_ee*trB_ee;
+	      C+=h_gg*(trCC_gg+0.5*trCg1*trCg2) +
+		h_ge*(trCC_ge+0.5*trCg1*trCe2+0.5*trCe1*trCg2) +
+		h_ee*(trCC_ee+0.5*trCe1*trCe2);
+	      D+=h_gg*(trCC_gg+0.5*trD_gg) +
+		h_ge*(trCC_ge+0.5*trD_ge) +
+		h_ee*(trCC_ee+0.5*trD_ee);
+	    }
+	  }
 	}
 
-	//calculate a, b, c from B C D
+	// Calculate a, b, c from B C D.
 	crt_a=2.0*D-C;
 	crt_b=2.0*B;
 	crt_c=C;
-	/*
-	cout<<B<<"\t"<<C<<"\t"<<D<<endl;
-	cout<<setprecision(6)<<crt_a<<"\t"<<crt_b<<"\t"<<crt_c<<endl;
-	*/
-	//free matrix memory
+
+	// Free matrix memory.
 	gsl_matrix_free(QiMQi_g1);
 	gsl_matrix_free(QiMQi_e1);
 	gsl_matrix_free(QiMQi_g2);
@@ -2244,14 +2387,19 @@ void CalcCRT (const gsl_matrix *Hessian_inv, const gsl_matrix *Qi, const gsl_mat
 	return;
 }
 
-
-
-
-
-//calculate first-order and second-order derivatives
-void CalcDev (const char func_name, const gsl_vector *eval, const gsl_matrix *Qi, const gsl_matrix *Hi, const gsl_matrix *xHi, const gsl_matrix *Hiy, const gsl_vector *QixHiy, gsl_vector *gradient, gsl_matrix *Hessian_inv, double &crt_a, double &crt_b, double &crt_c)
-{
-	if (func_name!='R' && func_name!='L' && func_name!='r' && func_name!='l') {cout<<"func_name only takes 'R' or 'L': 'R' for log-restricted likelihood, 'L' for log-likelihood."<<endl; return;}
+// Calculate first-order and second-order derivatives.
+void CalcDev (const char func_name, const gsl_vector *eval,
+	      const gsl_matrix *Qi, const gsl_matrix *Hi,
+	      const gsl_matrix *xHi, const gsl_matrix *Hiy,
+	      const gsl_vector *QixHiy, gsl_vector *gradient,
+	      gsl_matrix *Hessian_inv, double &crt_a, double &crt_b,
+	      double &crt_c) {
+	if (func_name!='R' && func_name!='L' && func_name!='r' &&
+	    func_name!='l') {
+	  cout<<"func_name only takes 'R' or 'L': 'R' for " <<
+	    "log-restricted likelihood, 'L' for log-likelihood."<<endl;
+	  return;
+	}
 
 	size_t dc_size=Qi->size1, d_size=Hi->size1;
 	size_t c_size=dc_size/d_size;
@@ -2275,137 +2423,140 @@ void CalcDev (const char func_name, const gsl_vector *eval, const gsl_matrix *Qi
 	gsl_matrix *QixHiDHixQixHiy_all_g=gsl_matrix_alloc (dc_size, v_size);
 	gsl_matrix *QixHiDHixQixHiy_all_e=gsl_matrix_alloc (dc_size, v_size);
 
-	gsl_matrix *xHiDHiDHiy_all_gg=gsl_matrix_alloc (dc_size, v_size*v_size);
-	gsl_matrix *xHiDHiDHiy_all_ee=gsl_matrix_alloc (dc_size, v_size*v_size);
-	gsl_matrix *xHiDHiDHiy_all_ge=gsl_matrix_alloc (dc_size, v_size*v_size);
-	gsl_matrix *xHiDHiDHix_all_gg=gsl_matrix_alloc (dc_size, v_size*v_size*dc_size);
-	gsl_matrix *xHiDHiDHix_all_ee=gsl_matrix_alloc (dc_size, v_size*v_size*dc_size);
-	gsl_matrix *xHiDHiDHix_all_ge=gsl_matrix_alloc (dc_size, v_size*v_size*dc_size);
+	gsl_matrix *xHiDHiDHiy_all_gg =
+	  gsl_matrix_alloc (dc_size, v_size*v_size);
+	gsl_matrix *xHiDHiDHiy_all_ee =
+	  gsl_matrix_alloc (dc_size, v_size*v_size);
+	gsl_matrix *xHiDHiDHiy_all_ge =
+	  gsl_matrix_alloc (dc_size, v_size*v_size);
+	gsl_matrix *xHiDHiDHix_all_gg =
+	  gsl_matrix_alloc (dc_size, v_size*v_size*dc_size);
+	gsl_matrix *xHiDHiDHix_all_ee =
+	  gsl_matrix_alloc (dc_size, v_size*v_size*dc_size);
+	gsl_matrix *xHiDHiDHix_all_ge =
+	  gsl_matrix_alloc (dc_size, v_size*v_size*dc_size);
 
-	//calculate xHiDHiy_all, xHiDHix_all and xHiDHixQixHiy_all
+	// Calculate xHiDHiy_all, xHiDHix_all and xHiDHixQixHiy_all.
 	Calc_xHiDHiy_all (eval, xHi, Hiy, xHiDHiy_all_g, xHiDHiy_all_e);
 	Calc_xHiDHix_all (eval, xHi, xHiDHix_all_g, xHiDHix_all_e);
-	Calc_xHiDHixQixHiy_all (xHiDHix_all_g, xHiDHix_all_e, QixHiy, xHiDHixQixHiy_all_g, xHiDHixQixHiy_all_e);
+	Calc_xHiDHixQixHiy_all (xHiDHix_all_g, xHiDHix_all_e, QixHiy,
+				xHiDHixQixHiy_all_g, xHiDHixQixHiy_all_e);
 
-	Calc_xHiDHiDHiy_all (v_size, eval, Hi, xHi, Hiy, xHiDHiDHiy_all_gg, xHiDHiDHiy_all_ee, xHiDHiDHiy_all_ge);
-	Calc_xHiDHiDHix_all (v_size, eval, Hi, xHi, xHiDHiDHix_all_gg, xHiDHiDHix_all_ee, xHiDHiDHix_all_ge);
+	Calc_xHiDHiDHiy_all (v_size, eval, Hi, xHi, Hiy, xHiDHiDHiy_all_gg,
+			     xHiDHiDHiy_all_ee, xHiDHiDHiy_all_ge);
+	Calc_xHiDHiDHix_all (v_size, eval, Hi, xHi, xHiDHiDHix_all_gg,
+			     xHiDHiDHix_all_ee, xHiDHiDHix_all_ge);
 
-	//calculate QixHiDHiy_all, QixHiDHix_all and QixHiDHixQixHiy_all
-	Calc_QiVec_all (Qi, xHiDHiy_all_g, xHiDHiy_all_e, QixHiDHiy_all_g, QixHiDHiy_all_e);
-	Calc_QiVec_all (Qi, xHiDHixQixHiy_all_g, xHiDHixQixHiy_all_e, QixHiDHixQixHiy_all_g, QixHiDHixQixHiy_all_e);
-	Calc_QiMat_all (Qi, xHiDHix_all_g, xHiDHix_all_e, QixHiDHix_all_g, QixHiDHix_all_e);
+	// Calculate QixHiDHiy_all, QixHiDHix_all and QixHiDHixQixHiy_all.
+	Calc_QiVec_all (Qi, xHiDHiy_all_g, xHiDHiy_all_e, QixHiDHiy_all_g,
+			QixHiDHiy_all_e);
+	Calc_QiVec_all (Qi, xHiDHixQixHiy_all_g, xHiDHixQixHiy_all_e,
+			QixHiDHixQixHiy_all_g, QixHiDHixQixHiy_all_e);
+	Calc_QiMat_all (Qi, xHiDHix_all_g, xHiDHix_all_e, QixHiDHix_all_g,
+			QixHiDHix_all_e);
 
-	double tHiD_g, tHiD_e, tPD_g, tPD_e, tHiDHiD_gg, tHiDHiD_ee, tHiDHiD_ge, tPDPD_gg, tPDPD_ee, tPDPD_ge;
+	double tHiD_g, tHiD_e, tPD_g, tPD_e, tHiDHiD_gg, tHiDHiD_ee;
+	double tHiDHiD_ge, tPDPD_gg, tPDPD_ee, tPDPD_ge;
 	double yPDPy_g, yPDPy_e, yPDPDPy_gg, yPDPDPy_ee, yPDPDPy_ge;
 
-	//calculate gradient and Hessian for Vg
+	// Calculate gradient and Hessian for Vg.
 	for (size_t i1=0; i1<d_size; i1++) {
-		for (size_t j1=0; j1<d_size; j1++) {
-			if (j1<i1) {continue;}
-			v1=GetIndex (i1, j1, d_size);
+	  for (size_t j1=0; j1<d_size; j1++) {
+	    if (j1<i1) {continue;}
+	    v1=GetIndex (i1, j1, d_size);
+	    
+	    Calc_yPDPy (eval, Hiy, QixHiy, xHiDHiy_all_g, xHiDHiy_all_e,
+			xHiDHixQixHiy_all_g, xHiDHixQixHiy_all_e, i1, j1,
+			yPDPy_g, yPDPy_e);
+	    
+	    if (func_name=='R' || func_name=='r') {
+	      Calc_tracePD (eval, Qi, Hi, xHiDHix_all_g, xHiDHix_all_e,
+			    i1, j1, tPD_g, tPD_e);
 
-			Calc_yPDPy (eval, Hiy, QixHiy, xHiDHiy_all_g, xHiDHiy_all_e, xHiDHixQixHiy_all_g, xHiDHixQixHiy_all_e, i1, j1, yPDPy_g, yPDPy_e);
+	      dev1_g=-0.5*tPD_g+0.5*yPDPy_g;
+	      dev1_e=-0.5*tPD_e+0.5*yPDPy_e;
+	    } else {
+	      Calc_traceHiD (eval, Hi, i1, j1, tHiD_g, tHiD_e);
+	      
+	      dev1_g=-0.5*tHiD_g+0.5*yPDPy_g;
+	      dev1_e=-0.5*tHiD_e+0.5*yPDPy_e;
+	    }
+	    
+	    gsl_vector_set (gradient, v1, dev1_g);
+	    gsl_vector_set (gradient, v1+v_size, dev1_e);
+	    
+	    for (size_t i2=0; i2<d_size; i2++) {
+	      for (size_t j2=0; j2<d_size; j2++) {
+		if (j2<i2) {continue;}
+		v2=GetIndex (i2, j2, d_size);
+		
+		if (v2<v1) {continue;}
 
-			if (func_name=='R' || func_name=='r') {
-				Calc_tracePD (eval, Qi, Hi, xHiDHix_all_g, xHiDHix_all_e, i1, j1, tPD_g, tPD_e);
-				//cout<<i1<<" "<<j1<<" "<<yPDPy_g<<" "<<yPDPy_e<<" "<<tPD_g<<" "<<tPD_e<<endl;
-
-				dev1_g=-0.5*tPD_g+0.5*yPDPy_g;
-				dev1_e=-0.5*tPD_e+0.5*yPDPy_e;
-			} else {
-				Calc_traceHiD (eval, Hi, i1, j1, tHiD_g, tHiD_e);
-
-				dev1_g=-0.5*tHiD_g+0.5*yPDPy_g;
-				dev1_e=-0.5*tHiD_e+0.5*yPDPy_e;
-			}
-
-			gsl_vector_set (gradient, v1, dev1_g);
-			gsl_vector_set (gradient, v1+v_size, dev1_e);
-
-			for (size_t i2=0; i2<d_size; i2++) {
-				for (size_t j2=0; j2<d_size; j2++) {
-					if (j2<i2) {continue;}
-					v2=GetIndex (i2, j2, d_size);
-
-					if (v2<v1) {continue;}
-
-					Calc_yPDPDPy (eval, Hi, xHi, Hiy, QixHiy, xHiDHiy_all_g, xHiDHiy_all_e, QixHiDHiy_all_g, QixHiDHiy_all_e, xHiDHixQixHiy_all_g, xHiDHixQixHiy_all_e, QixHiDHixQixHiy_all_g, QixHiDHixQixHiy_all_e, xHiDHiDHiy_all_gg, xHiDHiDHiy_all_ee, xHiDHiDHiy_all_ge, xHiDHiDHix_all_gg, xHiDHiDHix_all_ee, xHiDHiDHix_all_ge, i1, j1, i2, j2, yPDPDPy_gg, yPDPDPy_ee, yPDPDPy_ge);
-
-					//cout<<i1<<" "<<j1<<" "<<i2<<" "<<j2<<" "<<yPDPDPy_gg<<" "<<yPDPDPy_ee<<" "<<yPDPDPy_ge<<endl;
-					//AI for reml
-					if (func_name=='R' || func_name=='r') {
-						Calc_tracePDPD (eval, Qi, Hi, xHi, QixHiDHix_all_g, QixHiDHix_all_e, xHiDHiDHix_all_gg, xHiDHiDHix_all_ee, xHiDHiDHix_all_ge, i1, j1, i2, j2, tPDPD_gg, tPDPD_ee, tPDPD_ge);
-
-						dev2_gg=0.5*tPDPD_gg-yPDPDPy_gg;
-						dev2_ee=0.5*tPDPD_ee-yPDPDPy_ee;
-						dev2_ge=0.5*tPDPD_ge-yPDPDPy_ge;
-						/*
-						dev2_gg=-0.5*yPDPDPy_gg;
-						dev2_ee=-0.5*yPDPDPy_ee;
-						dev2_ge=-0.5*yPDPDPy_ge;
-						*/
-					} else {
-						Calc_traceHiDHiD (eval, Hi, i1, j1, i2, j2, tHiDHiD_gg, tHiDHiD_ee, tHiDHiD_ge);
-
-						dev2_gg=0.5*tHiDHiD_gg-yPDPDPy_gg;
-						dev2_ee=0.5*tHiDHiD_ee-yPDPDPy_ee;
-						dev2_ge=0.5*tHiDHiD_ge-yPDPDPy_ge;
-					}
-
-					//set up Hessian
-					gsl_matrix_set (Hessian, v1, v2, dev2_gg);
-					gsl_matrix_set (Hessian, v1+v_size, v2+v_size, dev2_ee);
-					gsl_matrix_set (Hessian, v1, v2+v_size, dev2_ge);
-					gsl_matrix_set (Hessian, v2+v_size, v1, dev2_ge);
-
-					if (v1!=v2) {
-						gsl_matrix_set (Hessian, v2, v1, dev2_gg);
-						gsl_matrix_set (Hessian, v2+v_size, v1+v_size, dev2_ee);
-						gsl_matrix_set (Hessian, v2, v1+v_size, dev2_ge);
-						gsl_matrix_set (Hessian, v1+v_size, v2, dev2_ge);
-					}
-				}
-			}
+		Calc_yPDPDPy (eval, Hi, xHi, Hiy, QixHiy, xHiDHiy_all_g,
+			      xHiDHiy_all_e, QixHiDHiy_all_g, QixHiDHiy_all_e,
+			      xHiDHixQixHiy_all_g, xHiDHixQixHiy_all_e,
+			      QixHiDHixQixHiy_all_g, QixHiDHixQixHiy_all_e,
+			      xHiDHiDHiy_all_gg, xHiDHiDHiy_all_ee,
+			      xHiDHiDHiy_all_ge, xHiDHiDHix_all_gg,
+			      xHiDHiDHix_all_ee, xHiDHiDHix_all_ge, i1, j1,
+			      i2, j2, yPDPDPy_gg, yPDPDPy_ee, yPDPDPy_ge);
+		
+		// AI for REML.
+		if (func_name=='R' || func_name=='r') {
+		  Calc_tracePDPD (eval, Qi, Hi, xHi, QixHiDHix_all_g,
+				  QixHiDHix_all_e, xHiDHiDHix_all_gg,
+				  xHiDHiDHix_all_ee, xHiDHiDHix_all_ge, i1, j1,
+				  i2, j2, tPDPD_gg, tPDPD_ee, tPDPD_ge);
+		  
+		  dev2_gg=0.5*tPDPD_gg-yPDPDPy_gg;
+		  dev2_ee=0.5*tPDPD_ee-yPDPDPy_ee;
+		  dev2_ge=0.5*tPDPD_ge-yPDPDPy_ge;
+		} else {
+		  Calc_traceHiDHiD (eval, Hi, i1, j1, i2, j2, tHiDHiD_gg,
+				    tHiDHiD_ee, tHiDHiD_ge);
+		  
+		  dev2_gg=0.5*tHiDHiD_gg-yPDPDPy_gg;
+		  dev2_ee=0.5*tHiDHiD_ee-yPDPDPy_ee;
+		  dev2_ge=0.5*tHiDHiD_ge-yPDPDPy_ge;
 		}
-	}
-
-	/*
-	cout<<"Hessian: "<<endl;
-	for (size_t i=0; i<2*v_size; i++) {
-		for (size_t j=0; j<2*v_size; j++) {
-			cout<<gsl_matrix_get(Hessian, i, j)<<"\t";
+		
+		// Set up Hessian.
+		gsl_matrix_set (Hessian, v1, v2, dev2_gg);
+		gsl_matrix_set (Hessian, v1+v_size, v2+v_size, dev2_ee);
+		gsl_matrix_set (Hessian, v1, v2+v_size, dev2_ge);
+		gsl_matrix_set (Hessian, v2+v_size, v1, dev2_ge);
+		
+		if (v1!=v2) {
+		  gsl_matrix_set (Hessian, v2, v1, dev2_gg);
+		  gsl_matrix_set (Hessian, v2+v_size, v1+v_size, dev2_ee);
+		  gsl_matrix_set (Hessian, v2, v1+v_size, dev2_ge);
+		  gsl_matrix_set (Hessian, v1+v_size, v2, dev2_ge);
 		}
-		cout<<endl;
+	      }
+	    }
+	  }
 	}
-	*/
-
-
-	//Invert Hessian
+	
+	// Invert Hessian.
 	int sig;
 	gsl_permutation * pmt=gsl_permutation_alloc (v_size*2);
 
 	LUDecomp (Hessian, pmt, &sig);
 	LUInvert (Hessian, pmt, Hessian_inv);
-	/*
-	cout<<"Hessian Inverse: "<<endl;
-	for (size_t i=0; i<2*v_size; i++) {
-		for (size_t j=0; j<2*v_size; j++) {
-			cout<<gsl_matrix_get(Hessian_inv, i, j)<<"\t";
-		}
-		cout<<endl;
-	}
-	*/
+	
 	gsl_permutation_free(pmt);
 	gsl_matrix_free(Hessian);
 
-	//calculate Edgeworth correction factors
-	//after inverting Hessian
+	// Calculate Edgeworth correction factors after inverting
+	// Hessian.
 	if (c_size>1) {
-		CalcCRT (Hessian_inv, Qi, QixHiDHix_all_g, QixHiDHix_all_e, xHiDHiDHix_all_gg, xHiDHiDHix_all_ee, xHiDHiDHix_all_ge, d_size, crt_a, crt_b, crt_c);
+	  CalcCRT(Hessian_inv, Qi, QixHiDHix_all_g, QixHiDHix_all_e,
+		  xHiDHiDHix_all_gg, xHiDHiDHix_all_ee, xHiDHiDHix_all_ge,
+		  d_size, crt_a, crt_b, crt_c);
 	} else {
-		crt_a=0.0; crt_b=0.0; crt_c=0.0;
+	  crt_a=0.0; crt_b=0.0; crt_c=0.0;
 	}
-
+	
 	gsl_matrix_free(xHiDHiy_all_g);
 	gsl_matrix_free(xHiDHiy_all_e);
 	gsl_matrix_free(xHiDHix_all_g);
@@ -2430,10 +2581,9 @@ void CalcDev (const char func_name, const gsl_vector *eval, const gsl_matrix *Qi
 	return;
 }
 
-
-//update Vg, Ve
-void UpdateVgVe (const gsl_matrix *Hessian_inv, const gsl_vector *gradient, const double step_scale, gsl_matrix *V_g, gsl_matrix *V_e)
-{
+// Update Vg, Ve.
+void UpdateVgVe (const gsl_matrix *Hessian_inv, const gsl_vector *gradient,
+		 const double step_scale, gsl_matrix *V_g, gsl_matrix *V_e) {
 	size_t v_size=gradient->size/2, d_size=V_g->size1;
 	size_t v;
 
@@ -2441,7 +2591,7 @@ void UpdateVgVe (const gsl_matrix *Hessian_inv, const gsl_vector *gradient, cons
 
 	double d;
 
-	//vectorize Vg and Ve
+	// Vectorize Vg and Ve.
 	for (size_t i=0; i<d_size; i++) {
 		for (size_t j=0; j<d_size; j++) {
 			if (j<i) {continue;}
@@ -2455,9 +2605,10 @@ void UpdateVgVe (const gsl_matrix *Hessian_inv, const gsl_vector *gradient, cons
 		}
 	}
 
-	gsl_blas_dgemv (CblasNoTrans, -1.0*step_scale, Hessian_inv, gradient, 1.0, vec_v);
+	gsl_blas_dgemv (CblasNoTrans, -1.0*step_scale, Hessian_inv,
+			gradient, 1.0, vec_v);
 
-	//save Vg and Ve
+	// Save Vg and Ve.
 	for (size_t i=0; i<d_size; i++) {
 		for (size_t j=0; j<d_size; j++) {
 			if (j<i) {continue;}
@@ -2478,19 +2629,24 @@ void UpdateVgVe (const gsl_matrix *Hessian_inv, const gsl_vector *gradient, cons
 	return;
 }
 
-
-
-
-
-
-double MphNR (const char func_name, const size_t max_iter, const double max_prec, const gsl_vector *eval, const gsl_matrix *X, const gsl_matrix *Y, gsl_matrix *Hi_all, gsl_matrix *xHi_all, gsl_matrix *Hiy_all, gsl_matrix *V_g, gsl_matrix *V_e, gsl_matrix *Hessian_inv, double &crt_a, double &crt_b, double &crt_c)
-{
-	if (func_name!='R' && func_name!='L' && func_name!='r' && func_name!='l') {cout<<"func_name only takes 'R' or 'L': 'R' for log-restricted likelihood, 'L' for log-likelihood."<<endl; return 0.0;}
+double MphNR (const char func_name, const size_t max_iter,
+	      const double max_prec, const gsl_vector *eval,
+	      const gsl_matrix *X, const gsl_matrix *Y, gsl_matrix *Hi_all,
+	      gsl_matrix *xHi_all, gsl_matrix *Hiy_all, gsl_matrix *V_g,
+	      gsl_matrix *V_e, gsl_matrix *Hessian_inv, double &crt_a,
+	      double &crt_b, double &crt_c) {
+	if (func_name!='R' && func_name!='L' && func_name!='r' &&
+	    func_name!='l') {
+	  cout<<"func_name only takes 'R' or 'L': 'R' for log-restricted "<<
+	    "likelihood, 'L' for log-likelihood."<<endl;
+	  return 0.0;
+	}
 	size_t n_size=eval->size, c_size=X->size1, d_size=Y->size1;
 	size_t dc_size=d_size*c_size;
 	size_t v_size=d_size*(d_size+1)/2;
 
-	double logdet_H, logdet_Q, yPy, logl_const, logl_old=0.0, logl_new=0.0, step_scale;
+	double logdet_H, logdet_Q, yPy, logl_const;
+	double logl_old=0.0, logl_new=0.0, step_scale;
 	int sig;
 	size_t step_iter, flag_pd;
 
@@ -2506,80 +2662,84 @@ double MphNR (const char func_name, const size_t max_iter, const double max_prec
 
 	gsl_vector *gradient=gsl_vector_alloc (v_size*2);
 
-	//calculate |XXt| and (XXt)^{-1}
+	// Calculate |XXt| and (XXt)^{-1}.
 	gsl_blas_dsyrk (CblasUpper, CblasNoTrans, 1.0, X, 0.0, XXt);
 	for (size_t i=0; i<c_size; ++i) {
-		for (size_t j=0; j<i; ++j) {
-			gsl_matrix_set (XXt, i, j, gsl_matrix_get (XXt, j, i));
-		}
+	  for (size_t j=0; j<i; ++j) {
+	    gsl_matrix_set (XXt, i, j, gsl_matrix_get (XXt, j, i));
+	  }
 	}
 
 	gsl_permutation * pmt=gsl_permutation_alloc (c_size);
 	LUDecomp (XXt, pmt, &sig);
 	gsl_permutation_free (pmt);
-//	LUInvert (XXt, pmt, XXti);
 
-	//calculate the constant for logl
+	// Calculate the constant for logl.
 	if (func_name=='R' || func_name=='r') {
-		logl_const=-0.5*(double)(n_size-c_size)*(double)d_size*log(2.0*M_PI)+0.5*(double)d_size*LULndet (XXt);
+	  logl_const=-0.5*(double)(n_size-c_size) *
+	    (double)d_size*log(2.0*M_PI) +
+	    0.5*(double)d_size*LULndet (XXt);
 	} else {
-		logl_const=-0.5*(double)n_size*(double)d_size*log(2.0*M_PI);
+	  logl_const=-0.5*(double)n_size*(double)d_size*log(2.0*M_PI);
 	}
-	//optimization iterations
-
+	
+	// Optimization iterations.
 	for (size_t t=0; t<max_iter; t++) {
 		gsl_matrix_memcpy (Vg_save, V_g);
 		gsl_matrix_memcpy (Ve_save, V_e);
 
 		step_scale=1.0; step_iter=0;
 		do {
-			gsl_matrix_memcpy (V_g, Vg_save);
-			gsl_matrix_memcpy (V_e, Ve_save);
+		  gsl_matrix_memcpy (V_g, Vg_save);
+		  gsl_matrix_memcpy (V_e, Ve_save);
+		  
+		  // Update Vg, Ve, and invert Hessian.
+		  if (t!=0) {
+		    UpdateVgVe (Hessian_inv, gradient, step_scale, V_g, V_e);
+		  }
+		  
+		  // Check if both Vg and Ve are positive definite.
+		  flag_pd=1;
+		  gsl_matrix_memcpy (V_temp, V_e);
+		  EigenDecomp(V_temp, U_temp, D_temp, 0);
+		  for (size_t i=0; i<d_size; i++) {
+		    if (gsl_vector_get (D_temp, i)<=0) {flag_pd=0;}
+		  }
+		  gsl_matrix_memcpy (V_temp, V_g);
+		  EigenDecomp(V_temp, U_temp, D_temp, 0);
+		  for (size_t i=0; i<d_size; i++) {
+		    if (gsl_vector_get (D_temp, i)<=0) {flag_pd=0;}
+		  }
+		  
+		  // If flag_pd==1, continue to calculate quantities
+		  // and logl.
+		  if (flag_pd==1) {
+		    CalcHiQi(eval,X,V_g,V_e,Hi_all,Qi,logdet_H,logdet_Q);
+		    Calc_Hiy_all (Y, Hi_all, Hiy_all);
+		    Calc_xHi_all (X, Hi_all, xHi_all);
+		    
+		    // Calculate QixHiy and yPy.
+		    Calc_xHiy (Y, xHi_all, xHiy);
+		    gsl_blas_dgemv (CblasNoTrans, 1.0, Qi, xHiy, 0.0, QixHiy);
+		    
+		    gsl_blas_ddot (QixHiy, xHiy, &yPy);
+		    yPy=Calc_yHiy (Y, Hiy_all)-yPy;
+		    
+		    // Calculate log likelihood/restricted likelihood value.
+		    if (func_name=='R' || func_name=='r') {
+		      logl_new=logl_const-0.5*logdet_H-0.5*logdet_Q-0.5*yPy;
+		    } else {
+		      logl_new=logl_const-0.5*logdet_H-0.5*yPy;
+		    }
+		  }
+		  
+		  step_scale/=2.0;
+		  step_iter++;
+		  
+		} while ( (flag_pd==0 || logl_new<logl_old ||
+			   logl_new-logl_old>10 ) && step_iter<10 && t!=0);
 
-			//update Vg, Ve, and invert Hessian
-			if (t!=0) {UpdateVgVe (Hessian_inv, gradient, step_scale, V_g, V_e);}
-
-			//check if both Vg and Ve are positive definite
-			flag_pd=1;
-			gsl_matrix_memcpy (V_temp, V_e);
-			EigenDecomp(V_temp, U_temp, D_temp, 0);
-			for (size_t i=0; i<d_size; i++) {
-				if (gsl_vector_get (D_temp, i)<=0) {flag_pd=0;}
-			}
-			gsl_matrix_memcpy (V_temp, V_g);
-			EigenDecomp(V_temp, U_temp, D_temp, 0);
-			for (size_t i=0; i<d_size; i++) {
-				if (gsl_vector_get (D_temp, i)<=0) {flag_pd=0;}
-			}
-
-			//if flag_pd==1 continue to calculate quantities and logl
-			if (flag_pd==1) {
-				CalcHiQi (eval, X, V_g, V_e, Hi_all, Qi, logdet_H, logdet_Q);
-				Calc_Hiy_all (Y, Hi_all, Hiy_all);
-				Calc_xHi_all (X, Hi_all, xHi_all);
-
-				//calculate QixHiy and yPy
-				Calc_xHiy (Y, xHi_all, xHiy);
-				gsl_blas_dgemv (CblasNoTrans, 1.0, Qi, xHiy, 0.0, QixHiy);
-
-				gsl_blas_ddot (QixHiy, xHiy, &yPy);
-				yPy=Calc_yHiy (Y, Hiy_all)-yPy;
-
-				//calculate log likelihood/restricted likelihood value
-				if (func_name=='R' || func_name=='r') {
-					logl_new=logl_const-0.5*logdet_H-0.5*logdet_Q-0.5*yPy;
-				} else {
-					logl_new=logl_const-0.5*logdet_H-0.5*yPy;
-				}
-			}
-
-			step_scale/=2.0;
-			step_iter++;
-
-			//cout<<t<<"\t"<<step_iter<<"\t"<<logl_old<<"\t"<<logl_new<<"\t"<<flag_pd<<endl;
-		} while ( (flag_pd==0 || logl_new<logl_old || logl_new-logl_old>10 ) && step_iter<10 && t!=0);
-
-		//terminate if change is small
+		// Terminate if change is small.
 		if (t!=0) {
 			if (logl_new<logl_old || flag_pd==0) {
 				gsl_matrix_memcpy (V_g, Vg_save);
@@ -2594,39 +2754,12 @@ double MphNR (const char func_name, const size_t max_iter, const double max_prec
 
 		logl_old=logl_new;
 
-		CalcDev (func_name, eval, Qi, Hi_all, xHi_all, Hiy_all, QixHiy, gradient, Hessian_inv, crt_a, crt_b, crt_c);
-
-
-		//output estimates in each iteration
-		/*
-		cout<<func_name<<" iteration = "<<t<<" log-likelihood = "<<logl_old<<"\t"<<logl_new<<endl;
-
-		cout<<"Vg: "<<endl;
-		for (size_t i=0; i<d_size; i++) {
-			for (size_t j=0; j<d_size; j++) {
-				cout<<gsl_matrix_get(V_g, i, j)<<"\t";
-			}
-			cout<<endl;
-		}
-		cout<<"Ve: "<<endl;
-		for (size_t i=0; i<d_size; i++) {
-			for (size_t j=0; j<d_size; j++) {
-				cout<<gsl_matrix_get(V_e, i, j)<<"\t";
-			}
-			cout<<endl;
-		}
-		cout<<"Hessian: "<<endl;
-		for (size_t i=0; i<Hessian_inv->size1; i++) {
-			for (size_t j=0; j<Hessian_inv->size2; j++) {
-				cout<<gsl_matrix_get(Hessian_inv, i, j)<<"\t";
-			}
-			cout<<endl;
-		}
-		*/
+		CalcDev (func_name, eval, Qi, Hi_all, xHi_all, Hiy_all,
+			 QixHiy, gradient, Hessian_inv, crt_a, crt_b, crt_c);
 	}
 
-	//mutiply Hessian_inv with -1.0
-	//now Hessian_inv is the variance matrix
+	// Mutiply Hessian_inv with -1.0.
+	// Now Hessian_inv is the variance matrix.
 	gsl_matrix_scale (Hessian_inv, -1.0);
 
 	gsl_matrix_free(Vg_save);
@@ -2645,13 +2778,14 @@ double MphNR (const char func_name, const size_t max_iter, const double max_prec
 	return logl_new;
 }
 
-
-
-
-
-//initialize Vg, Ve and B
-void MphInitial(const size_t em_iter, const double em_prec, const size_t nr_iter, const double nr_prec, const gsl_vector *eval, const gsl_matrix *X, const gsl_matrix *Y, const double l_min, const double l_max, const size_t n_region, gsl_matrix *V_g, gsl_matrix *V_e, gsl_matrix *B)
-{
+// Initialize Vg, Ve and B.
+void MphInitial(const size_t em_iter, const double em_prec,
+		const size_t nr_iter, const double nr_prec,
+		const gsl_vector *eval, const gsl_matrix *X,
+		const gsl_matrix *Y, const double l_min, const double l_max,
+		const size_t n_region, gsl_matrix *V_g, gsl_matrix *V_e,
+		gsl_matrix *B) {
+  
 	gsl_matrix_set_zero (V_g);
 	gsl_matrix_set_zero (V_e);
 	gsl_matrix_set_zero (B);
@@ -2660,7 +2794,8 @@ void MphInitial(const size_t em_iter, const double em_prec, const size_t nr_iter
 	double a, b, c;
 	double lambda, logl, vg, ve;
 
-	//Initial the diagonal elements of Vg and Ve using univariate LMM and REML estimates
+	// Initialize the diagonal elements of Vg and Ve using univariate
+	// LMM and REML estimates.
 	gsl_matrix *Xt=gsl_matrix_alloc (n_size, c_size);
 	gsl_vector *beta_temp=gsl_vector_alloc(c_size);
 	gsl_vector *se_beta_temp=gsl_vector_alloc(c_size);
@@ -2668,154 +2803,104 @@ void MphInitial(const size_t em_iter, const double em_prec, const size_t nr_iter
 	gsl_matrix_transpose_memcpy (Xt, X);
 
 	for (size_t i=0; i<d_size; i++) {
-		gsl_vector_const_view Y_row=gsl_matrix_const_row (Y, i);
-		CalcLambda ('R', eval, Xt, &Y_row.vector, l_min, l_max, n_region, lambda, logl);
-		CalcLmmVgVeBeta (eval, Xt, &Y_row.vector, lambda, vg, ve, beta_temp, se_beta_temp);
-
-		gsl_matrix_set(V_g, i, i, vg);
-		gsl_matrix_set(V_e, i, i, ve);
+	  gsl_vector_const_view Y_row=gsl_matrix_const_row (Y, i);
+	  CalcLambda ('R', eval, Xt, &Y_row.vector, l_min, l_max,
+		      n_region, lambda, logl);
+	  CalcLmmVgVeBeta (eval, Xt, &Y_row.vector, lambda, vg, ve,
+			   beta_temp, se_beta_temp);
+	  
+	  gsl_matrix_set(V_g, i, i, vg);
+	  gsl_matrix_set(V_e, i, i, ve);
 	}
-
+	
 	gsl_matrix_free (Xt);
 	gsl_vector_free (beta_temp);
 	gsl_vector_free (se_beta_temp);
 
-	//if number of phenotypes is above four, then obtain the off diagonal elements with two trait models
+	// If number of phenotypes is above four, then obtain the off
+	// diagonal elements with two trait models.
 	if (d_size>4) {
-		//first obtain good initial values
-		//large matrices for EM
-		gsl_matrix *U_hat=gsl_matrix_alloc (2, n_size);
-		gsl_matrix *E_hat=gsl_matrix_alloc (2, n_size);
-		gsl_matrix *OmegaU=gsl_matrix_alloc (2, n_size);
-		gsl_matrix *OmegaE=gsl_matrix_alloc (2, n_size);
-		gsl_matrix *UltVehiY=gsl_matrix_alloc (2, n_size);
-		gsl_matrix *UltVehiBX=gsl_matrix_alloc (2, n_size);
-		gsl_matrix *UltVehiU=gsl_matrix_alloc (2, n_size);
-		gsl_matrix *UltVehiE=gsl_matrix_alloc (2, n_size);
+	  
+	  // First obtain good initial values.
+	  // Large matrices for EM.
+	  gsl_matrix *U_hat=gsl_matrix_alloc (2, n_size);
+	  gsl_matrix *E_hat=gsl_matrix_alloc (2, n_size);
+	  gsl_matrix *OmegaU=gsl_matrix_alloc (2, n_size);
+	  gsl_matrix *OmegaE=gsl_matrix_alloc (2, n_size);
+	  gsl_matrix *UltVehiY=gsl_matrix_alloc (2, n_size);
+	  gsl_matrix *UltVehiBX=gsl_matrix_alloc (2, n_size);
+	  gsl_matrix *UltVehiU=gsl_matrix_alloc (2, n_size);
+	  gsl_matrix *UltVehiE=gsl_matrix_alloc (2, n_size);
+	  
+	  // Large matrices for NR. Each dxd block is H_k^{-1}.
+	  gsl_matrix *Hi_all=gsl_matrix_alloc (2, 2*n_size);
 
-		//large matrices for NR
-		gsl_matrix *Hi_all=gsl_matrix_alloc (2, 2*n_size);		//each dxd block is H_k^{-1}
-		gsl_matrix *Hiy_all=gsl_matrix_alloc (2, n_size);				//each column is H_k^{-1}y_k
-		gsl_matrix *xHi_all=gsl_matrix_alloc (2*c_size, 2*n_size);		//each dcxdc block is x_k\otimes H_k^{-1}
-		gsl_matrix *Hessian=gsl_matrix_alloc (6, 6);
+	  // Each column is H_k^{-1}y_k.
+	  gsl_matrix *Hiy_all=gsl_matrix_alloc (2, n_size);
 
-		//2 by n matrix of Y
-		gsl_matrix *Y_sub=gsl_matrix_alloc (2, n_size);
-		gsl_matrix *Vg_sub=gsl_matrix_alloc (2, 2);
-		gsl_matrix *Ve_sub=gsl_matrix_alloc (2, 2);
-		gsl_matrix *B_sub=gsl_matrix_alloc (2, c_size);
-
-		for (size_t i=0; i<d_size; i++) {
-			gsl_vector_view Y_sub1=gsl_matrix_row (Y_sub, 0);
-			gsl_vector_const_view Y_1=gsl_matrix_const_row (Y, i);
-			gsl_vector_memcpy (&Y_sub1.vector, &Y_1.vector);
-
-			for (size_t j=i+1; j<d_size; j++) {
-				gsl_vector_view Y_sub2=gsl_matrix_row (Y_sub, 1);
-				gsl_vector_const_view Y_2=gsl_matrix_const_row (Y, j);
-				gsl_vector_memcpy (&Y_sub2.vector, &Y_2.vector);
-
-				gsl_matrix_set_zero (Vg_sub);
-				gsl_matrix_set_zero (Ve_sub);
-				gsl_matrix_set (Vg_sub, 0, 0, gsl_matrix_get (V_g, i, i));
-				gsl_matrix_set (Ve_sub, 0, 0, gsl_matrix_get (V_e, i, i));
-				gsl_matrix_set (Vg_sub, 1, 1, gsl_matrix_get (V_g, j, j));
-				gsl_matrix_set (Ve_sub, 1, 1, gsl_matrix_get (V_e, j, j));
-
-				logl=MphEM ('R', em_iter, em_prec, eval, X, Y_sub, U_hat, E_hat, OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE, Vg_sub, Ve_sub, B_sub);
-				logl=MphNR ('R', nr_iter, nr_prec, eval, X, Y_sub, Hi_all, xHi_all, Hiy_all, Vg_sub, Ve_sub, Hessian, a, b, c);
-
-				gsl_matrix_set(V_g, i, j, gsl_matrix_get (Vg_sub, 0, 1));
-				gsl_matrix_set(V_g, j, i, gsl_matrix_get (Vg_sub, 0, 1));
-
-				gsl_matrix_set(V_e, i, j, ve=gsl_matrix_get (Ve_sub, 0, 1));
-				gsl_matrix_set(V_e, j, i, ve=gsl_matrix_get (Ve_sub, 0, 1));
-			}
-		}
-
-		//free matrices
-		gsl_matrix_free(U_hat);
-		gsl_matrix_free(E_hat);
-		gsl_matrix_free(OmegaU);
-		gsl_matrix_free(OmegaE);
-		gsl_matrix_free(UltVehiY);
-		gsl_matrix_free(UltVehiBX);
-		gsl_matrix_free(UltVehiU);
-		gsl_matrix_free(UltVehiE);
-
-		gsl_matrix_free(Hi_all);
-		gsl_matrix_free(Hiy_all);
-		gsl_matrix_free(xHi_all);
-		gsl_matrix_free(Hessian);
-
-		gsl_matrix_free(Y_sub);
-		gsl_matrix_free(Vg_sub);
-		gsl_matrix_free(Ve_sub);
-		gsl_matrix_free(B_sub);
-
-		/*
-		//second, maximize a increasingly large matrix
-		for (size_t i=1; i<d_size; i++) {
-			//large matrices for EM
-			gsl_matrix *U_hat=gsl_matrix_alloc (i+1, n_size);
-			gsl_matrix *E_hat=gsl_matrix_alloc (i+1, n_size);
-			gsl_matrix *OmegaU=gsl_matrix_alloc (i+1, n_size);
-			gsl_matrix *OmegaE=gsl_matrix_alloc (i+1, n_size);
-			gsl_matrix *UltVehiY=gsl_matrix_alloc (i+1, n_size);
-			gsl_matrix *UltVehiBX=gsl_matrix_alloc (i+1, n_size);
-			gsl_matrix *UltVehiU=gsl_matrix_alloc (i+1, n_size);
-			gsl_matrix *UltVehiE=gsl_matrix_alloc (i+1, n_size);
-
-			//large matrices for NR
-			gsl_matrix *Hi_all=gsl_matrix_alloc (i+1, (i+1)*n_size);		//each dxd block is H_k^{-1}
-			gsl_matrix *Hiy_all=gsl_matrix_alloc (i+1, n_size);				//each column is H_k^{-1}y_k
-			gsl_matrix *xHi_all=gsl_matrix_alloc ((i+1)*c_size, (i+1)*n_size);		//each dcxdc block is x_k\otimes H_k^{-1}
-			gsl_matrix *Hessian=gsl_matrix_alloc ((i+1)*(i+2), (i+1)*(i+2));
-
-			//(i+1) by n matrix of Y
-			gsl_matrix *Y_sub=gsl_matrix_alloc (i+1, n_size);
-			gsl_matrix *Vg_sub=gsl_matrix_alloc (i+1, i+1);
-			gsl_matrix *Ve_sub=gsl_matrix_alloc (i+1, i+1);
-			gsl_matrix *B_sub=gsl_matrix_alloc (i+1, c_size);
-
-			gsl_matrix_const_view Y_sub_view=gsl_matrix_const_submatrix (Y, 0, 0, i+1, n_size);
-			gsl_matrix_view Vg_sub_view=gsl_matrix_submatrix (V_g, 0, 0, i+1, i+1);
-			gsl_matrix_view Ve_sub_view=gsl_matrix_submatrix (V_e, 0, 0, i+1, i+1);
-
-			gsl_matrix_memcpy (Y_sub, &Y_sub_view.matrix);
-			gsl_matrix_memcpy (Vg_sub, &Vg_sub_view.matrix);
-			gsl_matrix_memcpy (Ve_sub, &Ve_sub_view.matrix);
-
-			logl=MphEM ('R', em_iter, em_prec, eval, X, Y_sub, U_hat, E_hat, OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE, Vg_sub, Ve_sub, B_sub);
-			logl=MphNR ('R', nr_iter, nr_prec, eval, X, Y_sub, Hi_all, xHi_all, Hiy_all, Vg_sub, Ve_sub, Hessian, crt_a, crt_b, crt_c);
-
-			gsl_matrix_memcpy (&Vg_sub_view.matrix, Vg_sub);
-			gsl_matrix_memcpy (&Ve_sub_view.matrix, Ve_sub);
-
-			//free matrices
-			gsl_matrix_free(U_hat);
-			gsl_matrix_free(E_hat);
-			gsl_matrix_free(OmegaU);
-			gsl_matrix_free(OmegaE);
-			gsl_matrix_free(UltVehiY);
-			gsl_matrix_free(UltVehiBX);
-			gsl_matrix_free(UltVehiU);
-			gsl_matrix_free(UltVehiE);
-
-			gsl_matrix_free(Hi_all);
-			gsl_matrix_free(Hiy_all);
-			gsl_matrix_free(xHi_all);
-			gsl_matrix_free(Hessian);
-
-			gsl_matrix_free(Y_sub);
-			gsl_matrix_free(Vg_sub);
-			gsl_matrix_free(Ve_sub);
-			gsl_matrix_free(B_sub);
-		}
-		 */
+	  // Each dcxdc block is x_k\otimes H_k^{-1}.
+	  gsl_matrix *xHi_all=gsl_matrix_alloc (2*c_size, 2*n_size);
+	  gsl_matrix *Hessian=gsl_matrix_alloc (6, 6);
+	  
+	  // 2 by n matrix of Y.
+	  gsl_matrix *Y_sub=gsl_matrix_alloc (2, n_size);
+	  gsl_matrix *Vg_sub=gsl_matrix_alloc (2, 2);
+	  gsl_matrix *Ve_sub=gsl_matrix_alloc (2, 2);
+	  gsl_matrix *B_sub=gsl_matrix_alloc (2, c_size);
+	  
+	  for (size_t i=0; i<d_size; i++) {
+	    gsl_vector_view Y_sub1=gsl_matrix_row (Y_sub, 0);
+	    gsl_vector_const_view Y_1=gsl_matrix_const_row (Y, i);
+	    gsl_vector_memcpy (&Y_sub1.vector, &Y_1.vector);
+	    
+	    for (size_t j=i+1; j<d_size; j++) {
+	      gsl_vector_view Y_sub2=gsl_matrix_row (Y_sub, 1);
+	      gsl_vector_const_view Y_2=gsl_matrix_const_row (Y, j);
+	      gsl_vector_memcpy (&Y_sub2.vector, &Y_2.vector);
+	      
+	      gsl_matrix_set_zero (Vg_sub);
+	      gsl_matrix_set_zero (Ve_sub);
+	      gsl_matrix_set (Vg_sub, 0, 0, gsl_matrix_get (V_g, i, i));
+	      gsl_matrix_set (Ve_sub, 0, 0, gsl_matrix_get (V_e, i, i));
+	      gsl_matrix_set (Vg_sub, 1, 1, gsl_matrix_get (V_g, j, j));
+	      gsl_matrix_set (Ve_sub, 1, 1, gsl_matrix_get (V_e, j, j));
+	      
+	      logl=MphEM ('R', em_iter, em_prec, eval, X, Y_sub, U_hat,
+			  E_hat, OmegaU, OmegaE, UltVehiY, UltVehiBX,
+			  UltVehiU, UltVehiE, Vg_sub, Ve_sub, B_sub);
+	      logl=MphNR ('R', nr_iter, nr_prec, eval, X, Y_sub, Hi_all,
+			  xHi_all, Hiy_all, Vg_sub, Ve_sub, Hessian, a, b, c);
+	      
+	      gsl_matrix_set(V_g, i, j, gsl_matrix_get (Vg_sub, 0, 1));
+	      gsl_matrix_set(V_g, j, i, gsl_matrix_get (Vg_sub, 0, 1));
+	      
+	      gsl_matrix_set(V_e, i, j, ve=gsl_matrix_get (Ve_sub, 0, 1));
+	      gsl_matrix_set(V_e, j, i, ve=gsl_matrix_get (Ve_sub, 0, 1));
+	    }
+	  }
+	  
+	  // Free matrices.
+	  gsl_matrix_free(U_hat);
+	  gsl_matrix_free(E_hat);
+	  gsl_matrix_free(OmegaU);
+	  gsl_matrix_free(OmegaE);
+	  gsl_matrix_free(UltVehiY);
+	  gsl_matrix_free(UltVehiBX);
+	  gsl_matrix_free(UltVehiU);
+	  gsl_matrix_free(UltVehiE);
+	  
+	  gsl_matrix_free(Hi_all);
+	  gsl_matrix_free(Hiy_all);
+	  gsl_matrix_free(xHi_all);
+	  gsl_matrix_free(Hessian);
+	  
+	  gsl_matrix_free(Y_sub);
+	  gsl_matrix_free(Vg_sub);
+	  gsl_matrix_free(Ve_sub);
+	  gsl_matrix_free(B_sub);
 	}
 
-	//calculate B hat using GSL estimate
+	// Calculate B hat using GSL estimate.
 	gsl_matrix *UltVehiY=gsl_matrix_alloc (d_size, n_size);
 
 	gsl_vector *D_l=gsl_vector_alloc (d_size);
@@ -2829,43 +2914,42 @@ void MphInitial(const size_t em_iter, const double em_prec, const size_t nr_iter
 
 	double logdet_Ve, logdet_Q, dl, d, delta, dx, dy;
 
-	//eigen decomposition and calculate log|Ve|
+	// Eigen decomposition and calculate log|Ve|.
 	logdet_Ve=EigenProc (V_g, V_e, D_l, UltVeh, UltVehi);
 
-	//calculate Qi and log|Q|
+	// Calculate Qi and log|Q|.
 	logdet_Q=CalcQi (eval, D_l, X, Qi);
 
-	//calculate UltVehiY
-	gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, UltVehi, Y, 0.0, UltVehiY);
+	// Calculate UltVehiY.
+	gsl_blas_dgemm(CblasNoTrans,CblasNoTrans,1.0,UltVehi,Y,0.0,UltVehiY);
 
 	//calculate XHiy
 	for (size_t i=0; i<d_size; i++) {
-		dl=gsl_vector_get(D_l, i);
-
-		for (size_t j=0; j<c_size; j++) {
-			d=0.0;
-			for (size_t k=0; k<n_size; k++) {
-				delta=gsl_vector_get(eval, k);
-				dx=gsl_matrix_get(X, j, k);
-				dy=gsl_matrix_get(UltVehiY, i, k);
-
-				//if (delta==0) {continue;}
-				d+=dy*dx/(delta*dl+1.0);
-			}
-			gsl_vector_set(XHiy, j*d_size+i, d);
-		}
+	  dl=gsl_vector_get(D_l, i);
+	  
+	  for (size_t j=0; j<c_size; j++) {
+	    d=0.0;
+	    for (size_t k=0; k<n_size; k++) {
+	      delta=gsl_vector_get(eval, k);
+	      dx=gsl_matrix_get(X, j, k);
+	      dy=gsl_matrix_get(UltVehiY, i, k);
+	      d+=dy*dx/(delta*dl+1.0);
+	    }
+	    gsl_vector_set(XHiy, j*d_size+i, d);
+	  }
 	}
 
 	gsl_blas_dgemv(CblasNoTrans, 1.0, Qi, XHiy, 0.0, beta);
 
-	//multiply beta by UltVeh and save to B
+	// Multiply beta by UltVeh and save to B.
 	for (size_t i=0; i<c_size; i++) {
-		gsl_vector_view B_col=gsl_matrix_column (B, i);
-		gsl_vector_view beta_sub=gsl_vector_subvector (beta, i*d_size, d_size);
-		gsl_blas_dgemv(CblasTrans, 1.0, UltVeh, &beta_sub.vector, 0.0, &B_col.vector);
+	  gsl_vector_view B_col=gsl_matrix_column (B, i);
+	  gsl_vector_view beta_sub=gsl_vector_subvector(beta,i*d_size,d_size);
+	  gsl_blas_dgemv(CblasTrans, 1.0, UltVeh, &beta_sub.vector, 0.0,
+			 &B_col.vector);
 	}
 
-	//free memory
+	// Free memory.
 	gsl_matrix_free(UltVehiY);
 
 	gsl_vector_free(D_l);
@@ -2878,12 +2962,10 @@ void MphInitial(const size_t em_iter, const double em_prec, const size_t nr_iter
 	return;
 }
 
-
-
-//p value correction
-//mode=1 Wald; mode=2 LRT; mode=3 SCORE;
-double PCRT (const size_t mode, const size_t d_size, const double p_value, const double crt_a, const double crt_b, const double crt_c)
-{
+// p-value correction
+// mode=1 Wald; mode=2 LRT; mode=3 SCORE;
+double PCRT (const size_t mode, const size_t d_size, const double p_value,
+	     const double crt_a, const double crt_b, const double crt_c) {
 	double p_crt=0.0, chisq_crt=0.0, q=(double)d_size;
 	double chisq=gsl_cdf_chisq_Qinv(p_value, (double)d_size );
 
@@ -2894,53 +2976,45 @@ double PCRT (const size_t mode, const size_t d_size, const double p_value, const
 	} else if (mode==2) {
 		chisq_crt=chisq/(1.0+crt_a/(2.0*q) );
 	} else {
-		/*
-		double a=-1.0*crt_c/(2.0*q*(q+2.0));
-		double b=1.0+(crt_a-crt_b)/(2.0*q);
-		chisq_crt=(-1.0*b+sqrt(b*b+4.0*a*chisq))/(2.0*a);
-		*/
 		chisq_crt=chisq;
 	}
 
 	p_crt=gsl_cdf_chisq_Q (chisq_crt, (double)d_size );
 
-	//cout<<crt_a<<"\t"<<crt_b<<"\t"<<crt_c<<endl;
-	//cout<<setprecision(10)<<p_value<<"\t"<<p_crt<<endl;
-
 	return p_crt;
 }
 
-// WJA added
-#include <assert.h>
-void MVLMM::Analyzebgen (const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *UtW, const gsl_matrix *UtY)
-{
+// WJA added.
+void MVLMM::Analyzebgen (const gsl_matrix *U, const gsl_vector *eval,
+			 const gsl_matrix *UtW, const gsl_matrix *UtY) {
 	string file_bgen=file_oxford+".bgen";
 	ifstream infile (file_bgen.c_str(), ios::binary);
-	if (!infile) {cout<<"error reading bgen file:"<<file_bgen<<endl; return;}
+	if (!infile) {
+	  cout<<"error reading bgen file:"<<file_bgen<<endl;
+	  return;
+	}
 
 	clock_t time_start=clock();
 	time_UtX=0; time_opt=0;
 
 	string line;
 
-	//create a large matrix
+	// Create a large matrix.
 	size_t msize=10000;
 	gsl_matrix *Xlarge=gsl_matrix_alloc (U->size1, msize);
 	gsl_matrix *UtXlarge=gsl_matrix_alloc (U->size1, msize);
 	gsl_matrix_set_zero(Xlarge);
 
-	//	double lambda_mle=0, lambda_remle=0, beta=0, se=0, ;
 	double logl_H0=0.0, logl_H1=0.0, p_wald=0, p_lrt=0, p_score=0;
 	double crt_a, crt_b, crt_c;
 	int n_miss, c_phen;
 	double geno, x_mean;
 	size_t c=0;
-	//	double s=0.0;
 	size_t n_size=UtY->size1, d_size=UtY->size2, c_size=UtW->size2;
 
 	size_t dc_size=d_size*(c_size+1), v_size=d_size*(d_size+1)/2;
 
-	//large matrices for EM
+	// Large matrices for EM.
 	gsl_matrix *U_hat=gsl_matrix_alloc (d_size, n_size);
 	gsl_matrix *E_hat=gsl_matrix_alloc (d_size, n_size);
 	gsl_matrix *OmegaU=gsl_matrix_alloc (d_size, n_size);
@@ -2950,12 +3024,15 @@ void MVLMM::Analyzebgen (const gsl_matrix *U, const gsl_vector *eval, const gsl_
 	gsl_matrix *UltVehiU=gsl_matrix_alloc (d_size, n_size);
 	gsl_matrix *UltVehiE=gsl_matrix_alloc (d_size, n_size);
 
-	//large matrices for NR
-	gsl_matrix *Hi_all=gsl_matrix_alloc (d_size, d_size*n_size);		//each dxd block is H_k^{-1}
-	gsl_matrix *Hiy_all=gsl_matrix_alloc (d_size, n_size);				//each column is H_k^{-1}y_k
-	gsl_matrix *xHi_all=gsl_matrix_alloc (dc_size, d_size*n_size);		//each dcxdc block is x_k\otimes H_k^{-1}
-	gsl_matrix *Hessian=gsl_matrix_alloc (v_size*2, v_size*2);
+	// Large matrices for NR. Each dxd block is H_k^{-1}.
+	gsl_matrix *Hi_all=gsl_matrix_alloc (d_size, d_size*n_size);
 
+	// Each column is H_k^{-1}y_k.
+	gsl_matrix *Hiy_all=gsl_matrix_alloc (d_size, n_size);
+
+	// Each dcxdc block is x_k\otimes H_k^{-1}.
+	gsl_matrix *xHi_all=gsl_matrix_alloc (dc_size, d_size*n_size);
+	gsl_matrix *Hessian=gsl_matrix_alloc (v_size*2, v_size*2);
 	gsl_vector *x=gsl_vector_alloc (n_size);
 	gsl_vector *x_miss=gsl_vector_alloc (n_size);
 
@@ -2967,7 +3044,7 @@ void MVLMM::Analyzebgen (const gsl_matrix *U, const gsl_vector *eval, const gsl_
 	gsl_vector *beta=gsl_vector_alloc (d_size);
 	gsl_matrix *Vbeta=gsl_matrix_alloc (d_size, d_size);
 
-	//null estimates for initial values
+	// Null estimates for initial values.
 	gsl_matrix *V_g_null=gsl_matrix_alloc (d_size, d_size);
 	gsl_matrix *V_e_null=gsl_matrix_alloc (d_size, d_size);
 	gsl_matrix *B_null=gsl_matrix_alloc (d_size, c_size+1);
@@ -2975,7 +3052,8 @@ void MVLMM::Analyzebgen (const gsl_matrix *U, const gsl_vector *eval, const gsl_
 
 	gsl_matrix_view X_sub=gsl_matrix_submatrix (X, 0, 0, c_size, n_size);
 	gsl_matrix_view B_sub=gsl_matrix_submatrix (B, 0, 0, d_size, c_size);
-	gsl_matrix_view xHi_all_sub=gsl_matrix_submatrix (xHi_all, 0, 0, d_size*c_size, d_size*n_size);
+	gsl_matrix_view xHi_all_sub =
+	  gsl_matrix_submatrix (xHi_all, 0, 0, d_size*c_size, d_size*n_size);
 
 	gsl_matrix_transpose_memcpy (Y, UtY);
 
@@ -2986,30 +3064,37 @@ void MVLMM::Analyzebgen (const gsl_matrix *U, const gsl_vector *eval, const gsl_
 	gsl_vector_view B_col=gsl_matrix_column(B, c_size);
 	gsl_vector_set_zero(&B_col.vector);
 
-	MphInitial(em_iter, em_prec, nr_iter, nr_prec, eval, &X_sub.matrix, Y, l_min, l_max, n_region, V_g, V_e, &B_sub.matrix);
-	logl_H0=MphEM ('R', em_iter, em_prec, eval, &X_sub.matrix, Y, U_hat, E_hat, OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE, V_g, V_e, &B_sub.matrix);
-	logl_H0=MphNR ('R', nr_iter, nr_prec, eval, &X_sub.matrix, Y, Hi_all, &xHi_all_sub.matrix, Hiy_all, V_g, V_e, Hessian, crt_a, crt_b, crt_c);
-	MphCalcBeta (eval, &X_sub.matrix, Y, V_g, V_e, UltVehiY, &B_sub.matrix, se_B_null);
+	MphInitial(em_iter, em_prec, nr_iter, nr_prec, eval, &X_sub.matrix,
+		   Y, l_min, l_max, n_region, V_g, V_e, &B_sub.matrix);
+	logl_H0=MphEM ('R', em_iter, em_prec, eval, &X_sub.matrix, Y, U_hat,
+		       E_hat, OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU,
+		       UltVehiE, V_g, V_e, &B_sub.matrix);
+	logl_H0=MphNR ('R', nr_iter, nr_prec, eval, &X_sub.matrix, Y,
+		       Hi_all, &xHi_all_sub.matrix, Hiy_all, V_g, V_e,
+		       Hessian, crt_a, crt_b, crt_c);
+	MphCalcBeta (eval, &X_sub.matrix, Y, V_g, V_e, UltVehiY,
+		     &B_sub.matrix, se_B_null);
 
 	c=0;
 	Vg_remle_null.clear();
 	Ve_remle_null.clear();
 	for (size_t i=0; i<d_size; i++) {
-		for (size_t j=i; j<d_size; j++) {
-			Vg_remle_null.push_back(gsl_matrix_get (V_g, i, j) );
-			Ve_remle_null.push_back(gsl_matrix_get (V_e, i, j) );
-			VVg_remle_null.push_back(gsl_matrix_get (Hessian, c, c) );
-			VVe_remle_null.push_back(gsl_matrix_get (Hessian, c+v_size, c+v_size) );
-			c++;
-		}
+	  for (size_t j=i; j<d_size; j++) {
+	    Vg_remle_null.push_back(gsl_matrix_get (V_g, i, j) );
+	    Ve_remle_null.push_back(gsl_matrix_get (V_e, i, j) );
+	    VVg_remle_null.push_back(gsl_matrix_get (Hessian, c, c) );
+	    VVe_remle_null.push_back(gsl_matrix_get (Hessian, c+v_size,
+						     c+v_size) );
+	    c++;
+	  }
 	}
 	beta_remle_null.clear();
 	se_beta_remle_null.clear();
 	for (size_t i=0; i<se_B_null->size1; i++) {
-		for (size_t j=0; j<se_B_null->size2; j++) {
-			beta_remle_null.push_back(gsl_matrix_get(B, i, j) );
-			se_beta_remle_null.push_back(gsl_matrix_get(se_B_null, i, j) );
-		}
+	  for (size_t j=0; j<se_B_null->size2; j++) {
+	    beta_remle_null.push_back(gsl_matrix_get(B, i, j) );
+	    se_beta_remle_null.push_back(gsl_matrix_get(se_B_null, i, j) );
+	  }
 	}
 	logl_remle_H0=logl_H0;
 
@@ -3040,91 +3125,96 @@ void MVLMM::Analyzebgen (const gsl_matrix *U, const gsl_vector *eval, const gsl_
 	}
 	cout<<"se(Ve): "<<endl;
 	for (size_t i=0; i<d_size; i++) {
-		for (size_t j=0; j<=i; j++) {
-			c=GetIndex(i, j, d_size);
-			cout<<sqrt(gsl_matrix_get(Hessian, c+v_size, c+v_size))<<"\t";
-		}
-		cout<<endl;
+	  for (size_t j=0; j<=i; j++) {
+	    c=GetIndex(i, j, d_size);
+	    cout<<sqrt(gsl_matrix_get(Hessian, c+v_size, c+v_size))<<"\t";
+	  }
+	  cout<<endl;
 	}
 	cout<<"REMLE likelihood = "<<logl_H0<<endl;
 
 
-	logl_H0=MphEM ('L', em_iter, em_prec, eval, &X_sub.matrix, Y, U_hat, E_hat, OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE, V_g, V_e, &B_sub.matrix);
-	logl_H0=MphNR ('L', nr_iter, nr_prec, eval, &X_sub.matrix, Y, Hi_all, &xHi_all_sub.matrix, Hiy_all, V_g, V_e, Hessian, crt_a, crt_b, crt_c);
-	MphCalcBeta (eval, &X_sub.matrix, Y, V_g, V_e, UltVehiY, &B_sub.matrix, se_B_null);
+	logl_H0=MphEM ('L', em_iter, em_prec, eval, &X_sub.matrix, Y, U_hat,
+		       E_hat, OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU,
+		       UltVehiE, V_g, V_e, &B_sub.matrix);
+	logl_H0=MphNR ('L', nr_iter, nr_prec, eval, &X_sub.matrix, Y,
+		       Hi_all, &xHi_all_sub.matrix, Hiy_all, V_g, V_e,
+		       Hessian, crt_a, crt_b, crt_c);
+	MphCalcBeta (eval, &X_sub.matrix, Y, V_g, V_e, UltVehiY,
+		     &B_sub.matrix, se_B_null);
 
 	c=0;
 	Vg_mle_null.clear();
 	Ve_mle_null.clear();
 	for (size_t i=0; i<d_size; i++) {
-		for (size_t j=i; j<d_size; j++) {
-			Vg_mle_null.push_back(gsl_matrix_get (V_g, i, j) );
-			Ve_mle_null.push_back(gsl_matrix_get (V_e, i, j) );
-			VVg_mle_null.push_back(gsl_matrix_get (Hessian, c, c) );
-			VVe_mle_null.push_back(gsl_matrix_get (Hessian, c+v_size, c+v_size) );
-			c++;
-		}
+	  for (size_t j=i; j<d_size; j++) {
+	    Vg_mle_null.push_back(gsl_matrix_get (V_g, i, j) );
+	    Ve_mle_null.push_back(gsl_matrix_get (V_e, i, j) );
+	    VVg_mle_null.push_back(gsl_matrix_get (Hessian, c, c) );
+	    VVe_mle_null.push_back(gsl_matrix_get(Hessian,c+v_size,c+v_size));
+	    c++;
+	  }
 	}
 	beta_mle_null.clear();
 	se_beta_mle_null.clear();
 	for (size_t i=0; i<se_B_null->size1; i++) {
-		for (size_t j=0; j<se_B_null->size2; j++) {
-			beta_mle_null.push_back(gsl_matrix_get(B, i, j) );
-			se_beta_mle_null.push_back(gsl_matrix_get(se_B_null, i, j) );
-		}
+	  for (size_t j=0; j<se_B_null->size2; j++) {
+	    beta_mle_null.push_back(gsl_matrix_get(B, i, j) );
+	    se_beta_mle_null.push_back(gsl_matrix_get(se_B_null, i, j) );
+	  }
 	}
 	logl_mle_H0=logl_H0;
 
 	cout<<"MLE estimate for Vg in the null model: "<<endl;
 	for (size_t i=0; i<d_size; i++) {
-		for (size_t j=0; j<=i; j++) {
-			cout<<gsl_matrix_get(V_g, i, j)<<"\t";
-		}
-		cout<<endl;
+	  for (size_t j=0; j<=i; j++) {
+	    cout<<gsl_matrix_get(V_g, i, j)<<"\t";
+	  }
+	  cout<<endl;
 	}
 	cout<<"se(Vg): "<<endl;
 	for (size_t i=0; i<d_size; i++) {
-		for (size_t j=0; j<=i; j++) {
-			c=GetIndex(i, j, d_size);
-			cout<<sqrt(gsl_matrix_get(Hessian, c, c))<<"\t";
-		}
-		cout<<endl;
+	  for (size_t j=0; j<=i; j++) {
+	    c=GetIndex(i, j, d_size);
+	    cout<<sqrt(gsl_matrix_get(Hessian, c, c))<<"\t";
+	  }
+	  cout<<endl;
 	}
 	cout<<"MLE estimate for Ve in the null model: "<<endl;
 	for (size_t i=0; i<d_size; i++) {
-		for (size_t j=0; j<=i; j++) {
-			cout<<gsl_matrix_get(V_e, i, j)<<"\t";
-		}
-		cout<<endl;
+	  for (size_t j=0; j<=i; j++) {
+	    cout<<gsl_matrix_get(V_e, i, j)<<"\t";
+	  }
+	  cout<<endl;
 	}
 	cout<<"se(Ve): "<<endl;
 	for (size_t i=0; i<d_size; i++) {
-		for (size_t j=0; j<=i; j++) {
-			c=GetIndex(i, j, d_size);
-			cout<<sqrt(gsl_matrix_get(Hessian, c+v_size, c+v_size))<<"\t";
-		}
-		cout<<endl;
+	  for (size_t j=0; j<=i; j++) {
+	    c=GetIndex(i, j, d_size);
+	    cout<<sqrt(gsl_matrix_get(Hessian, c+v_size, c+v_size))<<"\t";
+	  }
+	  cout<<endl;
 	}
 	cout<<"MLE likelihood = "<<logl_H0<<endl;
 
 
 	vector<double> v_beta, v_Vg, v_Ve, v_Vbeta;
 	for (size_t i=0; i<d_size; i++) {
-		v_beta.push_back(0.0);
+	  v_beta.push_back(0.0);
 	}
 	for (size_t i=0; i<d_size; i++) {
-		for (size_t j=i; j<d_size; j++) {
-			v_Vg.push_back(0.0);
-			v_Ve.push_back(0.0);
-			v_Vbeta.push_back(0.0);
-		}
+	  for (size_t j=i; j<d_size; j++) {
+	    v_Vg.push_back(0.0);
+	    v_Ve.push_back(0.0);
+	    v_Vbeta.push_back(0.0);
+	  }
 	}
 
 	gsl_matrix_memcpy (V_g_null, V_g);
 	gsl_matrix_memcpy (V_e_null, V_e);
 	gsl_matrix_memcpy (B_null, B);
 
-	// read in header
+	// Read in header.
 	uint32_t bgen_snp_block_offset;
 	uint32_t bgen_header_length;
 	uint32_t bgen_nsamples;
@@ -3142,11 +3232,11 @@ void MVLMM::Analyzebgen (const gsl_matrix *U, const gsl_vector *eval, const gsl_
 	infile.read(reinterpret_cast<char*>(&bgen_flags),4);
 	bgen_snp_block_offset-=4;
 	bool CompressedSNPBlocks=bgen_flags&0x1;
-//	bool LongIds=bgen_flags&0x4;
 
 	infile.ignore(bgen_snp_block_offset);
 
-	double bgen_geno_prob_AA, bgen_geno_prob_AB, bgen_geno_prob_BB, bgen_geno_prob_non_miss;
+	double bgen_geno_prob_AA, bgen_geno_prob_AB, bgen_geno_prob_BB;
+	double bgen_geno_prob_non_miss;
 
 	uint32_t bgen_N;
 	uint16_t bgen_LS;
@@ -3162,233 +3252,240 @@ void MVLMM::Analyzebgen (const gsl_matrix *U, const gsl_vector *eval, const gsl_
 	string id;
 	string rs;
 	string chr;
-	std::cout<<"Warning: WJA hard coded SNP missingness threshold of 10%"<<std::endl;
+	std::cout<<"Warning: WJA hard coded SNP missingness threshold "<<
+	  "of 10%"<<std::endl;
 
-
-
-	//start reading genotypes and analyze
+	// Start reading genotypes and analyze.
 	size_t csnp=0, t_last=0;
 	for (size_t t=0; t<indicator_snp.size(); ++t) {
 	  if (indicator_snp[t]==0) {continue;}
 	  t_last++;
 	}
 	for (size_t t=0; t<indicator_snp.size(); ++t) {
+	  if (t%d_pace==0 || t==(ns_total-1)) {
+	    ProgressBar ("Reading SNPs  ", t, ns_total-1);
+	  }
+	  if (indicator_snp[t]==0) {continue;}
+	  
+	  // Read SNP header.
+	  id.clear();
+	  rs.clear();
+	  chr.clear();
+	  bgen_A_allele.clear();
+	  bgen_B_allele.clear();
+	  
+	  infile.read(reinterpret_cast<char*>(&bgen_N),4);
+	  infile.read(reinterpret_cast<char*>(&bgen_LS),2);
+	  
+	  id.resize(bgen_LS);
+	  infile.read(&id[0], bgen_LS);
+	  
+	  infile.read(reinterpret_cast<char*>(&bgen_LR),2);
+	  rs.resize(bgen_LR);
+	  infile.read(&rs[0], bgen_LR);
+	  
+	  infile.read(reinterpret_cast<char*>(&bgen_LC),2);
+	  chr.resize(bgen_LC);
+	  infile.read(&chr[0], bgen_LC);
+	  
+	  infile.read(reinterpret_cast<char*>(&bgen_SNP_pos),4);
+	  
+	  infile.read(reinterpret_cast<char*>(&bgen_LA),4);
+	  bgen_A_allele.resize(bgen_LA);
+	  infile.read(&bgen_A_allele[0], bgen_LA);
+		
+	  infile.read(reinterpret_cast<char*>(&bgen_LB),4);
+	  bgen_B_allele.resize(bgen_LB);
+	  infile.read(&bgen_B_allele[0], bgen_LB);
+	  
+	  uint16_t unzipped_data[3*bgen_N];
+	  
+	  if (indicator_snp[t]==0) {
+	    if(CompressedSNPBlocks)
+	      infile.read(reinterpret_cast<char*>(&bgen_P),4);
+	    else
+	      bgen_P=6*bgen_N;
+	    
+	    infile.ignore(static_cast<size_t>(bgen_P));
+	    
+	    continue;
+	  }
 
+	  if(CompressedSNPBlocks) {
 
-//		if (t>1) {break;}
-		if (t%d_pace==0 || t==(ns_total-1)) {ProgressBar ("Reading SNPs  ", t, ns_total-1);}
-		if (indicator_snp[t]==0) {continue;}
-		// read SNP header
-		id.clear();
-		rs.clear();
-		chr.clear();
-		bgen_A_allele.clear();
-		bgen_B_allele.clear();
+	    infile.read(reinterpret_cast<char*>(&bgen_P),4);
+	    uint8_t zipped_data[bgen_P];
+	    
+	    unzipped_data_size=6*bgen_N;
+	    
+	    infile.read(reinterpret_cast<char*>(zipped_data),bgen_P);
+	    
+	    int result=uncompress(reinterpret_cast<Bytef*>(unzipped_data),
+	      reinterpret_cast<uLongf*>(&unzipped_data_size),
+	      reinterpret_cast<Bytef*>(zipped_data),
+              static_cast<uLong> (bgen_P));
+	    assert(result == Z_OK);
+	    
+	  } else {
+	    
+	    bgen_P=6*bgen_N;
+	    infile.read(reinterpret_cast<char*>(unzipped_data),bgen_P);
+	  }
+	  
+	  x_mean=0.0; c_phen=0; n_miss=0;
+	  gsl_vector_set_zero(x_miss);
+	  for (size_t i=0; i<bgen_N; ++i) {
+	    if (indicator_idv[i]==0) {continue;}
+	    
+	    bgen_geno_prob_AA =
+	      static_cast<double>(unzipped_data[i*3])/32768.0;
+	    bgen_geno_prob_AB =
+	      static_cast<double>(unzipped_data[i*3+1])/32768.0;
+	    bgen_geno_prob_BB =
+	      static_cast<double>(unzipped_data[i*3+2])/32768.0;
+	    
+	    // WJA.
+	    bgen_geno_prob_non_miss=bgen_geno_prob_AA +
+	      bgen_geno_prob_AB+bgen_geno_prob_BB;
+	    if (bgen_geno_prob_non_miss<0.9) {
+	      gsl_vector_set(x_miss, c_phen, 0.0);
+	      n_miss++;
+	    }
+	    else {
+	      
+	      bgen_geno_prob_AA/=bgen_geno_prob_non_miss;
+	      bgen_geno_prob_AB/=bgen_geno_prob_non_miss;
+	      bgen_geno_prob_BB/=bgen_geno_prob_non_miss;
+	      
+	      geno=2.0*bgen_geno_prob_BB+bgen_geno_prob_AB;
+	      
+	      gsl_vector_set(x, c_phen, geno);
+	      gsl_vector_set(x_miss, c_phen, 1.0);
+	      x_mean+=geno;
+	    }
+	    c_phen++;
+	  }
+	  
+	  x_mean/=static_cast<double>(ni_test-n_miss);
+	  
+	  for (size_t i=0; i<ni_test; ++i) {
+	    if (gsl_vector_get (x_miss, i)==0) {gsl_vector_set(x, i, x_mean);}
+	  }
 
-		infile.read(reinterpret_cast<char*>(&bgen_N),4);
-		infile.read(reinterpret_cast<char*>(&bgen_LS),2);
+	  gsl_vector_view Xlarge_col=gsl_matrix_column (Xlarge, csnp%msize);
+	  gsl_vector_memcpy (&Xlarge_col.vector, x);
+	  csnp++;
 
-		id.resize(bgen_LS);
-		infile.read(&id[0], bgen_LS);
-
-		infile.read(reinterpret_cast<char*>(&bgen_LR),2);
-		rs.resize(bgen_LR);
-		infile.read(&rs[0], bgen_LR);
-
-		infile.read(reinterpret_cast<char*>(&bgen_LC),2);
-		chr.resize(bgen_LC);
-		infile.read(&chr[0], bgen_LC);
-
-		infile.read(reinterpret_cast<char*>(&bgen_SNP_pos),4);
-
-		infile.read(reinterpret_cast<char*>(&bgen_LA),4);
-		bgen_A_allele.resize(bgen_LA);
-		infile.read(&bgen_A_allele[0], bgen_LA);
-
-
-		infile.read(reinterpret_cast<char*>(&bgen_LB),4);
-		bgen_B_allele.resize(bgen_LB);
-		infile.read(&bgen_B_allele[0], bgen_LB);
-
-
-
-
-		uint16_t unzipped_data[3*bgen_N];
-
-		if (indicator_snp[t]==0) {
-			if(CompressedSNPBlocks)
-				infile.read(reinterpret_cast<char*>(&bgen_P),4);
-			else
-				bgen_P=6*bgen_N;
-
-			infile.ignore(static_cast<size_t>(bgen_P));
-
-			continue;
+	  if (csnp%msize==0 || csnp==t_last ) {
+	    size_t l=0;
+	    if (csnp%msize==0) {l=msize;} else {l=csnp%msize;}
+	    
+	    gsl_matrix_view Xlarge_sub =
+	      gsl_matrix_submatrix(Xlarge, 0, 0, Xlarge->size1, l);
+	    gsl_matrix_view UtXlarge_sub =
+	      gsl_matrix_submatrix(UtXlarge, 0, 0, UtXlarge->size1, l);
+	    
+	    time_start=clock();
+	    eigenlib_dgemm ("T", "N", 1.0, U, &Xlarge_sub.matrix, 0.0,
+			    &UtXlarge_sub.matrix);
+	    time_UtX+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
+	    
+	    gsl_matrix_set_zero (Xlarge);
+	    
+	    for (size_t i=0; i<l; i++) {
+	      gsl_vector_view UtXlarge_col=gsl_matrix_column (UtXlarge, i);
+	      gsl_vector_memcpy (&X_row.vector, &UtXlarge_col.vector);
+	      
+	      // Initial values.
+	      gsl_matrix_memcpy (V_g, V_g_null);
+	      gsl_matrix_memcpy (V_e, V_e_null);
+	      gsl_matrix_memcpy (B, B_null);
+	      
+	      time_start=clock();
+		    
+	      // 3 is before 1
+	      if (a_mode==3 || a_mode==4) {
+		p_score=MphCalcP (eval, &X_row.vector, &X_sub.matrix, Y,
+				  V_g_null, V_e_null, UltVehiY, beta, Vbeta);
+		if (p_score<p_nr && crt==1) {
+		  logl_H1=MphNR ('R', 1, nr_prec*10, eval, X, Y, Hi_all,
+				 xHi_all, Hiy_all, V_g, V_e, Hessian, crt_a,
+				 crt_b, crt_c);
+		  p_score=PCRT (3, d_size, p_score, crt_a, crt_b, crt_c);
 		}
-
-
-		if(CompressedSNPBlocks)
-		{
-
-
-			infile.read(reinterpret_cast<char*>(&bgen_P),4);
-			uint8_t zipped_data[bgen_P];
-
-			unzipped_data_size=6*bgen_N;
-
-			infile.read(reinterpret_cast<char*>(zipped_data),bgen_P);
-
-			int result=uncompress(reinterpret_cast<Bytef*>(unzipped_data), reinterpret_cast<uLongf*>(&unzipped_data_size), reinterpret_cast<Bytef*>(zipped_data), static_cast<uLong> (bgen_P));
-			assert(result == Z_OK);
-
-		}
-		else
-		{
-
-			bgen_P=6*bgen_N;
-			infile.read(reinterpret_cast<char*>(unzipped_data),bgen_P);
-		}
-
-		x_mean=0.0; c_phen=0; n_miss=0;
-		gsl_vector_set_zero(x_miss);
-		for (size_t i=0; i<bgen_N; ++i) {
-			if (indicator_idv[i]==0) {continue;}
-
-
-				bgen_geno_prob_AA=static_cast<double>(unzipped_data[i*3])/32768.0;
-				bgen_geno_prob_AB=static_cast<double>(unzipped_data[i*3+1])/32768.0;
-				bgen_geno_prob_BB=static_cast<double>(unzipped_data[i*3+2])/32768.0;
-				// WJA
-				bgen_geno_prob_non_miss=bgen_geno_prob_AA+bgen_geno_prob_AB+bgen_geno_prob_BB;
-				if (bgen_geno_prob_non_miss<0.9) {gsl_vector_set(x_miss, c_phen, 0.0); n_miss++;}
-				else {
-
-					bgen_geno_prob_AA/=bgen_geno_prob_non_miss;
-					bgen_geno_prob_AB/=bgen_geno_prob_non_miss;
-					bgen_geno_prob_BB/=bgen_geno_prob_non_miss;
-
-					geno=2.0*bgen_geno_prob_BB+bgen_geno_prob_AB;
-
-					gsl_vector_set(x, c_phen, geno);
-					gsl_vector_set(x_miss, c_phen, 1.0);
-					x_mean+=geno;
-			}
-			c_phen++;
-		}
-
-		x_mean/=static_cast<double>(ni_test-n_miss);
-
-		for (size_t i=0; i<ni_test; ++i) {
-			if (gsl_vector_get (x_miss, i)==0) {gsl_vector_set(x, i, x_mean);}
-			//geno=gsl_vector_get(x, i);
-			//if (x_mean>1) {
-			//gsl_vector_set(x, i, 2-geno);
-			//}
-		}
-
-		/*
-		//calculate statistics
-		time_start=clock();
-		gsl_blas_dgemv (CblasTrans, 1.0, U, x, 0.0, &X_row.vector);
-		time_UtX+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
-		*/
-
-		gsl_vector_view Xlarge_col=gsl_matrix_column (Xlarge, csnp%msize);
-		gsl_vector_memcpy (&Xlarge_col.vector, x);
-		csnp++;
-
-		if (csnp%msize==0 || csnp==t_last ) {
-		  size_t l=0;
-		  if (csnp%msize==0) {l=msize;} else {l=csnp%msize;}
-
-		  gsl_matrix_view Xlarge_sub=gsl_matrix_submatrix(Xlarge, 0, 0, Xlarge->size1, l);
-		  gsl_matrix_view UtXlarge_sub=gsl_matrix_submatrix(UtXlarge, 0, 0, UtXlarge->size1, l);
-
-		  time_start=clock();
-		  eigenlib_dgemm ("T", "N", 1.0, U, &Xlarge_sub.matrix, 0.0, &UtXlarge_sub.matrix);
-		  time_UtX+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
-
-		  gsl_matrix_set_zero (Xlarge);
-
-		  for (size_t i=0; i<l; i++) {
-		    gsl_vector_view UtXlarge_col=gsl_matrix_column (UtXlarge, i);
-		    gsl_vector_memcpy (&X_row.vector, &UtXlarge_col.vector);
-
-		    //initial values
-		    gsl_matrix_memcpy (V_g, V_g_null);
-		    gsl_matrix_memcpy (V_e, V_e_null);
-		    gsl_matrix_memcpy (B, B_null);
-
-		    time_start=clock();
-
-		    //3 is before 1
-		    if (a_mode==3 || a_mode==4) {
-		      p_score=MphCalcP (eval, &X_row.vector, &X_sub.matrix, Y, V_g_null, V_e_null, UltVehiY, beta, Vbeta);
-		      if (p_score<p_nr && crt==1) {
-			logl_H1=MphNR ('R', 1, nr_prec*10, eval, X, Y, Hi_all, xHi_all, Hiy_all, V_g, V_e, Hessian, crt_a, crt_b, crt_c);
-			p_score=PCRT (3, d_size, p_score, crt_a, crt_b, crt_c);
-		      }
-		    }
-
-		    if (a_mode==2 || a_mode==4) {
-		      logl_H1=MphEM ('L', em_iter/10, em_prec*10, eval, X, Y, U_hat, E_hat, OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE, V_g, V_e, B);
-		      //calculate beta and Vbeta
-		      p_lrt=MphCalcP (eval, &X_row.vector, &X_sub.matrix, Y, V_g, V_e, UltVehiY, beta, Vbeta);
-		      p_lrt=gsl_cdf_chisq_Q (2.0*(logl_H1-logl_H0), (double)d_size );
-
-		      if (p_lrt<p_nr) {
-			logl_H1=MphNR ('L', nr_iter/10, nr_prec*10, eval, X, Y, Hi_all, xHi_all, Hiy_all, V_g, V_e, Hessian, crt_a, crt_b, crt_c);
-			//calculate beta and Vbeta
-			p_lrt=MphCalcP (eval, &X_row.vector, &X_sub.matrix, Y, V_g, V_e, UltVehiY, beta, Vbeta);
-			p_lrt=gsl_cdf_chisq_Q (2.0*(logl_H1-logl_H0), (double)d_size );
-
-			if (crt==1) {
-			  p_lrt=PCRT (2, d_size, p_lrt, crt_a, crt_b, crt_c);
-			}
-		      }
-		    }
-
-		    if (a_mode==1 || a_mode==4) {
-		      logl_H1=MphEM ('R', em_iter/10, em_prec*10, eval, X, Y, U_hat, E_hat, OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE, V_g, V_e, B);
-		      p_wald=MphCalcP (eval, &X_row.vector, &X_sub.matrix, Y, V_g, V_e, UltVehiY, beta, Vbeta);
-
-		      if (p_wald<p_nr) {
-			logl_H1=MphNR ('R', nr_iter/10, nr_prec*10, eval, X, Y, Hi_all, xHi_all, Hiy_all, V_g, V_e, Hessian, crt_a, crt_b, crt_c);
-			p_wald=MphCalcP (eval, &X_row.vector, &X_sub.matrix, Y, V_g, V_e, UltVehiY, beta, Vbeta);
-
-			if (crt==1) {
-			  p_wald=PCRT (1, d_size, p_wald, crt_a, crt_b, crt_c);
-			}
-		      }
-		    }
-
-		    //if (x_mean>1) {gsl_vector_scale(beta, -1.0);}
-
-		    time_opt+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
-
-		    //store summary data
-		    //SUMSTAT SNPs={snpInfo[t].get_chr(), snpInfo[t].get_rs(), snpInfo[t].get_pos(), n_miss, beta, se, lambda_remle, lambda_mle, p_wald, p_lrt, p_score};
-		    for (size_t i=0; i<d_size; i++) {
-		      v_beta[i]=gsl_vector_get (beta, i);
-		    }
-
-		    c=0;
-		    for (size_t i=0; i<d_size; i++) {
-		      for (size_t j=i; j<d_size; j++) {
-			v_Vg[c]=gsl_matrix_get (V_g, i, j);
-			v_Ve[c]=gsl_matrix_get (V_e, i, j);
-			v_Vbeta[c]=gsl_matrix_get (Vbeta, i, j);
-			c++;
-		      }
-		    }
-
-		    MPHSUMSTAT SNPs={v_beta, p_wald, p_lrt, p_score, v_Vg, v_Ve, v_Vbeta};
-		    sumStat.push_back(SNPs);
+	      }
+	      
+	      if (a_mode==2 || a_mode==4) {
+		logl_H1=MphEM ('L', em_iter/10, em_prec*10, eval, X, Y,
+			       U_hat, E_hat, OmegaU, OmegaE, UltVehiY,
+			       UltVehiBX, UltVehiU, UltVehiE, V_g, V_e, B);
+		
+		// Calculate beta and Vbeta.
+		p_lrt=MphCalcP (eval, &X_row.vector, &X_sub.matrix, Y, V_g,
+				V_e, UltVehiY, beta, Vbeta);
+		p_lrt=gsl_cdf_chisq_Q (2.0*(logl_H1-logl_H0), (double)d_size );
+		
+		if (p_lrt<p_nr) {
+		  logl_H1=MphNR ('L', nr_iter/10, nr_prec*10, eval, X, Y,
+				 Hi_all, xHi_all, Hiy_all, V_g, V_e, Hessian,
+				 crt_a, crt_b, crt_c);
+		  
+		  // Calculate beta and Vbeta.
+		  p_lrt=MphCalcP (eval, &X_row.vector, &X_sub.matrix, Y, V_g,
+				  V_e, UltVehiY, beta, Vbeta);
+		  p_lrt=gsl_cdf_chisq_Q (2.0*(logl_H1-logl_H0),
+					 (double)d_size );
+		  
+		  if (crt==1) {
+		    p_lrt=PCRT (2, d_size, p_lrt, crt_a, crt_b, crt_c);
 		  }
 		}
+	      }
+	      
+	      if (a_mode==1 || a_mode==4) {
+		logl_H1=MphEM ('R', em_iter/10, em_prec*10, eval, X, Y, U_hat,
+			       E_hat, OmegaU, OmegaE, UltVehiY, UltVehiBX,
+			       UltVehiU, UltVehiE, V_g, V_e, B);
+		p_wald=MphCalcP (eval, &X_row.vector, &X_sub.matrix, Y, V_g,
+				 V_e, UltVehiY, beta, Vbeta);
+		
+		if (p_wald<p_nr) {
+		  logl_H1=MphNR ('R', nr_iter/10, nr_prec*10, eval, X, Y,
+				 Hi_all, xHi_all, Hiy_all, V_g, V_e, Hessian,
+				 crt_a, crt_b, crt_c);
+		  p_wald=MphCalcP (eval, &X_row.vector, &X_sub.matrix, Y,
+				   V_g, V_e, UltVehiY, beta, Vbeta);
+		  
+		  if (crt==1) {
+		    p_wald=PCRT (1, d_size, p_wald, crt_a, crt_b, crt_c);
+		  }
+		}
+	      }
+
+	      time_opt+=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
+
+	      // Store summary data.
+	      for (size_t i=0; i<d_size; i++) {
+		v_beta[i]=gsl_vector_get (beta, i);
+	      }
+	      
+	      c=0;
+	      for (size_t i=0; i<d_size; i++) {
+		for (size_t j=i; j<d_size; j++) {
+		  v_Vg[c]=gsl_matrix_get (V_g, i, j);
+		  v_Ve[c]=gsl_matrix_get (V_e, i, j);
+		  v_Vbeta[c]=gsl_matrix_get (Vbeta, i, j);
+		  c++;
+		}
+	      }
+	      
+	      MPHSUMSTAT SNPs={v_beta, p_wald, p_lrt, p_score, v_Vg, v_Ve,
+			       v_Vbeta};
+	      sumStat.push_back(SNPs);
+	    }
+	  }
 	}
 	cout<<endl;
-
 
 	infile.close();
 	infile.clear();
@@ -3429,11 +3526,13 @@ void MVLMM::Analyzebgen (const gsl_matrix *U, const gsl_vector *eval, const gsl_
 	return;
 }
 
-void MVLMM::AnalyzeBimbam (const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *UtW, const gsl_matrix *UtY)
-{
+void MVLMM::AnalyzeBimbam (const gsl_matrix *U, const gsl_vector *eval,
+			   const gsl_matrix *UtW, const gsl_matrix *UtY) {
 	igzstream infile (file_geno.c_str(), igzstream::in);
-//	ifstream infile (file_geno.c_str(), ifstream::in);
-	if (!infile) {cout<<"error reading genotype file:"<<file_geno<<endl; return;}
+	if (!infile) {
+	  cout<<"error reading genotype file:"<<file_geno<<endl;
+	  return;
+	}
 
 	clock_t time_start=clock();
 	time_UtX=0; time_opt=0;
@@ -3441,24 +3540,22 @@ void MVLMM::AnalyzeBimbam (const gsl_matrix *U, const gsl_vector *eval, const gs
 	string line;
 	char *ch_ptr;
 
-	//	double lambda_mle=0, lambda_remle=0, beta=0, se=0, ;
 	double logl_H0=0.0, logl_H1=0.0, p_wald=0, p_lrt=0, p_score=0;
 	double crt_a, crt_b, crt_c;
 	int n_miss, c_phen;
 	double geno, x_mean;
 	size_t c=0;
-	//	double s=0.0;
 	size_t n_size=UtY->size1, d_size=UtY->size2, c_size=UtW->size2;
 
 	size_t dc_size=d_size*(c_size+1), v_size=d_size*(d_size+1)/2;
 
-	//create a large matrix
+	// Create a large matrix.
 	size_t msize=10000;
 	gsl_matrix *Xlarge=gsl_matrix_alloc (U->size1, msize);
 	gsl_matrix *UtXlarge=gsl_matrix_alloc (U->size1, msize);
 	gsl_matrix_set_zero(Xlarge);
 
-	//large matrices for EM
+	// Large matrices for EM.
 	gsl_matrix *U_hat=gsl_matrix_alloc (d_size, n_size);
 	gsl_matrix *E_hat=gsl_matrix_alloc (d_size, n_size);
 	gsl_matrix *OmegaU=gsl_matrix_alloc (d_size, n_size);
