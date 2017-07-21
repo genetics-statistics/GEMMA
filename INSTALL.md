@@ -23,7 +23,7 @@ dependencies:
 
 ### Bioconda
 
-(Note Bioconda install is a work in [progress](https://github.com/xiangzhou/GEMMA/issues/52)
+(Note Bioconda install is a work in [progress](https://github.com/genetics-statistics/GEMMA/issues/52)
 
 Recent versions of GEMMA can be installed with
 [BioConda](http://ddocent.com/bioconda/) without root permissions using the following
