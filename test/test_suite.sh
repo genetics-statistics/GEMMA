@@ -39,8 +39,13 @@ testMultivariateLinearMixedModel() {
     assertEquals "139867" `wc -w < $outfn`
     assertEquals "92079" `perl -nle '$sum += substr($_,0,6) } END { print $sum' $outfn`
 }
+shunit2=`which shunit2`
 
-if [ -e shunit2-2.0.3/src/shell/shunit2 ]; then
+if [ -x "$shunit2" ]; then
+    echo run system shunit2
+    . $shunit2
+elif [ -e shunit2-2.0.3/src/shell/shunit2 ]; then
+    echo run shunit2 provided in gemma repo
     . shunit2-2.0.3/src/shell/shunit2
 else
     echo "Can not find shunit2 - see INSTALL.md"
