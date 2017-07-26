@@ -8,6 +8,7 @@ testCenteredRelatednessMatrixK() {
     assertEquals 0 $?
     grep "total computation time" < output/mouse_hs1940.log.txt
     assertEquals 0 $?
+    assertEquals "1940" `wc -l < output/mouse_hs1940.cXX.txt`
     assertEquals "3763600" `wc -w < output/mouse_hs1940.cXX.txt`
     # assertEquals "15f680c" `md5sum < output/mouse_hs1940.cXX.txt | head -c 7`
     assertEquals "0.335" `head -c 5 output/mouse_hs1940.cXX.txt`
