@@ -179,7 +179,9 @@ Autotools.*
 You will need a standard C/C++ compiler such as GNU gcc, as well as
 [GSL](http://www.gnu.org/s/gsl) and
 [LAPACK](http://www.netlib.org/lapack) libraries. You will need to
-change the library paths in the Makefile accordingly.
+change the library paths in the Makefile accordingly. *Note that GEMMA
+currently does not work with GSL 2.x. We recommend linking to the
+latest version of GSL 1.x, which is GSL 1.16 as of this writing.*
 
 *Revise this step:* You will need to download the
 [Eigen C++ library](http://eigen.tuxfamily.org), and copy the `Eigen`
