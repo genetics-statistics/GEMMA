@@ -16,57 +16,67 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <iostream>
+#include "gemma.h"
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include "gemma.h"
 
 using namespace std;
 
-int main(int argc, char * argv[]) {
-	GEMMA cGemma;
-	PARAM cPar;
+int main(int argc, char *argv[]) {
+  GEMMA cGemma;
+  PARAM cPar;
 
-	if (argc <= 1) {
-		cGemma.PrintHeader();
-		return EXIT_SUCCESS;
-	}
-	if (argc==2 && argv[1][0] == '-' && argv[1][1] == 'h') {
-		cGemma.PrintHelp(0);
-		return EXIT_SUCCESS;
-	}
-	if (argc==3 && argv[1][0] == '-' && argv[1][1] == 'h') {
-		string str;
-		str.assign(argv[2]);
-		cGemma.PrintHelp(atoi(str.c_str()));
-		return EXIT_SUCCESS;
-	}
-	if (argc==2 && argv[1][0] == '-' && argv[1][1] == 'l') {
-		cGemma.PrintLicense();
-		return EXIT_SUCCESS;
-	}
+  if (argc <= 1) {
+    cGemma.PrintHeader();
+    return EXIT_SUCCESS;
+  }
+  if (argc == 2 && argv[1][0] == '-' && argv[1][1] == 'h') {
+    cGemma.PrintHelp(0);
+    return EXIT_SUCCESS;
+  }
+  if (argc == 3 && argv[1][0] == '-' && argv[1][1] == 'h') {
+    string str;
+    str.assign(argv[2]);
+    cGemma.PrintHelp(atoi(str.c_str()));
+    return EXIT_SUCCESS;
+  }
+  if (argc == 2 && argv[1][0] == '-' && argv[1][1] == 'l') {
+    cGemma.PrintLicense();
+    return EXIT_SUCCESS;
+  }
 
-	cGemma.Assign(argc, argv, cPar);
+  cGemma.Assign(argc, argv, cPar);
 
-	ifstream check_dir((cPar.path_out).c_str());
-	if (!check_dir) {
-	  mkdir((cPar.path_out).c_str(), S_IRWXU|S_IRGRP|S_IROTH);
-	}
+  ifstream check_dir((cPar.path_out).c_str());
+  if (!check_dir) {
+    mkdir((cPar.path_out).c_str(), S_IRWXU | S_IRGRP | S_IROTH);
+  }
 
-	if (cPar.error==true) {return EXIT_FAILURE;}
+  if (cPar.error == true) {
+    return EXIT_FAILURE;
+  }
 
-	if (cPar.mode_silence) {stringstream ss; cout.rdbuf (ss.rdbuf());}
+  if (cPar.mode_silence) {
+    stringstream ss;
+    cout.rdbuf(ss.rdbuf());
+  }
 
-	cPar.CheckParam();
+  cPar.CheckParam();
 
-	if (cPar.error==true) {return EXIT_FAILURE;}
+  if (cPar.error == true) {
+    return EXIT_FAILURE;
+  }
 
-	cGemma.BatchRun(cPar);
+  cGemma.BatchRun(cPar);
 
-	if (cPar.error==true) {return EXIT_FAILURE;}
+  if (cPar.error == true) {
+    return EXIT_FAILURE;
+  }
 
-	cGemma.WriteLog(argc, argv, cPar);
+  cGemma.WriteLog(argc, argv, cPar);
 
-    return EXIT_SUCCESS;                                                       }
+  return EXIT_SUCCESS;
+}

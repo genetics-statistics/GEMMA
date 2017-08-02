@@ -19,61 +19,61 @@
 #ifndef __LM_H__
 #define __LM_H__
 
-#include "gsl/gsl_vector.h"
 #include "gsl/gsl_matrix.h"
-#include "param.h"
+#include "gsl/gsl_vector.h"
 #include "io.h"
+#include "param.h"
 
 using namespace std;
 
 class LM {
 
 public:
-	// IO-related parameters.
-	int a_mode;	// Analysis mode: 50+1/2/3/4 for Frequentist tests.
-	size_t d_pace;	// Display pace.
+  // IO-related parameters.
+  int a_mode;    // Analysis mode: 50+1/2/3/4 for Frequentist tests.
+  size_t d_pace; // Display pace.
 
-	string file_bfile;
-	string file_geno;
-	string file_oxford;
-	string file_out;
-	string path_out;
+  string file_bfile;
+  string file_geno;
+  string file_oxford;
+  string file_out;
+  string path_out;
 
-	string file_gene;
+  string file_gene;
 
-	// Summary statistics.
-	size_t ni_total, ni_test;  // Number of individuals.
-	size_t ns_total, ns_test;  // Number of SNPs.
-	size_t ng_total, ng_test;  // Number of genes.
-	size_t n_cvt;
-	double time_opt;	   // Time spent.
+  // Summary statistics.
+  size_t ni_total, ni_test; // Number of individuals.
+  size_t ns_total, ns_test; // Number of SNPs.
+  size_t ng_total, ng_test; // Number of genes.
+  size_t n_cvt;
+  double time_opt; // Time spent.
 
-        // Indicator for individuals (phenotypes): 0 missing, 1
-        // available for analysis.
-	vector<int> indicator_idv;
+  // Indicator for individuals (phenotypes): 0 missing, 1
+  // available for analysis.
+  vector<int> indicator_idv;
 
-        // Sequence indicator for SNPs: 0 ignored because of (a) maf,
-        // (b) miss, (c) non-poly; 1 available for analysis.
-	vector<int> indicator_snp;
+  // Sequence indicator for SNPs: 0 ignored because of (a) maf,
+  // (b) miss, (c) non-poly; 1 available for analysis.
+  vector<int> indicator_snp;
 
-	vector<SNPINFO> snpInfo;  // Record SNP information.
+  vector<SNPINFO> snpInfo; // Record SNP information.
 
-	// Not included in PARAM.
-	vector<SUMSTAT> sumStat;  // Output SNPSummary Data.
+  // Not included in PARAM.
+  vector<SUMSTAT> sumStat; // Output SNPSummary Data.
 
-	// Main functions.
-	void CopyFromParam (PARAM &cPar);
-	void CopyToParam (PARAM &cPar);
-	void AnalyzeGene (const gsl_matrix *W, const gsl_vector *x);
-	void AnalyzePlink (const gsl_matrix *W, const gsl_vector *y);
-	void AnalyzeBimbam (const gsl_matrix *W, const gsl_vector *y);
-	// WJA added.
-	void Analyzebgen (const gsl_matrix *W, const gsl_vector *y);
+  // Main functions.
+  void CopyFromParam(PARAM &cPar);
+  void CopyToParam(PARAM &cPar);
+  void AnalyzeGene(const gsl_matrix *W, const gsl_vector *x);
+  void AnalyzePlink(const gsl_matrix *W, const gsl_vector *y);
+  void AnalyzeBimbam(const gsl_matrix *W, const gsl_vector *y);
+  // WJA added.
+  void Analyzebgen(const gsl_matrix *W, const gsl_vector *y);
 
-	void WriteFiles ();
+  void WriteFiles();
 };
 
-void MatrixCalcLmLR (const gsl_matrix *X, const gsl_vector *y,
-		     vector<pair<size_t, double> > &pos_loglr);
+void MatrixCalcLmLR(const gsl_matrix *X, const gsl_vector *y,
+                    vector<pair<size_t, double>> &pos_loglr);
 
 #endif

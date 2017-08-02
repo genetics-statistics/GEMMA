@@ -19,32 +19,32 @@
 #ifndef __MATHFUNC_H__
 #define __MATHFUNC_H__
 
-#include "gsl/gsl_vector.h"
-#include "gsl/gsl_matrix.h"
 #include "Eigen/Dense"
+#include "gsl/gsl_matrix.h"
+#include "gsl/gsl_vector.h"
 
 using namespace std;
 using namespace Eigen;
 
-double VectorVar (const gsl_vector *v);
-void CenterMatrix (gsl_matrix *G);
-void CenterMatrix (gsl_matrix *G, const gsl_vector *w);
-void CenterMatrix (gsl_matrix *G, const gsl_matrix *W);
-void StandardizeMatrix (gsl_matrix *G);
-double ScaleMatrix (gsl_matrix *G);
-double CenterVector (gsl_vector *y);
-void CenterVector (gsl_vector *y, const gsl_matrix *W);
-void StandardizeVector (gsl_vector *y);
-void CalcUtX (const gsl_matrix *U, gsl_matrix *UtX);
-void CalcUtX (const gsl_matrix *U, const gsl_matrix *X, gsl_matrix *UtX);
-void CalcUtX (const gsl_matrix *U, const gsl_vector *x, gsl_vector *Utx);
-double CalcHWE (const size_t n_hom1, const size_t n_hom2, const size_t n_ab);
+double VectorVar(const gsl_vector *v);
+void CenterMatrix(gsl_matrix *G);
+void CenterMatrix(gsl_matrix *G, const gsl_vector *w);
+void CenterMatrix(gsl_matrix *G, const gsl_matrix *W);
+void StandardizeMatrix(gsl_matrix *G);
+double ScaleMatrix(gsl_matrix *G);
+double CenterVector(gsl_vector *y);
+void CenterVector(gsl_vector *y, const gsl_matrix *W);
+void StandardizeVector(gsl_vector *y);
+void CalcUtX(const gsl_matrix *U, gsl_matrix *UtX);
+void CalcUtX(const gsl_matrix *U, const gsl_matrix *X, gsl_matrix *UtX);
+void CalcUtX(const gsl_matrix *U, const gsl_vector *x, gsl_vector *Utx);
+double CalcHWE(const size_t n_hom1, const size_t n_hom2, const size_t n_ab);
 void Kronecker(const gsl_matrix *K, const gsl_matrix *V, gsl_matrix *H);
 void KroneckerSym(const gsl_matrix *K, const gsl_matrix *V, gsl_matrix *H);
 
 double UcharToDouble02(const unsigned char c);
 unsigned char Double02ToUchar(const double dosage);
-void uchar_matrix_get_row (const vector<vector<unsigned char> > &X,
-			   const size_t i_row, VectorXd &x_row);
+void uchar_matrix_get_row(const vector<vector<unsigned char>> &X,
+                          const size_t i_row, VectorXd &x_row);
 
 #endif
