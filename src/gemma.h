@@ -26,22 +26,21 @@ using namespace std;
 class GEMMA {
 
 public:
-	// Parameters.
-	string version;
-	string date;
-	string year;
+  // Parameters.
+  string version;
+  string date;
+  string year;
 
-	// Constructor.
-	GEMMA(void);
+  // Constructor.
+  GEMMA(void);
 
-	// Functions.
-	void PrintHeader (void);
-	void PrintHelp (size_t option);
-	void PrintLicense (void);
-	void Assign (int argc, char **argv, PARAM &cPar);
-	void BatchRun (PARAM &cPar);
-	void WriteLog (int argc, char **argv, PARAM &cPar);
+  // Functions.
+  void PrintHeader(void);
+  void PrintHelp(size_t option);
+  void PrintLicense(void);
+  void Assign(int argc, char **argv, PARAM &cPar);
+  void BatchRun(PARAM &cPar);
+  void WriteLog(int argc, char **argv, PARAM &cPar);
 };
 
 #endif
-
