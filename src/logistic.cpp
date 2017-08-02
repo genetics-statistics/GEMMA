@@ -1,4 +1,3 @@
-#include "logistic.h"
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_multimin.h>
@@ -6,6 +5,8 @@
 #include <gsl/gsl_sf.h>
 #include <math.h>
 #include <stdio.h>
+
+#include "logistic.h"
 
 // I need to bundle all the data that goes to the function to optimze
 // together.
