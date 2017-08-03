@@ -34,7 +34,7 @@ void ProgressBar(string str, double p, double total);
 void ProgressBar(string str, double p, double total, double ratio);
 std::istream &safeGetline(std::istream &is, std::string &t);
 
-bool ReadFile_snps(const string &file_snps, set<string> &setSnps);
+bool ReadFile_snps(const string file_snps, set<string> &setSnps);
 bool ReadFile_snps_header(const string &file_snps, set<string> &setSnps);
 bool ReadFile_log(const string &file_log, double &pheno_mean);
 
@@ -83,13 +83,14 @@ void ReadFile_mk(const string &file_mk, vector<int> &indicator_idv,
 void ReadFile_eigenU(const string &file_u, bool &error, gsl_matrix *U);
 void ReadFile_eigenD(const string &file_d, bool &error, gsl_vector *eval);
 
-bool BimbamKin(const string &file_geno, vector<int> &indicator_snp,
-               const int k_mode, const int display_pace,
-               gsl_matrix *matrix_kin);
+bool BimbamKin(const string file_geno, const set<string> ksnps,
+               vector<int> &indicator_snp, const int k_mode,
+               const int display_pace, gsl_matrix *matrix_kin,
+               const bool test_nind);
 bool PlinkKin(const string &file_bed, vector<int> &indicator_snp,
               const int k_mode, const int display_pace, gsl_matrix *matrix_kin);
 
-bool ReadFile_geno(const string &file_geno, vector<int> &indicator_idv,
+bool ReadFile_geno(const string file_geno, vector<int> &indicator_idv,
                    vector<int> &indicator_snp, gsl_matrix *UtX, gsl_matrix *K,
                    const bool calc_K);
 bool ReadFile_bed(const string &file_bed, vector<int> &indicator_idv,
@@ -124,13 +125,14 @@ bool ReadFile_catc(const string &file_cat,
 bool ReadFile_mcatc(const string &file_mcat,
                     map<string, vector<double>> &mapRS2catc, size_t &n_cat);
 
-bool BimbamKin(const string &file_geno, const int display_pace,
-               const vector<int> &indicator_idv,
-               const vector<int> &indicator_snp,
-               const map<string, double> &mapRS2weight,
-               const map<string, size_t> &mapRS2cat,
-               const vector<SNPINFO> &snpInfo, const gsl_matrix *W,
-               gsl_matrix *matrix_kin, gsl_vector *vector_ns);
+bool BimbamKinUncentered(const string &file_geno, const set<string> ksnps,
+                         const int display_pace,
+                         const vector<int> &indicator_idv,
+                         const vector<int> &indicator_snp,
+                         const map<string, double> &mapRS2weight,
+                         const map<string, size_t> &mapRS2cat,
+                         const vector<SNPINFO> &snpInfo, const gsl_matrix *W,
+                         gsl_matrix *matrix_kin, gsl_vector *vector_ns);
 bool PlinkKin(const string &file_bed, const int display_pace,
               const vector<int> &indicator_idv,
               const vector<int> &indicator_snp,
@@ -139,7 +141,8 @@ bool PlinkKin(const string &file_bed, const int display_pace,
               const vector<SNPINFO> &snpInfo, const gsl_matrix *W,
               gsl_matrix *matrix_kin, gsl_vector *vector_ns);
 bool MFILEKin(const size_t mfile_mode, const string &file_mfile,
-              const int display_pace, const vector<int> &indicator_idv,
+              const set<string> setKSnps, const int display_pace,
+              const vector<int> &indicator_idv,
               const vector<vector<int>> &mindicator_snp,
               const map<string, double> &mapRS2weight,
               const map<string, size_t> &mapRS2cat,

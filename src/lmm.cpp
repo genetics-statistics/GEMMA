@@ -80,6 +80,7 @@ void LMM::CopyFromParam(PARAM &cPar) {
   indicator_idv = cPar.indicator_idv;
   indicator_snp = cPar.indicator_snp;
   snpInfo = cPar.snpInfo;
+  setGWASnps = cPar.setGWASnps;
 
   return;
 }
@@ -165,6 +166,7 @@ void LMM::WriteFiles() {
       }
     }
   } else {
+    bool process_gwasnps = setGWASnps.size();
     outfile << "chr"
             << "\t"
             << "rs"
@@ -217,9 +219,13 @@ void LMM::WriteFiles() {
 
     size_t t = 0;
     for (size_t i = 0; i < snpInfo.size(); ++i) {
-      if (indicator_snp[i] == 0) {
+
+      if (indicator_snp[i] == 0)
         continue;
-      }
+      auto snp = snpInfo[i].rs_number;
+      if (process_gwasnps && setGWASnps.count(snp) == 0)
+        continue;
+      // cout << t << endl;
 
       outfile << snpInfo[i].chr << "\t" << snpInfo[i].rs_number << "\t"
               << snpInfo[i].base_position << "\t" << snpInfo[i].n_miss << "\t"
@@ -1311,78 +1317,126 @@ void LMM::AnalyzeGene(const gsl_matrix *U, const gsl_vector *eval,
 
 void LMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
                         const gsl_matrix *UtW, const gsl_vector *Uty,
-                        const gsl_matrix *W, const gsl_vector *y) {
-  igzstream infile(file_geno.c_str(), igzstream::in);
-  if (!infile) {
-    cout << "error reading genotype file:" << file_geno << endl;
-    return;
-  }
-
+                        const gsl_matrix *W, const gsl_vector *y,
+                        const set<string> gwasnps) {
   clock_t time_start = clock();
 
-  string line;
-  char *ch_ptr;
-
-  double lambda_mle = 0, lambda_remle = 0, beta = 0, se = 0, p_wald = 0;
-  double p_lrt = 0, p_score = 0;
-  double logl_H1 = 0.0;
-  int n_miss, c_phen;
-  double geno, x_mean;
+  // LOCO support
+  bool process_gwasnps = gwasnps.size();
+  if (process_gwasnps)
+    debug_msg("AnalyzeBimbam w. LOCO");
 
   // Calculate basic quantities.
   size_t n_index = (n_cvt + 2 + 1) * (n_cvt + 2) / 2;
 
-  gsl_vector *x = gsl_vector_alloc(U->size1);
-  gsl_vector *x_miss = gsl_vector_alloc(U->size1);
+  const size_t inds = U->size1;
+  gsl_vector *x = gsl_vector_alloc(inds); // #inds
+  gsl_vector *x_miss = gsl_vector_alloc(inds);
   gsl_vector *Utx = gsl_vector_alloc(U->size2);
   gsl_matrix *Uab = gsl_matrix_alloc(U->size2, n_index);
   gsl_vector *ab = gsl_vector_alloc(n_index);
 
-  // Create a large matrix.
-  size_t msize = 10000;
-  gsl_matrix *Xlarge = gsl_matrix_alloc(U->size1, msize);
-  gsl_matrix *UtXlarge = gsl_matrix_alloc(U->size1, msize);
-  gsl_matrix_set_zero(Xlarge);
+  // Create a large matrix with LMM_BATCH_SIZE columns for batched processing
+  // const size_t msize=(process_gwasnps ? 1 : LMM_BATCH_SIZE);
+  const size_t msize = LMM_BATCH_SIZE;
+  gsl_matrix *Xlarge = gsl_matrix_alloc(inds, msize);
+  gsl_matrix *UtXlarge = gsl_matrix_alloc(inds, msize);
 
+  enforce_msg(Xlarge && UtXlarge, "Xlarge memory check"); // just to be sure
+  gsl_matrix_set_zero(Xlarge);
   gsl_matrix_set_zero(Uab);
   CalcUab(UtW, Uty, Uab);
 
   // start reading genotypes and analyze
-  size_t c = 0, t_last = 0;
-  for (size_t t = 0; t < indicator_snp.size(); ++t) {
-    if (indicator_snp[t] == 0) {
-      continue;
+  size_t c = 0;
+
+  igzstream infile(file_geno.c_str(), igzstream::in);
+  enforce_msg(infile, "error reading genotype file");
+
+  auto batch_compute = [&](size_t l) { // using a C++ closure
+    // Compute SNPs in batch, note the computations are independent per SNP
+    gsl_matrix_view Xlarge_sub = gsl_matrix_submatrix(Xlarge, 0, 0, inds, l);
+    gsl_matrix_view UtXlarge_sub =
+        gsl_matrix_submatrix(UtXlarge, 0, 0, inds, l);
+
+    time_start = clock();
+    eigenlib_dgemm("T", "N", 1.0, U, &Xlarge_sub.matrix, 0.0,
+                   &UtXlarge_sub.matrix);
+    time_UtX += (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
+
+    gsl_matrix_set_zero(Xlarge);
+    for (size_t i = 0; i < l; i++) {
+      // for every batch...
+      gsl_vector_view UtXlarge_col = gsl_matrix_column(UtXlarge, i);
+      gsl_vector_memcpy(Utx, &UtXlarge_col.vector);
+
+      CalcUab(UtW, Uty, Utx, Uab);
+
+      time_start = clock();
+      FUNC_PARAM param1 = {false, ni_test, n_cvt, eval, Uab, ab, 0};
+
+      double lambda_mle = 0, lambda_remle = 0, beta = 0, se = 0, p_wald = 0;
+      double p_lrt = 0, p_score = 0;
+      double logl_H1 = 0.0;
+
+      // 3 is before 1.
+      if (a_mode == 3 || a_mode == 4) {
+        CalcRLScore(l_mle_null, param1, beta, se, p_score);
+      }
+
+      if (a_mode == 1 || a_mode == 4) {
+        // for univariate a_mode is 1
+        CalcLambda('R', param1, l_min, l_max, n_region, lambda_remle, logl_H1);
+        CalcRLWald(lambda_remle, param1, beta, se, p_wald);
+      }
+
+      if (a_mode == 2 || a_mode == 4) {
+        CalcLambda('L', param1, l_min, l_max, n_region, lambda_mle, logl_H1);
+        p_lrt = gsl_cdf_chisq_Q(2.0 * (logl_H1 - logl_mle_H0), 1);
+      }
+
+      time_opt += (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
+
+      // Store summary data.
+      SUMSTAT SNPs = {beta,   se,    lambda_remle, lambda_mle,
+                      p_wald, p_lrt, p_score};
+      sumStat.push_back(SNPs);
     }
-    t_last++;
-  }
+  };
+
   for (size_t t = 0; t < indicator_snp.size(); ++t) {
-    !safeGetline(infile, line).eof();
+    // for every SNP
+    string line;
+    safeGetline(infile, line);
     if (t % d_pace == 0 || t == (ns_total - 1)) {
       ProgressBar("Reading SNPs  ", t, ns_total - 1);
     }
-    if (indicator_snp[t] == 0) {
+    if (indicator_snp[t] == 0)
       continue;
-    }
 
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
+    char *ch_ptr = strtok((char *)line.c_str(), " , \t");
+    auto snp = string(ch_ptr);
+    // check whether SNP is included in gwasnps (used by LOCO)
+    if (process_gwasnps && gwasnps.count(snp) == 0)
+      continue;
     ch_ptr = strtok(NULL, " , \t");
     ch_ptr = strtok(NULL, " , \t");
 
-    x_mean = 0.0;
-    c_phen = 0;
-    n_miss = 0;
+    double x_mean = 0.0;
+    int c_phen = 0;
+    int n_miss = 0;
     gsl_vector_set_zero(x_miss);
     for (size_t i = 0; i < ni_total; ++i) {
+      // get the genotypes per individual and compute stats per SNP
       ch_ptr = strtok(NULL, " , \t");
-      if (indicator_idv[i] == 0) {
+      if (indicator_idv[i] == 0)
         continue;
-      }
 
       if (strcmp(ch_ptr, "NA") == 0) {
         gsl_vector_set(x_miss, c_phen, 0.0);
         n_miss++;
       } else {
-        geno = atof(ch_ptr);
+        double geno = atof(ch_ptr);
 
         gsl_vector_set(x, c_phen, geno);
         gsl_vector_set(x_miss, c_phen, 1.0);
@@ -1398,66 +1452,16 @@ void LMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
         gsl_vector_set(x, i, x_mean);
       }
     }
-
+    // copy genotype values for SNP into Xlarge cache
     gsl_vector_view Xlarge_col = gsl_matrix_column(Xlarge, c % msize);
     gsl_vector_memcpy(&Xlarge_col.vector, x);
-    c++;
+    c++; // count SNPs going in
 
-    if (c % msize == 0 || c == t_last) {
-      size_t l = 0;
-      if (c % msize == 0) {
-        l = msize;
-      } else {
-        l = c % msize;
-      }
-
-      gsl_matrix_view Xlarge_sub =
-          gsl_matrix_submatrix(Xlarge, 0, 0, Xlarge->size1, l);
-      gsl_matrix_view UtXlarge_sub =
-          gsl_matrix_submatrix(UtXlarge, 0, 0, UtXlarge->size1, l);
-
-      time_start = clock();
-      eigenlib_dgemm("T", "N", 1.0, U, &Xlarge_sub.matrix, 0.0,
-                     &UtXlarge_sub.matrix);
-      time_UtX += (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
-
-      gsl_matrix_set_zero(Xlarge);
-
-      for (size_t i = 0; i < l; i++) {
-        gsl_vector_view UtXlarge_col = gsl_matrix_column(UtXlarge, i);
-        gsl_vector_memcpy(Utx, &UtXlarge_col.vector);
-
-        CalcUab(UtW, Uty, Utx, Uab);
-
-        time_start = clock();
-        FUNC_PARAM param1 = {false, ni_test, n_cvt, eval, Uab, ab, 0};
-
-        // 3 is before 1.
-        if (a_mode == 3 || a_mode == 4) {
-          CalcRLScore(l_mle_null, param1, beta, se, p_score);
-        }
-
-        if (a_mode == 1 || a_mode == 4) {
-          CalcLambda('R', param1, l_min, l_max, n_region, lambda_remle,
-                     logl_H1);
-          CalcRLWald(lambda_remle, param1, beta, se, p_wald);
-        }
-
-        if (a_mode == 2 || a_mode == 4) {
-          CalcLambda('L', param1, l_min, l_max, n_region, lambda_mle, logl_H1);
-          p_lrt = gsl_cdf_chisq_Q(2.0 * (logl_H1 - logl_mle_H0), 1);
-        }
-
-        time_opt += (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
-
-        // Store summary data.
-        SUMSTAT SNPs = {beta,   se,    lambda_remle, lambda_mle,
-                        p_wald, p_lrt, p_score};
-
-        sumStat.push_back(SNPs);
-      }
-    }
+    if (c == msize)
+      batch_compute(msize);
   }
+  batch_compute(c % msize);
+  // cout << "Counted SNPs " << c << " sumStat " << sumStat.size() << endl;
   cout << endl;
 
   gsl_vector_free(x);
@@ -1505,7 +1509,7 @@ void LMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
   gsl_vector *ab = gsl_vector_alloc(n_index);
 
   // Create a large matrix.
-  size_t msize = 10000;
+  size_t msize = LMM_BATCH_SIZE;
   gsl_matrix *Xlarge = gsl_matrix_alloc(U->size1, msize);
   gsl_matrix *UtXlarge = gsl_matrix_alloc(U->size1, msize);
   gsl_matrix_set_zero(Xlarge);
@@ -1528,9 +1532,8 @@ void LMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
 
   size_t c = 0, t_last = 0;
   for (size_t t = 0; t < snpInfo.size(); ++t) {
-    if (indicator_snp[t] == 0) {
+    if (indicator_snp[t] == 0)
       continue;
-    }
     t_last++;
   }
   for (vector<SNPINFO>::size_type t = 0; t < snpInfo.size(); ++t) {
@@ -1697,7 +1700,7 @@ void LMM::Analyzebgen(const gsl_matrix *U, const gsl_vector *eval,
   gsl_vector *ab = gsl_vector_alloc(n_index);
 
   // Create a large matrix.
-  size_t msize = 10000;
+  size_t msize = LMM_BATCH_SIZE;
   gsl_matrix *Xlarge = gsl_matrix_alloc(U->size1, msize);
   gsl_matrix *UtXlarge = gsl_matrix_alloc(U->size1, msize);
   gsl_matrix_set_zero(Xlarge);

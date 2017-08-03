@@ -40,6 +40,8 @@ public:
   bool noconstrain;
 };
 
+// Methods for variant component (VC) estimation
+
 class VC {
 
 public:

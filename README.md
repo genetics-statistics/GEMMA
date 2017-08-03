@@ -191,16 +191,6 @@ last tested using Eigen version 3.3.3.)
 More information on source code, dependencies and installation can be
 found in [INSTALL.md](INSTALL.md).
 
-## Contributing
-
-GEMMA uses the [LLVM style](http://llvm.org/docs/CodingStandards.html)
-for C++ code.  You should set your editor to replace tabs with spaces
-and 2 spaces of indentation. Use
-
-    clang-format -style=LLVM -i *.cpp *.h
-
-to validate the coding style.
-
 ## Credits
 
 The *GEMMA* software was developed by:

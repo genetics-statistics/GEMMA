@@ -151,6 +151,7 @@ void GEMMA::PrintHelp(size_t option) {
     cout << " 11: obtain predicted values" << endl;
     cout << " 12: calculate snp variance covariance" << endl;
     cout << " 13: note" << endl;
+    cout << " 14: debug options" << endl;
     cout << endl;
   }
 
@@ -446,7 +447,16 @@ void GEMMA::PrintHelp(size_t option) {
   }
 
   if (option == 4) {
-    cout << " RELATEDNESS MATRIX CALCULATION OPTIONS" << endl;
+    cout << " RELATEDNESS MATRIX (K) CALCULATION OPTIONS" << endl;
+    cout << " -ksnps    [filename]     "
+         << " specify input snps file name to compute K" << endl;
+    cout << " -loco     [chr]          "
+         << " leave one chromosome out (LOCO) by name (requires -a annotation "
+            "file)"
+         << endl;
+    cout << " -a        [filename]     "
+         << " specify input BIMBAM SNP annotation file name (LOCO only)"
+         << endl;
     cout << " -gk       [num]          "
          << " specify which type of kinship/relatedness matrix to generate "
             "(default 1)"
@@ -679,6 +689,14 @@ void GEMMA::PrintHelp(size_t option) {
     cout << " 5. For bslmm analysis, in addition to 3, memory should be large "
             "enough to hold the whole genotype matrix."
          << endl;
+    cout << endl;
+  }
+
+  if (option == 14) {
+    cout << " DEBUG OPTIONS" << endl;
+    cout << " -silence                 silent terminal display" << endl;
+    cout << " -debug                   debug output" << endl;
+    cout << " -nind       [num]        read up to num individuals" << endl;
     cout << endl;
   }
 
@@ -1008,7 +1026,7 @@ void GEMMA::Assign(int argc, char **argv, PARAM &cPar) {
       str.clear();
       str.assign(argv[i]);
       cPar.k_mode = atoi(str.c_str());
-    } else if (strcmp(argv[i], "-n") == 0) {
+    } else if (strcmp(argv[i], "-n") == 0) { // set pheno column (range)
       (cPar.p_column).clear();
       while (argv[i + 1] != NULL && argv[i + 1][0] != '-') {
         ++i;
@@ -1076,6 +1094,12 @@ void GEMMA::Assign(int argc, char **argv, PARAM &cPar) {
       cPar.r2_level = atof(str.c_str());
     } else if (strcmp(argv[i], "-notsnp") == 0) {
       cPar.maf_level = -1;
+    } else if (strcmp(argv[i], "-loco") == 0) {
+      assert(argv[i + 1]);
+      ++i;
+      str.clear();
+      str.assign(argv[i]);
+      cPar.loco = str;
     } else if (strcmp(argv[i], "-gk") == 0) {
       if (cPar.a_mode != 0) {
         cPar.error = true;
@@ -1315,6 +1339,14 @@ void GEMMA::Assign(int argc, char **argv, PARAM &cPar) {
       str.clear();
       str.assign(argv[i]);
       cPar.nr_iter = atoi(str.c_str());
+    } else if (strcmp(argv[i], "-nind") == 0) {
+      if (argv[i + 1] == NULL || argv[i + 1][0] == '-') {
+        continue;
+      }
+      ++i;
+      str.clear();
+      str.assign(argv[i]);
+      cPar.ni_max = atoi(str.c_str()); // for testing purposes
     } else if (strcmp(argv[i], "-emp") == 0) {
       if (argv[i + 1] == NULL || argv[i + 1][0] == '-') {
         continue;
@@ -1533,6 +1565,8 @@ void GEMMA::Assign(int argc, char **argv, PARAM &cPar) {
       str.clear();
       str.assign(argv[i]);
       cPar.window_ns = atoi(str.c_str());
+    } else if (strcmp(argv[i], "-debug") == 0) {
+      cPar.mode_debug = true;
     } else {
       cout << "error! unrecognized option: " << argv[i] << endl;
       cPar.error = true;
@@ -1808,14 +1842,16 @@ void GEMMA::BatchRun(PARAM &cPar) {
     gsl_matrix_free(H_full);
   }
 
-  // Generate Kinship matrix
+  // Generate Kinship matrix (optionally using LOCO)
   if (cPar.a_mode == 21 || cPar.a_mode == 22) {
     cout << "Calculating Relatedness Matrix ... " << endl;
 
     gsl_matrix *G = gsl_matrix_alloc(cPar.ni_total, cPar.ni_total);
+    enforce_msg(G, "allocate G"); // just to be sure
 
     time_start = clock();
     cPar.CalcKin(G);
+
     cPar.time_G = (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
     if (cPar.error == true) {
       cout << "error! fail to calculate relatedness matrix. " << endl;
@@ -2613,6 +2649,7 @@ return;}
       cPar.a_mode == 4 || cPar.a_mode == 5 ||
       cPar.a_mode == 31) { // Fit LMM or mvLMM or eigen
     gsl_matrix *Y = gsl_matrix_alloc(cPar.ni_test, cPar.n_ph);
+    enforce_msg(Y, "allocate Y"); // just to be sure
     gsl_matrix *W = gsl_matrix_alloc(Y->size1, cPar.n_cvt);
     gsl_matrix *B = gsl_matrix_alloc(Y->size2, W->size2); // B is a d by c
                                                           // matrix
@@ -2749,7 +2786,7 @@ return;}
       CalcUtX(U, Y, UtY);
 
       // calculate REMLE/MLE estimate and pve for univariate model
-      if (cPar.n_ph == 1) {
+      if (cPar.n_ph == 1) { // one phenotype
         gsl_vector_view beta = gsl_matrix_row(B, 0);
         gsl_vector_view se_beta = gsl_matrix_row(se_B, 0);
         gsl_vector_view UtY_col = gsl_matrix_column(UtY, 0);
@@ -2819,7 +2856,7 @@ return;}
         }
       }
 
-      // Fit LMM or mvLMM
+      // Fit LMM or mvLMM (w. LOCO)
       if (cPar.a_mode == 1 || cPar.a_mode == 2 || cPar.a_mode == 3 ||
           cPar.a_mode == 4) {
         if (cPar.n_ph == 1) {
@@ -2844,7 +2881,7 @@ return;}
           } else {
             if (cPar.file_gxe.empty()) {
               cLmm.AnalyzeBimbam(U, eval, UtW, &UtY_col.vector, W,
-                                 &Y_col.vector);
+                                 &Y_col.vector, cPar.setGWASnps);
             } else {
               cLmm.AnalyzeBimbamGXE(U, eval, UtW, &UtY_col.vector, W,
                                     &Y_col.vector, env);

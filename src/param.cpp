@@ -38,6 +38,54 @@
 
 using namespace std;
 
+// ---- Helper functions which do not use the PARAM scope
+
+// Calculate the SNP sets as used in LOCO from mapchr which was filled
+// from the annotation file. Returns ksnps (used for K) and gwasnps (used for
+// GWA). Both are complimentary with each other and subsets of setSnps.
+
+void LOCO_set_Snps(set<string> &ksnps, set<string> &gwasnps,
+                   const map<string, string> mapchr, const string loco) {
+  enforce_msg(ksnps.size() == 0, "make sure knsps is not initialized twice");
+  enforce_msg(gwasnps.size() == 0,
+              "make sure gwasnps is not initialized twice");
+  for (auto &kv : mapchr) {
+    auto snp = kv.first;
+    auto chr = kv.second;
+    if (chr != loco) {
+      ksnps.insert(snp);
+    } else {
+      gwasnps.insert(snp);
+    }
+  }
+}
+
+// Trim #individuals to size which is used to write tests that run faster
+//
+// Note it actually trims the number of functional individuals
+// (indicator_idv[x] == 1). This should match indicator_cvt etc. If
+// this gives problems with certain sets we can simply trim to size.
+
+void trim_individuals(vector<int> &idvs, size_t ni_max, bool debug) {
+  if (ni_max) {
+    size_t count = 0;
+    for (auto ind = idvs.begin(); ind != idvs.end(); ++ind) {
+      if (*ind)
+        count++;
+      if (count >= ni_max)
+        break;
+    }
+    if (count != idvs.size()) {
+      if (debug)
+        cout << "**** TEST MODE: trim individuals from " << idvs.size()
+             << " to " << count << endl;
+      idvs.resize(count);
+    }
+  }
+}
+
+// ---- PARAM class implementation
+
 PARAM::PARAM(void)
     : mode_silence(false), a_mode(0), k_mode(1), d_pace(100000),
       file_out("result"), path_out("./output/"), miss_level(0.05),
@@ -94,6 +142,15 @@ void PARAM::ReadFiles(void) {
     }
   } else {
     setSnps.clear();
+  }
+
+  // Read KSNP set.
+  if (!file_ksnps.empty()) {
+    if (ReadFile_snps(file_ksnps, setKSnps) == false) {
+      error = true;
+    }
+  } else {
+    setKSnps.clear();
   }
 
   // For prediction.
@@ -164,6 +221,7 @@ void PARAM::ReadFiles(void) {
   } else {
     n_cvt = 1;
   }
+  trim_individuals(indicator_cvt, ni_max, mode_debug);
 
   if (!file_gxe.empty()) {
     if (ReadFile_column(file_gxe, indicator_gxe, gxe, 1) == false) {
@@ -175,6 +233,8 @@ void PARAM::ReadFiles(void) {
       error = true;
     }
   }
+
+  trim_individuals(indicator_idv, ni_max, mode_debug);
 
   // WJA added.
   // Read genotype and phenotype file for bgen format.
@@ -273,12 +333,15 @@ void PARAM::ReadFiles(void) {
     gsl_matrix *W = gsl_matrix_alloc(ni_test, n_cvt);
     CopyCvt(W);
 
+    trim_individuals(indicator_idv, ni_max, mode_debug);
+    trim_individuals(indicator_cvt, ni_max, mode_debug);
     if (ReadFile_geno(file_geno, setSnps, W, indicator_idv, indicator_snp,
                       maf_level, miss_level, hwe_level, r2_level, mapRS2chr,
                       mapRS2bp, mapRS2cM, snpInfo, ns_test) == false) {
       error = true;
     }
     gsl_matrix_free(W);
+
     ns_total = indicator_snp.size();
   }
 
@@ -456,6 +519,11 @@ void PARAM::ReadFiles(void) {
     // Post-process covariates and phenotypes, obtain
     // ni_test, save all useful covariates.
     ProcessCvtPhen();
+  }
+
+  // Compute setKSnps when -loco is passed in
+  if (!loco.empty()) {
+    LOCO_set_Snps(setKSnps, setGWASnps, mapRS2chr, loco);
   }
   return;
 }
@@ -869,22 +937,22 @@ void PARAM::CheckParam(void) {
     error = true;
   }
 
-  str = file_snps;
-  if (!str.empty() && stat(str.c_str(), &fileInfo) == -1) {
-    cout << "error! fail to open snps file: " << str << endl;
-    error = true;
-  }
+  enforce_fexists(file_snps, "open file");
+  enforce_fexists(file_ksnps, "open file");
+  enforce_fexists(file_gwasnps, "open file");
+  enforce_fexists(file_log, "open file");
+  enforce_fexists(file_anno, "open file");
 
-  str = file_log;
-  if (!str.empty() && stat(str.c_str(), &fileInfo) == -1) {
-    cout << "error! fail to open log file: " << str << endl;
-    error = true;
-  }
-
-  str = file_anno;
-  if (!str.empty() && stat(str.c_str(), &fileInfo) == -1) {
-    cout << "error! fail to open annotation file: " << str << endl;
-    error = true;
+  if (!loco.empty()) {
+    enforce_msg((a_mode >= 1 && a_mode <= 4) || a_mode == 21 || a_mode == 22,
+                "LOCO only works with LMM and K");
+    enforce_msg(file_bfile.empty(), "LOCO does not work with PLink (yet)");
+    enforce_msg(file_oxford.empty(), "LOCO does not work with Oxford (yet)");
+    enforce_msg(file_gxe.empty(), "LOCO does not support GXE (yet)");
+    enforce_msg(!file_anno.empty(),
+                "LOCO requires annotation file (-a switch)");
+    enforce_msg(file_ksnps.empty(), "LOCO does not allow -ksnps switch");
+    enforce_msg(file_gwasnps.empty(), "LOCO does not allow -gwasnps switch");
   }
 
   str = file_kin;
@@ -1005,7 +1073,7 @@ void PARAM::CheckData(void) {
       (indicator_cvt).size() != (indicator_idv).size()) {
     error = true;
     cout << "error! number of rows in the covariates file do not "
-         << "match the number of individuals. " << endl;
+         << "match the number of individuals. " << indicator_cvt.size() << endl;
     return;
   }
   if ((indicator_gxe).size() != 0 &&
@@ -1123,7 +1191,15 @@ void PARAM::CheckData(void) {
     if (!file_gene.empty()) {
       cout << "## number of total genes = " << ng_total << endl;
     } else if (file_epm.empty() && a_mode != 43 && a_mode != 5) {
-      cout << "## number of total SNPs = " << ns_total << endl;
+      if (!loco.empty())
+        cout << "## leave one chromosome out (LOCO) = " << loco << endl;
+      cout << "## number of total SNPs    = " << ns_total << endl;
+      if (setSnps.size())
+        cout << "## number of considered SNPS = " << setSnps.size() << endl;
+      if (setKSnps.size())
+        cout << "## number of SNPS for K    = " << setKSnps.size() << endl;
+      if (setGWASnps.size())
+        cout << "## number of SNPS for GWAS = " << setGWASnps.size() << endl;
       cout << "## number of analyzed SNPs = " << ns_test << endl;
     } else {
     }
@@ -1297,20 +1373,22 @@ void PARAM::CalcKin(gsl_matrix *matrix_kin) {
 
   if (!file_bfile.empty()) {
     file_str = file_bfile + ".bed";
+    enforce_msg(loco.empty(), "FIXME: LOCO nyi");
     if (PlinkKin(file_str, indicator_snp, a_mode - 20, d_pace, matrix_kin) ==
         false) {
       error = true;
     }
   } else if (!file_oxford.empty()) {
     file_str = file_oxford + ".bgen";
+    enforce_msg(loco.empty(), "FIXME: LOCO nyi");
     if (bgenKin(file_str, indicator_snp, a_mode - 20, d_pace, matrix_kin) ==
         false) {
       error = true;
     }
   } else {
     file_str = file_geno;
-    if (BimbamKin(file_str, indicator_snp, a_mode - 20, d_pace, matrix_kin) ==
-        false) {
+    if (BimbamKin(file_str, setKSnps, indicator_snp, a_mode - 20, d_pace,
+                  matrix_kin, ni_max == 0) == false) {
       error = true;
     }
   }
@@ -1720,37 +1798,43 @@ void PARAM::CalcS(const map<string, double> &mapRS2wA,
   } else if (!file_geno.empty()) {
     file_str = file_geno;
     if (mapRS2wA.size() == 0) {
-      if (BimbamKin(file_str, d_pace, indicator_idv, indicator_snp, mapRS2wK,
-                    mapRS2cat, snpInfo, W, K, ns) == false) {
+      if (BimbamKinUncentered(file_str, setKSnps, d_pace, indicator_idv,
+                              indicator_snp, mapRS2wK, mapRS2cat, snpInfo, W, K,
+                              ns) == false) {
         error = true;
       }
     } else {
-      if (BimbamKin(file_str, d_pace, indicator_idv, indicator_snp, mapRS2wA,
-                    mapRS2cat, snpInfo, W, A, ns) == false) {
+      if (BimbamKinUncentered(file_str, setKSnps, d_pace, indicator_idv,
+                              indicator_snp, mapRS2wA, mapRS2cat, snpInfo, W, A,
+                              ns) == false) {
         error = true;
       }
     }
   } else if (!file_mbfile.empty()) {
     if (mapRS2wA.size() == 0) {
-      if (MFILEKin(1, file_mbfile, d_pace, indicator_idv, mindicator_snp,
-                   mapRS2wK, mapRS2cat, msnpInfo, W, K, ns) == false) {
+      if (MFILEKin(1, file_mbfile, setKSnps, d_pace, indicator_idv,
+                   mindicator_snp, mapRS2wK, mapRS2cat, msnpInfo, W, K,
+                   ns) == false) {
         error = true;
       }
     } else {
-      if (MFILEKin(1, file_mbfile, d_pace, indicator_idv, mindicator_snp,
-                   mapRS2wA, mapRS2cat, msnpInfo, W, A, ns) == false) {
+      if (MFILEKin(1, file_mbfile, setKSnps, d_pace, indicator_idv,
+                   mindicator_snp, mapRS2wA, mapRS2cat, msnpInfo, W, A,
+                   ns) == false) {
         error = true;
       }
     }
   } else if (!file_mgeno.empty()) {
     if (mapRS2wA.size() == 0) {
-      if (MFILEKin(0, file_mgeno, d_pace, indicator_idv, mindicator_snp,
-                   mapRS2wK, mapRS2cat, msnpInfo, W, K, ns) == false) {
+      if (MFILEKin(0, file_mgeno, setKSnps, d_pace, indicator_idv,
+                   mindicator_snp, mapRS2wK, mapRS2cat, msnpInfo, W, K,
+                   ns) == false) {
         error = true;
       }
     } else {
-      if (MFILEKin(0, file_mgeno, d_pace, indicator_idv, mindicator_snp,
-                   mapRS2wA, mapRS2cat, msnpInfo, W, A, ns) == false) {
+      if (MFILEKin(0, file_mgeno, setKSnps, d_pace, indicator_idv,
+                   mindicator_snp, mapRS2wA, mapRS2cat, msnpInfo, W, A,
+                   ns) == false) {
         error = true;
       }
     }

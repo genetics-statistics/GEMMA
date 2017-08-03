@@ -19,11 +19,14 @@
 #ifndef __PARAM_H__
 #define __PARAM_H__
 
+#include "debug.h"
 #include "gsl/gsl_matrix.h"
 #include "gsl/gsl_vector.h"
 #include <map>
 #include <set>
 #include <vector>
+
+#define K_BATCH_SIZE 10000 // #snps used for batched K
 
 using namespace std;
 
@@ -110,6 +113,7 @@ class PARAM {
 public:
   // IO-related parameters.
   bool mode_silence;
+  bool mode_debug = false;
   int a_mode; // Analysis mode, 1/2/3/4 for Frequentist tests
   int k_mode; // Kinship read mode: 1: n by n matrix, 2: id/id/k_value;
   vector<size_t> p_column; // Which phenotype column needs analysis.
@@ -135,12 +139,14 @@ public:
   string file_bf, file_hyp;
   string path_out;
 
-  string file_epm;  // Estimated parameter file.
-  string file_ebv;  // Estimated breeding value file.
-  string file_log;  // Log file containing mean estimate.
-  string file_read; // File containing total number of reads.
-  string file_gene; // Gene expression file.
-  string file_snps; // File containing analyzed SNPs or genes.
+  string file_epm;     // Estimated parameter file.
+  string file_ebv;     // Estimated breeding value file.
+  string file_log;     // Log file containing mean estimate.
+  string file_read;    // File containing total number of reads.
+  string file_gene;    // Gene expression file.
+  string file_snps;    // File containing analyzed SNPs or genes.
+  string file_ksnps;   // File SNPs for computing K
+  string file_gwasnps; // File SNPs for computing GWAS
 
   // WJA added.
   string file_oxford;
@@ -152,6 +158,7 @@ public:
   double r2_level;
 
   // LMM-related parameters.
+  string loco;
   double l_min;
   double l_max;
   size_t n_region;
@@ -215,6 +222,7 @@ public:
 
   // Number of individuals.
   size_t ni_total, ni_test, ni_cvt, ni_study, ni_ref;
+  size_t ni_max = 0; // -nind switch for testing purposes
 
   // Number of observed and missing phenotypes.
   size_t np_obs, np_miss;
@@ -305,7 +313,9 @@ public:
 
   vector<SNPINFO> snpInfo;          // Record SNP information.
   vector<vector<SNPINFO>> msnpInfo; // Record SNP information.
-  set<string> setSnps;              // Set of snps for analysis.
+  set<string> setSnps;              // Set of snps for analysis (-snps).
+  set<string> setKSnps;             // Set of snps for K (-ksnps and LOCO)
+  set<string> setGWASnps;           // Set of snps for GWA (-gwasnps and LOCO)
 
   // Constructor.
   PARAM();
@@ -350,5 +360,11 @@ public:
 };
 
 size_t GetabIndex(const size_t a, const size_t b, const size_t n_cvt);
+
+// Helpers for checking parameters
+#define enforce_fexists(fn, msg)                                               \
+  if (!fn.empty())                                                             \
+    enforce_msg(stat(fn.c_str(), &fileInfo) == 0,                              \
+                ((std::string(__STRING(fn)) + ": " + msg).c_str()));
 
 #endif
