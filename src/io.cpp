@@ -25,6 +25,7 @@
 #include <iomanip>
 #include <iostream>
 #include <map>
+#include <regex>
 #include <set>
 #include <sstream>
 #include <stdio.h>
@@ -132,7 +133,7 @@ std::istream &safeGetline(std::istream &is, std::string &t) {
 }
 
 // Read SNP file.
-bool ReadFile_snps(const string &file_snps, set<string> &setSnps) {
+bool ReadFile_snps(const string file_snps, set<string> &setSnps) {
   setSnps.clear();
 
   igzstream infile(file_snps.c_str(), igzstream::in);
@@ -654,6 +655,7 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
     major = ch_ptr;
 
     if (setSnps.size() != 0 && setSnps.count(rs) == 0) {
+      // if SNP in geno but not in -snps we add an missing value
       SNPINFO sInfo = {"-9", rs, -9, -9, minor, major,
                        0,    -9, -9, 0,  0,     file_pos};
       snpInfo.push_back(sInfo);
@@ -684,9 +686,8 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
     gsl_vector_set_zero(genotype_miss);
     for (int i = 0; i < ni_total; ++i) {
       ch_ptr = strtok(NULL, " , \t");
-      if (indicator_idv[i] == 0) {
+      if (indicator_idv[i] == 0)
         continue;
-      }
 
       if (strcmp(ch_ptr, "NA") == 0) {
         gsl_vector_set(genotype_miss, c_idv, 1);
@@ -1334,55 +1335,78 @@ void ReadFile_eigenD(const string &file_kd, bool &error, gsl_vector *eval) {
 }
 
 // Read bimbam mean genotype file and calculate kinship matrix.
-bool BimbamKin(const string &file_geno, vector<int> &indicator_snp,
-               const int k_mode, const int display_pace,
-               gsl_matrix *matrix_kin) {
+bool BimbamKin(const string file_geno, const set<string> ksnps,
+               vector<int> &indicator_snp, const int k_mode,
+               const int display_pace, gsl_matrix *matrix_kin,
+               const bool test_nind) {
   igzstream infile(file_geno.c_str(), igzstream::in);
-  if (!infile) {
-    cout << "error reading genotype file:" << file_geno << endl;
-    return false;
-  }
-
-  string line;
-  char *ch_ptr;
+  enforce_msg(infile, "error reading genotype file");
 
   size_t n_miss;
   double d, geno_mean, geno_var;
+
+  // setKSnp and/or LOCO support
+  bool process_ksnps = ksnps.size();
 
   size_t ni_total = matrix_kin->size1;
   gsl_vector *geno = gsl_vector_alloc(ni_total);
   gsl_vector *geno_miss = gsl_vector_alloc(ni_total);
 
-  // Create a large matrix.
-  size_t msize = 10000;
+  // Xlarge contains inds x markers
+  const size_t msize = K_BATCH_SIZE;
   gsl_matrix *Xlarge = gsl_matrix_alloc(ni_total, msize);
+  enforce_msg(Xlarge, "allocate Xlarge");
+
   gsl_matrix_set_zero(Xlarge);
 
+  // For every SNP read the genotype per individual
   size_t ns_test = 0;
   for (size_t t = 0; t < indicator_snp.size(); ++t) {
+    string line;
     !safeGetline(infile, line).eof();
     if (t % display_pace == 0 || t == (indicator_snp.size() - 1)) {
       ProgressBar("Reading SNPs  ", t, indicator_snp.size() - 1);
     }
-    if (indicator_snp[t] == 0) {
+    if (indicator_snp[t] == 0)
       continue;
+
+    std::regex_token_iterator<std::string::iterator> rend;
+    regex split_on("[,[:blank:]]+");
+    regex_token_iterator<string::iterator> tokens(line.begin(), line.end(),
+                                                  split_on, -1);
+    if (test_nind) {
+      // ascertain the number of genotype fields match
+      uint token_num = 0;
+      for (auto x = tokens; x != rend; x++)
+        token_num++;
+      enforce_str(token_num == ni_total + 3, line + " count fields");
     }
 
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
-    ch_ptr = strtok(NULL, " , \t");
-    ch_ptr = strtok(NULL, " , \t");
+    auto snp = *tokens; // first field
+    // check whether SNP is included in ksnps (used by LOCO)
+    if (process_ksnps && ksnps.count(snp) == 0)
+      continue;
 
+    tokens++; // skip nucleotide fields
+    tokens++; // skip nucleotide fields
+
+    // calc SNP stats
     geno_mean = 0.0;
     n_miss = 0;
     geno_var = 0.0;
     gsl_vector_set_all(geno_miss, 0);
     for (size_t i = 0; i < ni_total; ++i) {
-      ch_ptr = strtok(NULL, " , \t");
-      if (strcmp(ch_ptr, "NA") == 0) {
+      tokens++;
+      enforce_str(tokens != rend, line + " number of fields");
+      string field = *tokens;
+      if (field == "NA") {
         gsl_vector_set(geno_miss, i, 0);
         n_miss++;
       } else {
-        d = atof(ch_ptr);
+        d = stod(field);
+        // make sure genotype field contains a number
+        if (field != "0" && field != "0.0")
+          enforce_str(d != 0.0f, field);
         gsl_vector_set(geno, i, d);
         gsl_vector_set(geno_miss, i, 1);
         geno_mean += d;
@@ -1406,23 +1430,28 @@ bool BimbamKin(const string &file_geno, vector<int> &indicator_snp,
     if (k_mode == 2 && geno_var != 0) {
       gsl_vector_scale(geno, 1.0 / sqrt(geno_var));
     }
+    // set the SNP column ns_test
     gsl_vector_view Xlarge_col = gsl_matrix_column(Xlarge, ns_test % msize);
-    gsl_vector_memcpy(&Xlarge_col.vector, geno);
+    enforce_gsl(gsl_vector_memcpy(&Xlarge_col.vector, geno));
 
     ns_test++;
 
+    // compute kinship matrix and return in matrix_kin a SNP at a time
     if (ns_test % msize == 0) {
       eigenlib_dgemm("N", "T", 1.0, Xlarge, Xlarge, 1.0, matrix_kin);
       gsl_matrix_set_zero(Xlarge);
     }
   }
-
   if (ns_test % msize != 0) {
     eigenlib_dgemm("N", "T", 1.0, Xlarge, Xlarge, 1.0, matrix_kin);
   }
   cout << endl;
 
-  gsl_matrix_scale(matrix_kin, 1.0 / (double)ns_test);
+  // scale the kinship matrix
+  enforce_gsl(gsl_matrix_scale(matrix_kin, 1.0 / (double)ns_test));
+
+  // and transpose
+  // FIXME: the following is very slow
 
   for (size_t i = 0; i < ni_total; ++i) {
     for (size_t j = 0; j < i; ++j) {
@@ -1430,6 +1459,8 @@ bool BimbamKin(const string &file_geno, vector<int> &indicator_snp,
       gsl_matrix_set(matrix_kin, i, j, d);
     }
   }
+  // GSL is faster - and there are even faster methods
+  // enforce_gsl(gsl_matrix_transpose(matrix_kin));
 
   gsl_vector_free(geno);
   gsl_vector_free(geno_miss);
@@ -1463,7 +1494,7 @@ bool PlinkKin(const string &file_bed, vector<int> &indicator_snp,
   int n_bit;
 
   // Create a large matrix.
-  size_t msize = 10000;
+  const size_t msize = K_BATCH_SIZE;
   gsl_matrix *Xlarge = gsl_matrix_alloc(ni_total, msize);
   gsl_matrix_set_zero(Xlarge);
 
@@ -1583,7 +1614,7 @@ bool PlinkKin(const string &file_bed, vector<int> &indicator_snp,
 
 // Read bimbam mean genotype file, the second time, recode "mean"
 // genotype and calculate K.
-bool ReadFile_geno(const string &file_geno, vector<int> &indicator_idv,
+bool ReadFile_geno(const string file_geno, vector<int> &indicator_idv,
                    vector<int> &indicator_snp, gsl_matrix *UtX, gsl_matrix *K,
                    const bool calc_K) {
   igzstream infile(file_geno.c_str(), igzstream::in);
@@ -3326,13 +3357,14 @@ bool ReadFile_mcat(const string &file_mcat, map<string, size_t> &mapRS2cat,
 // Read bimbam mean genotype file and calculate kinship matrix; this
 // time, the kinship matrix is not centered, and can contain multiple
 // K matrix.
-bool BimbamKin(const string &file_geno, const int display_pace,
-               const vector<int> &indicator_idv,
-               const vector<int> &indicator_snp,
-               const map<string, double> &mapRS2weight,
-               const map<string, size_t> &mapRS2cat,
-               const vector<SNPINFO> &snpInfo, const gsl_matrix *W,
-               gsl_matrix *matrix_kin, gsl_vector *vector_ns) {
+bool BimbamKinUncentered(const string &file_geno, const set<string> ksnps,
+                         const int display_pace,
+                         const vector<int> &indicator_idv,
+                         const vector<int> &indicator_snp,
+                         const map<string, double> &mapRS2weight,
+                         const map<string, size_t> &mapRS2cat,
+                         const vector<SNPINFO> &snpInfo, const gsl_matrix *W,
+                         gsl_matrix *matrix_kin, gsl_vector *vector_ns) {
   igzstream infile(file_geno.c_str(), igzstream::in);
   if (!infile) {
     cout << "error reading genotype file:" << file_geno << endl;
@@ -3368,7 +3400,7 @@ bool BimbamKin(const string &file_geno, const int display_pace,
   }
 
   // Create a large matrix.
-  size_t msize = 10000;
+  const size_t msize = K_BATCH_SIZE;
   gsl_matrix *Xlarge = gsl_matrix_alloc(ni_test, msize * n_vc);
   gsl_matrix_set_zero(Xlarge);
 
@@ -3378,9 +3410,8 @@ bool BimbamKin(const string &file_geno, const int display_pace,
     if (t % display_pace == 0 || t == (indicator_snp.size() - 1)) {
       ProgressBar("Reading SNPs  ", t, indicator_snp.size() - 1);
     }
-    if (indicator_snp[t] == 0) {
+    if (indicator_snp[t] == 0)
       continue;
-    }
 
     ch_ptr = strtok((char *)line.c_str(), " , \t");
     ch_ptr = strtok(NULL, " , \t");
@@ -3562,7 +3593,7 @@ bool PlinkKin(const string &file_bed, const int display_pace,
   }
 
   // Create a large matrix.
-  size_t msize = 10000;
+  const size_t msize = K_BATCH_SIZE;
   gsl_matrix *Xlarge = gsl_matrix_alloc(ni_test, msize * n_vc);
   gsl_matrix_set_zero(Xlarge);
 
@@ -3742,7 +3773,8 @@ bool PlinkKin(const string &file_bed, const int display_pace,
 }
 
 bool MFILEKin(const size_t mfile_mode, const string &file_mfile,
-              const int display_pace, const vector<int> &indicator_idv,
+              const set<string> setKSnps, const int display_pace,
+              const vector<int> &indicator_idv,
               const vector<vector<int>> &mindicator_snp,
               const map<string, double> &mapRS2weight,
               const map<string, size_t> &mapRS2cat,
@@ -3774,8 +3806,9 @@ bool MFILEKin(const size_t mfile_mode, const string &file_mfile,
       PlinkKin(file_name, display_pace, indicator_idv, mindicator_snp[l],
                mapRS2weight, mapRS2cat, msnpInfo[l], W, kin_tmp, ns_tmp);
     } else {
-      BimbamKin(file_name, display_pace, indicator_idv, mindicator_snp[l],
-                mapRS2weight, mapRS2cat, msnpInfo[l], W, kin_tmp, ns_tmp);
+      BimbamKinUncentered(file_name, setKSnps, display_pace, indicator_idv,
+                          mindicator_snp[l], mapRS2weight, mapRS2cat,
+                          msnpInfo[l], W, kin_tmp, ns_tmp);
     }
 
     // Add ns.

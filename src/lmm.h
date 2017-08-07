@@ -26,6 +26,8 @@
 
 using namespace std;
 
+#define LMM_BATCH_SIZE 10000 // used for batch processing
+
 class FUNC_PARAM {
 
 public:
@@ -78,6 +80,7 @@ public:
   vector<int> indicator_snp;
 
   vector<SNPINFO> snpInfo; // Record SNP information.
+  set<string> setGWASnps;  // Record SNP information.
 
   // Not included in PARAM.
   vector<SUMSTAT> sumStat; // Output SNPSummary Data.
@@ -97,7 +100,8 @@ public:
                    const gsl_matrix *W, const gsl_vector *y);
   void AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
                      const gsl_matrix *UtW, const gsl_vector *Uty,
-                     const gsl_matrix *W, const gsl_vector *y);
+                     const gsl_matrix *W, const gsl_vector *y,
+                     const set<string> gwasnps);
   void AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval,
                        const gsl_matrix *UtW, const gsl_vector *Uty,
                        const gsl_matrix *W, const gsl_vector *y,

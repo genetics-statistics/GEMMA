@@ -2974,7 +2974,7 @@ void MVLMM::Analyzebgen(const gsl_matrix *U, const gsl_vector *eval,
   string line;
 
   // Create a large matrix.
-  size_t msize = 10000;
+  size_t msize = LMM_BATCH_SIZE;
   gsl_matrix *Xlarge = gsl_matrix_alloc(U->size1, msize);
   gsl_matrix *UtXlarge = gsl_matrix_alloc(U->size1, msize);
   gsl_matrix_set_zero(Xlarge);
@@ -3531,7 +3531,7 @@ void MVLMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
   size_t dc_size = d_size * (c_size + 1), v_size = d_size * (d_size + 1) / 2;
 
   // Create a large matrix.
-  size_t msize = 10000;
+  size_t msize = LMM_BATCH_SIZE;
   gsl_matrix *Xlarge = gsl_matrix_alloc(U->size1, msize);
   gsl_matrix *UtXlarge = gsl_matrix_alloc(U->size1, msize);
   gsl_matrix_set_zero(Xlarge);
@@ -3968,7 +3968,7 @@ void MVLMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
   size_t dc_size = d_size * (c_size + 1), v_size = d_size * (d_size + 1) / 2;
 
   // Create a large matrix.
-  size_t msize = 10000;
+  size_t msize = LMM_BATCH_SIZE;
   gsl_matrix *Xlarge = gsl_matrix_alloc(U->size1, msize);
   gsl_matrix *UtXlarge = gsl_matrix_alloc(U->size1, msize);
   gsl_matrix_set_zero(Xlarge);
