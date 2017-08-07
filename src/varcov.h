@@ -19,45 +19,43 @@
 #ifndef __VARCOV_H__
 #define __VARCOV_H__
 
-#include "gsl/gsl_vector.h"
 #include "gsl/gsl_matrix.h"
-#include "param.h"
+#include "gsl/gsl_vector.h"
 #include "io.h"
+#include "param.h"
 
 using namespace std;
 
 class VARCOV {
 
 public:
-	// IO-related parameters.
-	string file_out;
-	string path_out;
-	string file_geno;
-	string file_bfile;
-	int d_pace;
+  // IO-related parameters.
+  string file_out;
+  string path_out;
+  string file_geno;
+  string file_bfile;
+  int d_pace;
 
-	vector<int> indicator_idv;
-	vector<int> indicator_snp;
+  vector<int> indicator_idv;
+  vector<int> indicator_snp;
 
-	vector<SNPINFO> snpInfo;
+  vector<SNPINFO> snpInfo;
 
-	double time_opt;
+  double time_opt;
 
-	// Class-specific parameters.
-	double window_cm;
-	size_t window_bp;
-	size_t window_ns;
+  // Class-specific parameters.
+  double window_cm;
+  size_t window_bp;
+  size_t window_ns;
 
-	// Main functions.
-	void CopyFromParam (PARAM &cPar);
-	void CopyToParam (PARAM &cPar);
-	void CalcNB (vector<SNPINFO> &snpInfo_sort);
-	void WriteCov (const int flag, const vector<SNPINFO> &snpInfo_sub,
-		       const vector<vector<double> > &Cov_mat);
-	void AnalyzeBimbam ();
-	void AnalyzePlink ();
+  // Main functions.
+  void CopyFromParam(PARAM &cPar);
+  void CopyToParam(PARAM &cPar);
+  void CalcNB(vector<SNPINFO> &snpInfo_sort);
+  void WriteCov(const int flag, const vector<SNPINFO> &snpInfo_sub,
+                const vector<vector<double>> &Cov_mat);
+  void AnalyzeBimbam();
+  void AnalyzePlink();
 };
 
 #endif
-
-

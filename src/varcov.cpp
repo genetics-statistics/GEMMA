@@ -16,103 +16,126 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <string>
-#include <iomanip>
 #include <bitset>
-#include <vector>
+#include <cmath>
+#include <cstring>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
 #include <map>
 #include <set>
-#include <cstring>
-#include <cmath>
+#include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string>
+#include <vector>
 
-#include "gsl/gsl_vector.h"
-#include "gsl/gsl_matrix.h"
-#include "gsl/gsl_linalg.h"
 #include "gsl/gsl_blas.h"
 #include "gsl/gsl_cdf.h"
+#include "gsl/gsl_linalg.h"
+#include "gsl/gsl_matrix.h"
+#include "gsl/gsl_vector.h"
 
-#include "lapack.h"
 #include "gzstream.h"
+#include "io.h"
+#include "lapack.h"
+#include "mathfunc.h"
 #include "param.h"
 #include "varcov.h"
-#include "io.h"
-#include "mathfunc.h"
 
 using namespace std;
 
-void VARCOV::CopyFromParam (PARAM &cPar) {
-	d_pace=cPar.d_pace;
+void VARCOV::CopyFromParam(PARAM &cPar) {
+  d_pace = cPar.d_pace;
 
-	file_bfile=cPar.file_bfile;
-	file_geno=cPar.file_geno;
-	file_out=cPar.file_out;
-	path_out=cPar.path_out;
+  file_bfile = cPar.file_bfile;
+  file_geno = cPar.file_geno;
+  file_out = cPar.file_out;
+  path_out = cPar.path_out;
 
-	time_opt=0.0;
+  time_opt = 0.0;
 
-	window_cm=cPar.window_cm;
-	window_bp=cPar.window_bp;
-	window_ns=cPar.window_ns;
+  window_cm = cPar.window_cm;
+  window_bp = cPar.window_bp;
+  window_ns = cPar.window_ns;
 
-	indicator_idv=cPar.indicator_idv;
-	indicator_snp=cPar.indicator_snp;
-	snpInfo=cPar.snpInfo;
+  indicator_idv = cPar.indicator_idv;
+  indicator_snp = cPar.indicator_snp;
+  snpInfo = cPar.snpInfo;
 
-	return;
+  return;
 }
 
-void VARCOV::CopyToParam (PARAM &cPar) {
-	cPar.time_opt=time_opt;
-	return;
+void VARCOV::CopyToParam(PARAM &cPar) {
+  cPar.time_opt = time_opt;
+  return;
 }
 
-void VARCOV::WriteCov (const int flag, const vector<SNPINFO> &snpInfo_sub,
-		       const vector<vector<double> > &Cov_mat) {
+void VARCOV::WriteCov(const int flag, const vector<SNPINFO> &snpInfo_sub,
+                      const vector<vector<double>> &Cov_mat) {
   string file_cov;
-  file_cov=path_out+"/"+file_out;
-  file_cov+=".cor.txt";
+  file_cov = path_out + "/" + file_out;
+  file_cov += ".cor.txt";
 
   ofstream outfile;
 
-  if (flag==0) {
-    outfile.open (file_cov.c_str(), ofstream::out);
-    if (!outfile) {cout<<"error writing file: "<<file_cov<<endl; return;}
+  if (flag == 0) {
+    outfile.open(file_cov.c_str(), ofstream::out);
+    if (!outfile) {
+      cout << "error writing file: " << file_cov << endl;
+      return;
+    }
 
-    outfile<<"chr"<<"\t"<<"rs"<<"\t"<<"ps"<<"\t"<<"n_mis"
-	   <<"\t"<<"n_obs"<<"\t"<<"allele1"<<"\t"<<"allele0"
-	   <<"\t"<<"af"<<"\t"<<"window_size"
-	   <<"\t"<<"var"<<"\t"<<"cor"<<endl;
+    outfile << "chr"
+            << "\t"
+            << "rs"
+            << "\t"
+            << "ps"
+            << "\t"
+            << "n_mis"
+            << "\t"
+            << "n_obs"
+            << "\t"
+            << "allele1"
+            << "\t"
+            << "allele0"
+            << "\t"
+            << "af"
+            << "\t"
+            << "window_size"
+            << "\t"
+            << "var"
+            << "\t"
+            << "cor" << endl;
   } else {
-    outfile.open (file_cov.c_str(), ofstream::app);
-    if (!outfile) {cout<<"error writing file: "<<file_cov<<endl; return;}
+    outfile.open(file_cov.c_str(), ofstream::app);
+    if (!outfile) {
+      cout << "error writing file: " << file_cov << endl;
+      return;
+    }
 
-    for (size_t i=0; i<Cov_mat.size(); i++) {
-      outfile << snpInfo_sub[i].chr << "\t" << snpInfo_sub[i].rs_number <<
-	"\t" << snpInfo_sub[i].base_position << "\t" <<
-	snpInfo_sub[i].n_miss << "\t" << snpInfo_sub[i].n_idv << "\t" <<
-	snpInfo_sub[i].a_minor << "\t" << snpInfo_sub[i].a_major << "\t" <<
-	fixed << setprecision(3) << snpInfo_sub[i].maf << "\t" <<
-	Cov_mat[i].size()-1 << "\t";
-      outfile<<scientific<<setprecision(6)<<Cov_mat[i][0]<<"\t";
+    for (size_t i = 0; i < Cov_mat.size(); i++) {
+      outfile << snpInfo_sub[i].chr << "\t" << snpInfo_sub[i].rs_number << "\t"
+              << snpInfo_sub[i].base_position << "\t" << snpInfo_sub[i].n_miss
+              << "\t" << snpInfo_sub[i].n_idv << "\t" << snpInfo_sub[i].a_minor
+              << "\t" << snpInfo_sub[i].a_major << "\t" << fixed
+              << setprecision(3) << snpInfo_sub[i].maf << "\t"
+              << Cov_mat[i].size() - 1 << "\t";
+      outfile << scientific << setprecision(6) << Cov_mat[i][0] << "\t";
 
-      if (Cov_mat[i].size()==1) {
-	outfile<<"NA";
+      if (Cov_mat[i].size() == 1) {
+        outfile << "NA";
       } else {
-	for (size_t j=1; j<Cov_mat[i].size(); j++) {
-	  if (j==(Cov_mat[i].size()-1)) {
-	    outfile<<Cov_mat[i][j];
-	  } else {
-	    outfile<<Cov_mat[i][j]<<",";
-	  }
-	}
+        for (size_t j = 1; j < Cov_mat[i].size(); j++) {
+          if (j == (Cov_mat[i].size() - 1)) {
+            outfile << Cov_mat[i][j];
+          } else {
+            outfile << Cov_mat[i][j] << ",";
+          }
+        }
       }
 
-      outfile<<endl;
+      outfile << endl;
     }
   }
 
@@ -121,18 +144,18 @@ void VARCOV::WriteCov (const int flag, const vector<SNPINFO> &snpInfo_sub,
   return;
 }
 
-bool CompareSNPinfo (const SNPINFO &snpInfo1, const SNPINFO &snpInfo2) {
-  int c_chr=snpInfo1.chr.compare(snpInfo2.chr);
-  long int c_bp=snpInfo1.base_position-snpInfo2.base_position;
+bool CompareSNPinfo(const SNPINFO &snpInfo1, const SNPINFO &snpInfo2) {
+  int c_chr = snpInfo1.chr.compare(snpInfo2.chr);
+  long int c_bp = snpInfo1.base_position - snpInfo2.base_position;
 
-  if(c_chr<0) {
+  if (c_chr < 0) {
     return true;
-  } else if (c_chr>0) {
+  } else if (c_chr > 0) {
     return false;
   } else {
-    if (c_bp<0) {
+    if (c_bp < 0) {
       return true;
-    } else if (c_bp>0) {
+    } else if (c_bp > 0) {
       return false;
     } else {
       return true;
@@ -140,64 +163,73 @@ bool CompareSNPinfo (const SNPINFO &snpInfo1, const SNPINFO &snpInfo2) {
   }
 }
 
-
 // Do not sort SNPs (because gzip files do not support random access)
 // then calculate n_nb, the number of neighbours, for each SNP.
-void VARCOV::CalcNB (vector<SNPINFO> &snpInfo_sort) {
-  size_t t2=0, n_nb=0;
-  for (size_t t=0; t<indicator_snp.size(); ++t) {
-    if (indicator_snp[t]==0) {continue;}
-
-    if (snpInfo_sort[t].chr=="-9" ||
-	(snpInfo_sort[t].cM==-9 && window_cm!=0) ||
-	(snpInfo_sort[t].base_position==-9 && window_bp!=0) ) {
-      snpInfo_sort[t].n_nb=0; continue;
+void VARCOV::CalcNB(vector<SNPINFO> &snpInfo_sort) {
+  size_t t2 = 0, n_nb = 0;
+  for (size_t t = 0; t < indicator_snp.size(); ++t) {
+    if (indicator_snp[t] == 0) {
+      continue;
     }
 
-    if (t==indicator_snp.size()-1) {snpInfo_sort[t].n_nb=0; continue;}
+    if (snpInfo_sort[t].chr == "-9" ||
+        (snpInfo_sort[t].cM == -9 && window_cm != 0) ||
+        (snpInfo_sort[t].base_position == -9 && window_bp != 0)) {
+      snpInfo_sort[t].n_nb = 0;
+      continue;
+    }
 
-    t2=t+1; n_nb=0;
+    if (t == indicator_snp.size() - 1) {
+      snpInfo_sort[t].n_nb = 0;
+      continue;
+    }
 
-    while (t2<indicator_snp.size() &&
-	   snpInfo_sort[t2].chr == snpInfo_sort[t].chr &&
-	   indicator_snp[t2]==0) {
+    t2 = t + 1;
+    n_nb = 0;
+
+    while (t2 < indicator_snp.size() &&
+           snpInfo_sort[t2].chr == snpInfo_sort[t].chr &&
+           indicator_snp[t2] == 0) {
       t2++;
     }
 
-    while (t2<indicator_snp.size() &&
-	   snpInfo_sort[t2].chr==snpInfo_sort[t].chr &&
-	   (snpInfo_sort[t2].cM-snpInfo_sort[t].cM<window_cm ||
-	    window_cm==0) &&
-	   (snpInfo_sort[t2].base_position-snpInfo_sort[t].base_position <
-	    window_bp || window_bp==0) && (n_nb<window_ns|| window_ns==0)) {
-      t2++; n_nb++;
-      while (t2<indicator_snp.size() &&
-	     snpInfo_sort[t2].chr==snpInfo_sort[t].chr &&
-	     indicator_snp[t2]==0) {
-	t2++;
+    while (t2 < indicator_snp.size() &&
+           snpInfo_sort[t2].chr == snpInfo_sort[t].chr &&
+           (snpInfo_sort[t2].cM - snpInfo_sort[t].cM < window_cm ||
+            window_cm == 0) &&
+           (snpInfo_sort[t2].base_position - snpInfo_sort[t].base_position <
+                window_bp ||
+            window_bp == 0) &&
+           (n_nb < window_ns || window_ns == 0)) {
+      t2++;
+      n_nb++;
+      while (t2 < indicator_snp.size() &&
+             snpInfo_sort[t2].chr == snpInfo_sort[t].chr &&
+             indicator_snp[t2] == 0) {
+        t2++;
       }
     }
 
-    snpInfo_sort[t].n_nb=n_nb;
+    snpInfo_sort[t].n_nb = n_nb;
   }
 
   return;
 }
 
 // Vector double is centered to have mean 0.
-void Calc_Cor(vector<vector<double> > &X_mat, vector<double> &cov_vec) {
+void Calc_Cor(vector<vector<double>> &X_mat, vector<double> &cov_vec) {
   cov_vec.clear();
 
   double v1, v2, r;
-  vector<double> x_vec=X_mat[0];
+  vector<double> x_vec = X_mat[0];
 
   lapack_ddot(x_vec, x_vec, v1);
-  cov_vec.push_back(v1/(double)x_vec.size() );
+  cov_vec.push_back(v1 / (double)x_vec.size());
 
-  for (size_t i=1; i<X_mat.size(); i++) {
+  for (size_t i = 1; i < X_mat.size(); i++) {
     lapack_ddot(X_mat[i], x_vec, r);
     lapack_ddot(X_mat[i], X_mat[i], v2);
-    r/=sqrt(v1*v2);
+    r /= sqrt(v1 * v2);
 
     cov_vec.push_back(r);
   }
@@ -214,10 +246,10 @@ void Calc_Cor(vector<vector<double> > &X_mat, vector<double> &cov_vec) {
 // window_size (which can vary if cM was used) read bimbam mean
 // genotype file and calculate the covariance matrix for neighboring
 // SNPs output values at 10000-SNP-interval.
-void VARCOV::AnalyzeBimbam () {
-  igzstream infile (file_geno.c_str(), igzstream::in);
+void VARCOV::AnalyzeBimbam() {
+  igzstream infile(file_geno.c_str(), igzstream::in);
   if (!infile) {
-    cout<<"error reading genotype file:"<<file_geno<<endl;
+    cout << "error reading genotype file:" << file_geno << endl;
     return;
   }
 
@@ -225,58 +257,64 @@ void VARCOV::AnalyzeBimbam () {
   vector<SNPINFO> snpInfo_sub;
   CalcNB(snpInfo);
 
-  size_t ni_test=0;
-  for (size_t i=0; i<indicator_idv.size(); i++) {
-    ni_test+=indicator_idv[i];
+  size_t ni_test = 0;
+  for (size_t i = 0; i < indicator_idv.size(); i++) {
+    ni_test += indicator_idv[i];
   }
 
-  gsl_vector *geno=gsl_vector_alloc (ni_test);
+  gsl_vector *geno = gsl_vector_alloc(ni_test);
   double geno_mean;
 
   vector<double> x_vec, cov_vec;
-  vector<vector<double> > X_mat, Cov_mat;
+  vector<vector<double>> X_mat, Cov_mat;
 
-  for (size_t i=0; i<ni_test; i++) {
+  for (size_t i = 0; i < ni_test; i++) {
     x_vec.push_back(0);
   }
 
-  WriteCov (0, snpInfo_sub, Cov_mat);
+  WriteCov(0, snpInfo_sub, Cov_mat);
 
-  size_t t2=0, inc;
-  int n_nb=0;
+  size_t t2 = 0, inc;
+  int n_nb = 0;
 
-  for (size_t t=0; t<indicator_snp.size(); ++t) {
-    if (t%d_pace==0 || t==(indicator_snp.size()-1))
-      {ProgressBar ("Reading SNPs  ", t, indicator_snp.size()-1);}
-    if (indicator_snp[t]==0) {continue;}
-
-    if (X_mat.size()==0) {
-      n_nb=snpInfo[t].n_nb+1;
-    } else {
-      n_nb=snpInfo[t].n_nb-n_nb+1;
+  for (size_t t = 0; t < indicator_snp.size(); ++t) {
+    if (t % d_pace == 0 || t == (indicator_snp.size() - 1)) {
+      ProgressBar("Reading SNPs  ", t, indicator_snp.size() - 1);
+    }
+    if (indicator_snp[t] == 0) {
+      continue;
     }
 
-    for (int i=0; i<n_nb; i++) {
-      if (X_mat.size()==0) {t2=t;}
+    if (X_mat.size() == 0) {
+      n_nb = snpInfo[t].n_nb + 1;
+    } else {
+      n_nb = snpInfo[t].n_nb - n_nb + 1;
+    }
 
-      // Read a line of the snp is filtered out.
-      inc=0;
-      while (t2<indicator_snp.size() && indicator_snp[t2]==0) {
-	t2++; inc++;
+    for (int i = 0; i < n_nb; i++) {
+      if (X_mat.size() == 0) {
+        t2 = t;
       }
 
-      Bimbam_ReadOneSNP (inc, indicator_idv, infile, geno, geno_mean);
-      gsl_vector_add_constant (geno, -1.0*geno_mean);
+      // Read a line of the snp is filtered out.
+      inc = 0;
+      while (t2 < indicator_snp.size() && indicator_snp[t2] == 0) {
+        t2++;
+        inc++;
+      }
 
-      for (size_t j=0; j<geno->size; j++) {
-	x_vec[j]=gsl_vector_get(geno, j);
+      Bimbam_ReadOneSNP(inc, indicator_idv, infile, geno, geno_mean);
+      gsl_vector_add_constant(geno, -1.0 * geno_mean);
+
+      for (size_t j = 0; j < geno->size; j++) {
+        x_vec[j] = gsl_vector_get(geno, j);
       }
       X_mat.push_back(x_vec);
 
       t2++;
     }
 
-    n_nb=snpInfo[t].n_nb;
+    n_nb = snpInfo[t].n_nb;
 
     Calc_Cor(X_mat, cov_vec);
     Cov_mat.push_back(cov_vec);
@@ -285,15 +323,15 @@ void VARCOV::AnalyzeBimbam () {
     X_mat.erase(X_mat.begin());
 
     // Write out var/cov values.
-    if (Cov_mat.size()==10000) {
-      WriteCov (1, snpInfo_sub, Cov_mat);
+    if (Cov_mat.size() == 10000) {
+      WriteCov(1, snpInfo_sub, Cov_mat);
       Cov_mat.clear();
       snpInfo_sub.clear();
     }
   }
 
-  if (Cov_mat.size()!=0) {
-    WriteCov (1, snpInfo_sub, Cov_mat);
+  if (Cov_mat.size() != 0) {
+    WriteCov(1, snpInfo_sub, Cov_mat);
     Cov_mat.clear();
     snpInfo_sub.clear();
   }
@@ -306,68 +344,76 @@ void VARCOV::AnalyzeBimbam () {
   return;
 }
 
-void VARCOV::AnalyzePlink () {
-  string file_bed=file_bfile+".bed";
-  ifstream infile (file_bed.c_str(), ios::binary);
-  if (!infile) {cout<<"error reading bed file:"<<file_bed<<endl; return;}
+void VARCOV::AnalyzePlink() {
+  string file_bed = file_bfile + ".bed";
+  ifstream infile(file_bed.c_str(), ios::binary);
+  if (!infile) {
+    cout << "error reading bed file:" << file_bed << endl;
+    return;
+  }
 
   // Calculate the number of right-hand-side neighbours for each SNP.
   vector<SNPINFO> snpInfo_sub;
   CalcNB(snpInfo);
 
-  size_t ni_test=0;
-  for (size_t i=0; i<indicator_idv.size(); i++) {
-    ni_test+=indicator_idv[i];
+  size_t ni_test = 0;
+  for (size_t i = 0; i < indicator_idv.size(); i++) {
+    ni_test += indicator_idv[i];
   }
 
-  gsl_vector *geno=gsl_vector_alloc (ni_test);
+  gsl_vector *geno = gsl_vector_alloc(ni_test);
   double geno_mean;
 
   vector<double> x_vec, cov_vec;
-  vector<vector<double> > X_mat, Cov_mat;
+  vector<vector<double>> X_mat, Cov_mat;
 
-  for (size_t i=0; i<ni_test; i++) {
+  for (size_t i = 0; i < ni_test; i++) {
     x_vec.push_back(0);
   }
 
-  WriteCov (0, snpInfo_sub, Cov_mat);
+  WriteCov(0, snpInfo_sub, Cov_mat);
 
-  size_t t2=0, inc;
-  int n_nb=0;
+  size_t t2 = 0, inc;
+  int n_nb = 0;
 
-  for (size_t t=0; t<indicator_snp.size(); ++t) {
-    if (t%d_pace==0 || t==(indicator_snp.size()-1))
-      {ProgressBar ("Reading SNPs  ", t, indicator_snp.size()-1);}
-    if (indicator_snp[t]==0) {continue;}
-
-    if (X_mat.size()==0) {
-      n_nb=snpInfo[t].n_nb+1;
-    } else {
-      n_nb=snpInfo[t].n_nb-n_nb+1;
+  for (size_t t = 0; t < indicator_snp.size(); ++t) {
+    if (t % d_pace == 0 || t == (indicator_snp.size() - 1)) {
+      ProgressBar("Reading SNPs  ", t, indicator_snp.size() - 1);
+    }
+    if (indicator_snp[t] == 0) {
+      continue;
     }
 
-    for (int i=0; i<n_nb; i++) {
-      if (X_mat.size()==0) {t2=t;}
+    if (X_mat.size() == 0) {
+      n_nb = snpInfo[t].n_nb + 1;
+    } else {
+      n_nb = snpInfo[t].n_nb - n_nb + 1;
+    }
 
-      // Read a line if the SNP is filtered out.
-      inc=0;
-      while (t2<indicator_snp.size() && indicator_snp[t2]==0) {
-	t2++;
-	inc++;
+    for (int i = 0; i < n_nb; i++) {
+      if (X_mat.size() == 0) {
+        t2 = t;
       }
 
-      Plink_ReadOneSNP (t2, indicator_idv, infile, geno, geno_mean);
-      gsl_vector_add_constant (geno, -1.0*geno_mean);
+      // Read a line if the SNP is filtered out.
+      inc = 0;
+      while (t2 < indicator_snp.size() && indicator_snp[t2] == 0) {
+        t2++;
+        inc++;
+      }
 
-      for (size_t j=0; j<geno->size; j++) {
-	x_vec[j]=gsl_vector_get(geno, j);
+      Plink_ReadOneSNP(t2, indicator_idv, infile, geno, geno_mean);
+      gsl_vector_add_constant(geno, -1.0 * geno_mean);
+
+      for (size_t j = 0; j < geno->size; j++) {
+        x_vec[j] = gsl_vector_get(geno, j);
       }
       X_mat.push_back(x_vec);
 
       t2++;
     }
 
-    n_nb=snpInfo[t].n_nb;
+    n_nb = snpInfo[t].n_nb;
 
     Calc_Cor(X_mat, cov_vec);
     Cov_mat.push_back(cov_vec);
@@ -376,15 +422,15 @@ void VARCOV::AnalyzePlink () {
     X_mat.erase(X_mat.begin());
 
     // Write out var/cov values.
-    if (Cov_mat.size()==10000) {
-      WriteCov (1, snpInfo_sub, Cov_mat);
+    if (Cov_mat.size() == 10000) {
+      WriteCov(1, snpInfo_sub, Cov_mat);
       Cov_mat.clear();
       snpInfo_sub.clear();
     }
   }
 
-  if (Cov_mat.size()!=0) {
-    WriteCov (1, snpInfo_sub, Cov_mat);
+  if (Cov_mat.size() != 0) {
+    WriteCov(1, snpInfo_sub, Cov_mat);
     Cov_mat.clear();
     snpInfo_sub.clear();
   }

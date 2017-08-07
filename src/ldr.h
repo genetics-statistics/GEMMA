@@ -19,53 +19,51 @@
 #ifndef __LDR_H__
 #define __LDR_H__
 
-#include <vector>
-#include <map>
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_randist.h>
 #include "param.h"
+#include <gsl/gsl_randist.h>
+#include <gsl/gsl_rng.h>
+#include <map>
+#include <vector>
 
 using namespace std;
 
 class LDR {
 
 public:
-	// IO-related parameters.
-	int a_mode;
-	size_t d_pace;
+  // IO-related parameters.
+  int a_mode;
+  size_t d_pace;
 
-	string file_bfile;
-	string file_geno;
-	string file_out;
-	string path_out;
+  string file_bfile;
+  string file_geno;
+  string file_out;
+  string path_out;
 
-	// Summary statistics.
-	size_t ni_total, ns_total; // Total number of individuals & SNPs.
-	size_t ni_test, ns_test;   // Number of individuals & SNPs used
-                                   // for analysis
-	size_t n_cvt;		   // Number of covariates.
+  // Summary statistics.
+  size_t ni_total, ns_total; // Total number of individuals & SNPs.
+  size_t ni_test, ns_test;   // Number of individuals & SNPs used
+                             // for analysis
+  size_t n_cvt;              // Number of covariates.
 
-        // Indicator for individuals (phenotypes): 0 missing, 1
-        // available for analysis.
-	vector<int> indicator_idv;
+  // Indicator for individuals (phenotypes): 0 missing, 1
+  // available for analysis.
+  vector<int> indicator_idv;
 
-       	// Sequence indicator for SNPs: 0 ignored because of (a) maf,
-       	// (b) miss, (c) non-poly; 1 available for analysis.
-	vector<int> indicator_snp;
+  // Sequence indicator for SNPs: 0 ignored because of (a) maf,
+  // (b) miss, (c) non-poly; 1 available for analysis.
+  vector<int> indicator_snp;
 
-	vector<SNPINFO> snpInfo; // Record SNP information.
+  vector<SNPINFO> snpInfo; // Record SNP information.
 
-	// Not included in PARAM.
-	gsl_rng *gsl_r;
+  // Not included in PARAM.
+  gsl_rng *gsl_r;
 
-	// Main functions.
-	void CopyFromParam (PARAM &cPar);
-	void CopyToParam (PARAM &cPar);
+  // Main functions.
+  void CopyFromParam(PARAM &cPar);
+  void CopyToParam(PARAM &cPar);
 
-	void VB(const vector<vector<unsigned char> > &Xt,
-		const gsl_matrix *W_gsl, const gsl_vector *y_gsl);
+  void VB(const vector<vector<unsigned char>> &Xt, const gsl_matrix *W_gsl,
+          const gsl_vector *y_gsl);
 };
 
 #endif
-
-

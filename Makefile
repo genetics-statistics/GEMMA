@@ -30,7 +30,13 @@ SRC_DIR  = ./src
 
 CPP = g++
 
-CPPFLAGS = -O3 -std=gnu++11 -isystem/$(EIGEN_INCLUDE_PATH)
+ifdef DEBUG
+  # development mode
+  CPPFLAGS = -g -O3 -std=gnu++11 -isystem/$(EIGEN_INCLUDE_PATH)
+else
+  # release
+  CPPFLAGS = -DNDEBUG -O3 -std=gnu++11 -isystem/$(EIGEN_INCLUDE_PATH)
+endif
 
 ifdef SHOW_COMPILER_WARNINGS
   CPPFLAGS += -Wall
@@ -106,12 +112,19 @@ $(OBJS) : $(HDR)
 	$(CPP) $(CPPFLAGS) $(HEADERS) -c $*.cpp -o $*.o
 .SUFFIXES : .cpp .c .o $(SUFFIXES)
 
-check: all
+fast-check: all
+	cd test && ./dev_test_suite.sh | tee ../dev_test.log
+	grep -q 'success rate: 100%' dev_test.log
+
+slow-check: all
 	cd test && ./test_suite.sh | tee ../test.log
 	grep -q 'success rate: 100%' test.log
 
+check: fast-check slow-check
+
 clean:
 	rm -rf ${SRC_DIR}/*.o ${SRC_DIR}/*~ *~ $(OUTPUT)
+	rm test/output/*
 
 DIST_COMMON = COPYING.txt README.txt Makefile
 DIST_SUBDIRS = src doc example bin

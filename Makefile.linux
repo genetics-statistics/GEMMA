@@ -22,17 +22,16 @@ DIST_NAME = gemma-0.97
 # Edit below this line with caution
 # --------------------------------------------------------------------
 
-
 BIN_DIR  = ./bin
 
 SRC_DIR  = ./src
 
 CPP = g++
 
-CPPFLAGS = -Wall -Weffc++ -O3 -std=gnu++11
+CPPFLAGS = -O3 -std=gnu++11 -I./eigen
 
-LIBS = /software/gsl-2.2.1-el7-x86_64/lib/libgslcblas.a \
-       /software/gsl-2.2.1-el7-x86_64/lib/libgsl.a \
+LIBS = /software/gsl-1.16-el7-x86_64/lib/libgslcblas.a \
+       /software/gsl-1.16-el7-x86_64/lib/libgsl.a \
        -pthread -lz
 
 # ifdef FORCE_DYNAMIC
