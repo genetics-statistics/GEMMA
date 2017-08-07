@@ -16,7 +16,7 @@ WITH_OPENBLAS   =
 NO_INTEL_COMPAT =
 FORCE_32BIT     =
 FORCE_DYNAMIC   =
-DIST_NAME       = gemma-0.97
+DIST_NAME       = gemma-0.97.1
 
 # --------------------------------------------------------------------
 # Edit below this line with caution

@@ -47,7 +47,7 @@
 
 using namespace std;
 
-GEMMA::GEMMA(void) : version("0.97"), date("07/27/2017"), year("2017") {}
+GEMMA::GEMMA(void) : version("0.97.1"), date("08/07/2017"), year("2017") {}
 
 void GEMMA::PrintHeader(void) {
   cout << endl;
