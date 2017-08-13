@@ -13,15 +13,24 @@ and it should give you the version.
 GEMMA runs on Linux and MAC OSX and the runtime has the following
 dependencies:
 
-* C++ tool chain
+* C++ tool chain >= 4.9
 * GNU Science library (GSL) 1.x (does not currently work with GSL >= 2).
-* blas
-* [Eigen library](http://eigen.tuxfamily.org/dox/)
+* blas/openblas
+* lapack
+* [Eigen3 library](http://eigen.tuxfamily.org/dox/)
 * zlib
 
 See below for installation on Guix.
 
 ## Install GEMMA
+
+### Debian and Ubuntu
+
+Travis-CI uses Ubuntu for testing. Check the test logs for version numbers.
+
+[![Build Status](https://travis-ci.org/genetics-statistics/GEMMA.svg?branch=master)](https://travis-ci.org/genetics-statistics/GEMMA)
+
+Current settings can be found in [travis.yml](.travis.yml).
 
 ### Bioconda
 
