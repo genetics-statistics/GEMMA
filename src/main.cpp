@@ -25,9 +25,19 @@
 
 using namespace std;
 
+void gemma_gsl_error_handler (const char * reason,
+                              const char * file,
+                              int line, int gsl_errno) {
+  cerr << "GSL ERROR: " << reason << " in " << file
+       << " at line " << line << " errno " << gsl_errno <<endl;
+  exit(22);
+}
+
 int main(int argc, char *argv[]) {
   GEMMA cGemma;
   PARAM cPar;
+
+  gsl_set_error_handler (&gemma_gsl_error_handler);
 
   if (argc <= 1) {
     cGemma.PrintHeader();

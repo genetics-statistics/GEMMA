@@ -14,7 +14,7 @@ GEMMA runs on Linux and MAC OSX and the runtime has the following
 dependencies:
 
 * C++ tool chain >= 4.9
-* GNU Science library (GSL) 1.x (does not currently work with GSL >= 2).
+* GNU Science library (GSL) 1.x (GEMMA does not currently work with GSL >= 2).
 * blas/openblas
 * lapack
 * [Eigen3 library](http://eigen.tuxfamily.org/dox/)
@@ -66,6 +66,10 @@ path. E.g. on GNU Guix with shared libs and DEBUG the following may
 work
 
 	make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 FORCE_DYNAMIC=1 WITH_OPENBLAS=1 DEBUG=1
+
+another example overriding optimization and LIB flags (so as to link against gslv1) would be
+
+    make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 WITH_OPENBLAS=1 DEBUG=1 FORCE_DYNAMIC=1 GCC_FLAGS="-O3" LIBS="$HOME/opt/gsl1/lib/libgsl.a $HOME/opt/gsl1/lib/libgslcblas.a -L$HOME/.guix-profile/lib -pthread -llapack -lblas -lz"
 
 to run GEMMA tests
 

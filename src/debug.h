@@ -7,10 +7,15 @@
 // enforce works like assert but also when NDEBUG is set (i.e., it
 // always works). enforce_msg prints message instead of expr
 
+#define ROUND(f) round(f * 10000.)/10000
 #if defined NDEBUG
 #define debug_msg(msg)
+#define assert_issue(is_issue, expr)
 #else
 #define debug_msg(msg) cout << "**** DEBUG: " << msg << endl;
+#define assert_issue(is_issue, expr) \
+  ((is_issue) ? enforce_msg(expr,"FAIL: ISSUE assert") : __ASSERT_VOID_CAST(0))
+
 #endif
 
 /* This prints an "Assertion failed" message and aborts.  */
@@ -48,5 +53,6 @@ inline void __enforce_fail(const char *__assertion, const char *__file,
        ? __ASSERT_VOID_CAST(0)                                                 \
        : __enforce_fail(gsl_strerror(COMBINE(res, __LINE__)), __FILE__,         \
                         __LINE__, __ASSERT_FUNCTION))
+
 
 #endif

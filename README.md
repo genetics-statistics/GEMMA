@@ -134,61 +134,37 @@ of this.*
 
 To install GEMMA you can
 
-1. Download the precompiled binaries (64-bit Linux and Mac only).
+1. Download the precompiled binaries (64-bit Linux and Mac only), see
+   [latest stable release][latest_release].
 
 2. Use existing package managers, see [INSTALL.md](INSTALL.md).
 
-3. Compile the GEMMA executable from source.
+3. Compile GEMMA from source, see [INSTALL.md](INSTALL.md).
 
 Compiling from source takes more work, but can boost performance of
-the program, especially when using specialized C++ compilers and
-numerical libraries.
+GEMMA when using specialized C++ compilers and numerical libraries.
 
 Source code and [latest stable release][latest_release] are available
 from the Github repository.
 
 ### Precompiled binaries
 
-1. Go to the [latest stable release](latest_release) and download the
+1. Fetch the [latest stable release][latest_release] and download the
 file appropriate for your platform: `gemma.linux.gz` for Linux, or
 `gemma.macosx.gz` for Mac OS X.
 
 2. Run `gunzip gemma.linux.gz` or `gunzip gemma.linux.gz` to
-decompress the file.
+unpack the file.
 
-3. For convenience, the binaries we provide are linked to static
-versions of the GSL, LAPACK and BLAS libraries. So you do not need to
-install these libraries.
-
-4. Cince the program dynamically links to standard C++ and system
-libraries, *you need to make sure that you have installed on your
-system the same C++ compiler that was used to build the program.* For
-example, `gemma.linux` was built using `gcc 4.8.5`, so you should have
-`gcc 4.8.x`. If the libraries are installed somewhere non-standard,
-you can tell where GEMMA can find the libraries by setting the
-`LD_LIBRARY_PATH` environment variable. If you have the wrong version
-of the C++ compiler, or if the libraries are in a place where GEMMA
-cannot find them, then the program will complain about dynamic linking
-errors.
+3. Downloadable binaries are linked to static versions of the GSL,
+LAPACK and BLAS libraries. There is no need to install these
+libraries.
 
 ### Building from source
 
-*We provide a simple Makefile which will need to be customized; please
-see the comments at the top of the Makefile. Explain why we
-automatically generate a Makefile using programs such as CMake or
-Autotools.*
-
-You will need a standard C/C++ compiler such as GNU gcc, as well as
-[GSL](http://www.gnu.org/s/gsl) and
-[LAPACK](http://www.netlib.org/lapack) libraries. You will need to
-change the library paths in the Makefile accordingly. *Note that GEMMA
-currently does not work with GSL 2.x. We recommend linking to the
-latest version of GSL 1.x, which is GSL 1.16 as of this writing.*
-
-*Revise this step:* You will need to download the
-[Eigen C++ library](http://eigen.tuxfamily.org), and copy the `Eigen`
-subdirectory into the `src` directory of the GEMMA repository. (It was
-last tested using Eigen version 3.3.3.)
+*Note that GEMMA currently does not work with GSL 2.x. We recommend
+linking to the latest version of GSL 1.x, which is GSL 1.16 as of this
+writing.*
 
 More information on source code, dependencies and installation can be
 found in [INSTALL.md](INSTALL.md).
@@ -205,4 +181,4 @@ University of Michigan<br>
 Peter Carbonetto, Tim Flutre, Matthew Stephens, Pjotr Prins and others
 have also contributed to the development of this software.
 
-[latest_release]: https://github.com/genetics-statistics/GEMMA/releases/tag/v0.96 "Most recent stable release"
+[latest_release]: https://github.com/genetics-statistics/GEMMA/releases "Most recent stable releases"
