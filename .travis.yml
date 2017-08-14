@@ -1,0 +1,41 @@
+language: g++
+compiler: gcc
+matrix:
+  include:
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-4.9
+      env:
+         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-6
+      env:
+        - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y libopenblas-dev zlib1g-dev
+  - sudo apt-get install -y libeigen3-dev
+  - sudo apt-get install -y libgsl0-dev
+  - sudo apt-get install -y liblapack-dev
+  - dpkg -l
+  - eval "${MATRIX_EVAL}"
+  - $CXX --version
+script:
+  - eval "${MATRIX_EVAL}"
+  - $CXX --version
+  # build and test debug version
+  - make CXX=$CXX FORCE_DYNAMIC=1 WITH_OPENBLAS=1 DEBUG=1 -j 4
+  - time make check
+  - make clean
+  # build and test release version
+  - make CXX=$CXX FORCE_DYNAMIC=1 WITH_OPENBLAS=1 -j 4 check
+  - time make check
