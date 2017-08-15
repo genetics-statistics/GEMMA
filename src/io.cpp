@@ -1162,7 +1162,7 @@ void ReadFile_kin(const string &file_kin, vector<int> &indicator_idv,
     }
     if (i_total != ni_total) {
       cout << "error! number of rows in the kinship file do "
-           << "not match the number of phentypes." << endl;
+           << "not match the number of phenotypes." << endl;
       error = true;
     }
   } else {
