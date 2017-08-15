@@ -26,6 +26,8 @@ before_install:
   - sudo apt-get install -y libeigen3-dev
   - sudo apt-get install -y libgsl0-dev
   - sudo apt-get install -y liblapack-dev
+  # for the static release version we need the following
+  # - sudo apt-get install -y gfortran-dev
   - dpkg -l
   - eval "${MATRIX_EVAL}"
   - $CXX --version
@@ -37,5 +39,9 @@ script:
   - time make check
   - make clean
   # build and test release version
-  - make CXX=$CXX FORCE_DYNAMIC=1 WITH_OPENBLAS=1 -j 4 check
+  - make CXX=$CXX FORCE_DYNAMIC=1 WITH_OPENBLAS=1 -j 4
   - time make check
+  # build static release (fast-check only)
+  # - make clean
+  # - make CXX=$CXX TRAVIS_CI=1 -j 4 fast-check
+  # - ldd ./bin/gemma

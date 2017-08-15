@@ -2,8 +2,26 @@
 
 gemma=../bin/gemma
 
+# Test for https://github.com/genetics-statistics/GEMMA/issues/26
+# Always getting 'pve estimate =0.99xxx se(pve) =-nan'
+testIssue26() {
+    outn=issue26
+    rm -f output/$outn.*
+    $gemma -bfile data/issue26/mydata -k data/issue26/mydata_kinship.sXX.txt \
+           -miss 1 -maf 0.01 -r2 1 -lmm \
+           -debug -issue 26 \
+           -o $outn
+    assertEquals 0 $?
+    outfn=output/$outn.assoc.txt
+    grep "total computation time" < output/$outn.log.txt
+    assertEquals 0 $?
+    assertEquals "2001" `wc -l < $outfn`
+    assertEquals "1582899231.18" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+}
+
 testCenteredRelatednessMatrixKLOCO1() {
     outn=mouse_hs1940_LOCO1
+    rm -f output/$outn.*
     $gemma -g ../example/mouse_hs1940.geno.txt.gz -p ../example/mouse_hs1940.pheno.txt \
            -a ../example/mouse_hs1940.anno.txt -snps ../example/mouse_hs1940_snps.txt -nind 400 -loco 1 -gk -debug -o $outn
     assertEquals 0 $?
@@ -17,6 +35,7 @@ testCenteredRelatednessMatrixKLOCO1() {
 
 testUnivariateLinearMixedModelLOCO1() {
     outn=mouse_hs1940_CD8_LOCO1_lmm
+    rm -f output/$outn.*
     $gemma -g ../example/mouse_hs1940.geno.txt.gz -p ../example/mouse_hs1940.pheno.txt \
 	   -n 1 \
 	   -loco 1 \

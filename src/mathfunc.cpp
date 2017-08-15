@@ -187,6 +187,14 @@ double ScaleMatrix(gsl_matrix *G) {
   return d;
 }
 
+double SumVector(const gsl_vector *v) {
+  double sum = 0;
+  for (int i = 0; i < v->size; i++ ) {
+    sum += gsl_vector_get(v, i);
+  }
+  return( sum );
+}
+
 // Center the vector y.
 double CenterVector(gsl_vector *y) {
   double d = 0.0;
