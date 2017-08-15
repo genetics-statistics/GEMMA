@@ -80,6 +80,37 @@ testMultivariateLinearMixedModel() {
     assertEquals "139867" `wc -w < $outfn`
     assertEquals "4029037056.54" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
+
+testPlinkStandardRelatednessMatrixK() {
+    testname=testPlinkStandardRelatednessMatrixK
+    datadir=../example
+    outfn=output/$testname.sXX.txt
+    rm -f $outfn
+    $gemma -bfile $datadir/HLC \
+           -gk 2 -o $testname
+    assertEquals 0 $?
+    assertEquals 0 $?
+    assertEquals "427" `wc -l < $outfn`
+    assertEquals "-358.07" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+}
+
+# Test for https://github.com/genetics-statistics/GEMMA/issues/58
+# fixed GSLv2 NaN's that appeared with covariates.
+testPlinkMultivariateLinearMixedModel() {
+    testname=testPlinkMultivariateLinearMixedModel
+    datadir=../example
+    $gemma -bfile $datadir/HLC \
+           -k output/testPlinkStandardRelatednessMatrixK.sXX.txt \
+           -lmm 1 \
+           -maf 0.1 \
+           -c $datadir/HLC_covariates.txt \
+           -o $testname
+    assertEquals 0 $?
+    outfn=output/$testname.assoc.txt
+    assertEquals "223243" `wc -l < $outfn`
+    assertEquals "89756559859.06" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+}
+
 shunit2=`which shunit2`
 
 if [ -x "$shunit2" ]; then
