@@ -1955,7 +1955,7 @@ void PARAM::WriteMatrix(const gsl_matrix *matrix_U, const string suffix) {
 
   for (size_t i = 0; i < matrix_U->size1; ++i) {
     for (size_t j = 0; j < matrix_U->size2; ++j) {
-      outfile << gsl_matrix_get(matrix_U, i, j) << "\t";
+      outfile << tab(j) << gsl_matrix_get(matrix_U, i, j);
     }
     outfile << endl;
   }

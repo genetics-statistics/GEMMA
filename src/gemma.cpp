@@ -1789,14 +1789,14 @@ void GEMMA::BatchRun(PARAM &cPar) {
       cout << "REMLE estimate for Vg in the null model: " << endl;
       for (size_t i = 0; i < Vg->size1; i++) {
         for (size_t j = 0; j <= i; j++) {
-          cout << gsl_matrix_get(Vg, i, j) << "\t";
+          cout << tab(j) << gsl_matrix_get(Vg, i, j);
         }
         cout << endl;
       }
       cout << "REMLE estimate for Ve in the null model: " << endl;
       for (size_t i = 0; i < Ve->size1; i++) {
         for (size_t j = 0; j <= i; j++) {
-          cout << gsl_matrix_get(Ve, i, j) << "\t";
+          cout << tab(j) << gsl_matrix_get(Ve, i, j);
         }
         cout << endl;
       }
@@ -3560,7 +3560,7 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
         for (size_t j = 0; j <= i; j++) {
           c = (2 * cPar.n_ph - min(i, j) + 1) * min(i, j) / 2 + max(i, j) -
               min(i, j);
-          outfile << cPar.Vg_remle_null[c] << "\t";
+          outfile << tab(j) << cPar.Vg_remle_null[c];
         }
         outfile << endl;
       }
@@ -3569,7 +3569,7 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
         for (size_t j = 0; j <= i; j++) {
           c = (2 * cPar.n_ph - min(i, j) + 1) * min(i, j) / 2 + max(i, j) -
               min(i, j);
-          outfile << sqrt(cPar.VVg_remle_null[c]) << "\t";
+          outfile << tab(j) << sqrt(cPar.VVg_remle_null[c]);
         }
         outfile << endl;
       }
@@ -3578,7 +3578,7 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
         for (size_t j = 0; j <= i; j++) {
           c = (2 * cPar.n_ph - min(i, j) + 1) * min(i, j) / 2 + max(i, j) -
               min(i, j);
-          outfile << cPar.Ve_remle_null[c] << "\t";
+          outfile << tab(j) << cPar.Ve_remle_null[c];
         }
         outfile << endl;
       }
@@ -3587,7 +3587,7 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
         for (size_t j = 0; j <= i; j++) {
           c = (2 * cPar.n_ph - min(i, j) + 1) * min(i, j) / 2 + max(i, j) -
               min(i, j);
-          outfile << sqrt(cPar.VVe_remle_null[c]) << "\t";
+          outfile << tab(j) << sqrt(cPar.VVe_remle_null[c]);
         }
         outfile << endl;
       }
@@ -3597,7 +3597,7 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
         for (size_t j = 0; j < cPar.n_ph; j++) {
           c = (2 * cPar.n_ph - min(i, j) + 1) * min(i, j) / 2 + max(i, j) -
               min(i, j);
-          outfile << cPar.Vg_mle_null[c] << "\t";
+          outfile << tab(j) << cPar.Vg_mle_null[c];
         }
         outfile << endl;
       }
@@ -3606,7 +3606,7 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
         for (size_t j = 0; j <= i; j++) {
           c = (2 * cPar.n_ph - min(i, j) + 1) * min(i, j) / 2 + max(i, j) -
               min(i, j);
-          outfile << sqrt(cPar.VVg_mle_null[c]) << "\t";
+          outfile << tab(j) << sqrt(cPar.VVg_mle_null[c]);
         }
         outfile << endl;
       }
@@ -3615,7 +3615,7 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
         for (size_t j = 0; j < cPar.n_ph; j++) {
           c = (2 * cPar.n_ph - min(i, j) + 1) * min(i, j) / 2 + max(i, j) -
               min(i, j);
-          outfile << cPar.Ve_mle_null[c] << "\t";
+          outfile << tab(j) << cPar.Ve_mle_null[c];
         }
         outfile << endl;
       }
@@ -3624,7 +3624,7 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
         for (size_t j = 0; j <= i; j++) {
           c = (2 * cPar.n_ph - min(i, j) + 1) * min(i, j) / 2 + max(i, j) -
               min(i, j);
-          outfile << sqrt(cPar.VVe_mle_null[c]) << "\t";
+          outfile << tab(j) << sqrt(cPar.VVe_mle_null[c]);
         }
         outfile << endl;
       }
@@ -3634,7 +3634,7 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
       for (size_t i = 0; i < cPar.n_ph; i++) {
         for (size_t j = 0; j < cPar.n_cvt; j++) {
           c = i * cPar.n_cvt + j;
-          outfile << cPar.beta_remle_null[c] << "\t";
+          outfile << tab(j) << cPar.beta_remle_null[c];
         }
         outfile << endl;
       }
@@ -3642,7 +3642,7 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
       for (size_t i = 0; i < cPar.n_ph; i++) {
         for (size_t j = 0; j < cPar.n_cvt; j++) {
           c = i * cPar.n_cvt + j;
-          outfile << cPar.se_beta_remle_null[c] << "\t";
+          outfile << tab(j) << cPar.se_beta_remle_null[c];
         }
         outfile << endl;
       }

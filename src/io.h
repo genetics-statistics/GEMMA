@@ -28,6 +28,8 @@
 #include "gzstream.h"
 #include "param.h"
 
+#define tab(col) ( col ? "\t" : "")
+
 using namespace std;
 
 void ProgressBar(string str, double p, double total);
