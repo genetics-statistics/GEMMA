@@ -4,6 +4,7 @@ src/Eigen
 example/output
 test/output
 ./output
+bin/
 doc/manual.aux
 doc/manual.bbl
 doc/manual.blg
