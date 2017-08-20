@@ -29,21 +29,39 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
+#include <tuple>
 #include <vector>
 
 #include "Eigen/Dense"
+
+#include "gsl/gsl_version.h"
+
+#if GSL_MAJOR_VERSION < 2
+#pragma message "GSL version " GSL_VERSION
+#endif
+
 #include "gsl/gsl_blas.h"
 #include "gsl/gsl_cdf.h"
 #include "gsl/gsl_linalg.h"
 #include "gsl/gsl_matrix.h"
 #include "gsl/gsl_vector.h"
+#include "gsl/gsl_eigen.h"
 
+#include "debug.h"
 #include "eigenlib.h"
 #include "lapack.h"
 #include "mathfunc.h"
 
 using namespace std;
 using namespace Eigen;
+
+bool has_nan(const vector<double> v) {
+  for (const auto& e: v) {
+    if (std::isnan(e))
+      return true;
+  }
+  return false;
+}
 
 // calculate variance of a vector
 double VectorVar(const gsl_vector *v) {
@@ -185,6 +203,111 @@ double ScaleMatrix(gsl_matrix *G) {
   }
 
   return d;
+}
+
+bool isMatrixSymmetric(const gsl_matrix *G) {
+  enforce(G->size1 == G->size2);
+  auto m = G->data;
+  // upper triangle
+  auto size = G->size1;
+  for(auto c = 0; c < size; c++) {
+    for(auto r = 0; r < c; r++) {
+      int x1 = c, y1 = r, x2 = r, y2 = c;
+      auto idx1 = y1*size+x1, idx2 = y2*size+x2;
+      // printf("(%d,%d %f - %d,%d %f)",x1,y1,m[idx1],x2,y2,m[idx2]);
+      if(m[idx1] != m[idx2]) {
+        cout << "Mismatch coordinates (" << c << "," << r << ")" << m[idx1] << ":" << m[idx2] << "!" << endl;
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+bool isMatrixPositiveDefinite(const gsl_matrix *G) {
+  enforce(G->size1 == G->size2);
+  auto G2 = gsl_matrix_alloc(G->size1, G->size2);
+  enforce_gsl(gsl_matrix_memcpy(G2,G));
+  auto handler = gsl_set_error_handler_off();
+#if GSL_MAJOR_VERSION >= 2
+  auto s = gsl_linalg_cholesky_decomp1(G2);
+#else
+  auto s = gsl_linalg_cholesky_decomp(G2);
+#endif
+  gsl_set_error_handler(handler);
+  gsl_matrix_free(G2);
+  return (s == GSL_SUCCESS);
+}
+
+gsl_vector *getEigenValues(const gsl_matrix *G) {
+  enforce(G->size1 == G->size2);
+  auto G2 = gsl_matrix_alloc(G->size1, G->size2);
+  enforce_gsl(gsl_matrix_memcpy(G2,G));
+  auto eworkspace = gsl_eigen_symm_alloc(G->size1);
+  enforce(eworkspace);
+  gsl_vector *eigenvalues = gsl_vector_alloc(G->size1);
+  enforce_gsl(gsl_eigen_symm(G2, eigenvalues, eworkspace));
+  gsl_eigen_symm_free(eworkspace);
+  gsl_matrix_free(G2);
+  return eigenvalues;
+}
+
+// Check whether eigen values are larger than *min*
+// by default 1E-5.
+// Returns success, eigen min, eigen max
+
+tuple<double, double> abs_minmax(const gsl_vector *v) {
+  auto min = std::abs(v->data[0]);
+  auto max = std::abs(v->data[0]);
+  for (auto i=0; i<v->size; i++) {
+    auto value = std::abs(v->data[i]);
+    if (value < min)
+      min = value;
+    if (value > max)
+      max = value;
+  }
+  return std::make_tuple(min, max);
+}
+
+bool has_negative_values(const gsl_vector *v) {
+  for (auto i=0; i<v->size; i++) {
+    if (v->data[i] < 0.0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool checkMatrixEigen(const gsl_matrix *G, double min) {
+  auto eigenvalues = getEigenValues(G);
+  bool ret_valid = true;
+
+  if (has_negative_values(eigenvalues))
+    ret_valid = false;
+
+  auto t = abs_minmax(eigenvalues);
+  auto absmin = get<0>(t);
+  if (absmin < min)
+    ret_valid = false;
+  gsl_vector_free(eigenvalues);
+  return ret_valid;
+}
+
+bool isMatrixIllConditioned(const gsl_matrix *G, double max_ratio) {
+  bool ret_valid = true;
+  auto eigenvalues = getEigenValues(G);
+
+  auto t = abs_minmax(eigenvalues);
+  auto absmin = get<0>(t);
+  auto absmax = get<1>(t);
+  if (absmax/absmin > max_ratio) {
+    #if !NDEBUG
+    cerr << "**** DEBUG: Eigenvalues Min " << absmin << " Max " << absmax << " Ratio " << absmax/absmin << endl;
+    #endif
+    ret_valid = false;
+  }
+  gsl_vector_free(eigenvalues);
+  return ret_valid;
 }
 
 double SumVector(const gsl_vector *v) {

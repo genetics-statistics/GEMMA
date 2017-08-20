@@ -44,10 +44,19 @@
 #include "prdt.h"
 #include "varcov.h"
 #include "vc.h"
+#include "debug.h"
 
 using namespace std;
 
 GEMMA::GEMMA(void) : version("0.97.1"), date("08/07/2017"), year("2017") {}
+
+void gemma_gsl_error_handler (const char * reason,
+                              const char * file,
+                              int line, int gsl_errno) {
+  cerr << "GSL ERROR: " << reason << " in " << file
+       << " at line " << line << " errno " << gsl_errno <<endl;
+  exit(22);
+}
 
 void GEMMA::PrintHeader(void) {
   cout << endl;
@@ -247,10 +256,10 @@ void GEMMA::PrintHelp(size_t option) {
          << endl;
     cout << " to fit a multivariate linear mixed model: " << endl;
     cout << "         ./gemma -bfile [prefix] -k [filename] -lmm [num] -n "
-            "[num1] [num2] -o [prefix]"
+            "[pheno cols...] -o [prefix]"
          << endl;
     cout << "         ./gemma -g [filename] -p [filename] -a [filename] -k "
-            "[filename] -lmm [num] -n [num1] [num2] -o [prefix]"
+            "[filename] -lmm [num] -n [pheno cols...] -o [prefix]"
          << endl;
     cout << " to fit a Bayesian sparse linear mixed model: " << endl;
     cout << "         ./gemma -bfile [prefix] -bslmm [num] -o [prefix]" << endl;
@@ -536,6 +545,7 @@ void GEMMA::PrintHelp(size_t option) {
 
   if (option == 9) {
     cout << " MULTIVARIATE LINEAR MIXED MODEL OPTIONS" << endl;
+    cout << " -n [pheno cols...] - range of phenotypes" << endl;
     cout << " -pnr				     "
          << " specify the pvalue threshold to use the Newton-Raphson's method "
             "(default 0.001)"
@@ -694,6 +704,7 @@ void GEMMA::PrintHelp(size_t option) {
 
   if (option == 14) {
     cout << " DEBUG OPTIONS" << endl;
+    cout << " -no-checks               disable checks" << endl;
     cout << " -silence                 silent terminal display" << endl;
     cout << " -debug                   debug output" << endl;
     cout << " -nind       [num]        read up to num individuals" << endl;
@@ -1578,6 +1589,8 @@ void GEMMA::Assign(int argc, char **argv, PARAM &cPar) {
       cPar.window_ns = atoi(str.c_str());
     } else if (strcmp(argv[i], "-debug") == 0) {
       cPar.mode_debug = true;
+    } else if (strcmp(argv[i], "-no-checks") == 0) {
+      cPar.mode_check = false;
     } else {
       cout << "error! unrecognized option: " << argv[i] << endl;
       cPar.error = true;
@@ -1713,6 +1726,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
       cout << "error! fail to read kinship/relatedness file. " << endl;
       return;
     }
+    // FIXME: this is strange, why read twice?
     ReadFile_kin(cPar.file_kin, cPar.indicator_cvt, cPar.mapID2num, cPar.k_mode,
                  cPar.error, G_full);
     if (cPar.error == true) {
@@ -1723,6 +1737,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
     // center matrix G
     CenterMatrix(G);
     CenterMatrix(G_full);
+    validate_K(G,cPar.mode_check);
 
     // eigen-decomposition and calculate trace_G
     cout << "Start Eigen-Decomposition..." << endl;
@@ -1868,6 +1883,9 @@ void GEMMA::BatchRun(PARAM &cPar) {
       cout << "error! fail to calculate relatedness matrix. " << endl;
       return;
     }
+
+    // Now we have the Kinship matrix test it
+    validate_K(G,cPar.mode_check);
 
     if (cPar.a_mode == 21) {
       cPar.WriteMatrix(G, "cXX");
@@ -2146,6 +2164,8 @@ void GEMMA::BatchRun(PARAM &cPar) {
                cPar.se_pve_total, cPar.v_sigma2, cPar.v_se_sigma2,
                cPar.v_enrich, cPar.v_se_enrich);
 
+      assert(!has_nan(cPar.v_se_pve));
+
       // if LDSC weights, then compute the weights and run the above steps again
       if (cPar.a_mode == 62) {
         // compute the weights and normalize the weights for A
@@ -2175,7 +2195,9 @@ void GEMMA::BatchRun(PARAM &cPar) {
                  cPar.ni_study, cPar.v_pve, cPar.v_se_pve, cPar.pve_total,
                  cPar.se_pve_total, cPar.v_sigma2, cPar.v_se_sigma2,
                  cPar.v_enrich, cPar.v_se_enrich);
+        assert(!has_nan(cPar.v_se_pve));
       }
+
 
       gsl_vector_set(s, cPar.n_vc, cPar.ni_test);
 
@@ -2265,6 +2287,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
                cPar.v_pve, cPar.v_se_pve, cPar.pve_total, cPar.se_pve_total,
                cPar.v_sigma2, cPar.v_se_sigma2, cPar.v_enrich,
                cPar.v_se_enrich);
+      assert(!has_nan(cPar.v_se_pve));
 
       gsl_vector_view s_sub = gsl_vector_subvector(s, 0, cPar.n_vc);
       gsl_vector_memcpy(&s_sub.vector, s_ref);
@@ -2325,6 +2348,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
 
         // center matrix G
         CenterMatrix(G);
+        validate_K(G,cPar.mode_check);
 
         (cPar.v_traceG).clear();
         double d = 0;
@@ -2636,6 +2660,7 @@ return;}
     CalcCIss(Xz, XWz, XtXWz, S, Svar, w, z, s_vec, vec_cat, cPar.v_pve,
              cPar.v_se_pve, cPar.pve_total, cPar.se_pve_total, cPar.v_sigma2,
              cPar.v_se_sigma2, cPar.v_enrich, cPar.v_se_enrich);
+      assert(!has_nan(cPar.v_se_pve));
 
     // write files
     // cPar.WriteMatrix (XWz, "XWz");
@@ -2692,6 +2717,7 @@ return;}
 
       // center matrix G
       CenterMatrix(G);
+      validate_K(G,cPar.mode_check);
 
       // is residual weights are provided, then
       if (!cPar.file_weight.empty()) {
@@ -3007,6 +3033,7 @@ return;}
 
         // center matrix G
         CenterMatrix(G);
+        validate_K(G,cPar.mode_check);
       } else {
         cPar.ReadGenotypes(UtX, G, true);
       }
@@ -3123,6 +3150,8 @@ return;}
 
           // center matrix G
           CenterMatrix(G);
+          validate_K(G,cPar.mode_check);
+
         } else {
           cPar.ReadGenotypes(UtX, G, true);
         }
@@ -3329,6 +3358,7 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
       outfile << "  " << cPar.v_se_pve[i];
     }
     outfile << endl;
+    assert(!has_nan(cPar.v_se_pve));
 
     if (cPar.n_vc > 1) {
       outfile << "## total pve = " << cPar.pve_total << endl;
