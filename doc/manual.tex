@@ -980,7 +980,36 @@ There will be two output files, both inside an output folder in the
 current directory. The prefix.log.txt file contains some detailed
 information about the running parameters and computation time. In
 addition, prefix.log.txt contains PVE estimate and its standard error
-in the null linear mixed model.
+in the null linear mixed model. Here is an example log file in which
+an additional covariates file is also provided:
+%
+\begin{verbatim}
+## Summary Statistics:
+## number of total individuals = 1940
+## number of analyzed individuals = 1197
+## number of covariates = 2
+## number of phenotypes = 1
+## number of total SNPs = 12226
+## number of analyzed SNPs = 10758
+## REMLE log-likelihood in the null model = -1355.27
+## MLE log-likelihood in the null model = -1356.45
+## pve estimate in the null model = 0.598772
+## se(pve) in the null model = 0.0356942
+## vg estimate in the null model = 1.42894
+## ve estimate in the null model = 0.344439
+## beta estimate in the null model = 0.00735198 0.0425024
+## se(beta) = 0.0169633 0.025582
+\end{verbatim}
+%
+In this example, the ``null model'' in which none of the 10,758
+analyzed SNPs have an effect on phenotype, explains about 60\% of the
+variance in the phenotype residuals (with standard error of 3.6\%)
+after removing linear effects of the two covariates. The genetic and
+environmental variance components of the residuals are 1.43 and 0.34,
+respectively. The last two lines in the log file give the coefficients
+of the two covariates in the fitted linear mixed model, with standard
+errors. The first number (0.007) is the estimate of the intercept
+because the first column in the covariates file is a column of ones.
 
 The prefix.assoc.txt contains the results. An example file with a few
 SNPs is shown below:
