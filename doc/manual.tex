@@ -1454,7 +1454,7 @@ source code for detailed examples.
 \item  \textcolor{red}{ -d        [filename]}     \quad  specify input eigen value file name
 \item  \textcolor{red}{ -u        [filename]}     \quad  specify input eigen vector file name
 \item  \textcolor{red}{ -c        [filename] }     \quad      specify input covariates file name (optional); an intercept term is needed in the covariates file
-\item  \textcolor{red}{ -widv        [filename] }     \quad      specify input weight file name; this is only used for weighting the residual variance of different individuals
+\item  \textcolor{red}{ -widv        [filename] }     \quad      weight file contains a column of positive values to be used as weights for residuals---each weight corresponds to an individual, in which a high weight corresponds to high residual error variance for this individual (similar in format to phenotype file)
 \item  \textcolor{red}{ -gxe        [filename] }     \quad      specify input environmental covariate file name; this is only used for detecting gene x environmental interactions
 \item  \textcolor{red}{ -cat        [filename] }     \quad      specify input SNP category file name; this is only used for variance component estimation using summary statistics
 \item  \textcolor{red}{ -beta        [filename] }     \quad      specify input beta/z file name; this is only used for variance component estimation using summary statistics

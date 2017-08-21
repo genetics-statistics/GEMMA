@@ -113,8 +113,9 @@ chr	rs	ps	n_miss	allele1	allele0	af	beta_1	beta_2	Vbeta_1_1	Vbeta_1_2	Vbeta_2_2	
 
 # The pve estimates in the log file are based on the standard linear model (i.e. on the observed scale), and so you will need to properly transform it back to the liability scale
 
-## To generate relatedness matrix based on the training data
-../bin/gemma -g mouse_hs1940.geno.txt.gz -p mouse_hs1940.pheno.txt -n 2 -a mouse_hs1940.anno.txt -gk 1 -o mouse_hs1940_CD8_train
+## To generate relatedness matrix based on the training data.
+../bin/gemma -g mouse_hs1940.geno.txt.gz -p mouse_hs1940.pheno.txt -n 2 \
+  -a mouse_hs1940.anno.txt -gk 1 -o mouse_hs1940_CD8_train
 
 # This matrix will only be required if you want to do prediction based on estimated breeding values
 # Prediction can also be done without using the breeding values but instead using the alphas. This later approach does not appear to lose much accuracy in many examples we have encountered, although this may not be the case in your data.

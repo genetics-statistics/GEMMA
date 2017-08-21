@@ -323,7 +323,11 @@ void GEMMA::PrintHelp(size_t option) {
     cout << "                  ..." << endl;
     cout << "          missing value: NA" << endl;
     cout << " -widv   [filename]     "
-         << " specify input file that contains a column of residual weights"
+         << " weight file contains a column of positive values to be used "
+         << "as weights for residuals---each weight corresponds to an "
+         << "individual, in which a high weight corresponds to high "
+         << "residual error variance for this individual (similar in "
+	 << "format to phenotype file)"
          << endl;
     cout << "          format: variable for individual 1" << endl;
     cout << "                  variable for individual 2" << endl;
