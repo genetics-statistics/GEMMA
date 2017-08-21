@@ -16,7 +16,7 @@ SYS = MAC
 WITH_LAPACK = 1
 FORCE_32BIT =
 FORCE_DYNAMIC = 1
-DIST_NAME = gemma-0.97.1
+DIST_NAME = gemma-0.97.2
 
 # --------------------------------------------------------------------
 # Edit below this line with caution
