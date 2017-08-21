@@ -305,7 +305,7 @@ double CalcQi(const gsl_vector *eval, const gsl_vector *D_l,
             d1 = gsl_matrix_get(X, i, k);
             d2 = gsl_matrix_get(X, j, k);
             delta = gsl_vector_get(eval, k);
-            d += d1 * d2 / (dl * delta + 1.0);
+            d += d1 * d2 / (dl * delta + 1.0); // @@
           }
         }
 
@@ -366,7 +366,7 @@ void CalcOmega(const gsl_vector *eval, const gsl_vector *D_l,
     for (size_t i = 0; i < d_size; i++) {
       dl = gsl_vector_get(D_l, i);
 
-      d_u = dl / (delta * dl + 1.0);
+      d_u = dl / (delta * dl + 1.0);  // @@
       d_e = delta * d_u;
 
       gsl_matrix_set(OmegaU, i, k, d_u);
@@ -961,7 +961,7 @@ void CalcHiQi(const gsl_vector *eval, const gsl_matrix *X,
       d = delta * dl + 1.0;
 
       gsl_vector_view mat_row = gsl_matrix_row(mat_dd, i);
-      gsl_vector_scale(&mat_row.vector, 1.0 / d);
+      gsl_vector_scale(&mat_row.vector, 1.0 / d); // @@
 
       logdet_H += log(d);
     }

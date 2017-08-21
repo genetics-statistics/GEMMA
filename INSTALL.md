@@ -69,7 +69,7 @@ work
 
 another example overriding optimization and LIB flags (so as to link against gslv1) would be
 
-    make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 WITH_OPENBLAS=1 DEBUG=1 FORCE_DYNAMIC=1 GCC_FLAGS="-O3" LIBS="$HOME/opt/gsl1/lib/libgsl.a $HOME/opt/gsl1/lib/libgslcblas.a -L$HOME/.guix-profile/lib -pthread -llapack -lblas -lz"
+    make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 WITH_OPENBLAS=1 DEBUG=1 FORCE_DYNAMIC=1 GCC_FLAGS="-Wall" LIBS="$HOME/opt/gsl1/lib/libgsl.a $HOME/opt/gsl1/lib/libgslcblas.a -L$HOME/.guix-profile/lib -pthread -llapack -lblas -lz"
 
 to run GEMMA tests
 

@@ -26,12 +26,18 @@
 using namespace std;
 using namespace Eigen;
 
+bool has_nan(const vector<double> v);
+
 double VectorVar(const gsl_vector *v);
 void CenterMatrix(gsl_matrix *G);
 void CenterMatrix(gsl_matrix *G, const gsl_vector *w);
 void CenterMatrix(gsl_matrix *G, const gsl_matrix *W);
 void StandardizeMatrix(gsl_matrix *G);
 double ScaleMatrix(gsl_matrix *G);
+bool isMatrixPositiveDefinite(const gsl_matrix *G);
+bool isMatrixIllConditioned(const gsl_matrix *G, double max_ratio=4.0);
+bool isMatrixSymmetric(const gsl_matrix *G);
+bool checkMatrixEigen(const gsl_matrix *G, double min=1e-5);
 double SumVector(const gsl_vector *v);
 double CenterVector(gsl_vector *y);
 void CenterVector(gsl_vector *y, const gsl_matrix *W);

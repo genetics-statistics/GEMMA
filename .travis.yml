@@ -1,4 +1,4 @@
-language: g++
+language: C++
 compiler: gcc
 matrix:
   include:
@@ -36,11 +36,11 @@ script:
   - $CXX --version
   # build and test debug version
   - make CXX=$CXX FORCE_DYNAMIC=1 WITH_OPENBLAS=1 DEBUG=1 -j 4
-  - time make check
+  - time make CXX=$CXX FORCE_DYNAMIC=1 WITH_OPENBLAS=1 DEBUG=1 check
   - make clean
   # build and test release version
   - make CXX=$CXX FORCE_DYNAMIC=1 WITH_OPENBLAS=1 -j 4
-  - time make check
+  - time make CXX=$CXX FORCE_DYNAMIC=1 WITH_OPENBLAS=1 check
   # build static release (fast-check only)
   # - make clean
   # - make CXX=$CXX TRAVIS_CI=1 -j 4 fast-check

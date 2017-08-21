@@ -101,15 +101,17 @@ warranty**; without even the implied warranty of **merchantability or
 fitness for a particular purpose**. See file [LICENSE](LICENSE) for
 the full text of the license.
 
-
-
 The source code for the
 [shUnit2](https://github.com/genenetwork/shunit2) unit testing
-framework, included in this repository [here](test/shunit2-2.0.3), is
+framework, included in this repository [here](contrib/shunit2-2.0.3), is
 distributed under the
-[GNU Lesser General Public License](test/shunit2-2.0.3/doc/LGPL-2.1),
+[GNU Lesser General Public License](contrib/shunit2-2.0.3/doc/LGPL-2.1),
 either version 2.1 of the License, or (at your option) any later
 revision.
+
+The source code for the included [Catch](http://catch-lib.net) unit
+testing framework is distributed under the
+[Boost Software Licence version 1](https://github.com/philsquared/Catch/blob/master/LICENSE.txt).
 
 ## What's included
 

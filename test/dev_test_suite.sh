@@ -2,23 +2,6 @@
 
 gemma=../bin/gemma
 
-# Test for https://github.com/genetics-statistics/GEMMA/issues/26
-# Always getting 'pve estimate =0.99xxx se(pve) =-nan'
-testIssue26() {
-    outn=issue26
-    rm -f output/$outn.*
-    $gemma -bfile data/issue26/mydata -k data/issue26/mydata_kinship.sXX.txt \
-           -miss 1 -maf 0.01 -r2 1 -lmm \
-           -debug -issue 26 \
-           -o $outn
-    assertEquals 0 $?
-    outfn=output/$outn.assoc.txt
-    grep "total computation time" < output/$outn.log.txt
-    assertEquals 0 $?
-    assertEquals "2001" `wc -l < $outfn`
-    assertEquals "1582899231.18" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
-}
-
 testCenteredRelatednessMatrixKLOCO1() {
     outn=mouse_hs1940_LOCO1
     rm -f output/$outn.*
@@ -57,9 +40,9 @@ shunit2=`which shunit2`
 if [ -x "$shunit2" ]; then
     echo run system shunit2
     . $shunit2
-elif [ -e shunit2-2.0.3/src/shell/shunit2 ]; then
+elif [ -e ../contrib/shunit2-2.0.3/src/shell/shunit2 ]; then
     echo run shunit2 provided in gemma repo
-    . shunit2-2.0.3/src/shell/shunit2
+    . ../contrib/shunit2-2.0.3/src/shell/shunit2
 else
     echo "Can not find shunit2 - see INSTALL.md"
 fi
