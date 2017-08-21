@@ -10,14 +10,14 @@
 # Set this variable to either LNX or MAC
 SYS = LNX
 # Leave blank after "=" to disable; put "= 1" to enable
-SHOW_COMPILER_WARNINGS   =
+SHOW_COMPILER_WARNINGS =
 WITH_LAPACK     = 1
 WITH_OPENBLAS   =
 NO_INTEL_COMPAT =
 FORCE_32BIT     =
 FORCE_DYNAMIC   =
 GCC_FLAGS       = -O3 # extra flags -Wl,--allow-multiple-definition
-DIST_NAME       = gemma-0.97.1
+DIST_NAME       = gemma-0.97.2
 TRAVIS_CI       =
 
 # --------------------------------------------------------------------
