@@ -2022,12 +2022,12 @@ void PARAM::CheckCvt() {
     }
   }
 
-  // Add an intecept term if needed.
+  // Add an intercept term if needed.
   if (n_cvt == set_remove.size()) {
     indicator_cvt.clear();
     n_cvt = 1;
   } else if (flag_ipt == 0) {
-    cout << "no intecept term is found in the cvt file. "
+    cout << "no intercept term is found in the cvt file. "
          << "a column of 1s is added." << endl;
     for (vector<int>::size_type i = 0; i < indicator_idv.size(); ++i) {
       if (indicator_idv[i] == 0 || indicator_cvt[i] == 0) {
