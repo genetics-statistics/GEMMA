@@ -446,15 +446,25 @@ double EigenDecomp_Zeroed(gsl_matrix *G, gsl_matrix *U, gsl_vector *eval,
                           const size_t flag_largematrix) {
   EigenDecomp(G,U,eval,flag_largematrix);
   auto d = 0.0;
+  int count_zero_eigenvalues = 0;
   int count_negative_eigenvalues = 0;
   for (size_t i = 0; i < eval->size; i++) {
     if (std::abs(gsl_vector_get(eval, i)) < EIGEN_MINVALUE)
       gsl_vector_set(eval, i, 0.0);
-    if (gsl_vector_get(eval,i) < 0.0)
+    // checks
+    if (gsl_vector_get(eval,i) == 0.0)
+      count_zero_eigenvalues += 1;
+    if (gsl_vector_get(eval,i) < 0.0) // count smaller than -EIGEN_MINVALUE
       count_negative_eigenvalues += 1;
     d += gsl_vector_get(eval, i);
   }
   d /= (double)eval->size;
+  if (count_zero_eigenvalues > 1) {
+    std::string msg = "Matrix G has ";
+    msg += std::to_string(count_zero_eigenvalues);
+    msg += " eigenvalues close to zero";
+    warning_msg(msg);
+  }
   if (count_negative_eigenvalues > 0) {
     warning_msg("Matrix G has more than one negative eigenvalues!");
   }
