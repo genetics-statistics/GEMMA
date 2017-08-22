@@ -120,8 +120,8 @@ $(OBJS) : $(HDR)
 .SUFFIXES : .cpp .c .o $(SUFFIXES)
 
 unittests: all contrib/catch-1.9.7/catch.hpp $(TEST_SRC_DIR)/unittests-main.o $(TEST_SRC_DIR)/unittests-math.o
-	$(CPP) $(CPPFLAGS) $(TEST_SRC_DIR)/unittests-main.o  $(TEST_SRC_DIR)/unittests-math.o $(filter-out $(SRC_DIR)/main.o, $(OBJS)) $(LIBS) -o ./bin/unittests
-	./bin/unittests
+	$(CPP) $(CPPFLAGS) $(TEST_SRC_DIR)/unittests-main.o  $(TEST_SRC_DIR)/unittests-math.o $(filter-out $(SRC_DIR)/main.o, $(OBJS)) $(LIBS) -o ./bin/unittests-gemma
+	./bin/unittests-gemma
 
 fast-check: all unittests
 	rm -vf test/output/*
@@ -140,7 +140,7 @@ clean:
 	rm -vf $(SRC_DIR)/*~
 	rm -vf $(TEST_SRC_DIR)/*.o
 	rm -vf $(OUTPUT)
-	rm -vf ./bin/unittests
+	rm -vf ./bin/unittests-gemma
 
 DIST_COMMON = COPYING.txt README.txt Makefile
 DIST_SUBDIRS = src doc example bin
