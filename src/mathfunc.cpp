@@ -254,59 +254,62 @@ gsl_vector *getEigenValues(const gsl_matrix *G) {
 
 // Check whether eigen values are larger than *min*
 // by default 1E-5.
-// Returns success, eigen min, eigen max
+// Returns success, eigen min, eigen min-but-1, eigen max
 
-tuple<double, double> abs_minmax(const gsl_vector *v) {
-  auto min = std::abs(v->data[0]);
-  auto max = std::abs(v->data[0]);
+tuple<double, double, double> abs_minmax(const gsl_vector *v) {
+  auto min  = std::abs(v->data[0]);
+  auto min1 = std::abs(v->data[0]);
+  auto max  = std::abs(v->data[0]);
   for (auto i=0; i<v->size; i++) {
     auto value = std::abs(v->data[i]);
-    if (value < min)
+    if (value < min) {
+      min1 = min;
       min = value;
+    }
     if (value > max)
       max = value;
   }
-  return std::make_tuple(min, max);
+  return std::make_tuple(min, min1, max);
 }
 
-bool has_negative_values(const gsl_vector *v) {
+// Check for negative values. skip_min will leave out
+// the lowest value
+bool has_negative_values_but_one(const gsl_vector *v) {
+  bool one_skipped = false;
   for (auto i=0; i<v->size; i++) {
     if (v->data[i] < 0.0) {
-      return true;
+      if (one_skipped)
+        return true;
+      one_skipped = true;
     }
   }
   return false;
 }
 
-bool checkMatrixEigen(const gsl_matrix *G, double min) {
-  auto eigenvalues = getEigenValues(G);
-  bool ret_valid = true;
-
-  if (has_negative_values(eigenvalues))
-    ret_valid = false;
-
-  auto t = abs_minmax(eigenvalues);
-  auto absmin = get<0>(t);
-  if (absmin < min)
-    ret_valid = false;
-  gsl_vector_free(eigenvalues);
-  return ret_valid;
+uint count_small_values(const gsl_vector *v, double min) {
+  uint count = 0;
+  for (auto i=0; i<v->size; i++) {
+    if (v->data[i] < min)
+      count += 1;
+  }
+  return count;
 }
 
-bool isMatrixIllConditioned(const gsl_matrix *G, double max_ratio) {
+// Check for matrix being ill conditioned by taking the eigen values
+// and the ratio of max and min but one (min is expected to be zero).
+bool isMatrixIllConditioned(const gsl_vector *eigenvalues, double max_ratio) {
   bool ret_valid = true;
-  auto eigenvalues = getEigenValues(G);
 
   auto t = abs_minmax(eigenvalues);
   auto absmin = get<0>(t);
-  auto absmax = get<1>(t);
-  if (absmax/absmin > max_ratio) {
+  auto absmin1 = get<1>(t);
+  auto absmax = get<2>(t);
+  if (absmax/absmin1 > max_ratio) {
     #if !NDEBUG
-    cerr << "**** DEBUG: Eigenvalues Min " << absmin << " Max " << absmax << " Ratio " << absmax/absmin << endl;
+    cerr << "**** DEBUG: Eigenvalues [Min " << absmin << ", " << absmin1 << " ... " << absmax << " Max] Ratio " << absmax/absmin1 << endl;
     #endif
     ret_valid = false;
   }
-  gsl_vector_free(eigenvalues);
   return ret_valid;
 }
 

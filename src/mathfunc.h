@@ -23,6 +23,9 @@
 #include "gsl/gsl_matrix.h"
 #include "gsl/gsl_vector.h"
 
+#define CONDITIONED_MAXRATIO 2e+6 // based on http://mathworld.wolfram.com/ConditionNumber.html
+#define EIGEN_MINVALUE 1e-10
+
 using namespace std;
 using namespace Eigen;
 
@@ -34,10 +37,12 @@ void CenterMatrix(gsl_matrix *G, const gsl_vector *w);
 void CenterMatrix(gsl_matrix *G, const gsl_matrix *W);
 void StandardizeMatrix(gsl_matrix *G);
 double ScaleMatrix(gsl_matrix *G);
+bool has_negative_values_but_one(const gsl_vector *v);
+uint count_small_values(const gsl_vector *v, double min);
 bool isMatrixPositiveDefinite(const gsl_matrix *G);
-bool isMatrixIllConditioned(const gsl_matrix *G, double max_ratio=4.0);
+bool isMatrixIllConditioned(const gsl_vector *eigenvalues, double max_ratio=CONDITIONED_MAXRATIO);
 bool isMatrixSymmetric(const gsl_matrix *G);
-bool checkMatrixEigen(const gsl_matrix *G, double min=1e-5);
+gsl_vector *getEigenValues(const gsl_matrix *G);
 double SumVector(const gsl_vector *v);
 double CenterVector(gsl_vector *y);
 void CenterVector(gsl_vector *y, const gsl_matrix *W);

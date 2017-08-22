@@ -112,7 +112,8 @@ public:
 class PARAM {
 public:
   // IO-related parameters
-  bool mode_check = true;
+  bool mode_check = true;   // run data checks (slower)
+  bool mode_strict = false; // exit on some data checks
   bool mode_silence;
   bool mode_debug = false;
   uint issue; // enable tests for issue on github tracker

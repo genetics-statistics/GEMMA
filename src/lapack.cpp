@@ -23,8 +23,12 @@
 #include <iostream>
 #include <vector>
 
+#include "debug.h"
+#include "mathfunc.h"
+
 using namespace std;
 
+/*
 extern "C" void sgemm_(char *TRANSA, char *TRANSB, int *M, int *N, int *K,
                        float *ALPHA, float *A, int *LDA, float *B, int *LDB,
                        float *BETA, float *C, int *LDC);
@@ -39,6 +43,7 @@ extern "C" void ssyevr_(char *JOBZ, char *RANGE, char *UPLO, int *N, float *A,
                         int *ISUPPZ, float *WORK, int *LWORK, int *IWORK,
                         int *LIWORK, int *INFO);
 extern "C" double sdot_(int *N, float *DX, int *INCX, float *DY, int *INCY);
+*/
 
 extern "C" void dgemm_(char *TRANSA, char *TRANSB, int *M, int *N, int *K,
                        double *ALPHA, double *A, int *LDA, double *B, int *LDB,
@@ -55,6 +60,7 @@ extern "C" void dsyevr_(char *JOBZ, char *RANGE, char *UPLO, int *N, double *A,
                         int *LIWORK, int *INFO);
 extern "C" double ddot_(int *N, double *DX, int *INCX, double *DY, int *INCY);
 
+/*
 // Cholesky decomposition, A is destroyed.
 void lapack_float_cholesky_decomp(gsl_matrix_float *A) {
   int N = A->size1, LDA = A->size1, INFO;
@@ -75,6 +81,7 @@ void lapack_float_cholesky_decomp(gsl_matrix_float *A) {
 
   return;
 }
+*/
 
 // Cholesky decomposition, A is destroyed.
 void lapack_cholesky_decomp(gsl_matrix *A) {
@@ -97,6 +104,7 @@ void lapack_cholesky_decomp(gsl_matrix *A) {
   return;
 }
 
+/*
 // Cholesky solve, A is decomposed.
 void lapack_float_cholesky_solve(gsl_matrix_float *A, const gsl_vector_float *b,
                                  gsl_vector_float *x) {
@@ -118,6 +126,7 @@ void lapack_float_cholesky_solve(gsl_matrix_float *A, const gsl_vector_float *b,
 
   return;
 }
+*/
 
 // Cholesky solve, A is decomposed.
 void lapack_cholesky_solve(gsl_matrix *A, const gsl_vector *b, gsl_vector *x) {
@@ -140,6 +149,7 @@ void lapack_cholesky_solve(gsl_matrix *A, const gsl_vector *b, gsl_vector *x) {
   return;
 }
 
+/*
 void lapack_sgemm(char *TransA, char *TransB, float alpha,
                   const gsl_matrix_float *A, const gsl_matrix_float *B,
                   float beta, gsl_matrix_float *C) {
@@ -192,6 +202,7 @@ void lapack_sgemm(char *TransA, char *TransB, float alpha,
   gsl_matrix_float_free(C_t);
   return;
 }
+*/
 
 void lapack_dgemm(char *TransA, char *TransB, double alpha, const gsl_matrix *A,
                   const gsl_matrix *B, double beta, gsl_matrix *C) {
@@ -246,6 +257,7 @@ void lapack_dgemm(char *TransA, char *TransB, double alpha, const gsl_matrix *A,
   return;
 }
 
+/*
 // Eigen value decomposition, matrix A is destroyed, float seems to
 // have problem with large matrices (in mac).
 void lapack_float_eigen_symmv(gsl_matrix_float *A, gsl_vector_float *eval,
@@ -328,7 +340,10 @@ void lapack_float_eigen_symmv(gsl_matrix_float *A, gsl_vector_float *eval,
   return;
 }
 
-// Eigenvalue decomposition, matrix A is destroyed.
+*/
+
+// Eigenvalue decomposition, matrix A is destroyed. Returns eigenvalues in
+// 'eval'. Also returns matrix 'evec' (U).
 void lapack_eigen_symmv(gsl_matrix *A, gsl_vector *eval, gsl_matrix *evec,
                         const size_t flag_largematrix) {
   if (flag_largematrix == 1) {
@@ -409,21 +424,55 @@ void lapack_eigen_symmv(gsl_matrix *A, gsl_vector *eval, gsl_matrix *evec,
   return;
 }
 
-// DO NOT set eigenvalues to be positive.
+// Does NOT set eigenvalues to be positive. G gets destroyed. Returns
+// eigen trace and values in U and eval (eigenvalues).
 double EigenDecomp(gsl_matrix *G, gsl_matrix *U, gsl_vector *eval,
                    const size_t flag_largematrix) {
   lapack_eigen_symmv(G, eval, U, flag_largematrix);
 
   // Calculate track_G=mean(diag(G)).
   double d = 0.0;
-  for (size_t i = 0; i < eval->size; ++i) {
+  for (size_t i = 0; i < eval->size; ++i)
     d += gsl_vector_get(eval, i);
-  }
+
   d /= (double)eval->size;
 
   return d;
 }
 
+// Same as EigenDecomp but zeroes eigenvalues close to zero. When
+// negative eigenvalues remain a warning is issued.
+double EigenDecomp_Zeroed(gsl_matrix *G, gsl_matrix *U, gsl_vector *eval,
+                          const size_t flag_largematrix) {
+  EigenDecomp(G,U,eval,flag_largematrix);
+  auto d = 0.0;
+  int count_zero_eigenvalues = 0;
+  int count_negative_eigenvalues = 0;
+  for (size_t i = 0; i < eval->size; i++) {
+    if (std::abs(gsl_vector_get(eval, i)) < EIGEN_MINVALUE)
+      gsl_vector_set(eval, i, 0.0);
+    // checks
+    if (gsl_vector_get(eval,i) == 0.0)
+      count_zero_eigenvalues += 1;
+    if (gsl_vector_get(eval,i) < 0.0) // count smaller than -EIGEN_MINVALUE
+      count_negative_eigenvalues += 1;
+    d += gsl_vector_get(eval, i);
+  }
+  d /= (double)eval->size;
+  if (count_zero_eigenvalues > 1) {
+    std::string msg = "Matrix G has ";
+    msg += std::to_string(count_zero_eigenvalues);
+    msg += " eigenvalues close to zero";
+    warning_msg(msg);
+  }
+  if (count_negative_eigenvalues > 0) {
+    warning_msg("Matrix G has more than one negative eigenvalues!");
+  }
+
+  return d;
+}
+
+/*
 // DO NOT set eigen values to be positive.
 double EigenDecomp(gsl_matrix_float *G, gsl_matrix_float *U,
                    gsl_vector_float *eval, const size_t flag_largematrix) {
@@ -438,6 +487,7 @@ double EigenDecomp(gsl_matrix_float *G, gsl_matrix_float *U,
 
   return d;
 }
+*/
 
 double CholeskySolve(gsl_matrix *Omega, gsl_vector *Xty, gsl_vector *OiXty) {
   double logdet_O = 0.0;
@@ -452,6 +502,7 @@ double CholeskySolve(gsl_matrix *Omega, gsl_vector *Xty, gsl_vector *OiXty) {
   return logdet_O;
 }
 
+/*
 double CholeskySolve(gsl_matrix_float *Omega, gsl_vector_float *Xty,
                      gsl_vector_float *OiXty) {
   double logdet_O = 0.0;
@@ -465,6 +516,7 @@ double CholeskySolve(gsl_matrix_float *Omega, gsl_vector_float *Xty,
 
   return logdet_O;
 }
+*/
 
 // LU decomposition.
 void LUDecomp(gsl_matrix *LU, gsl_permutation *p, int *signum) {
@@ -472,6 +524,7 @@ void LUDecomp(gsl_matrix *LU, gsl_permutation *p, int *signum) {
   return;
 }
 
+/*
 void LUDecomp(gsl_matrix_float *LU, gsl_permutation *p, int *signum) {
   gsl_matrix *LU_double = gsl_matrix_alloc(LU->size1, LU->size2);
 
@@ -496,6 +549,7 @@ void LUDecomp(gsl_matrix_float *LU, gsl_permutation *p, int *signum) {
   gsl_matrix_free(LU_double);
   return;
 }
+*/
 
 // LU invert.
 void LUInvert(const gsl_matrix *LU, const gsl_permutation *p,
@@ -504,6 +558,7 @@ void LUInvert(const gsl_matrix *LU, const gsl_permutation *p,
   return;
 }
 
+/*
 void LUInvert(const gsl_matrix_float *LU, const gsl_permutation *p,
               gsl_matrix_float *inverse) {
   gsl_matrix *LU_double = gsl_matrix_alloc(LU->size1, LU->size2);
@@ -532,6 +587,8 @@ void LUInvert(const gsl_matrix_float *LU, const gsl_permutation *p,
   return;
 }
 
+*/
+
 // LU lndet.
 double LULndet(gsl_matrix *LU) {
   double d;
@@ -539,6 +596,7 @@ double LULndet(gsl_matrix *LU) {
   return d;
 }
 
+/*
 double LULndet(gsl_matrix_float *LU) {
   gsl_matrix *LU_double = gsl_matrix_alloc(LU->size1, LU->size2);
   double d;
@@ -557,6 +615,7 @@ double LULndet(gsl_matrix_float *LU) {
   gsl_matrix_free(LU_double);
   return d;
 }
+*/
 
 // LU solve.
 void LUSolve(const gsl_matrix *LU, const gsl_permutation *p,
@@ -565,6 +624,7 @@ void LUSolve(const gsl_matrix *LU, const gsl_permutation *p,
   return;
 }
 
+/*
 void LUSolve(const gsl_matrix_float *LU, const gsl_permutation *p,
              const gsl_vector_float *b, gsl_vector_float *x) {
   gsl_matrix *LU_double = gsl_matrix_alloc(LU->size1, LU->size2);
@@ -600,7 +660,7 @@ void LUSolve(const gsl_matrix_float *LU, const gsl_permutation *p,
   gsl_vector_free(x_double);
   return;
 }
-
+*/
 bool lapack_ddot(vector<double> &x, vector<double> &y, double &v) {
   bool flag = false;
   int incx = 1;
@@ -614,6 +674,7 @@ bool lapack_ddot(vector<double> &x, vector<double> &y, double &v) {
   return flag;
 }
 
+/*
 bool lapack_sdot(vector<float> &x, vector<float> &y, double &v) {
   bool flag = false;
   int incx = 1;
@@ -626,3 +687,4 @@ bool lapack_sdot(vector<float> &x, vector<float> &y, double &v) {
 
   return flag;
 }
+*/
