@@ -708,7 +708,8 @@ void GEMMA::PrintHelp(size_t option) {
 
   if (option == 14) {
     cout << " DEBUG OPTIONS" << endl;
-    cout << " -no-checks               disable checks" << endl;
+    cout << " -no-check                disable checks" << endl;
+    cout << " -strict                  strict mode will stop when there is a problem" << endl;
     cout << " -silence                 silent terminal display" << endl;
     cout << " -debug                   debug output" << endl;
     cout << " -nind       [num]        read up to num individuals" << endl;
@@ -1593,8 +1594,10 @@ void GEMMA::Assign(int argc, char **argv, PARAM &cPar) {
       cPar.window_ns = atoi(str.c_str());
     } else if (strcmp(argv[i], "-debug") == 0) {
       cPar.mode_debug = true;
-    } else if (strcmp(argv[i], "-no-checks") == 0) {
+    } else if (strcmp(argv[i], "-no-check") == 0) {
       cPar.mode_check = false;
+    } else if (strcmp(argv[i], "-strict") == 0) {
+      cPar.mode_strict = true;
     } else {
       cout << "error! unrecognized option: " << argv[i] << endl;
       cPar.error = true;
@@ -1730,7 +1733,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
       cout << "error! fail to read kinship/relatedness file. " << endl;
       return;
     }
-    // FIXME: this is strange, why read twice?
+    // This is not so elegant. Reads twice to select on idv and then cvt
     ReadFile_kin(cPar.file_kin, cPar.indicator_cvt, cPar.mapID2num, cPar.k_mode,
                  cPar.error, G_full);
     if (cPar.error == true) {
@@ -1741,20 +1744,12 @@ void GEMMA::BatchRun(PARAM &cPar) {
     // center matrix G
     CenterMatrix(G);
     CenterMatrix(G_full);
-    validate_K(G,cPar.mode_check);
+    validate_K(G,cPar.mode_check,cPar.mode_strict);
 
     // eigen-decomposition and calculate trace_G
     cout << "Start Eigen-Decomposition..." << endl;
     time_start = clock();
-    cPar.trace_G = EigenDecomp(G, U, eval, 0);
-    cPar.trace_G = 0.0;
-    for (size_t i = 0; i < eval->size; i++) {
-      if (gsl_vector_get(eval, i) < 1e-10) {
-        gsl_vector_set(eval, i, 0);
-      }
-      cPar.trace_G += gsl_vector_get(eval, i);
-    }
-    cPar.trace_G /= (double)eval->size;
+    cPar.trace_G = EigenDecomp_Zeroed(G, U, eval, 0);
     cPar.time_eigen = (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
 
     // calculate UtW and Uty
@@ -1889,7 +1884,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
     }
 
     // Now we have the Kinship matrix test it
-    validate_K(G,cPar.mode_check);
+    validate_K(G,cPar.mode_check,cPar.mode_strict);
 
     if (cPar.a_mode == 21) {
       cPar.WriteMatrix(G, "cXX");
@@ -2352,7 +2347,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
 
         // center matrix G
         CenterMatrix(G);
-        validate_K(G,cPar.mode_check);
+        validate_K(G,cPar.mode_check,cPar.mode_strict);
 
         (cPar.v_traceG).clear();
         double d = 0;
@@ -2721,7 +2716,7 @@ return;}
 
       // center matrix G
       CenterMatrix(G);
-      validate_K(G,cPar.mode_check);
+      validate_K(G,cPar.mode_check,cPar.mode_strict);
 
       // is residual weights are provided, then
       if (!cPar.file_weight.empty()) {
@@ -2750,9 +2745,9 @@ return;}
       time_start = clock();
 
       if (cPar.a_mode == 31) {
-        cPar.trace_G = EigenDecomp(G, U, eval, 1);
+        cPar.trace_G = EigenDecomp_Zeroed(G, U, eval, 1);
       } else {
-        cPar.trace_G = EigenDecomp(G, U, eval, 0);
+        cPar.trace_G = EigenDecomp_Zeroed(G, U, eval, 0);
       }
 
       if (!cPar.file_weight.empty()) {
@@ -2768,15 +2763,6 @@ return;}
           gsl_vector_scale(&Urow.vector, wi);
         }
       }
-
-      cPar.trace_G = 0.0;
-      for (size_t i = 0; i < eval->size; i++) {
-        if (gsl_vector_get(eval, i) < 1e-10) {
-          gsl_vector_set(eval, i, 0);
-        }
-        cPar.trace_G += gsl_vector_get(eval, i);
-      }
-      cPar.trace_G /= (double)eval->size;
 
       cPar.time_eigen =
           (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
@@ -3037,7 +3023,7 @@ return;}
 
         // center matrix G
         CenterMatrix(G);
-        validate_K(G,cPar.mode_check);
+        validate_K(G,cPar.mode_check,cPar.mode_strict);
       } else {
         cPar.ReadGenotypes(UtX, G, true);
       }
@@ -3045,15 +3031,9 @@ return;}
       // eigen-decomposition and calculate trace_G
       cout << "Start Eigen-Decomposition..." << endl;
       time_start = clock();
-      cPar.trace_G = EigenDecomp(G, U, eval, 0);
-      cPar.trace_G = 0.0;
-      for (size_t i = 0; i < eval->size; i++) {
-        if (gsl_vector_get(eval, i) < 1e-10) {
-          gsl_vector_set(eval, i, 0);
-        }
-        cPar.trace_G += gsl_vector_get(eval, i);
-      }
-      cPar.trace_G /= (double)eval->size;
+
+      cPar.trace_G = EigenDecomp_Zeroed(G, U, eval, 0);
+
       cPar.time_eigen =
           (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
 
@@ -3154,7 +3134,7 @@ return;}
 
           // center matrix G
           CenterMatrix(G);
-          validate_K(G,cPar.mode_check);
+          validate_K(G,cPar.mode_check,cPar.mode_strict);
 
         } else {
           cPar.ReadGenotypes(UtX, G, true);
@@ -3163,15 +3143,7 @@ return;}
         // eigen-decomposition and calculate trace_G
         cout << "Start Eigen-Decomposition..." << endl;
         time_start = clock();
-        cPar.trace_G = EigenDecomp(G, U, eval, 0);
-        cPar.trace_G = 0.0;
-        for (size_t i = 0; i < eval->size; i++) {
-          if (gsl_vector_get(eval, i) < 1e-10) {
-            gsl_vector_set(eval, i, 0);
-          }
-          cPar.trace_G += gsl_vector_get(eval, i);
-        }
-        cPar.trace_G /= (double)eval->size;
+        cPar.trace_G = EigenDecomp_Zeroed(G, U, eval, 0);
         cPar.time_eigen =
             (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
 

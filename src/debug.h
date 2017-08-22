@@ -12,16 +12,21 @@ void gemma_gsl_error_handler (const char * reason,
 
 
 // Validation routines
-void do_validate_K(const gsl_matrix *K, bool do_check, const char *__file, int __line);
+void do_validate_K(const gsl_matrix *K, bool do_check, bool strict, const char *__file, int __line);
 
 #define ROUND(f) round(f * 10000.)/10000
-#define validate_K(K,check) do_validate_K(K,check,__FILE__,__LINE__)
+#define validate_K(K,check,strict) do_validate_K(K,check,strict,__FILE__,__LINE__)
 
 #define warning_at_msg(__file,__line,msg) cerr << "**** WARNING: " << msg << " in " << __file << " at line " << __line << endl;
 
-inline void fail_at_msg(const char *__file, int __line, const char *msg) {
-  std::cerr << "**** FAIL: " << msg << " in " << __file << " at line " << __line << std::endl;
-  exit(1);
+inline void fail_at_msg(bool strict, const char *__file, int __line, const char *msg) {
+  if (strict)
+    std::cerr << "**** STRICT FAIL: ";
+  else
+    std::cerr << "**** WARNING: ";
+  std::cerr << msg << " in " << __file << " at line " << __line << std::endl;
+  if (strict)
+    exit(1);
 }
 #if defined NDEBUG
 

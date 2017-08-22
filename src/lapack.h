@@ -41,6 +41,8 @@ void lapack_eigen_symmv(gsl_matrix *A, gsl_vector *eval, gsl_matrix *evec,
 
 double EigenDecomp(gsl_matrix *G, gsl_matrix *U, gsl_vector *eval,
                    const size_t flag_largematrix);
+double EigenDecomp_Zeroed(gsl_matrix *G, gsl_matrix *U, gsl_vector *eval,
+                   const size_t flag_largematrix);
 double EigenDecomp(gsl_matrix_float *G, gsl_matrix_float *U,
                    gsl_vector_float *eval, const size_t flag_largematrix);
 
