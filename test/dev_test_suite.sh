@@ -2,6 +2,50 @@
 
 gemma=../bin/gemma
 
+
+# Related to https://github.com/genetics-statistics/GEMMA/issues/78
+testBXDStandardRelatednessMatrixKSingularError() {
+    outn=BXDerr
+    rm -f output/$outn.*
+    $gemma -g ../example/BXD_geno.txt.gz \
+           -p ../example/BXD_pheno.txt \
+           -c ../example/BXD_covariates.txt \
+           -a ../example/BXD_snps.txt \
+           -gk \
+           -debug -o $outn
+    assertEquals 22 $? # should show singular error
+}
+
+testBXDStandardRelatednessMatrixK() {
+    outn=BXD
+    rm -f output/$outn.*
+    $gemma -g ../example/BXD_geno.txt.gz \
+           -p ../example/BXD_pheno.txt \
+           -c ../example/BXD_covariates2.txt \
+           -a ../example/BXD_snps.txt \
+           -gk \
+           -debug -o $outn
+    assertEquals 0 $?
+    outfn=output/$outn.cXX.txt
+    assertEquals "198" `wc -l < $outfn`
+    assertEquals "-116.11" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+}
+
+testBXDMultivariateLinearMixedModel() {
+    $gemma -g ../example/BXD_geno.txt.gz \
+           -p ../example/BXD_pheno.txt \
+           -c ../example/BXD_covariates2.txt \
+           -a ../example/BXD_snps.txt \
+           -k ./output/BXD.cXX.txt \
+           -lmm 2 -maf 0.1 \
+           -o BXD_mvlmm
+    assertEquals 0 $?
+
+    outfn=output/BXD_mvlmm.assoc.txt
+    assertEquals "65862" `wc -w < $outfn`
+    assertEquals "3088489421.94" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+}
+
 testCenteredRelatednessMatrixKLOCO1() {
     outn=mouse_hs1940_LOCO1
     rm -f output/$outn.*
