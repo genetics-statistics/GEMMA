@@ -594,10 +594,7 @@ void LUInvert(const gsl_matrix_float *LU, const gsl_permutation *p,
 
 // LU lndet.
 double LULndet(const gsl_matrix *LU) {
-  double d;
-  d = gsl_linalg_LU_lndet((gsl_matrix *)LU);
-  enforce(d != 0.0);
-  return d;
+  return gsl_linalg_LU_lndet((gsl_matrix *)LU);
 }
 
 /*
