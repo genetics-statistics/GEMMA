@@ -24,7 +24,8 @@ testBXDStandardRelatednessMatrixK() {
            -c ../example/BXD_covariates2.txt \
            -a ../example/BXD_snps.txt \
            -gk \
-           -debug -o $outn
+           -debug \
+           -o $outn
     assertEquals 0 $?
     outfn=output/$outn.cXX.txt
     assertEquals "198" `wc -l < $outfn`
@@ -38,6 +39,7 @@ testBXDMultivariateLinearMixedModel() {
            -a ../example/BXD_snps.txt \
            -k ./output/BXD.cXX.txt \
            -lmm 2 -maf 0.1 \
+           -debug \
            -o BXD_mvlmm
     assertEquals 0 $?
 

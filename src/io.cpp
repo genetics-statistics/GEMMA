@@ -608,7 +608,7 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
                    const double &r2_level, map<string, string> &mapRS2chr,
                    map<string, long int> &mapRS2bp,
                    map<string, double> &mapRS2cM, vector<SNPINFO> &snpInfo,
-                   size_t &ns_test) {
+                   size_t &ns_test, bool debug) {
   indicator_snp.clear();
   snpInfo.clear();
 
@@ -679,10 +679,11 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
     }
 
     if (mapRS2bp.count(rs) == 0) {
-      std::string msg = "Can't figure out position for ";
-      msg += rs;
-      debug_msg(msg);
-
+      if (debug) {
+        std::string msg = "Can't figure out position for ";
+        msg += rs;
+        debug_msg(msg);
+      }
       chr = "-9";
       b_pos = -9;
       cM = -9;
@@ -1633,7 +1634,7 @@ bool PlinkKin(const string &file_bed, vector<int> &indicator_snp,
 // genotype and calculate K.
 bool ReadFile_geno(const string file_geno, vector<int> &indicator_idv,
                    vector<int> &indicator_snp, gsl_matrix *UtX, gsl_matrix *K,
-                   const bool calc_K) {
+                   const bool calc_K, bool debug) {
   igzstream infile(file_geno.c_str(), igzstream::in);
   if (!infile) {
     cout << "error reading genotype file:" << file_geno << endl;
@@ -1737,7 +1738,7 @@ bool ReadFile_geno(const string &file_geno, vector<int> &indicator_idv,
                    vector<int> &indicator_snp,
                    vector<vector<unsigned char>> &Xt, gsl_matrix *K,
                    const bool calc_K, const size_t ni_test,
-                   const size_t ns_test) {
+                   const size_t ns_test, bool debug) {
   igzstream infile(file_geno.c_str(), igzstream::in);
   if (!infile) {
     cout << "error reading genotype file:" << file_geno << endl;
