@@ -659,6 +659,7 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
   ns_test = 0;
 
   file_pos = 0;
+  auto count_warnings = 0;
   while (!safeGetline(infile, line).eof()) {
     ch_ptr = strtok((char *)line.c_str(), " , \t");
     rs = ch_ptr;
@@ -679,10 +680,12 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
     }
 
     if (mapRS2bp.count(rs) == 0) {
-      if (debug) {
+      if (debug && count_warnings++ < 10) {
         std::string msg = "Can't figure out position for ";
         msg += rs;
         debug_msg(msg);
+        if (count_warnings == 10)
+          debug_msg("Skipping similar warnings");
       }
       chr = "-9";
       b_pos = -9;
