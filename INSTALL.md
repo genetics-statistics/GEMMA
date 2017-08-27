@@ -82,6 +82,9 @@ You can run gemma in the debugger with, for example
 		-p example/mouse_hs1940.pheno.txt -a example/mouse_hs1940.anno.txt \
 		-snps example/snps.txt -nind 400 -loco 1 -gk -debug -o myoutput
 
+Note that if you get <optimized out> warnings on inspecting variables you
+should compile with GCC_FLAGS="" to disable optimizations (-O3).
+
 Other options, such as compiling with warnings, are listed in the
 Makefile.
 

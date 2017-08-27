@@ -64,7 +64,7 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
                    const double &r2_level, map<string, string> &mapRS2chr,
                    map<string, long int> &mapRS2bp,
                    map<string, double> &mapRS2cM, vector<SNPINFO> &snpInfo,
-                   size_t &ns_test);
+                   size_t &ns_test, bool debug);
 bool ReadFile_bed(const string &file_bed, const set<string> &setSnps,
                   const gsl_matrix *W, vector<int> &indicator_idv,
                   vector<int> &indicator_snp, vector<SNPINFO> &snpInfo,
@@ -94,7 +94,7 @@ bool PlinkKin(const string &file_bed, vector<int> &indicator_snp,
 
 bool ReadFile_geno(const string file_geno, vector<int> &indicator_idv,
                    vector<int> &indicator_snp, gsl_matrix *UtX, gsl_matrix *K,
-                   const bool calc_K);
+                   const bool calc_K, bool debug);
 bool ReadFile_bed(const string &file_bed, vector<int> &indicator_idv,
                   vector<int> &indicator_snp, gsl_matrix *UtX, gsl_matrix *K,
                   const bool calc_K);
@@ -102,7 +102,7 @@ bool ReadFile_geno(const string &file_geno, vector<int> &indicator_idv,
                    vector<int> &indicator_snp,
                    vector<vector<unsigned char>> &Xt, gsl_matrix *K,
                    const bool calc_K, const size_t ni_test,
-                   const size_t ns_test);
+                   const size_t ns_test, bool debug);
 bool ReadFile_bed(const string &file_bed, vector<int> &indicator_idv,
                   vector<int> &indicator_snp, vector<vector<unsigned char>> &Xt,
                   gsl_matrix *K, const bool calc_K, const size_t ni_test,

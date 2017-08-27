@@ -337,7 +337,7 @@ void PARAM::ReadFiles(void) {
     trim_individuals(indicator_cvt, ni_max, mode_debug);
     if (ReadFile_geno(file_geno, setSnps, W, indicator_idv, indicator_snp,
                       maf_level, miss_level, hwe_level, r2_level, mapRS2chr,
-                      mapRS2bp, mapRS2cM, snpInfo, ns_test) == false) {
+                      mapRS2bp, mapRS2cM, snpInfo, ns_test, mode_debug) == false) {
       error = true;
     }
     gsl_matrix_free(W);
@@ -445,7 +445,7 @@ void PARAM::ReadFiles(void) {
     while (!safeGetline(infile, file_name).eof()) {
       if (ReadFile_geno(file_name, setSnps, W, indicator_idv, indicator_snp,
                         maf_level, miss_level, hwe_level, r2_level, mapRS2chr,
-                        mapRS2bp, mapRS2cM, snpInfo, ns_test_tmp) == false) {
+                        mapRS2bp, mapRS2cM, snpInfo, ns_test_tmp, mode_debug) == false) {
         error = true;
       }
 
@@ -1338,7 +1338,7 @@ void PARAM::ReadGenotypes(gsl_matrix *UtX, gsl_matrix *K, const bool calc_K) {
     }
   } else {
     if (ReadFile_geno(file_geno, indicator_idv, indicator_snp, UtX, K,
-                      calc_K) == false) {
+                      calc_K, mode_debug) == false) {
       error = true;
     }
   }
@@ -1358,7 +1358,7 @@ void PARAM::ReadGenotypes(vector<vector<unsigned char>> &Xt, gsl_matrix *K,
     }
   } else {
     if (ReadFile_geno(file_geno, indicator_idv, indicator_snp, Xt, K, calc_K,
-                      ni_test, ns_test) == false) {
+                      ni_test, ns_test, mode_debug) == false) {
       error = true;
     }
   }

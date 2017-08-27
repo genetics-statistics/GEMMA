@@ -133,7 +133,7 @@ std::istream &safeGetline(std::istream &is, std::string &t) {
   }
 }
 
-// Read SNP file.
+// Read SNP file. A single column of SNP names.
 bool ReadFile_snps(const string file_snps, set<string> &setSnps) {
   setSnps.clear();
 
@@ -148,6 +148,7 @@ bool ReadFile_snps(const string file_snps, set<string> &setSnps) {
 
   while (getline(infile, line)) {
     ch_ptr = strtok((char *)line.c_str(), " , \t");
+    enforce_msg(ch_ptr,"Problem reading SNP file");
     setSnps.insert(ch_ptr);
   }
 
@@ -157,6 +158,9 @@ bool ReadFile_snps(const string file_snps, set<string> &setSnps) {
   return true;
 }
 
+// Read SNP file using a header. The header determines how the
+// values for each row are parsed. A valid header can be, for example,
+// RS POS CHR
 bool ReadFile_snps_header(const string &file_snps, set<string> &setSnps) {
   setSnps.clear();
 
@@ -175,7 +179,7 @@ bool ReadFile_snps_header(const string &file_snps, set<string> &setSnps) {
   ReadHeader_io(line, header);
 
   if (header.rs_col == 0 && (header.chr_col == 0 || header.pos_col == 0)) {
-    cout << "missing rs id in the hearder" << endl;
+    cout << "missing rs id in the header" << endl;
   }
 
   while (!safeGetline(infile, line).eof()) {
@@ -185,6 +189,7 @@ bool ReadFile_snps_header(const string &file_snps, set<string> &setSnps) {
     ch_ptr = strtok((char *)line.c_str(), " , \t");
 
     for (size_t i = 0; i < header.coln; i++) {
+      enforce_msg(ch_ptr,"Problem reading SNP file");
       if (header.rs_col != 0 && header.rs_col == i + 1) {
         rs = ch_ptr;
       }
@@ -250,7 +255,7 @@ bool ReadFile_log(const string &file_log, double &pheno_mean) {
   return true;
 }
 
-// Read bimbam annotation file.
+// Read bimbam annotation file which consists of rows of SNP, POS and CHR
 bool ReadFile_anno(const string &file_anno, map<string, string> &mapRS2chr,
                    map<string, long int> &mapRS2bp,
                    map<string, double> &mapRS2cM) {
@@ -264,33 +269,39 @@ bool ReadFile_anno(const string &file_anno, map<string, string> &mapRS2chr,
   }
 
   string line;
-  char *ch_ptr;
-
-  string rs;
-  long int b_pos;
-  string chr;
-  double cM;
 
   while (!safeGetline(infile, line).eof()) {
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
-    rs = ch_ptr;
+    const char *ch_ptr = strtok((char *)line.c_str(), " , \t");
+    enforce_str(ch_ptr, line + " Bad RS format");
+    const string rs = ch_ptr;
+    enforce_str(rs != "", line + " Bad RS format");
+
     ch_ptr = strtok(NULL, " , \t");
+    enforce_str(ch_ptr, line + " Bad format");
+    ulong b_pos;
     if (strcmp(ch_ptr, "NA") == 0) {
       b_pos = -9;
     } else {
       b_pos = atol(ch_ptr);
     }
+    enforce_str(b_pos,line + " Bad pos format (is zero)");
+
+    string chr;
     ch_ptr = strtok(NULL, " , \t");
     if (ch_ptr == NULL || strcmp(ch_ptr, "NA") == 0) {
       chr = "-9";
     } else {
       chr = ch_ptr;
+      enforce_str(chr != "", line + " Bad chr format");
     }
+
+    double cM;
     ch_ptr = strtok(NULL, " , \t");
     if (ch_ptr == NULL || strcmp(ch_ptr, "NA") == 0) {
       cM = -9;
     } else {
       cM = atof(ch_ptr);
+      enforce_str(b_pos, line + "Bad cM format (is zero)");
     }
 
     mapRS2chr[rs] = chr;
@@ -377,9 +388,9 @@ bool ReadFile_pheno(const string &file_pheno,
 
   while (!safeGetline(infile, line).eof()) {
     ch_ptr = strtok((char *)line.c_str(), " , \t");
-
     size_t i = 0;
     while (i < p_max) {
+      enforce_msg(ch_ptr,"Wrong number of phenotypes");
       if (mapP2c.count(i + 1) != 0) {
         if (strcmp(ch_ptr, "NA") == 0) {
           ind_pheno_row[mapP2c[i + 1]] = 0;
@@ -597,7 +608,7 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
                    const double &r2_level, map<string, string> &mapRS2chr,
                    map<string, long int> &mapRS2bp,
                    map<string, double> &mapRS2cM, vector<SNPINFO> &snpInfo,
-                   size_t &ns_test) {
+                   size_t &ns_test, bool debug) {
   indicator_snp.clear();
   snpInfo.clear();
 
@@ -618,7 +629,8 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
   gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, W, W, 0.0, WtW);
   int sig;
   LUDecomp(WtW, pmt, &sig);
-  LUInvert(WtW, pmt, WtWi);
+
+  LUInvert(WtW, pmt, WtWi); // @@
 
   double v_x, v_w;
   int c_idv = 0;
@@ -667,6 +679,11 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
     }
 
     if (mapRS2bp.count(rs) == 0) {
+      if (debug) {
+        std::string msg = "Can't figure out position for ";
+        msg += rs;
+        debug_msg(msg);
+      }
       chr = "-9";
       b_pos = -9;
       cM = -9;
@@ -1617,7 +1634,7 @@ bool PlinkKin(const string &file_bed, vector<int> &indicator_snp,
 // genotype and calculate K.
 bool ReadFile_geno(const string file_geno, vector<int> &indicator_idv,
                    vector<int> &indicator_snp, gsl_matrix *UtX, gsl_matrix *K,
-                   const bool calc_K) {
+                   const bool calc_K, bool debug) {
   igzstream infile(file_geno.c_str(), igzstream::in);
   if (!infile) {
     cout << "error reading genotype file:" << file_geno << endl;
@@ -1721,7 +1738,7 @@ bool ReadFile_geno(const string &file_geno, vector<int> &indicator_idv,
                    vector<int> &indicator_snp,
                    vector<vector<unsigned char>> &Xt, gsl_matrix *K,
                    const bool calc_K, const size_t ni_test,
-                   const size_t ns_test) {
+                   const size_t ns_test, bool debug) {
   igzstream infile(file_geno.c_str(), igzstream::in);
   if (!infile) {
     cout << "error reading genotype file:" << file_geno << endl;
@@ -2979,7 +2996,7 @@ bool bgenKin(const string &file_oxford, vector<int> &indicator_snp,
 bool ReadHeader_io(const string &line, HEADER &header) {
   string rs_ptr[] = {"rs",    "RS",    "snp",  "SNP",  "snps",      "SNPS",
                      "snpid", "SNPID", "rsid", "RSID", "MarkerName"};
-  set<string> rs_set(rs_ptr, rs_ptr + 11);
+  set<string> rs_set(rs_ptr, rs_ptr + 11); // create a set of 11 items
   string chr_ptr[] = {"chr", "CHR"};
   set<string> chr_set(chr_ptr, chr_ptr + 2);
   string pos_ptr[] = {

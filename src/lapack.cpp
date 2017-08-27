@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "debug.h"
+#include "lapack.h"
 #include "mathfunc.h"
 
 using namespace std;
@@ -520,7 +521,7 @@ double CholeskySolve(gsl_matrix_float *Omega, gsl_vector_float *Xty,
 
 // LU decomposition.
 void LUDecomp(gsl_matrix *LU, gsl_permutation *p, int *signum) {
-  gsl_linalg_LU_decomp(LU, p, signum);
+  enforce_gsl(gsl_linalg_LU_decomp(LU, p, signum));
   return;
 }
 
@@ -551,11 +552,13 @@ void LUDecomp(gsl_matrix_float *LU, gsl_permutation *p, int *signum) {
 }
 */
 
-// LU invert.
-void LUInvert(const gsl_matrix *LU, const gsl_permutation *p,
-              gsl_matrix *inverse) {
-  gsl_linalg_LU_invert(LU, p, inverse);
-  return;
+// LU invert. Returns inverse. Note that GSL does not recommend using
+// this function
+void LUInvert(const gsl_matrix *LU, const gsl_permutation *p, gsl_matrix *ret_inverse) {
+  auto det = LULndet(LU);
+  assert(det != 1.0);
+
+  enforce_gsl(gsl_linalg_LU_invert(LU, p, ret_inverse));
 }
 
 /*
@@ -590,10 +593,8 @@ void LUInvert(const gsl_matrix_float *LU, const gsl_permutation *p,
 */
 
 // LU lndet.
-double LULndet(gsl_matrix *LU) {
-  double d;
-  d = gsl_linalg_LU_lndet(LU);
-  return d;
+double LULndet(const gsl_matrix *LU) {
+  return gsl_linalg_LU_lndet((gsl_matrix *)LU);
 }
 
 /*
@@ -620,7 +621,7 @@ double LULndet(gsl_matrix_float *LU) {
 // LU solve.
 void LUSolve(const gsl_matrix *LU, const gsl_permutation *p,
              const gsl_vector *b, gsl_vector *x) {
-  gsl_linalg_LU_solve(LU, p, b, x);
+  enforce_gsl(gsl_linalg_LU_solve(LU, p, b, x));
   return;
 }
 
