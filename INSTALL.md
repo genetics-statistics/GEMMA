@@ -49,7 +49,7 @@ using the following command
 
     guix package -i gemma
 
-To install the build tools with GNU Guix
+To build GEMMA from source you can opt to install the build tools with GNU Guix
 
     guix package -i make gcc linux-libre-headers gsl eigen openblas lapack glibc ld-wrapper
 
@@ -62,14 +62,15 @@ Install listed dependencies and run
 (the -j switch builds on 4 cores).
 
 if you get an Eigen error you may need to override the include
-path. E.g. on GNU Guix with shared libs and DEBUG the following may
-work
+path. E.g. to build GEMMA on GNU Guix with shared libs the following
+may work
 
-	make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 FORCE_DYNAMIC=1 WITH_OPENBLAS=1 DEBUG=1
+    make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 WITH_OPENBLAS=1
 
-another example overriding optimization and LIB flags (so as to link against gslv1) would be
+another example overriding optimization and LIB flags (so as to link
+against gslv1) would be
 
-    make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 WITH_OPENBLAS=1 DEBUG=1 FORCE_DYNAMIC=1 GCC_FLAGS="-Wall" LIBS="$HOME/opt/gsl1/lib/libgsl.a $HOME/opt/gsl1/lib/libgslcblas.a -L$HOME/.guix-profile/lib -pthread -llapack -lblas -lz"
+    make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 WITH_OPENBLAS=1 GCC_FLAGS="-Wall" LIBS="$HOME/opt/gsl1/lib/libgsl.a $HOME/opt/gsl1/lib/libgslcblas.a -L$HOME/.guix-profile/lib -pthread -llapack -lblas -lz"
 
 to run GEMMA tests
 
@@ -83,7 +84,9 @@ You can run gemma in the debugger with, for example
 		-snps example/snps.txt -nind 400 -loco 1 -gk -debug -o myoutput
 
 Note that if you get <optimized out> warnings on inspecting variables you
-should compile with GCC_FLAGS="" to disable optimizations (-O3).
+should compile with GCC_FLAGS="" to disable optimizations (-O3). E.g.
+
+    make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 WITH_OPENBLAS=1 GCC_FLAGS=
 
 Other options, such as compiling with warnings, are listed in the
 Makefile.

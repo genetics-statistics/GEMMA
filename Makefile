@@ -1,41 +1,65 @@
-#Makefile
-
+# Generic Makefile for GEMMA
+#
 # Supported platforms
-#       Unix / Linux               	LNX
+#
+#       Unix / Linux               	LNX (default)
 #       Mac                        	MAC
+#
 # Compilation options
-#       32-bit binary        		FORCE_32BIT
-#       dynamic compilation    		FORCE_DYNAMIC
+#       static compilation    		FORCE_STATIC
+#
+# Examples:
+#
+#    Make GEMMA on Linux with OPENBLAS support:
+#
+#      make WITH_OPENBLAS=1
+#
+#    Disable debug info and checks (slightly faster release mode)
+#
+#      make WITH_OPENBLAS=1 DEBUG=
+#
+#    Force static compilation
+#
+#      make FORCE_STATIC=1
+#
+#    Run tests with
+#
+#      make check
+#
+#    See also the INSTALL.md document in the source tree at
+#
+#      https://github.com/genetics-statistics/GEMMA/blob/master/INSTALL.md
 
 # Set this variable to either LNX or MAC
-SYS = LNX
+SYS                    = LNX # LNX|MAC (Linux is the default)
 # Leave blank after "=" to disable; put "= 1" to enable
+DIST_NAME              = gemma-0.97.2
+DEBUG                  = 1   # DEBUG mode, set DEBUG=0 for a release
 SHOW_COMPILER_WARNINGS =
-WITH_LAPACK     = 1
-WITH_OPENBLAS   =
-NO_INTEL_COMPAT =
-FORCE_32BIT     =
-FORCE_DYNAMIC   =
-GCC_FLAGS       = -O3 # extra flags -Wl,--allow-multiple-definition
-DIST_NAME       = gemma-0.97.2
-TRAVIS_CI       =
+WITH_LAPACK            = 1
+WITH_OPENBLAS          =     # Defaults to LAPACK - OPENBLAS may be faster
+FORCE_STATIC           =     # Static linking of libraries
+GCC_FLAGS              = -O3 # extra flags -Wl,--allow-multiple-definition
+TRAVIS_CI              =     # used by TRAVIS for testing
+EIGEN_INCLUDE_PATH=/usr/include/eigen3
 
 # --------------------------------------------------------------------
 # Edit below this line with caution
 # --------------------------------------------------------------------
 
-EIGEN_INCLUDE_PATH=/usr/include/eigen3
-
 BIN_DIR  = ./bin
-
 SRC_DIR  = ./src
 TEST_SRC_DIR  = ./test/src
 
-ifdef CXX
+ifdef CXX # CXX defined in environment
   CPP = $(CXX)
   CC = $(CXX)
 else
   CPP = g++
+endif
+
+ifdef OPENBLAS
+  WITH_LAPACK =  # OPENBLAS usually includes LAPACK
 endif
 
 ifdef DEBUG
@@ -49,7 +73,7 @@ ifdef SHOW_COMPILER_WARNINGS
   CPPFLAGS += -Wall
 endif
 
-ifdef FORCE_DYNAMIC
+ifndef FORCE_STATIC
   LIBS = -lgsl -lgslcblas -pthread -lz
 else
   ifndef TRAVIS_CI # Travis static compile we cheat a little
@@ -72,38 +96,25 @@ LIBS_MAC_D_LAPACK = -framework Veclib
 # LIBS_LNX_S_LAPACK = /usr/lib/libgsl.a  /usr/lib/libgslcblas.a /usr/lib/lapack/liblapack.a -lz
 LIBS_LNX_S_LAPACK = /usr/lib/lapack/liblapack.a -lgfortran  /usr/lib/atlas-base/libatlas.a /usr/lib/libblas/libblas.a -Wl,--allow-multiple-definition
 
-
-SOURCES += $(SRC_DIR)/param.cpp $(SRC_DIR)/gemma.cpp $(SRC_DIR)/io.cpp $(SRC_DIR)/lm.cpp $(SRC_DIR)/lmm.cpp $(SRC_DIR)/vc.cpp $(SRC_DIR)/mvlmm.cpp $(SRC_DIR)/bslmm.cpp $(SRC_DIR)/prdt.cpp $(SRC_DIR)/mathfunc.cpp $(SRC_DIR)/gzstream.cpp $(SRC_DIR)/eigenlib.cpp $(SRC_DIR)/ldr.cpp $(SRC_DIR)/bslmmdap.cpp $(SRC_DIR)/logistic.cpp $(SRC_DIR)/varcov.cpp $(SRC_DIR)/debug.cpp
-HDR += $(SRC_DIR)/param.h $(SRC_DIR)/gemma.h $(SRC_DIR)/io.h $(SRC_DIR)/lm.h $(SRC_DIR)/lmm.h $(SRC_DIR)/vc.h $(SRC_DIR)/mvlmm.h $(SRC_DIR)/bslmm.h $(SRC_DIR)/prdt.h $(SRC_DIR)/mathfunc.h $(SRC_DIR)/gzstream.h $(SRC_DIR)/eigenlib.h
-
 ifdef WITH_LAPACK
-  OBJS += $(SRC_DIR)/lapack.o
-ifeq ($(SYS), MAC)
-  LIBS += $(LIBS_MAC_D_LAPACK)
-else
-  ifdef FORCE_DYNAMIC
-    ifdef WITH_OPENBLAS
-      LIBS += $(LIBS_LNX_D_OPENBLAS)
-    else
-      LIBS += $(LIBS_LNX_D_BLAS)
-    endif
-    LIBS += $(LIBS_LNX_D_LAPACK)
+  ifeq ($(SYS), MAC)
+    LIBS += $(LIBS_MAC_D_LAPACK)
   else
-    LIBS += $(LIBS_LNX_S_LAPACK)
+    ifndef FORCE_STATIC
+      ifdef WITH_OPENBLAS
+        LIBS += $(LIBS_LNX_D_OPENBLAS)
+      else
+        LIBS += $(LIBS_LNX_D_BLAS)
+      endif
+      LIBS += $(LIBS_LNX_D_LAPACK)
+    else
+      LIBS += $(LIBS_LNX_S_LAPACK)
+    endif
   endif
-endif
-  SOURCES += $(SRC_DIR)/lapack.cpp
-  HDR += $(SRC_DIR)/lapack.h
 endif
 
-ifdef NO_INTEL_COMPAT
-  else
-  ifdef FORCE_32BIT
-    CPPFLAGS += -m32
-  else
-    CPPFLAGS += -m64
-  endif
-endif
+HDR          = $(wildcard src/*.h)
+SOURCES      = $(wildcard src/*.cpp)
 
 # all
 OBJS = $(SOURCES:.cpp=.o)
@@ -113,14 +124,14 @@ all: $(OUTPUT)
 $(OUTPUT): $(OBJS)
 	$(CPP) $(CPPFLAGS) $(OBJS) $(LIBS) -o $(OUTPUT)
 
-$(OBJS) : $(HDR)
+$(OBJS)  : $(HDR)
 
 .cpp.o:
 	$(CPP) $(CPPFLAGS) $(HEADERS) -c $*.cpp -o $*.o
 .SUFFIXES : .cpp .c .o $(SUFFIXES)
 
 unittests: all contrib/catch-1.9.7/catch.hpp $(TEST_SRC_DIR)/unittests-main.o $(TEST_SRC_DIR)/unittests-math.o
-	$(CPP) $(CPPFLAGS) $(TEST_SRC_DIR)/unittests-main.o  $(TEST_SRC_DIR)/unittests-math.o $(filter-out $(SRC_DIR)/main.o, $(OBJS)) $(LIBS) -o ./bin/unittests-gemma
+	$(CPP) $(CPPFLAGS) $(TEST_SRC_DIR)/unittests-main.o  $(TEST_SRC_DIR)/unittests-math.o $(filter-out src/main.o, $(OBJS)) $(LIBS) -o ./bin/unittests-gemma
 	./bin/unittests-gemma
 
 fast-check: all unittests
