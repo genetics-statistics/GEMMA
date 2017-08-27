@@ -2005,11 +2005,6 @@ void GEMMA::BatchRun(PARAM &cPar) {
     cPar.WriteMatrix(Vq, "Vq");
     cPar.WriteVector(q, "q");
     cPar.WriteVector(s, "size");
-    /*
-    for (size_t i=0; i<cPar.n_vc; i++) {
-      cout<<gsl_vector_get(q, i)<<endl;
-    }
-    */
     gsl_matrix_free(Vq);
     gsl_vector_free(q);
     gsl_vector_free(s);
@@ -2060,21 +2055,6 @@ void GEMMA::BatchRun(PARAM &cPar) {
       cLm.WriteFiles();
       cLm.CopyToParam(cPar);
     }
-    /*
-    else {
-            MVLM cMvlm;
-            cMvlm.CopyFromParam(cPar);
-
-            if (!cPar.file_bfile.empty()) {
-                    cMvlm.AnalyzePlink (W, Y);
-            } else {
-                    cMvlm.AnalyzeBimbam (W, Y);
-            }
-
-            cMvlm.WriteFiles();
-            cMvlm.CopyToParam(cPar);
-    }
-    */
     // release all matrices and vectors
     gsl_matrix_free(Y);
     gsl_matrix_free(W);
@@ -2357,116 +2337,9 @@ void GEMMA::BatchRun(PARAM &cPar) {
         d /= (double)G->size1;
         (cPar.v_traceG).push_back(d);
       }
-      /*
-      //eigen-decomposition and calculate trace_G
-      cout<<"Start Eigen-Decomposition..."<<endl;
-      time_start=clock();
-
-      if (cPar.a_mode==31) {
-              cPar.trace_G=EigenDecomp (G, U, eval, 1);
-      } else {
-              cPar.trace_G=EigenDecomp (G, U, eval, 0);
-      }
-
-      cPar.trace_G=0.0;
-      for (size_t i=0; i<eval->size; i++) {
-              if (gsl_vector_get (eval, i)<1e-10) {gsl_vector_set (eval, i, 0);}
-              cPar.trace_G+=gsl_vector_get (eval, i);
-      }
-      cPar.trace_G/=(double)eval->size;
-
-      cPar.time_eigen=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
-} else {
-      ReadFile_eigenU (cPar.file_ku, cPar.error, U);
-      if (cPar.error==true) {cout<<"error! fail to read the U file. "<<endl;
-return;}
-
-      ReadFile_eigenD (cPar.file_kd, cPar.error, eval);
-      if (cPar.error==true) {cout<<"error! fail to read the D file. "<<endl;
-return;}
-
-      cPar.trace_G=0.0;
-      for (size_t i=0; i<eval->size; i++) {
-              if (gsl_vector_get(eval, i)<1e-10) {gsl_vector_set(eval, i, 0);}
-              cPar.trace_G+=gsl_vector_get(eval, i);
-      }
-      cPar.trace_G/=(double)eval->size;
-}
-*/
       // fit multiple variance components
       if (cPar.n_ph == 1) {
         //		  if (cPar.n_vc==1) {
-        /*
-        //calculate UtW and Uty
-        CalcUtX (U, W, UtW);
-        CalcUtX (U, Y, UtY);
-
-        gsl_vector_view beta=gsl_matrix_row (B, 0);
-        gsl_vector_view se_beta=gsl_matrix_row (se_B, 0);
-        gsl_vector_view UtY_col=gsl_matrix_column (UtY, 0);
-
-        CalcLambda ('L', eval, UtW, &UtY_col.vector, cPar.l_min, cPar.l_max,
-        cPar.n_region, cPar.l_mle_null, cPar.logl_mle_H0);
-        CalcLmmVgVeBeta (eval, UtW, &UtY_col.vector, cPar.l_mle_null,
-        cPar.vg_mle_null, cPar.ve_mle_null, &beta.vector, &se_beta.vector);
-
-        cPar.beta_mle_null.clear();
-        cPar.se_beta_mle_null.clear();
-        for (size_t i=0; i<B->size2; i++) {
-          cPar.beta_mle_null.push_back(gsl_matrix_get(B, 0, i) );
-          cPar.se_beta_mle_null.push_back(gsl_matrix_get(se_B, 0, i) );
-        }
-
-        CalcLambda ('R', eval, UtW, &UtY_col.vector, cPar.l_min, cPar.l_max,
-        cPar.n_region, cPar.l_remle_null, cPar.logl_remle_H0);
-        CalcLmmVgVeBeta (eval, UtW, &UtY_col.vector, cPar.l_remle_null,
-        cPar.vg_remle_null, cPar.ve_remle_null, &beta.vector, &se_beta.vector);
-        cPar.beta_remle_null.clear();
-        cPar.se_beta_remle_null.clear();
-        for (size_t i=0; i<B->size2; i++) {
-          cPar.beta_remle_null.push_back(gsl_matrix_get(B, 0, i) );
-          cPar.se_beta_remle_null.push_back(gsl_matrix_get(se_B, 0, i) );
-        }
-
-        CalcPve (eval, UtW, &UtY_col.vector, cPar.l_remle_null, cPar.trace_G,
-        cPar.pve_null, cPar.pve_se_null);
-        cPar.PrintSummary();
-
-        //calculate and output residuals
-        if (cPar.a_mode==5) {
-          gsl_vector *Utu_hat=gsl_vector_alloc (Y->size1);
-          gsl_vector *Ute_hat=gsl_vector_alloc (Y->size1);
-          gsl_vector *u_hat=gsl_vector_alloc (Y->size1);
-          gsl_vector *e_hat=gsl_vector_alloc (Y->size1);
-          gsl_vector *y_hat=gsl_vector_alloc (Y->size1);
-
-          //obtain Utu and Ute
-          gsl_vector_memcpy (y_hat, &UtY_col.vector);
-          gsl_blas_dgemv (CblasNoTrans, -1.0, UtW, &beta.vector, 1.0, y_hat);
-
-          double d, u, e;
-          for (size_t i=0; i<eval->size; i++) {
-            d=gsl_vector_get (eval, i);
-            u=cPar.l_remle_null*d/(cPar.l_remle_null*d+1.0)*gsl_vector_get(y_hat,
-        i);
-            e=1.0/(cPar.l_remle_null*d+1.0)*gsl_vector_get(y_hat, i);
-            gsl_vector_set (Utu_hat, i, u);
-            gsl_vector_set (Ute_hat, i, e);
-          }
-
-          //obtain u and e
-          gsl_blas_dgemv (CblasNoTrans, 1.0, U, Utu_hat, 0.0, u_hat);
-          gsl_blas_dgemv (CblasNoTrans, 1.0, U, Ute_hat, 0.0, e_hat);
-
-          //output residuals
-          cPar.WriteVector(u_hat, "residU");
-          cPar.WriteVector(e_hat, "residE");
-
-          gsl_vector_free(u_hat);
-          gsl_vector_free(e_hat);
-          gsl_vector_free(y_hat);
-        }
-*/
         //		  } else {
         gsl_vector_view Y_col = gsl_matrix_column(Y, 0);
         VC cVc;
@@ -2587,15 +2460,6 @@ return;}
       MFILEXwz(0, cPar.file_mgeno, cPar.d_pace, cPar.indicator_idv,
                cPar.mindicator_snp, vec_cat, w1, z, Xz);
     }
-    /*
-    cout<<"Xz: "<<endl;
-    for (size_t i=0; i<5; i++) {
-      for (size_t j=0; j<cPar.n_vc; j++) {
-        cout<<gsl_matrix_get (Xz, i, j)<<" ";
-      }
-      cout<<endl;
-    }
-    */
     if (cPar.a_mode == 66) {
       gsl_matrix_memcpy(XWz, Xz);
     } else if (cPar.a_mode == 67) {
@@ -2618,16 +2482,6 @@ return;}
                  cPar.mindicator_snp, vec_cat, w, z, XWz);
       }
     }
-    /*
-    cout<<"XWz: "<<endl;
-    for (size_t i=0; i<5; i++) {
-      cout<<gsl_vector_get (w, i)<<endl;
-      for (size_t j=0; j<cPar.n_vc; j++) {
-        cout<<gsl_matrix_get (XWz, i, j)<<" ";
-      }
-      cout<<endl;
-    }
-    */
     // compute an p by k matrix of X_j^TWX_iWz
     cout << "Calculating XtXWz ... " << endl;
     gsl_matrix_set_zero(XtXWz);
@@ -2646,25 +2500,11 @@ return;}
       MFILEXtXwz(0, cPar.file_mgeno, cPar.d_pace, cPar.indicator_idv,
                  cPar.mindicator_snp, XWz, XtXWz);
     }
-    /*
-    cout<<"XtXWz: "<<endl;
-    for (size_t i=0; i<5; i++) {
-      for (size_t j=0; j<cPar.n_vc; j++) {
-        cout<<gsl_matrix_get (XtXWz, i, j)<<" ";
-      }
-      cout<<endl;
-    }
-    */
     // compute confidence intervals
     CalcCIss(Xz, XWz, XtXWz, S, Svar, w, z, s_vec, vec_cat, cPar.v_pve,
              cPar.v_se_pve, cPar.pve_total, cPar.se_pve_total, cPar.v_sigma2,
              cPar.v_se_sigma2, cPar.v_enrich, cPar.v_se_enrich);
-      assert(!has_nan(cPar.v_se_pve));
-
-    // write files
-    // cPar.WriteMatrix (XWz, "XWz");
-    // cPar.WriteMatrix (XtXWz, "XtXWz");
-    // cPar.WriteVector (w, "w");
+    assert(!has_nan(cPar.v_se_pve));
 
     gsl_matrix_free(S);
     gsl_matrix_free(Svar);
@@ -3244,36 +3084,6 @@ return;}
     }
   }
 
-  /*
-  //LDR (change 14 to 16?)
-  if (cPar.a_mode==14) {
-          gsl_vector *y=gsl_vector_alloc (cPar.ni_test);
-          gsl_matrix *W=gsl_matrix_alloc (y->size, cPar.n_cvt);
-          gsl_matrix *G=gsl_matrix_alloc (1, 1);
-          vector<vector<unsigned char> > Xt;
-
-          //set covariates matrix W and phenotype vector y
-          //an intercept is included in W
-          cPar.CopyCvtPhen (W, y, 0);
-
-          //read in genotype matrix X
-          cPar.ReadGenotypes (Xt, G, false);
-
-          LDR cLdr;
-          cLdr.CopyFromParam(cPar);
-          time_start=clock();
-
-          cLdr.VB(Xt, W, y);
-
-          cPar.time_opt=(clock()-time_start)/(double(CLOCKS_PER_SEC)*60.0);
-          cLdr.CopyToParam(cPar);
-
-          gsl_vector_free (y);
-          gsl_matrix_free (W);
-          gsl_matrix_free (G);
-  }
-  */
-
   cPar.time_total = (clock() - time_begin) / (double(CLOCKS_PER_SEC) * 60.0);
 
   return;
@@ -3514,18 +3324,6 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
         }
         outfile << endl;
       }
-      /*
-            outfile<<"## beta estimate in the null model = ";
-            for (size_t i=0; i<cPar.beta_remle_null.size(); i++) {
-                    outfile<<"  "<<cPar.beta_remle_null[i];
-            }
-            outfile<<endl;
-            outfile<<"## se(beta) = ";
-            for (size_t i=0; i<cPar.se_beta_remle_null.size(); i++) {
-                    outfile<<"  "<<cPar.se_beta_remle_null[i];
-            }
-            outfile<<endl;
-      */
     }
   }
 
@@ -3654,36 +3452,6 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
       }
     }
   }
-
-  /*
-  if (cPar.a_mode==1 || cPar.a_mode==2 || cPar.a_mode==3 || cPar.a_mode==4 ||
-  cPar.a_mode==11 || cPar.a_mode==12 || cPar.a_mode==13) {
-          if (cPar.n_ph==1) {
-                  outfile<<"## REMLE vg estimate in the null model =
-  "<<cPar.vg_remle_null<<endl;
-                  outfile<<"## REMLE ve estimate in the null model =
-  "<<cPar.ve_remle_null<<endl;
-          } else {
-                  size_t c;
-                  outfile<<"## REMLE estimate for Vg in the null model: "<<endl;
-                  for (size_t i=0; i<cPar.n_ph; i++) {
-                          for (size_t j=0; j<=i; j++) {
-                                  c=(2*cPar.n_ph-min(i,j)+1)*min(i,j)/2+max(i,j)-min(i,j);
-                                  outfile<<cPar.Vg_remle_null[c]<<"\t";
-                          }
-                          outfile<<endl;
-                  }
-                  outfile<<"## REMLE estimate for Ve in the null model: "<<endl;
-                  for (size_t i=0; i<cPar.n_ph; i++) {
-                          for (size_t j=0; j<=i; j++) {
-                                  c=(2*cPar.n_ph-min(i,j)+1)*min(i,j)/2+max(i,j)-min(i,j);
-                                  outfile<<cPar.Ve_remle_null[c]<<"\t";
-                          }
-                          outfile<<endl;
-                  }
-          }
-  }
-   */
 
   if (cPar.a_mode == 11 || cPar.a_mode == 12 || cPar.a_mode == 13 ||
       cPar.a_mode == 14 || cPar.a_mode == 16) {
