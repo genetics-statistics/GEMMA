@@ -350,6 +350,7 @@ void PARAM::ReadFiles(void) {
     igzstream infile(file_mbfile.c_str(), igzstream::in);
     if (!infile) {
       cout << "error! fail to open mbfile file: " << file_mbfile << endl;
+      error = true;
       return;
     }
 
@@ -437,6 +438,7 @@ void PARAM::ReadFiles(void) {
     igzstream infile(file_mgeno.c_str(), igzstream::in);
     if (!infile) {
       cout << "error! fail to open mgeno file: " << file_mgeno << endl;
+      error = true;
       return;
     }
 
@@ -504,8 +506,8 @@ void PARAM::ReadFiles(void) {
     }
 
     if (ni_test == 0) {
-      error = true;
       cout << "error! number of analyzed individuals equals 0. " << endl;
+      error = true;
       return;
     }
   }
