@@ -30,6 +30,7 @@
 #include "gsl/gsl_linalg.h"
 #include "gsl/gsl_matrix.h"
 #include "gsl/gsl_vector.h"
+#include "gsl/gsl_version.h"
 
 #include "bslmm.h"
 #include "bslmmdap.h"
@@ -3102,6 +3103,8 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
 
   outfile << "##" << endl;
   outfile << "## GEMMA Version = " << version << endl;
+  outfile << "## GSL Version   = " << GSL_VERSION << endl;
+  outfile << "## Eigen Version = " << EIGEN_WORLD_VERSION << "." << EIGEN_MAJOR_VERSION << "." << EIGEN_MINOR_VERSION << endl;
 
   outfile << "##" << endl;
   outfile << "## Command Line Input = ";
