@@ -229,7 +229,7 @@ bool isMatrixPositiveDefinite(const gsl_matrix *G) {
   auto G2 = gsl_matrix_alloc(G->size1, G->size2);
   enforce_gsl(gsl_matrix_memcpy(G2,G));
   auto handler = gsl_set_error_handler_off();
-#if GSL_MAJOR_VERSION >= 2
+#if GSL_MAJOR_VERSION >= 2 && GSL_MINOR_VERSION >= 3
   auto s = gsl_linalg_cholesky_decomp1(G2);
 #else
   auto s = gsl_linalg_cholesky_decomp(G2);
