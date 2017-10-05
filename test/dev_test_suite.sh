@@ -31,7 +31,8 @@ testBXDStandardRelatednessMatrixK() {
     assertEquals "-116.11" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
-testBXDMultivariateLinearMixedModel() {
+testBXDLMMLikelihoodRatio() {
+    outn=BXD_LMM_LR
     $gemma -g ../example/BXD_geno.txt.gz \
            -p ../example/BXD_pheno.txt \
            -c ../example/BXD_covariates2.txt \
@@ -39,12 +40,12 @@ testBXDMultivariateLinearMixedModel() {
            -k ./output/BXD.cXX.txt \
            -lmm 2 -maf 0.1 \
            -debug \
-           -o BXD_mvlmm
+           -o $outn
     assertEquals 0 $?
 
-    outfn=output/BXD_mvlmm.assoc.txt
-    assertEquals "65862" `wc -w < $outfn`
-    assertEquals "3088489421.94" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+    outfn=output/$outn.assoc.txt
+    assertEquals "87816" `wc -w < $outfn`
+    assertEquals "3088458212.93" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
 testCenteredRelatednessMatrixKLOCO1() {
@@ -79,7 +80,7 @@ testUnivariateLinearMixedModelLOCO1() {
     assertEquals 0 $?
     outfn=output/$outn.assoc.txt
     assertEquals "68" `wc -l < $outfn`
-    assertEquals "15465553.30" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+    assertEquals "15465346.22" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
 shunit2=`which shunit2`

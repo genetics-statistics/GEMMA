@@ -30,7 +30,7 @@ testUnivariateLinearMixedModelFullLOCO1() {
     assertEquals 0 $?
     outfn=output/$outn.assoc.txt
     assertEquals "951" `wc -l < $outfn`
-    assertEquals "267509369.79" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+    assertEquals "267507851.98" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
 testCenteredRelatednessMatrixK() {
@@ -58,8 +58,8 @@ testUnivariateLinearMixedModel() {
     grep "total computation time" < output/mouse_hs1940_CD8_lmm.log.txt
     assertEquals 0 $?
     outfn=output/mouse_hs1940_CD8_lmm.assoc.txt
-    assertEquals "118459" `wc -w < $outfn`
-    assertEquals "4038557453.62" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+    assertEquals "129228" `wc -w < $outfn`
+    assertEquals "4038540440.86" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
 testMultivariateLinearMixedModel() {
@@ -105,30 +105,7 @@ testPlinkMultivariateLinearMixedModel() {
     assertEquals 0 $?
     outfn=output/$testname.assoc.txt
     assertEquals "223243" `wc -l < $outfn`
-    assertEquals "89756559859.06" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
-}
-
-testPlinkMultivariateLinearMixedModelMultiplePhenotypes_Issue58() {
-    # n=2 is original pheno in fam file
-    # n=1 is causal1
-    # n=3..12 is causal2
-    # n=13..22 is causal3
-    # -n 1 2 3 15 is independent
-    testname=testPlinkMultivariateLinearMixedModelMultiplePhenotypes
-    datadir=../example
-    $gemma -bfile $datadir/HLC \
-           -p $datadir/HLC.simu.pheno.txt \
-           -k output/testPlinkStandardRelatednessMatrixK.sXX.txt \
-           -lmm 1 \
-           -maf 0.1 \
-           -n 1 2 3 15 \
-           -c $datadir/HLC_covariates.txt \
-           -debug \
-           -o $testname
-    assertEquals 0 $?
-    outfn=output/$testname.assoc.txt
-    assertEquals "223243" `wc -l < $outfn`
-    assertEquals "89756559859.06" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+    assertEquals "89757159113.77" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
 shunit2=`which shunit2`

@@ -95,6 +95,7 @@ void LMM::CopyToParam(PARAM &cPar) {
 }
 
 void LMM::WriteFiles() {
+
   string file_str;
   file_str = path_out + "/" + file_out;
   file_str += ".assoc.txt";
@@ -105,150 +106,99 @@ void LMM::WriteFiles() {
     return;
   }
 
-  if (!file_gene.empty()) {
-    outfile << "geneID"
-            << "\t";
+  auto common_header = [&] () {
+    outfile << "beta" << "\t"
+            << "se" << "\t";
 
-    if (a_mode == 1) {
-      outfile << "beta"
-              << "\t"
-              << "se"
-              << "\t"
-              << "l_remle"
-              << "\t"
+    outfile << "logl_H1" << "\t";  // we may make this an option
+
+    switch(a_mode) {
+    case 1:
+      outfile << "l_remle" << "\t"
               << "p_wald" << endl;
-    } else if (a_mode == 2) {
-      outfile << "l_mle"
-              << "\t"
+      break;
+    case 2:
+      outfile << "l_mle" << "\t"
               << "p_lrt" << endl;
-    } else if (a_mode == 3) {
-      outfile << "beta"
-              << "\t"
-              << "se"
-              << "\t"
+      break;
+    case 3:
+      outfile << "p_score" << endl;
+      break;
+    case 4:
+      outfile << "l_remle" << "\t"
+              << "l_mle" << "\t"
+              << "p_wald" << "\t"
+              << "p_lrt" << "\t"
               << "p_score" << endl;
-    } else if (a_mode == 4) {
-      outfile << "beta"
-              << "\t"
-              << "se"
-              << "\t"
-              << "l_remle"
-              << "\t"
-              << "l_mle"
-              << "\t"
-              << "p_wald"
-              << "\t"
-              << "p_lrt"
-              << "\t"
-              << "p_score" << endl;
-    } else {
+      break;
     }
+  };
+
+  auto sumstats = [&] (SUMSTAT st) {
+    outfile << scientific << setprecision(6) << st.beta << "\t"
+    << st.se << "\t";
+
+    outfile << st.logl_H1 << "\t";
+
+    switch(a_mode) {
+    case 1:
+      outfile << st.lambda_remle << "\t"
+              << st.p_wald << endl;
+      break;
+    case 2:
+      outfile << st.lambda_mle << "\t"
+              << st.p_lrt << endl;
+      break;
+    case 3:
+      outfile << st.p_score << endl;
+      break;
+    case 4:
+      outfile << st.lambda_remle << "\t"
+              << st.lambda_mle << "\t"
+              << st.p_wald << "\t"
+              << st.p_lrt << "\t"
+              << st.p_score << endl;
+      break;
+    }
+  };
+
+
+  if (!file_gene.empty()) {
+    outfile << "geneID" << "\t";
+
+    common_header();
 
     for (vector<SUMSTAT>::size_type t = 0; t < sumStat.size(); ++t) {
       outfile << snpInfo[t].rs_number << "\t";
-
-      if (a_mode == 1) {
-        outfile << scientific << setprecision(6) << sumStat[t].beta << "\t"
-                << sumStat[t].se << "\t" << sumStat[t].lambda_remle << "\t"
-                << sumStat[t].p_wald << endl;
-      } else if (a_mode == 2) {
-        outfile << scientific << setprecision(6) << sumStat[t].lambda_mle
-                << "\t" << sumStat[t].p_lrt << endl;
-      } else if (a_mode == 3) {
-        outfile << scientific << setprecision(6) << sumStat[t].beta << "\t"
-                << sumStat[t].se << "\t" << sumStat[t].p_score << endl;
-      } else if (a_mode == 4) {
-        outfile << scientific << setprecision(6) << sumStat[t].beta << "\t"
-                << sumStat[t].se << "\t" << sumStat[t].lambda_remle << "\t"
-                << sumStat[t].lambda_mle << "\t" << sumStat[t].p_wald << "\t"
-                << sumStat[t].p_lrt << "\t" << sumStat[t].p_score << endl;
-      } else {
-      }
+      sumstats(sumStat[t]);
     }
   } else {
     bool process_gwasnps = setGWASnps.size();
-    outfile << "chr"
-            << "\t"
-            << "rs"
-            << "\t"
-            << "ps"
-            << "\t"
-            << "n_miss"
-            << "\t"
-            << "allele1"
-            << "\t"
-            << "allele0"
-            << "\t"
-            << "af"
-            << "\t";
 
-    if (a_mode == 1) {
-      outfile << "beta"
-              << "\t"
-              << "se"
-              << "\t"
-              << "l_remle"
-              << "\t"
-              << "p_wald" << endl;
-    } else if (a_mode == 2) {
-      outfile << "l_mle"
-              << "\t"
-              << "p_lrt" << endl;
-    } else if (a_mode == 3) {
-      outfile << "beta"
-              << "\t"
-              << "se"
-              << "\t"
-              << "p_score" << endl;
-    } else if (a_mode == 4) {
-      outfile << "beta"
-              << "\t"
-              << "se"
-              << "\t"
-              << "l_remle"
-              << "\t"
-              << "l_mle"
-              << "\t"
-              << "p_wald"
-              << "\t"
-              << "p_lrt"
-              << "\t"
-              << "p_score" << endl;
-    } else {
-    }
+    outfile << "chr" << "\t"
+            << "rs" << "\t"
+            << "ps" << "\t"
+            << "n_miss" << "\t"
+            << "allele1" << "\t"
+            << "allele0" << "\t"
+            << "af" << "\t";
+
+    common_header();
 
     size_t t = 0;
     for (size_t i = 0; i < snpInfo.size(); ++i) {
-
       if (indicator_snp[i] == 0)
         continue;
       auto snp = snpInfo[i].rs_number;
       if (process_gwasnps && setGWASnps.count(snp) == 0)
         continue;
       // cout << t << endl;
-
       outfile << snpInfo[i].chr << "\t" << snpInfo[i].rs_number << "\t"
               << snpInfo[i].base_position << "\t" << snpInfo[i].n_miss << "\t"
               << snpInfo[i].a_minor << "\t" << snpInfo[i].a_major << "\t"
               << fixed << setprecision(3) << snpInfo[i].maf << "\t";
 
-      if (a_mode == 1) {
-        outfile << scientific << setprecision(6) << sumStat[t].beta << "\t"
-                << sumStat[t].se << "\t" << sumStat[t].lambda_remle << "\t"
-                << sumStat[t].p_wald << endl;
-      } else if (a_mode == 2) {
-        outfile << scientific << setprecision(6) << sumStat[t].lambda_mle
-                << "\t" << sumStat[t].p_lrt << endl;
-      } else if (a_mode == 3) {
-        outfile << scientific << setprecision(6) << sumStat[t].beta << "\t"
-                << sumStat[t].se << "\t" << sumStat[t].p_score << endl;
-      } else if (a_mode == 4) {
-        outfile << scientific << setprecision(6) << sumStat[t].beta << "\t"
-                << sumStat[t].se << "\t" << sumStat[t].lambda_remle << "\t"
-                << sumStat[t].lambda_mle << "\t" << sumStat[t].p_wald << "\t"
-                << sumStat[t].p_lrt << "\t" << sumStat[t].p_score << endl;
-      } else {
-      }
+      sumstats(sumStat[t]);
       t++;
     }
   }
@@ -1299,7 +1249,7 @@ void LMM::AnalyzeGene(const gsl_matrix *U, const gsl_vector *eval,
     time_opt += (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
 
     // Store summary data.
-    SUMSTAT SNPs = {beta, se, lambda_remle, lambda_mle, p_wald, p_lrt, p_score};
+    SUMSTAT SNPs = {beta, se, lambda_remle, lambda_mle, p_wald, p_lrt, p_score, logl_H1};
     sumStat.push_back(SNPs);
   }
   cout << endl;
@@ -1400,7 +1350,7 @@ void LMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
 
       // Store summary data.
       SUMSTAT SNPs = {beta,   se,    lambda_remle, lambda_mle,
-                      p_wald, p_lrt, p_score};
+                      p_wald, p_lrt, p_score, logl_H1};
       sumStat.push_back(SNPs);
     }
   };
@@ -1653,7 +1603,7 @@ void LMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
 
         // Store summary data.
         SUMSTAT SNPs = {beta,   se,    lambda_remle, lambda_mle,
-                        p_wald, p_lrt, p_score};
+                        p_wald, p_lrt, p_score, logl_H1};
         sumStat.push_back(SNPs);
       }
     }
@@ -1930,7 +1880,7 @@ void LMM::Analyzebgen(const gsl_matrix *U, const gsl_vector *eval,
 
         // Store summary data.
         SUMSTAT SNPs = {beta,   se,    lambda_remle, lambda_mle,
-                        p_wald, p_lrt, p_score};
+                        p_wald, p_lrt, p_score, logl_H1};
         sumStat.push_back(SNPs);
       }
     }
@@ -2411,7 +2361,7 @@ void LMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval,
     time_opt += (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
 
     // Store summary data.
-    SUMSTAT SNPs = {beta, se, lambda_remle, lambda_mle, p_wald, p_lrt, p_score};
+    SUMSTAT SNPs = {beta, se, lambda_remle, lambda_mle, p_wald, p_lrt, p_score, logl_H1};
     sumStat.push_back(SNPs);
   }
   cout << endl;
@@ -2589,7 +2539,7 @@ void LMM::AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval,
     time_opt += (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
 
     // Store summary data.
-    SUMSTAT SNPs = {beta, se, lambda_remle, lambda_mle, p_wald, p_lrt, p_score};
+    SUMSTAT SNPs = {beta, se, lambda_remle, lambda_mle, p_wald, p_lrt, p_score, logl_H1};
     sumStat.push_back(SNPs);
   }
   cout << endl;

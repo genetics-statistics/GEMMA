@@ -362,7 +362,7 @@ void LM::AnalyzeGene(const gsl_matrix *W, const gsl_vector *x) {
     time_opt += (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
 
     // Store summary data.
-    SUMSTAT SNPs = {beta, se, 0.0, 0.0, p_wald, p_lrt, p_score};
+    SUMSTAT SNPs = {beta, se, 0.0, 0.0, p_wald, p_lrt, p_score, -0.0 };
     sumStat.push_back(SNPs);
   }
   cout << endl;
@@ -587,7 +587,7 @@ void LM::Analyzebgen(const gsl_matrix *W, const gsl_vector *y) {
     time_opt += (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
 
     // Store summary data.
-    SUMSTAT SNPs = {beta, se, 0.0, 0.0, p_wald, p_lrt, p_score};
+    SUMSTAT SNPs = {beta, se, 0.0, 0.0, p_wald, p_lrt, p_score, -0.0};
     sumStat.push_back(SNPs);
   }
   cout << endl;
@@ -702,7 +702,7 @@ void LM::AnalyzeBimbam(const gsl_matrix *W, const gsl_vector *y) {
     time_opt += (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
 
     // Store summary data.
-    SUMSTAT SNPs = {beta, se, 0.0, 0.0, p_wald, p_lrt, p_score};
+    SUMSTAT SNPs = {beta, se, 0.0, 0.0, p_wald, p_lrt, p_score, -0.0};
     sumStat.push_back(SNPs);
   }
   cout << endl;
@@ -844,7 +844,7 @@ void LM::AnalyzePlink(const gsl_matrix *W, const gsl_vector *y) {
             p_lrt, p_score);
 
     // store summary data
-    SUMSTAT SNPs = {beta, se, 0.0, 0.0, p_wald, p_lrt, p_score};
+    SUMSTAT SNPs = {beta, se, 0.0, 0.0, p_wald, p_lrt, p_score, -0.0};
     sumStat.push_back(SNPs);
 
     time_opt += (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
