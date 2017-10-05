@@ -176,16 +176,6 @@ void ReadFile_mstudy(const string &file_mstudy, gsl_matrix *Vq,
                      gsl_vector *q_vec, gsl_vector *s_vec, size_t &ni);
 void ReadFile_mref(const string &file_mref, gsl_matrix *S_mat,
                    gsl_matrix *Svar_mat, gsl_vector *s_vec, size_t &ni);
-
-// WJA added.
-bool bgenKin(const string &file_geno, vector<int> &indicator_snp,
-             const int k_mode, const int display_pace, gsl_matrix *matrix_kin);
-bool ReadFile_bgen(const string &file_bgen, const set<string> &setSnps,
-                   const gsl_matrix *W, vector<int> &indicator_idv,
-                   vector<int> &indicator_snp, vector<SNPINFO> &snpInfo,
-                   const double &maf_level, const double &miss_level,
-                   const double &hwe_level, const double &r2_level,
-                   size_t &ns_test);
 bool ReadFile_sample(const string &file_sample,
                      vector<vector<int>> &indicator_pheno,
                      vector<vector<double>> &pheno,

@@ -236,37 +236,6 @@ void PARAM::ReadFiles(void) {
 
   trim_individuals(indicator_idv, ni_max, mode_debug);
 
-  // WJA added.
-  // Read genotype and phenotype file for bgen format.
-  if (!file_oxford.empty()) {
-    file_str = file_oxford + ".sample";
-    if (ReadFile_sample(file_str, indicator_pheno, pheno, p_column,
-                        indicator_cvt, cvt, n_cvt) == false) {
-      error = true;
-    }
-    if ((indicator_cvt).size() == 0) {
-      n_cvt = 1;
-    }
-
-    // Post-process covariates and phenotypes, obtain
-    // ni_test, save all useful covariates.
-    ProcessCvtPhen();
-
-    // Obtain covariate matrix.
-    gsl_matrix *W = gsl_matrix_alloc(ni_test, n_cvt);
-    CopyCvt(W);
-
-    file_str = file_oxford + ".bgen";
-    if (ReadFile_bgen(file_str, setSnps, W, indicator_idv, indicator_snp,
-                      snpInfo, maf_level, miss_level, hwe_level, r2_level,
-                      ns_test) == false) {
-      error = true;
-    }
-    gsl_matrix_free(W);
-
-    ns_total = indicator_snp.size();
-  }
-
   // Read genotype and phenotype file for PLINK format.
   if (!file_bfile.empty()) {
     file_str = file_bfile + ".bim";
@@ -741,19 +710,6 @@ void PARAM::CheckParam(void) {
     }
   }
 
-  if (!file_oxford.empty()) {
-    str = file_oxford + ".bgen";
-    if (stat(str.c_str(), &fileInfo) == -1) {
-      cout << "error! fail to open .bgen file: " << str << endl;
-      error = true;
-    }
-    str = file_oxford + ".sample";
-    if (stat(str.c_str(), &fileInfo) == -1) {
-      cout << "error! fail to open .sample file: " << str << endl;
-      error = true;
-    }
-  }
-
   if ((!file_geno.empty() || !file_gene.empty())) {
     str = file_pheno;
     if (stat(str.c_str(), &fileInfo) == -1) {
@@ -864,11 +820,6 @@ void PARAM::CheckParam(void) {
     flag++;
   }
 
-  // WJA added.
-  if (!file_oxford.empty()) {
-    flag++;
-  }
-
   if (flag != 1 && a_mode != 15 && a_mode != 27 && a_mode != 28 &&
       a_mode != 43 && a_mode != 5 && a_mode != 61 && a_mode != 62 &&
       a_mode != 63 && a_mode != 66 && a_mode != 67) {
@@ -949,7 +900,6 @@ void PARAM::CheckParam(void) {
     enforce_msg((a_mode >= 1 && a_mode <= 4) || a_mode == 21 || a_mode == 22,
                 "LOCO only works with LMM and K");
     enforce_msg(file_bfile.empty(), "LOCO does not work with PLink (yet)");
-    enforce_msg(file_oxford.empty(), "LOCO does not work with Oxford (yet)");
     enforce_msg(file_gxe.empty(), "LOCO does not support GXE (yet)");
     enforce_msg(!file_anno.empty(),
                 "LOCO requires annotation file (-a switch)");
@@ -1055,14 +1005,6 @@ void PARAM::CheckParam(void) {
 }
 
 void PARAM::CheckData(void) {
-
-  // WJA NOTE: I added this condition so that covariates can be added
-  // through sample, probably not exactly what is wanted.
-  if (file_oxford.empty()) {
-    if ((file_cvt).empty() || (indicator_cvt).size() == 0) {
-      n_cvt = 1;
-    }
-  }
 
   if ((a_mode == 66 || a_mode == 67) && (v_pve.size() != n_vc)) {
     cout << "error! the number of pve estimates does not equal to "
@@ -1377,13 +1319,6 @@ void PARAM::CalcKin(gsl_matrix *matrix_kin) {
     file_str = file_bfile + ".bed";
     enforce_msg(loco.empty(), "FIXME: LOCO nyi");
     if (PlinkKin(file_str, indicator_snp, a_mode - 20, d_pace, matrix_kin) ==
-        false) {
-      error = true;
-    }
-  } else if (!file_oxford.empty()) {
-    file_str = file_oxford + ".bgen";
-    enforce_msg(loco.empty(), "FIXME: LOCO nyi");
-    if (bgenKin(file_str, indicator_snp, a_mode - 20, d_pace, matrix_kin) ==
         false) {
       error = true;
     }

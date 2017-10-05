@@ -155,9 +155,6 @@ public:
   string file_ksnps;   // File SNPs for computing K
   string file_gwasnps; // File SNPs for computing GWAS
 
-  // WJA added.
-  string file_oxford;
-
   // QC-related parameters.
   double miss_level;
   double maf_level;

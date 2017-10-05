@@ -67,9 +67,6 @@ public:
   void AnalyzeGene(const gsl_matrix *W, const gsl_vector *x);
   void AnalyzePlink(const gsl_matrix *W, const gsl_vector *y);
   void AnalyzeBimbam(const gsl_matrix *W, const gsl_vector *y);
-  // WJA added.
-  void Analyzebgen(const gsl_matrix *W, const gsl_vector *y);
-
   void WriteFiles();
 };
 
