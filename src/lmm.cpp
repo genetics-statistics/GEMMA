@@ -107,8 +107,10 @@ void LMM::WriteFiles() {
   }
 
   auto common_header = [&] () {
-    outfile << "beta" << "\t"
-            << "se" << "\t";
+    if (a_mode != 2)
+      outfile << "beta" << "\t";
+
+    outfile << "se" << "\t";
 
     outfile << "logl_H1" << "\t";  // we may make this an option
 
@@ -135,8 +137,12 @@ void LMM::WriteFiles() {
   };
 
   auto sumstats = [&] (SUMSTAT st) {
-    outfile << scientific << setprecision(6) << st.beta << "\t"
-    << st.se << "\t";
+    outfile << scientific << setprecision(6);
+
+    if (a_mode != 2)
+      outfile << st.beta << "\t";
+
+    outfile << st.se << "\t";
 
     outfile << st.logl_H1 << "\t";
 

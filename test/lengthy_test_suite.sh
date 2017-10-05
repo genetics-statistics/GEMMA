@@ -18,6 +18,7 @@ testPlinkStandardRelatednessMatrixK() {
 }
 
 testPlinkMultivariateLinearMixedModelMultiplePhenotypes_Issue58() {
+    echo "Long running test!"
     # This test passes, but takes over 30 minutes to run!
     # n=2 is original pheno in fam file
     # n=1 is causal1
