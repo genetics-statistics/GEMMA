@@ -247,6 +247,7 @@ void Calc_Cor(vector<vector<double>> &X_mat, vector<double> &cov_vec) {
 // genotype file and calculate the covariance matrix for neighboring
 // SNPs output values at 10000-SNP-interval.
 void VARCOV::AnalyzeBimbam() {
+  debug_msg("entering");
   igzstream infile(file_geno.c_str(), igzstream::in);
   if (!infile) {
     cout << "error reading genotype file:" << file_geno << endl;
@@ -345,6 +346,7 @@ void VARCOV::AnalyzeBimbam() {
 }
 
 void VARCOV::AnalyzePlink() {
+  debug_msg("entering");
   string file_bed = file_bfile + ".bed";
   ifstream infile(file_bed.c_str(), ios::binary);
   if (!infile) {

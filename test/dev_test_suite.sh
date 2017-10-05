@@ -2,7 +2,6 @@
 
 gemma=../bin/gemma
 
-
 # Related to https://github.com/genetics-statistics/GEMMA/issues/78
 testBXDStandardRelatednessMatrixKSingularError() {
     outn=BXDerr
@@ -65,10 +64,12 @@ testCenteredRelatednessMatrixKLOCO1() {
 testUnivariateLinearMixedModelLOCO1() {
     outn=mouse_hs1940_CD8_LOCO1_lmm
     rm -f output/$outn.*
-    $gemma -g ../example/mouse_hs1940.geno.txt.gz -p ../example/mouse_hs1940.pheno.txt \
+    $gemma -g ../example/mouse_hs1940.geno.txt.gz \
+           -p ../example/mouse_hs1940.pheno.txt \
 	   -n 1 \
 	   -loco 1 \
-           -a ../example/mouse_hs1940.anno.txt -k ./output/mouse_hs1940_LOCO1.cXX.txt \
+           -a ../example/mouse_hs1940.anno.txt \
+           -k ./output/mouse_hs1940_LOCO1.cXX.txt \
 	   -snps ../example/mouse_hs1940_snps.txt -lmm \
 	   -nind 400 \
 	   -debug \

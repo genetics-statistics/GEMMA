@@ -1319,6 +1319,7 @@ void LMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
                         const gsl_matrix *UtW, const gsl_vector *Uty,
                         const gsl_matrix *W, const gsl_vector *y,
                         const set<string> gwasnps) {
+  debug_msg("entering");
   clock_t time_start = clock();
 
   // LOCO support
@@ -1482,6 +1483,7 @@ void LMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
 void LMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
                        const gsl_matrix *UtW, const gsl_vector *Uty,
                        const gsl_matrix *W, const gsl_vector *y) {
+  debug_msg("entering");
   string file_bed = file_bfile + ".bed";
   ifstream infile(file_bed.c_str(), ios::binary);
   if (!infile) {
@@ -1676,6 +1678,7 @@ void LMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
 void LMM::Analyzebgen(const gsl_matrix *U, const gsl_vector *eval,
                       const gsl_matrix *UtW, const gsl_vector *Uty,
                       const gsl_matrix *W, const gsl_vector *y) {
+  debug_msg("entering");
   string file_bgen = file_oxford + ".bgen";
   ifstream infile(file_bgen.c_str(), ios::binary);
   if (!infile) {
@@ -2282,6 +2285,7 @@ void LMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval,
                            const gsl_matrix *UtW, const gsl_vector *Uty,
                            const gsl_matrix *W, const gsl_vector *y,
                            const gsl_vector *env) {
+  debug_msg("entering");
   igzstream infile(file_geno.c_str(), igzstream::in);
   if (!infile) {
     cout << "error reading genotype file:" << file_geno << endl;
@@ -2430,6 +2434,7 @@ void LMM::AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval,
                           const gsl_matrix *UtW, const gsl_vector *Uty,
                           const gsl_matrix *W, const gsl_vector *y,
                           const gsl_vector *env) {
+  debug_msg("entering");
   string file_bed = file_bfile + ".bed";
   ifstream infile(file_bed.c_str(), ios::binary);
   if (!infile) {

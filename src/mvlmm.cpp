@@ -2953,6 +2953,7 @@ double PCRT(const size_t mode, const size_t d_size, const double p_value,
 // WJA added.
 void MVLMM::Analyzebgen(const gsl_matrix *U, const gsl_vector *eval,
                         const gsl_matrix *UtW, const gsl_matrix *UtY) {
+  debug_msg("entering");
   string file_bgen = file_oxford + ".bgen";
   ifstream infile(file_bgen.c_str(), ios::binary);
   if (!infile) {
@@ -3501,6 +3502,7 @@ void MVLMM::Analyzebgen(const gsl_matrix *U, const gsl_vector *eval,
 
 void MVLMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
                           const gsl_matrix *UtW, const gsl_matrix *UtY) {
+  debug_msg("entering");
   igzstream infile(file_geno.c_str(), igzstream::in);
   if (!infile) {
     cout << "error reading genotype file:" << file_geno << endl;
@@ -3938,6 +3940,7 @@ void MVLMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
 
 void MVLMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
                          const gsl_matrix *UtW, const gsl_matrix *UtY) {
+  debug_msg("entering");
   string file_bed = file_bfile + ".bed";
   ifstream infile(file_bed.c_str(), ios::binary);
   if (!infile) {
@@ -4475,6 +4478,7 @@ void CalcMvLmmVgVeBeta(const gsl_vector *eval, const gsl_matrix *UtW,
 void MVLMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval,
                              const gsl_matrix *UtW, const gsl_matrix *UtY,
                              const gsl_vector *env) {
+  debug_msg("entering");
   igzstream infile(file_geno.c_str(), igzstream::in);
   if (!infile) {
     cout << "error reading genotype file:" << file_geno << endl;
@@ -4920,6 +4924,7 @@ void MVLMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval,
 void MVLMM::AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval,
                             const gsl_matrix *UtW, const gsl_matrix *UtY,
                             const gsl_vector *env) {
+  debug_msg("entering");
   string file_bed = file_bfile + ".bed";
   ifstream infile(file_bed.c_str(), ios::binary);
   if (!infile) {

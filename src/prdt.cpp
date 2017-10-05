@@ -206,6 +206,7 @@ void PRDT::AddBV(gsl_matrix *G, const gsl_vector *u_hat, gsl_vector *y_prdt) {
 }
 
 void PRDT::AnalyzeBimbam(gsl_vector *y_prdt) {
+  debug_msg("entering");
   igzstream infile(file_geno.c_str(), igzstream::in);
   if (!infile) {
     cout << "error reading genotype file:" << file_geno << endl;
@@ -308,6 +309,7 @@ void PRDT::AnalyzeBimbam(gsl_vector *y_prdt) {
 }
 
 void PRDT::AnalyzePlink(gsl_vector *y_prdt) {
+  debug_msg("entering");
   string file_bed = file_bfile + ".bed";
   ifstream infile(file_bed.c_str(), ios::binary);
   if (!infile) {
