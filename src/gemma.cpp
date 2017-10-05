@@ -299,7 +299,7 @@ void GEMMA::PrintHelp(size_t option) {
     cout << "                  ..." << endl;
     cout << "          missing value: NA" << endl;
     cout << " -p        [filename]     "
-         << " specify input BIMBAM phenotype file name" << endl;
+         << " specify input BIMBAM-style phenotype file name (when used with PLINK .fam phenotypes are ignored)" << endl;
     cout << "          format: phenotype for individual 1" << endl;
     cout << "                  phenotype for individual 2" << endl;
     cout << "                  ..." << endl;
@@ -1044,7 +1044,7 @@ void GEMMA::Assign(int argc, char **argv, PARAM &cPar) {
       str.clear();
       str.assign(argv[i]);
       cPar.k_mode = atoi(str.c_str());
-    } else if (strcmp(argv[i], "-n") == 0) { // set pheno column (range)
+    } else if (strcmp(argv[i], "-n") == 0) { // set pheno column (list/range)
       (cPar.p_column).clear();
       while (argv[i + 1] != NULL && argv[i + 1][0] != '-') {
         ++i;

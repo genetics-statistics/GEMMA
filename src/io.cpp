@@ -187,6 +187,7 @@ bool ReadFile_snps_header(const string &file_snps, set<string> &setSnps) {
       continue;
     }
     ch_ptr = strtok((char *)line.c_str(), " , \t");
+    enforce_msg(ch_ptr,"Problem reading SNP header");
 
     for (size_t i = 0; i < header.coln; i++) {
       enforce_msg(ch_ptr,"Problem reading SNP file");
@@ -337,11 +338,11 @@ bool ReadFile_column(const string &file_pheno, vector<int> &indicator_idv,
     for (int i = 0; i < (p_column - 1); ++i) {
       ch_ptr = strtok(NULL, " , \t");
     }
+    enforce_msg(ch_ptr,"Problem reading PHENO column");
     if (strcmp(ch_ptr, "NA") == 0) {
       indicator_idv.push_back(0);
       pheno.push_back(-9);
     } else {
-
       // Pheno is different from pimass2.
       p = atof(ch_ptr);
       indicator_idv.push_back(1);
@@ -390,7 +391,7 @@ bool ReadFile_pheno(const string &file_pheno,
     ch_ptr = strtok((char *)line.c_str(), " , \t");
     size_t i = 0;
     while (i < p_max) {
-      enforce_msg(ch_ptr,"Wrong number of phenotypes");
+      enforce_msg(ch_ptr,"Number of phenotypes out of range");
       if (mapP2c.count(i + 1) != 0) {
         if (strcmp(ch_ptr, "NA") == 0) {
           ind_pheno_row[mapP2c[i + 1]] = 0;
@@ -524,7 +525,7 @@ bool ReadFile_bim(const string &file_bim, vector<SNPINFO> &snpInfo) {
   return true;
 }
 
-// Read .fam file.
+// Read .fam file (ignored with -p phenotypes switch)
 bool ReadFile_fam(const string &file_fam, vector<vector<int>> &indicator_pheno,
                   vector<vector<double>> &pheno, map<string, int> &mapID2num,
                   const vector<size_t> &p_column) {
@@ -568,6 +569,8 @@ bool ReadFile_fam(const string &file_fam, vector<vector<int>> &indicator_pheno,
     size_t i = 0;
     while (i < p_max) {
       if (mapP2c.count(i + 1) != 0) {
+        enforce_msg(ch_ptr,"Problem reading FAM file (phenotypes out of range)");
+
         if (strcmp(ch_ptr, "NA") == 0) {
           ind_pheno_row[mapP2c[i + 1]] = 0;
           pheno_row[mapP2c[i + 1]] = -9;
