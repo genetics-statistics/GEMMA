@@ -1289,7 +1289,7 @@ in.
 
  */
 
-void LMM::Analyze(std::function< string(size_t) >& fetch_line,
+void LMM::Analyze(std::function< SnpNameValues(size_t) >& fetch_snp,
                   const gsl_matrix *U, const gsl_vector *eval,
                   const gsl_matrix *UtW, const gsl_vector *Uty,
                   const gsl_matrix *W, const gsl_vector *y,
@@ -1383,17 +1383,13 @@ void LMM::Analyze(std::function< string(size_t) >& fetch_line,
     if (indicator_snp[t] == 0)
       continue;
 
-    string line = fetch_line(t);
+    auto tup = fetch_snp(t);
+    auto snp = get<0>(tup);
+    auto gs = get<1>(tup);
 
-    char *ch_ptr = strtok((char *)line.c_str(), " , \t");
-    enforce_msg(ch_ptr, "Parsing BIMBAM genofile"); // just to be sure
-
-    auto snp = string(ch_ptr);
     // check whether SNP is included in gwasnps (used by LOCO)
     if (process_gwasnps && gwasnps.count(snp) == 0)
       continue;
-    ch_ptr = strtok(NULL, " , \t");
-    ch_ptr = strtok(NULL, " , \t");
 
     double x_mean = 0.0;
     int c_phen = 0;
@@ -1401,16 +1397,14 @@ void LMM::Analyze(std::function< string(size_t) >& fetch_line,
     gsl_vector_set_zero(x_miss);
     for (size_t i = 0; i < ni_total; ++i) {
       // get the genotypes per individual and compute stats per SNP
-      ch_ptr = strtok(NULL, " , \t");
-      if (indicator_idv[i] == 0)
+      if (indicator_idv[i] == 0) // skip individual column
         continue;
 
-      if (strcmp(ch_ptr, "NA") == 0) {
+      double geno = gs[i];
+      if (std::isnan(geno)) {
         gsl_vector_set(x_miss, c_phen, 0.0);
         n_miss++;
       } else {
-        double geno = atof(ch_ptr);
-
         gsl_vector_set(x, c_phen, geno);
         gsl_vector_set(x_miss, c_phen, 1.0);
         x_mean += geno;
@@ -1448,7 +1442,6 @@ void LMM::Analyze(std::function< string(size_t) >& fetch_line,
 
 }
 
-
 void LMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
                         const gsl_matrix *UtW, const gsl_vector *Uty,
                         const gsl_matrix *W, const gsl_vector *y,
@@ -1459,16 +1452,36 @@ void LMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
   enforce_msg(infile, "error reading genotype file");
   size_t prev_line = 0;
 
-  std::function<string(size_t)>  fetch_line = [&](size_t num) {
+  // fetch_snp is a callback function for every SNP row
+  std::function<SnpNameValues(size_t)>  fetch_snp = [&](size_t num) {
     string line;
     while (prev_line <= num) {
+      // also read SNPs that were skipped
       safeGetline(infile, line);
       prev_line++;
     }
-    return line;
+    char *ch_ptr = strtok((char *)line.c_str(), " , \t");
+    enforce_msg(ch_ptr, "Parsing BIMBAM genofile"); // ch_ptr should not be NULL
+
+    auto snp = string(ch_ptr);
+    ch_ptr = strtok(NULL, " , \t"); // skip column
+    ch_ptr = strtok(NULL, " , \t"); // skip column
+
+    std::vector <double> gs;
+    gs.resize(ni_total);
+
+    for (size_t i = 0; i < ni_total; ++i) {
+      ch_ptr = strtok(NULL, " , \t");
+      enforce_msg(ch_ptr,line.c_str());
+      double geno = atof(ch_ptr);
+      if (strcmp(ch_ptr, "NA") == 0)
+        geno = nan("");
+      gs[i] = geno;
+    }
+    return std::make_tuple(snp,gs);
   };
 
-  LMM::Analyze(fetch_line,U,eval,UtW,Uty,W,y,gwasnps);
+  LMM::Analyze(fetch_snp,U,eval,UtW,Uty,W,y,gwasnps);
 
   infile.close();
   infile.clear();

@@ -24,6 +24,7 @@
 #include "io.h"
 #include "param.h"
 #include <functional>
+#include <tuple>
 
 using namespace std;
 
@@ -40,6 +41,8 @@ public:
   const gsl_vector *ab;
   size_t e_mode;
 };
+
+typedef std::tuple<string,std::vector<double> > SnpNameValues;
 
 class LMM {
 
@@ -90,7 +93,7 @@ public:
   void AnalyzeGene(const gsl_matrix *U, const gsl_vector *eval,
                    const gsl_matrix *UtW, const gsl_vector *Utx,
                    const gsl_matrix *W, const gsl_vector *x);
-  void Analyze(std::function< string(size_t) >& fetch_line,
+  void Analyze(std::function< SnpNameValues(size_t) >& fetch_snp,
                const gsl_matrix *U, const gsl_vector *eval,
                const gsl_matrix *UtW, const gsl_vector *Uty,
                const gsl_matrix *W, const gsl_vector *y,
