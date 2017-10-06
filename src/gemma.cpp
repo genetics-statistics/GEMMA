@@ -2736,20 +2736,25 @@ void GEMMA::BatchRun(PARAM &cPar) {
           gsl_vector_view UtY_col = gsl_matrix_column(UtY, 0);
 
           if (!cPar.file_bfile.empty()) {
+            // PLINK analysis
             if (cPar.file_gxe.empty()) {
               cLmm.AnalyzePlink(U, eval, UtW, &UtY_col.vector, W,
                                 &Y_col.vector);
-            } else {
+            }
+            else {
               cLmm.AnalyzePlinkGXE(U, eval, UtW, &UtY_col.vector, W,
                                    &Y_col.vector, env);
             }
           }
-          if (cPar.file_gxe.empty()) {
-            cLmm.AnalyzeBimbam(U, eval, UtW, &UtY_col.vector, W,
-                               &Y_col.vector, cPar.setGWASnps);
-          } else {
-            cLmm.AnalyzeBimbamGXE(U, eval, UtW, &UtY_col.vector, W,
-                                  &Y_col.vector, env);
+          else {
+            // BIMBAM analysis
+            if (cPar.file_gxe.empty()) {
+              cLmm.AnalyzeBimbam(U, eval, UtW, &UtY_col.vector, W,
+                                 &Y_col.vector, cPar.setGWASnps);
+            } else {
+              cLmm.AnalyzeBimbamGXE(U, eval, UtW, &UtY_col.vector, W,
+                                    &Y_col.vector, env);
+            }
           }
 
           cLmm.WriteFiles();

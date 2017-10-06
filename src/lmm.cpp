@@ -1164,6 +1164,7 @@ void Calcab(const gsl_matrix *W, const gsl_vector *y, const gsl_vector *x,
 void LMM::AnalyzeGene(const gsl_matrix *U, const gsl_vector *eval,
                       const gsl_matrix *UtW, const gsl_vector *Utx,
                       const gsl_matrix *W, const gsl_vector *x) {
+  debug_msg(file_gene);
   igzstream infile(file_gene.c_str(), igzstream::in);
   if (!infile) {
     cout << "error reading gene expression file:" << file_gene << endl;
@@ -1272,7 +1273,7 @@ void LMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
                         const gsl_matrix *UtW, const gsl_vector *Uty,
                         const gsl_matrix *W, const gsl_vector *y,
                         const set<string> gwasnps) {
-  debug_msg("entering");
+  debug_msg(file_geno);
   clock_t time_start = clock();
 
   // LOCO support
@@ -1369,6 +1370,8 @@ void LMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
       continue;
 
     char *ch_ptr = strtok((char *)line.c_str(), " , \t");
+    enforce_msg(ch_ptr, "Parsing BIMBAM genofile"); // just to be sure
+
     auto snp = string(ch_ptr);
     // check whether SNP is included in gwasnps (used by LOCO)
     if (process_gwasnps && gwasnps.count(snp) == 0)
@@ -1436,8 +1439,8 @@ void LMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
 void LMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
                        const gsl_matrix *UtW, const gsl_vector *Uty,
                        const gsl_matrix *W, const gsl_vector *y) {
-  debug_msg("entering");
   string file_bed = file_bfile + ".bed";
+  debug_msg(file_bed);
   ifstream infile(file_bed.c_str(), ios::binary);
   if (!infile) {
     cout << "error reading bed file:" << file_bed << endl;
@@ -2109,8 +2112,8 @@ void LMM::AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval,
                           const gsl_matrix *UtW, const gsl_vector *Uty,
                           const gsl_matrix *W, const gsl_vector *y,
                           const gsl_vector *env) {
-  debug_msg("entering");
   string file_bed = file_bfile + ".bed";
+  debug_msg(file_bed);
   ifstream infile(file_bed.c_str(), ios::binary);
   if (!infile) {
     cout << "error reading bed file:" << file_bed << endl;
