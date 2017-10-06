@@ -2739,7 +2739,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
             // PLINK analysis
             if (cPar.file_gxe.empty()) {
               cLmm.AnalyzePlink(U, eval, UtW, &UtY_col.vector, W,
-                                &Y_col.vector);
+                                &Y_col.vector, cPar.setGWASnps);
             }
             else {
               cLmm.AnalyzePlinkGXE(U, eval, UtW, &UtY_col.vector, W,

@@ -104,7 +104,8 @@ public:
                      const set<string> gwasnps);
   void AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
                     const gsl_matrix *UtW, const gsl_vector *Uty,
-                    const gsl_matrix *W, const gsl_vector *y);
+                    const gsl_matrix *W, const gsl_vector *y,
+                    const set<string> gwasnps);
   void AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval,
                        const gsl_matrix *UtW, const gsl_vector *Uty,
                        const gsl_matrix *W, const gsl_vector *y,
