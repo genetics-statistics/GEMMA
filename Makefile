@@ -26,6 +26,14 @@
 #
 #      make check
 #
+#    Run quick (development) tests with
+#
+#      make fast-check
+#
+#    Run full (lengthy) tests with
+#
+#      make check-all
+#
 #    See also the INSTALL.md document in the source tree at
 #
 #      https://github.com/genetics-statistics/GEMMA/blob/master/INSTALL.md
