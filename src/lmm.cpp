@@ -1289,7 +1289,7 @@ in.
 
  */
 
-void LMM::Analyze(std::function< string(void) >& fetch_line,
+void LMM::Analyze(std::function< string(size_t) >& fetch_line,
                   const gsl_matrix *U, const gsl_vector *eval,
                   const gsl_matrix *UtW, const gsl_vector *Uty,
                   const gsl_matrix *W, const gsl_vector *y,
@@ -1377,12 +1377,13 @@ void LMM::Analyze(std::function< string(void) >& fetch_line,
 
   for (size_t t = 0; t < indicator_snp.size(); ++t) {
     // for every SNP
-    string line = fetch_line();
     if (t % d_pace == 0 || t == (ns_total - 1)) {
       ProgressBar("Reading SNPs  ", t, ns_total - 1);
     }
     if (indicator_snp[t] == 0)
       continue;
+
+    string line = fetch_line(t);
 
     char *ch_ptr = strtok((char *)line.c_str(), " , \t");
     enforce_msg(ch_ptr, "Parsing BIMBAM genofile"); // just to be sure
@@ -1456,10 +1457,14 @@ void LMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
 
   igzstream infile(file_geno.c_str(), igzstream::in);
   enforce_msg(infile, "error reading genotype file");
+  size_t prev_line = 0;
 
-  std::function<string(void)>  fetch_line = [&]() {
+  std::function<string(size_t)>  fetch_line = [&](size_t num) {
     string line;
-    safeGetline(infile, line);
+    while (prev_line <= num) {
+      safeGetline(infile, line);
+      prev_line++;
+    }
     return line;
   };
 

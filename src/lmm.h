@@ -90,7 +90,7 @@ public:
   void AnalyzeGene(const gsl_matrix *U, const gsl_vector *eval,
                    const gsl_matrix *UtW, const gsl_vector *Utx,
                    const gsl_matrix *W, const gsl_vector *x);
-  void Analyze(std::function< string(void) >& fetch_line,
+  void Analyze(std::function< string(size_t) >& fetch_line,
                const gsl_matrix *U, const gsl_vector *eval,
                const gsl_matrix *UtW, const gsl_vector *Uty,
                const gsl_matrix *W, const gsl_vector *y,
