@@ -62,7 +62,7 @@ testUnivariateLinearMixedModel() {
     assertEquals "4038540440.86" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
-testMultivariateLinearMixedModel() {
+testLinearMixedModelPhenotypes() {
     $gemma -g ../example/mouse_hs1940.geno.txt.gz \
            -p ../example/mouse_hs1940.pheno.txt \
            -n 1 6 \
@@ -92,8 +92,8 @@ testPlinkStandardRelatednessMatrixK() {
 
 # Test for https://github.com/genetics-statistics/GEMMA/issues/58
 # fixed GSLv2 NaN's that appeared with covariates.
-testPlinkMultivariateLinearMixedModel() {
-    testname=testPlinkMultivariateLinearMixedModel
+testPlinkLinearMixedModelCovariates() {
+    testname=testPlinkLinearMixedModelCovariates
     datadir=../example
     $gemma -bfile $datadir/HLC \
            -k output/testPlinkStandardRelatednessMatrixK.sXX.txt \

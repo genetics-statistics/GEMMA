@@ -331,7 +331,7 @@ void LM::AnalyzeGene(const gsl_matrix *W, const gsl_vector *x) {
   for (size_t t = 0; t < ng_total; t++) {
     getline(infile, line);
     if (t % d_pace == 0 || t == ng_total - 1) {
-      ProgressBar("Performing Analysis ", t, ng_total - 1);
+      ProgressBar("Performing Analysis", t, ng_total - 1);
     }
     ch_ptr = strtok((char *)line.c_str(), " , \t");
     rs = ch_ptr;
@@ -421,7 +421,7 @@ void LM::AnalyzeBimbam(const gsl_matrix *W, const gsl_vector *y) {
   for (size_t t = 0; t < indicator_snp.size(); ++t) {
     getline(infile, line);
     if (t % d_pace == 0 || t == (ns_total - 1)) {
-      ProgressBar("Reading SNPs  ", t, ns_total - 1);
+      ProgressBar("Reading SNPs", t, ns_total - 1);
     }
     if (indicator_snp[t] == 0) {
       continue;
@@ -547,7 +547,7 @@ void LM::AnalyzePlink(const gsl_matrix *W, const gsl_vector *y) {
 
   for (vector<SNPINFO>::size_type t = 0; t < snpInfo.size(); ++t) {
     if (t % d_pace == 0 || t == snpInfo.size() - 1) {
-      ProgressBar("Reading SNPs  ", t, snpInfo.size() - 1);
+      ProgressBar("Reading SNPs", t, snpInfo.size() - 1);
     }
     if (indicator_snp[t] == 0) {
       continue;

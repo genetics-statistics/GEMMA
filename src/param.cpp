@@ -87,7 +87,7 @@ void trim_individuals(vector<int> &idvs, size_t ni_max, bool debug) {
 // ---- PARAM class implementation
 
 PARAM::PARAM(void)
-    : mode_silence(false), a_mode(0), k_mode(1), d_pace(100000),
+    : mode_silence(false), a_mode(0), k_mode(1), d_pace(DEFAULT_PACE),
       file_out("result"), path_out("./output/"), miss_level(0.05),
       maf_level(0.01), hwe_level(0), r2_level(0.9999), l_min(1e-5), l_max(1e5),
       n_region(10), p_nr(0.001), em_prec(0.0001), nr_prec(0.0001),
@@ -1150,7 +1150,7 @@ void PARAM::CheckData(void) {
   }
 
   // Set d_pace to 1000 for gene expression.
-  if (!file_gene.empty() && d_pace == 100000) {
+  if (!file_gene.empty() && d_pace == DEFAULT_PACE) {
     d_pace = 1000;
   }
 

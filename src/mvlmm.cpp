@@ -3190,7 +3190,7 @@ void MVLMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
   for (size_t t = 0; t < indicator_snp.size(); ++t) {
     !safeGetline(infile, line).eof();
     if (t % d_pace == 0 || t == (ns_total - 1)) {
-      ProgressBar("Reading SNPs  ", t, ns_total - 1);
+      ProgressBar("Reading SNPs", t, ns_total - 1);
     }
     if (indicator_snp[t] == 0) {
       continue;
@@ -3639,7 +3639,7 @@ void MVLMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
   }
   for (vector<SNPINFO>::size_type t = 0; t < snpInfo.size(); ++t) {
     if (t % d_pace == 0 || t == snpInfo.size() - 1) {
-      ProgressBar("Reading SNPs  ", t, snpInfo.size() - 1);
+      ProgressBar("Reading SNPs", t, snpInfo.size() - 1);
     }
     if (indicator_snp[t] == 0) {
       continue;
@@ -4167,7 +4167,7 @@ void MVLMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval,
   for (size_t t = 0; t < indicator_snp.size(); ++t) {
     !safeGetline(infile, line).eof();
     if (t % d_pace == 0 || t == (ns_total - 1)) {
-      ProgressBar("Reading SNPs  ", t, ns_total - 1);
+      ProgressBar("Reading SNPs", t, ns_total - 1);
     }
     if (indicator_snp[t] == 0) {
       continue;
@@ -4624,7 +4624,7 @@ void MVLMM::AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval,
 
   for (vector<SNPINFO>::size_type t = 0; t < snpInfo.size(); ++t) {
     if (t % d_pace == 0 || t == snpInfo.size() - 1) {
-      ProgressBar("Reading SNPs  ", t, snpInfo.size() - 1);
+      ProgressBar("Reading SNPs", t, snpInfo.size() - 1);
     }
     if (indicator_snp[t] == 0) {
       continue;

@@ -49,43 +49,17 @@
 using namespace std;
 
 // Print progress bar.
-void ProgressBar(string str, double p, double total) {
-  double progress = (100.0 * p / total);
-  int barsize = (int)(progress / 2.0);
-  char bar[51];
-
-  cout << str;
-  for (int i = 0; i < 50; i++) {
-    if (i < barsize) {
-      bar[i] = '=';
-    } else {
-      bar[i] = ' ';
-    }
-    cout << bar[i];
-  }
-  cout << setprecision(2) << fixed << progress << "%\r" << flush;
-
-  return;
-}
-
-// Print progress bar with acceptance ratio.
 void ProgressBar(string str, double p, double total, double ratio) {
-  double progress = (100.0 * p / total);
-  int barsize = (int)(progress / 2.0);
-  char bar[51];
-
-  cout << str;
-  for (int i = 0; i < 50; i++) {
-    if (i < barsize) {
-      bar[i] = '=';
-    } else {
-      bar[i] = ' ';
-    }
-    cout << bar[i];
-  }
-  cout << setprecision(2) << fixed << progress << "%    " << ratio << "\r"
-       << flush;
-  return;
+  assert(p<=total);
+  const double progress = (100.0 * p / total);
+  const uint barsize = (int)(progress / 2.0); // characters
+  cout << str << " ";
+  cout << std::string(barsize,'=');
+  cout << std::string(50-barsize,' ');
+  cout << setprecision(0) << fixed << progress << "%";
+  if (ratio != -1.0)
+    cout << setprecision(2) << "    " << ratio;
+  cout << "\r" << flush;
 }
 
 bool isBlankLine(char const *line) {
@@ -1407,7 +1381,7 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
     string line;
     !safeGetline(infile, line).eof();
     if (t % display_pace == 0 || t == (indicator_snp.size() - 1)) {
-      ProgressBar("Reading SNPs  ", t, indicator_snp.size() - 1);
+      ProgressBar("Reading SNPs", t, indicator_snp.size() - 1);
     }
     if (indicator_snp[t] == 0)
       continue;
@@ -1556,7 +1530,7 @@ bool PlinkKin(const string &file_bed, vector<int> &indicator_snp,
 
   for (size_t t = 0; t < indicator_snp.size(); ++t) {
     if (t % display_pace == 0 || t == (indicator_snp.size() - 1)) {
-      ProgressBar("Reading SNPs  ", t, indicator_snp.size() - 1);
+      ProgressBar("Reading SNPs", t, indicator_snp.size() - 1);
     }
     if (indicator_snp[t] == 0) {
       continue;
@@ -2713,7 +2687,7 @@ bool BimbamKinUncentered(const string &file_geno, const set<string> ksnps,
   for (size_t t = 0; t < indicator_snp.size(); ++t) {
     !safeGetline(infile, line).eof();
     if (t % display_pace == 0 || t == (indicator_snp.size() - 1)) {
-      ProgressBar("Reading SNPs  ", t, indicator_snp.size() - 1);
+      ProgressBar("Reading SNPs", t, indicator_snp.size() - 1);
     }
     if (indicator_snp[t] == 0)
       continue;
@@ -2918,7 +2892,7 @@ bool PlinkKin(const string &file_bed, const int display_pace,
 
   for (size_t t = 0; t < indicator_snp.size(); ++t) {
     if (t % display_pace == 0 || t == (indicator_snp.size() - 1)) {
-      ProgressBar("Reading SNPs  ", t, indicator_snp.size() - 1);
+      ProgressBar("Reading SNPs", t, indicator_snp.size() - 1);
     }
     if (indicator_snp[t] == 0) {
       continue;

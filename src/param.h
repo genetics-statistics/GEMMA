@@ -27,6 +27,7 @@
 #include <vector>
 
 #define K_BATCH_SIZE 10000 // #snps used for batched K
+#define DEFAULT_PACE 1000
 
 using namespace std;
 
@@ -124,7 +125,7 @@ public:
   uint a_mode; // Analysis mode, 1/2/3/4 for Frequentist tests
   int k_mode; // Kinship read mode: 1: n by n matrix, 2: id/id/k_value;
   vector<size_t> p_column; // Which phenotype column needs analysis.
-  size_t d_pace;           // Display pace
+  size_t d_pace = DEFAULT_PACE;   // Display pace (-pace switch)
 
   string file_bfile, file_mbfile;
   string file_geno, file_mgeno;
