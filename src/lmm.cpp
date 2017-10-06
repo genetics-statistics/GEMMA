@@ -1452,6 +1452,9 @@ void LMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
   enforce_msg(infile, "error reading genotype file");
   size_t prev_line = 0;
 
+  std::vector <double> gs;
+  gs.resize(ni_total);
+
   // fetch_snp is a callback function for every SNP row
   std::function<SnpNameValues(size_t)>  fetch_snp = [&](size_t num) {
     string line;
@@ -1467,16 +1470,13 @@ void LMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
     ch_ptr = strtok(NULL, " , \t"); // skip column
     ch_ptr = strtok(NULL, " , \t"); // skip column
 
-    std::vector <double> gs;
-    gs.resize(ni_total);
+    gs.assign (ni_total,nan("")); // wipe values
 
     for (size_t i = 0; i < ni_total; ++i) {
       ch_ptr = strtok(NULL, " , \t");
       enforce_msg(ch_ptr,line.c_str());
-      double geno = atof(ch_ptr);
-      if (strcmp(ch_ptr, "NA") == 0)
-        geno = nan("");
-      gs[i] = geno;
+      if (strcmp(ch_ptr, "NA") != 0)
+        gs[i] = atof(ch_ptr);
     }
     return std::make_tuple(snp,gs);
   };
@@ -1498,11 +1498,7 @@ void LMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
   enforce_msg(infile,"error reading genotype (.bed) file");
 
   bitset<8> bset8;
-  char ch[1];
-  // int n_bit; // , n_miss, ci_total, ci_test;
-
-  // size_t n_index = (n_cvt + 2 + 1) * (n_cvt + 2) / 2;
-
+  char ch[1]; // buffer
   // Calculate n_bit and c, the number of bit for each SNP.
   const size_t n_bit = (ni_total % 4 == 0 ? ni_total / 4 : ni_total / 4 + 1);
 
@@ -1512,19 +1508,17 @@ void LMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
     const bitset<8> b = ch[0];
   }
 
+  std::vector <double> gs;
+  gs.resize(ni_total);
+
   // fetch_snp is a callback function for every SNP row
   std::function<SnpNameValues(size_t)>  fetch_snp = [&](size_t num) {
 
-    std::vector <double> gs;
-    gs.resize(ni_total);
-
+    gs.assign (ni_total,nan("")); // wipe values
     // n_bit, and 3 is the number of magic numbers.
     auto t = num;
     infile.seekg(t * n_bit + 3);
     for (size_t i = 0; i < ni_total; ++i) {
-      // Read genotypes.
-      auto x_mean = 0.0;
-      auto n_miss = 0;
       auto ci_total = 0;
       auto ci_test = 0;
       for (int i = 0; i < n_bit; ++i) {
@@ -1544,21 +1538,14 @@ void LMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
           if (bset8[2 * j] == 0) {
             if (bset8[2 * j + 1] == 0) {
               gs[ci_test] = 2.0;
-              // gsl_vector_set(x, ci_test, 2);
-              x_mean += 2.0;
             } else {
               gs[ci_test] = 1.0;
-              // gsl_vector_set(x, ci_test, 1);
-              x_mean += 1.0;
             }
           } else {
             if (bset8[2 * j + 1] == 1) {
               gs[ci_test] = 0.0;
-              // gsl_vector_set(x, ci_test, 0);
             } else {
-              gs[ci_test] = nan("");
-              // gsl_vector_set(x, ci_test, -9);
-              n_miss++;
+              gs[ci_test] = nan(""); // already set to NaN
             }
           }
 
