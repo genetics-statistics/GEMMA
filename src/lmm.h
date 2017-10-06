@@ -23,6 +23,7 @@
 #include "gsl/gsl_vector.h"
 #include "io.h"
 #include "param.h"
+#include <functional>
 
 using namespace std;
 
@@ -89,13 +90,18 @@ public:
   void AnalyzeGene(const gsl_matrix *U, const gsl_vector *eval,
                    const gsl_matrix *UtW, const gsl_vector *Utx,
                    const gsl_matrix *W, const gsl_vector *x);
-  void AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
-                    const gsl_matrix *UtW, const gsl_vector *Uty,
-                    const gsl_matrix *W, const gsl_vector *y);
+  void Analyze(std::function< string(void) >& fetch_line,
+               const gsl_matrix *U, const gsl_vector *eval,
+               const gsl_matrix *UtW, const gsl_vector *Uty,
+               const gsl_matrix *W, const gsl_vector *y,
+               const set<string> gwasnps);
   void AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
                      const gsl_matrix *UtW, const gsl_vector *Uty,
                      const gsl_matrix *W, const gsl_vector *y,
                      const set<string> gwasnps);
+  void AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
+                    const gsl_matrix *UtW, const gsl_vector *Uty,
+                    const gsl_matrix *W, const gsl_vector *y);
   void AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval,
                        const gsl_matrix *UtW, const gsl_vector *Uty,
                        const gsl_matrix *W, const gsl_vector *y,

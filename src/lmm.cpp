@@ -1269,17 +1269,37 @@ void LMM::AnalyzeGene(const gsl_matrix *U, const gsl_vector *eval,
   return;
 }
 
-void LMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
-                        const gsl_matrix *UtW, const gsl_vector *Uty,
-                        const gsl_matrix *W, const gsl_vector *y,
-                        const set<string> gwasnps) {
-  debug_msg(file_geno);
+/*
+
+AnalyzeBimBam, AnalyzeGene and AnalyzePlink contain duplicate logic -
+and they differ now because the first has LOCO support. To add LOCO
+support to PLINK we'll converge on logic and make the functions DRY.
+
+The functions can be split into:
+
+1. Initialization
+2. Partially read genotype data (batch processing)
+3. LMM on the submatrix
+4. Collate the results
+5. Cleanup
+
+The only thing specific regarding the input file format is (2). The
+way to solve is is to put that reader in a function that gets passed
+in.
+
+ */
+
+void LMM::Analyze(std::function< string(void) >& fetch_line,
+                  const gsl_matrix *U, const gsl_vector *eval,
+                  const gsl_matrix *UtW, const gsl_vector *Uty,
+                  const gsl_matrix *W, const gsl_vector *y,
+                  const set<string> gwasnps) {
   clock_t time_start = clock();
 
-  // LOCO support
+  // Subset/LOCO support
   bool process_gwasnps = gwasnps.size();
   if (process_gwasnps)
-    debug_msg("AnalyzeBimbam w. LOCO");
+    debug_msg("Analyze subset of SNPs (LOCO)");
 
   // Calculate basic quantities.
   size_t n_index = (n_cvt + 2 + 1) * (n_cvt + 2) / 2;
@@ -1296,7 +1316,6 @@ void LMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
   const size_t msize = LMM_BATCH_SIZE;
   gsl_matrix *Xlarge = gsl_matrix_alloc(inds, msize);
   gsl_matrix *UtXlarge = gsl_matrix_alloc(inds, msize);
-
   enforce_msg(Xlarge && UtXlarge, "Xlarge memory check"); // just to be sure
   gsl_matrix_set_zero(Xlarge);
   gsl_matrix_set_zero(Uab);
@@ -1304,9 +1323,6 @@ void LMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
 
   // start reading genotypes and analyze
   size_t c = 0;
-
-  igzstream infile(file_geno.c_str(), igzstream::in);
-  enforce_msg(infile, "error reading genotype file");
 
   auto batch_compute = [&](size_t l) { // using a C++ closure
     // Compute SNPs in batch, note the computations are independent per SNP
@@ -1361,8 +1377,7 @@ void LMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
 
   for (size_t t = 0; t < indicator_snp.size(); ++t) {
     // for every SNP
-    string line;
-    safeGetline(infile, line);
+    string line = fetch_line();
     if (t % d_pace == 0 || t == (ns_total - 1)) {
       ProgressBar("Reading SNPs  ", t, ns_total - 1);
     }
@@ -1430,10 +1445,28 @@ void LMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
   gsl_matrix_free(Xlarge);
   gsl_matrix_free(UtXlarge);
 
+}
+
+
+void LMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
+                        const gsl_matrix *UtW, const gsl_vector *Uty,
+                        const gsl_matrix *W, const gsl_vector *y,
+                        const set<string> gwasnps) {
+  debug_msg(file_geno);
+
+  igzstream infile(file_geno.c_str(), igzstream::in);
+  enforce_msg(infile, "error reading genotype file");
+
+  std::function<string(void)>  fetch_line = [&]() {
+    string line;
+    safeGetline(infile, line);
+    return line;
+  };
+
+  LMM::Analyze(fetch_line,U,eval,UtW,Uty,W,y,gwasnps);
+
   infile.close();
   infile.clear();
-
-  return;
 }
 
 void LMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
