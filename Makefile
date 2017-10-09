@@ -144,7 +144,14 @@ slow-check: all
 	cd test && ./test_suite.sh | tee ../test.log
 	grep -q 'success rate: 100%' test.log
 
+lengthy-check: all
+	rm -vf test/output/*
+	cd test && ./lengthy_test_suite.sh | tee ../lengthy_test.log
+	grep -q 'success rate: 100%' lengthy_test.log
+
 check: fast-check slow-check
+
+check-all: check lengthy-check
 
 clean:
 	rm -vf $(SRC_DIR)/*.o

@@ -407,6 +407,7 @@ int LogRL_dev12(const gsl_vector *log_sigma2, void *params, gsl_vector *dev1,
 
 // Read header to determine which column contains which item.
 bool ReadHeader_vc(const string &line, HEADER &header) {
+  debug_msg("entering");
   string rs_ptr[] = {"rs",   "RS",    "snp",   "SNP",  "snps",
                      "SNPS", "snpid", "SNPID", "rsid", "RSID"};
   set<string> rs_set(rs_ptr, rs_ptr + 10);
@@ -639,6 +640,7 @@ void ReadFile_cor(const string &file_cor, const set<string> &setSnps,
                   vector<double> &vec_cm, vector<double> &vec_bp,
                   map<string, size_t> &mapRS2in,
                   map<string, double> &mapRS2var) {
+  debug_msg("entering");
   vec_rs.clear();
   vec_n.clear();
   mapRS2in.clear();
@@ -790,6 +792,7 @@ void ReadFile_beta(const bool flag_priorscale, const string &file_beta,
                    map<string, size_t> &mapRS2nsamp, gsl_vector *q_vec,
                    gsl_vector *qvar_vec, gsl_vector *s_vec, size_t &ni_total,
                    size_t &ns_total) {
+  debug_msg("entering");
   mapRS2nsamp.clear();
 
   igzstream infile(file_beta.c_str(), igzstream::in);
@@ -1004,6 +1007,7 @@ void ReadFile_cor(const string &file_cor, const vector<string> &vec_rs,
                   const double &window_ns, gsl_matrix *S_mat,
                   gsl_matrix *Svar_mat, gsl_vector *qvar_vec, size_t &ni_total,
                   size_t &ns_total, size_t &ns_test, size_t &ns_pair) {
+  debug_msg("entering");
   igzstream infile(file_cor.c_str(), igzstream::in);
   if (!infile) {
     cout << "error! fail to open cov file: " << file_cor << endl;
@@ -2213,6 +2217,7 @@ bool BimbamXwz(const string &file_geno, const int display_pace,
                vector<int> &indicator_idv, vector<int> &indicator_snp,
                const vector<size_t> &vec_cat, const gsl_vector *w,
                const gsl_vector *z, size_t ns_test, gsl_matrix *XWz) {
+  debug_msg("entering");
   igzstream infile(file_geno.c_str(), igzstream::in);
   if (!infile) {
     cout << "error reading genotype file:" << file_geno << endl;
@@ -2306,6 +2311,7 @@ bool PlinkXwz(const string &file_bed, const int display_pace,
               vector<int> &indicator_idv, vector<int> &indicator_snp,
               const vector<size_t> &vec_cat, const gsl_vector *w,
               const gsl_vector *z, size_t ns_test, gsl_matrix *XWz) {
+  debug_msg("entering");
   ifstream infile(file_bed.c_str(), ios::binary);
   if (!infile) {
     cout << "error reading bed file:" << file_bed << endl;
@@ -2432,6 +2438,7 @@ bool MFILEXwz(const size_t mfile_mode, const string &file_mfile,
               vector<vector<int>> &mindicator_snp,
               const vector<size_t> &vec_cat, const gsl_vector *w,
               const gsl_vector *z, gsl_matrix *XWz) {
+  debug_msg("entering");
   gsl_matrix_set_zero(XWz);
 
   igzstream infile(file_mfile.c_str(), igzstream::in);
@@ -2466,6 +2473,7 @@ bool MFILEXwz(const size_t mfile_mode, const string &file_mfile,
 bool BimbamXtXwz(const string &file_geno, const int display_pace,
                  vector<int> &indicator_idv, vector<int> &indicator_snp,
                  const gsl_matrix *XWz, size_t ns_test, gsl_matrix *XtXWz) {
+  debug_msg("entering");
   igzstream infile(file_geno.c_str(), igzstream::in);
   if (!infile) {
     cout << "error reading genotype file:" << file_geno << endl;
@@ -2556,6 +2564,7 @@ bool BimbamXtXwz(const string &file_geno, const int display_pace,
 bool PlinkXtXwz(const string &file_bed, const int display_pace,
                 vector<int> &indicator_idv, vector<int> &indicator_snp,
                 const gsl_matrix *XWz, size_t ns_test, gsl_matrix *XtXWz) {
+  debug_msg("entering");
   ifstream infile(file_bed.c_str(), ios::binary);
   if (!infile) {
     cout << "error reading bed file:" << file_bed << endl;
@@ -2679,6 +2688,7 @@ bool MFILEXtXwz(const size_t mfile_mode, const string &file_mfile,
                 const int display_pace, vector<int> &indicator_idv,
                 vector<vector<int>> &mindicator_snp, const gsl_matrix *XWz,
                 gsl_matrix *XtXWz) {
+  debug_msg("entering");
   gsl_matrix_set_zero(XtXWz);
 
   igzstream infile(file_mfile.c_str(), igzstream::in);

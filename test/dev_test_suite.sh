@@ -2,7 +2,6 @@
 
 gemma=../bin/gemma
 
-
 # Related to https://github.com/genetics-statistics/GEMMA/issues/78
 testBXDStandardRelatednessMatrixKSingularError() {
     outn=BXDerr
@@ -32,7 +31,8 @@ testBXDStandardRelatednessMatrixK() {
     assertEquals "-116.11" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
-testBXDMultivariateLinearMixedModel() {
+testBXDLMMLikelihoodRatio() {
+    outn=BXD_LMM_LR
     $gemma -g ../example/BXD_geno.txt.gz \
            -p ../example/BXD_pheno.txt \
            -c ../example/BXD_covariates2.txt \
@@ -40,12 +40,12 @@ testBXDMultivariateLinearMixedModel() {
            -k ./output/BXD.cXX.txt \
            -lmm 2 -maf 0.1 \
            -debug \
-           -o BXD_mvlmm
+           -o $outn
     assertEquals 0 $?
 
-    outfn=output/BXD_mvlmm.assoc.txt
-    assertEquals "65862" `wc -w < $outfn`
-    assertEquals "3088489421.94" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+    outfn=output/$outn.assoc.txt
+    assertEquals "80498" `wc -w < $outfn`
+    assertEquals "3088458212.93" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
 testCenteredRelatednessMatrixKLOCO1() {
@@ -65,10 +65,12 @@ testCenteredRelatednessMatrixKLOCO1() {
 testUnivariateLinearMixedModelLOCO1() {
     outn=mouse_hs1940_CD8_LOCO1_lmm
     rm -f output/$outn.*
-    $gemma -g ../example/mouse_hs1940.geno.txt.gz -p ../example/mouse_hs1940.pheno.txt \
+    $gemma -g ../example/mouse_hs1940.geno.txt.gz \
+           -p ../example/mouse_hs1940.pheno.txt \
 	   -n 1 \
 	   -loco 1 \
-           -a ../example/mouse_hs1940.anno.txt -k ./output/mouse_hs1940_LOCO1.cXX.txt \
+           -a ../example/mouse_hs1940.anno.txt \
+           -k ./output/mouse_hs1940_LOCO1.cXX.txt \
 	   -snps ../example/mouse_hs1940_snps.txt -lmm \
 	   -nind 400 \
 	   -debug \
@@ -78,7 +80,7 @@ testUnivariateLinearMixedModelLOCO1() {
     assertEquals 0 $?
     outfn=output/$outn.assoc.txt
     assertEquals "68" `wc -l < $outfn`
-    assertEquals "15465553.30" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+    assertEquals "15465346.22" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
 shunit2=`which shunit2`

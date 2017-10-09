@@ -56,6 +56,9 @@ public:
   double p_wald;       // p value from a Wald test.
   double p_lrt;        // p value from a likelihood ratio test.
   double p_score;      // p value from a score test.
+  double logl_H1;      // log likelihood under the alternative
+                       // hypothesis as a measure of goodness of fit,
+                       // see https://github.com/genetics-statistics/GEMMA/issues/81
 };
 
 // Results for mvLMM.
@@ -118,7 +121,7 @@ public:
   bool mode_debug = false;
   uint issue; // enable tests for issue on github tracker
 
-  int a_mode; // Analysis mode, 1/2/3/4 for Frequentist tests
+  uint a_mode; // Analysis mode, 1/2/3/4 for Frequentist tests
   int k_mode; // Kinship read mode: 1: n by n matrix, 2: id/id/k_value;
   vector<size_t> p_column; // Which phenotype column needs analysis.
   size_t d_pace;           // Display pace

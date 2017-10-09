@@ -135,6 +135,7 @@ std::istream &safeGetline(std::istream &is, std::string &t) {
 
 // Read SNP file. A single column of SNP names.
 bool ReadFile_snps(const string file_snps, set<string> &setSnps) {
+  debug_msg("entered");
   setSnps.clear();
 
   igzstream infile(file_snps.c_str(), igzstream::in);
@@ -162,6 +163,7 @@ bool ReadFile_snps(const string file_snps, set<string> &setSnps) {
 // values for each row are parsed. A valid header can be, for example,
 // RS POS CHR
 bool ReadFile_snps_header(const string &file_snps, set<string> &setSnps) {
+  debug_msg("entered");
   setSnps.clear();
 
   igzstream infile(file_snps.c_str(), igzstream::in);
@@ -187,6 +189,7 @@ bool ReadFile_snps_header(const string &file_snps, set<string> &setSnps) {
       continue;
     }
     ch_ptr = strtok((char *)line.c_str(), " , \t");
+    enforce_msg(ch_ptr,"Problem reading SNP header");
 
     for (size_t i = 0; i < header.coln; i++) {
       enforce_msg(ch_ptr,"Problem reading SNP file");
@@ -218,6 +221,7 @@ bool ReadFile_snps_header(const string &file_snps, set<string> &setSnps) {
 
 // Read log file.
 bool ReadFile_log(const string &file_log, double &pheno_mean) {
+  debug_msg("ReadFile_log");
   ifstream infile(file_log.c_str(), ifstream::in);
   if (!infile) {
     cout << "error! fail to open log file: " << file_log << endl;
@@ -259,6 +263,7 @@ bool ReadFile_log(const string &file_log, double &pheno_mean) {
 bool ReadFile_anno(const string &file_anno, map<string, string> &mapRS2chr,
                    map<string, long int> &mapRS2bp,
                    map<string, double> &mapRS2cM) {
+  debug_msg("ReadFile_anno");
   mapRS2chr.clear();
   mapRS2bp.clear();
 
@@ -318,6 +323,7 @@ bool ReadFile_anno(const string &file_anno, map<string, string> &mapRS2chr,
 // Read 1 column of phenotype.
 bool ReadFile_column(const string &file_pheno, vector<int> &indicator_idv,
                      vector<double> &pheno, const int &p_column) {
+  debug_msg("entered");
   indicator_idv.clear();
   pheno.clear();
 
@@ -337,11 +343,11 @@ bool ReadFile_column(const string &file_pheno, vector<int> &indicator_idv,
     for (int i = 0; i < (p_column - 1); ++i) {
       ch_ptr = strtok(NULL, " , \t");
     }
+    enforce_msg(ch_ptr,"Problem reading PHENO column");
     if (strcmp(ch_ptr, "NA") == 0) {
       indicator_idv.push_back(0);
       pheno.push_back(-9);
     } else {
-
       // Pheno is different from pimass2.
       p = atof(ch_ptr);
       indicator_idv.push_back(1);
@@ -360,6 +366,7 @@ bool ReadFile_pheno(const string &file_pheno,
                     vector<vector<int>> &indicator_pheno,
                     vector<vector<double>> &pheno,
                     const vector<size_t> &p_column) {
+  debug_msg("entered");
   indicator_pheno.clear();
   pheno.clear();
 
@@ -390,7 +397,7 @@ bool ReadFile_pheno(const string &file_pheno,
     ch_ptr = strtok((char *)line.c_str(), " , \t");
     size_t i = 0;
     while (i < p_max) {
-      enforce_msg(ch_ptr,"Wrong number of phenotypes");
+      enforce_msg(ch_ptr,"Number of phenotypes out of range");
       if (mapP2c.count(i + 1) != 0) {
         if (strcmp(ch_ptr, "NA") == 0) {
           ind_pheno_row[mapP2c[i + 1]] = 0;
@@ -417,6 +424,7 @@ bool ReadFile_pheno(const string &file_pheno,
 
 bool ReadFile_cvt(const string &file_cvt, vector<int> &indicator_cvt,
                   vector<vector<double>> &cvt, size_t &n_cvt) {
+  debug_msg("entered");
   indicator_cvt.clear();
 
   ifstream infile(file_cvt.c_str(), ifstream::in);
@@ -483,6 +491,7 @@ bool ReadFile_cvt(const string &file_cvt, vector<int> &indicator_cvt,
 
 // Read .bim file.
 bool ReadFile_bim(const string &file_bim, vector<SNPINFO> &snpInfo) {
+  debug_msg("entered");
   snpInfo.clear();
 
   ifstream infile(file_bim.c_str(), ifstream::in);
@@ -524,10 +533,11 @@ bool ReadFile_bim(const string &file_bim, vector<SNPINFO> &snpInfo) {
   return true;
 }
 
-// Read .fam file.
+// Read .fam file (ignored with -p phenotypes switch)
 bool ReadFile_fam(const string &file_fam, vector<vector<int>> &indicator_pheno,
                   vector<vector<double>> &pheno, map<string, int> &mapID2num,
                   const vector<size_t> &p_column) {
+  debug_msg("entered");
   indicator_pheno.clear();
   pheno.clear();
   mapID2num.clear();
@@ -568,6 +578,8 @@ bool ReadFile_fam(const string &file_fam, vector<vector<int>> &indicator_pheno,
     size_t i = 0;
     while (i < p_max) {
       if (mapP2c.count(i + 1) != 0) {
+        enforce_msg(ch_ptr,"Problem reading FAM file (phenotypes out of range)");
+
         if (strcmp(ch_ptr, "NA") == 0) {
           ind_pheno_row[mapP2c[i + 1]] = 0;
           pheno_row[mapP2c[i + 1]] = -9;
@@ -609,6 +621,7 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
                    map<string, long int> &mapRS2bp,
                    map<string, double> &mapRS2cM, vector<SNPINFO> &snpInfo,
                    size_t &ns_test, bool debug) {
+  debug_msg("entered");
   indicator_snp.clear();
   snpInfo.clear();
 
@@ -819,6 +832,7 @@ bool ReadFile_bed(const string &file_bed, const set<string> &setSnps,
                   const double &maf_level, const double &miss_level,
                   const double &hwe_level, const double &r2_level,
                   size_t &ns_test) {
+  debug_msg("entered");
   indicator_snp.clear();
   size_t ns_total = snpInfo.size();
 
@@ -1007,6 +1021,7 @@ bool ReadFile_bed(const string &file_bed, const set<string> &setSnps,
 // Missing values are replaced by mean.
 bool Bimbam_ReadOneSNP(const size_t inc, const vector<int> &indicator_idv,
                        igzstream &infile, gsl_vector *geno, double &geno_mean) {
+  debug_msg("entered");
   size_t ni_total = indicator_idv.size();
 
   string line;
@@ -1057,6 +1072,7 @@ bool Bimbam_ReadOneSNP(const size_t inc, const vector<int> &indicator_idv,
 // For PLINK, store SNPs as double too.
 void Plink_ReadOneSNP(const int pos, const vector<int> &indicator_idv,
                       ifstream &infile, gsl_vector *geno, double &geno_mean) {
+  debug_msg("entered");
   size_t ni_total = indicator_idv.size(), n_bit;
   if (ni_total % 4 == 0) {
     n_bit = ni_total / 4;
@@ -1123,6 +1139,7 @@ void Plink_ReadOneSNP(const int pos, const vector<int> &indicator_idv,
 void ReadFile_kin(const string &file_kin, vector<int> &indicator_idv,
                   map<string, int> &mapID2num, const size_t k_mode, bool &error,
                   gsl_matrix *G) {
+  debug_msg("entered");
   igzstream infile(file_kin.c_str(), igzstream::in);
   if (!infile) {
     cout << "error! fail to open kinship file: " << file_kin << endl;
@@ -1239,6 +1256,7 @@ void ReadFile_kin(const string &file_kin, vector<int> &indicator_idv,
 void ReadFile_mk(const string &file_mk, vector<int> &indicator_idv,
                  map<string, int> &mapID2num, const size_t k_mode, bool &error,
                  gsl_matrix *G) {
+  debug_msg("entered");
   igzstream infile(file_mk.c_str(), igzstream::in);
   if (!infile) {
     cout << "error! fail to open file: " << file_mk << endl;
@@ -1264,6 +1282,7 @@ void ReadFile_mk(const string &file_mk, vector<int> &indicator_idv,
 }
 
 void ReadFile_eigenU(const string &file_ku, bool &error, gsl_matrix *U) {
+  debug_msg("entered");
   igzstream infile(file_ku.c_str(), igzstream::in);
   if (!infile) {
     cout << "error! fail to open the U file: " << file_ku << endl;
@@ -1312,6 +1331,7 @@ void ReadFile_eigenU(const string &file_ku, bool &error, gsl_matrix *U) {
 }
 
 void ReadFile_eigenD(const string &file_kd, bool &error, gsl_vector *eval) {
+  debug_msg("entered");
   igzstream infile(file_kd.c_str(), igzstream::in);
   if (!infile) {
     cout << "error! fail to open the D file: " << file_kd << endl;
@@ -1360,6 +1380,7 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
                vector<int> &indicator_snp, const int k_mode,
                const int display_pace, gsl_matrix *matrix_kin,
                const bool test_nind) {
+  debug_msg("entered");
   igzstream infile(file_geno.c_str(), igzstream::in);
   enforce_msg(infile, "error reading genotype file");
 
@@ -1496,6 +1517,7 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
 bool PlinkKin(const string &file_bed, vector<int> &indicator_snp,
               const int k_mode, const int display_pace,
               gsl_matrix *matrix_kin) {
+  debug_msg("entered");
   ifstream infile(file_bed.c_str(), ios::binary);
   if (!infile) {
     cout << "error reading bed file:" << file_bed << endl;
@@ -1638,6 +1660,7 @@ bool PlinkKin(const string &file_bed, vector<int> &indicator_snp,
 bool ReadFile_geno(const string file_geno, vector<int> &indicator_idv,
                    vector<int> &indicator_snp, gsl_matrix *UtX, gsl_matrix *K,
                    const bool calc_K, bool debug) {
+  debug_msg("entered");
   igzstream infile(file_geno.c_str(), igzstream::in);
   if (!infile) {
     cout << "error reading genotype file:" << file_geno << endl;
@@ -1742,6 +1765,7 @@ bool ReadFile_geno(const string &file_geno, vector<int> &indicator_idv,
                    vector<vector<unsigned char>> &Xt, gsl_matrix *K,
                    const bool calc_K, const size_t ni_test,
                    const size_t ns_test, bool debug) {
+  debug_msg("entered");
   igzstream infile(file_geno.c_str(), igzstream::in);
   if (!infile) {
     cout << "error reading genotype file:" << file_geno << endl;
@@ -1848,6 +1872,7 @@ bool ReadFile_geno(const string &file_geno, vector<int> &indicator_idv,
 bool ReadFile_bed(const string &file_bed, vector<int> &indicator_idv,
                   vector<int> &indicator_snp, gsl_matrix *UtX, gsl_matrix *K,
                   const bool calc_K) {
+  debug_msg("entered");
   ifstream infile(file_bed.c_str(), ios::binary);
   if (!infile) {
     cout << "error reading bed file:" << file_bed << endl;
@@ -1979,6 +2004,7 @@ bool ReadFile_bed(const string &file_bed, vector<int> &indicator_idv,
                   vector<int> &indicator_snp, vector<vector<unsigned char>> &Xt,
                   gsl_matrix *K, const bool calc_K, const size_t ni_test,
                   const size_t ns_test) {
+  debug_msg("entered");
   ifstream infile(file_bed.c_str(), ios::binary);
   if (!infile) {
     cout << "error reading bed file:" << file_bed << endl;
@@ -2113,6 +2139,7 @@ bool ReadFile_bed(const string &file_bed, vector<int> &indicator_idv,
 
 bool ReadFile_est(const string &file_est, const vector<size_t> &est_column,
                   map<string, double> &mapRS2est) {
+  debug_msg("entered");
   mapRS2est.clear();
 
   ifstream infile(file_est.c_str(), ifstream::in);
@@ -2173,6 +2200,7 @@ bool ReadFile_est(const string &file_est, const vector<size_t> &est_column,
 }
 
 bool CountFileLines(const string &file_input, size_t &n_lines) {
+  debug_msg("entered");
   igzstream infile(file_input.c_str(), igzstream::in);
   if (!infile) {
     cout << "error! fail to open file: " << file_input << endl;
@@ -2189,6 +2217,7 @@ bool CountFileLines(const string &file_input, size_t &n_lines) {
 // Read gene expression file.
 bool ReadFile_gene(const string &file_gene, vector<double> &vec_read,
                    vector<SNPINFO> &snpInfo, size_t &ng_total) {
+  debug_msg("entered");
   vec_read.clear();
   ng_total = 0;
 
@@ -2252,6 +2281,7 @@ bool ReadFile_sample(const string &file_sample,
                      vector<vector<double>> &pheno,
                      const vector<size_t> &p_column, vector<int> &indicator_cvt,
                      vector<vector<double>> &cvt, size_t &n_cvt) {
+  debug_msg("entered");
   indicator_pheno.clear();
   pheno.clear();
   indicator_cvt.clear();
@@ -2506,6 +2536,7 @@ bool ReadFile_bgen(const string &file_bgen, const set<string> &setSnps,
                    const double &hwe_level, const double &r2_level,
                    size_t &ns_test) {
 
+  debug_msg("entered");
   indicator_snp.clear();
 
   ifstream infile(file_bgen.c_str(), ios::binary);
@@ -2793,6 +2824,7 @@ bool ReadFile_bgen(const string &file_bgen, const set<string> &setSnps,
 // Read oxford genotype file and calculate kinship matrix.
 bool bgenKin(const string &file_oxford, vector<int> &indicator_snp,
              const int k_mode, const int display_pace, gsl_matrix *matrix_kin) {
+  debug_msg("entered");
   string file_bgen = file_oxford;
   ifstream infile(file_bgen.c_str(), ios::binary);
   if (!infile) {
@@ -2851,7 +2883,7 @@ bool bgenKin(const string &file_oxford, vector<int> &indicator_snp,
   for (size_t t = 0; t < indicator_snp.size(); ++t) {
 
     if (t % display_pace == 0 || t == (indicator_snp.size() - 1)) {
-      ProgressBar("Reading SNPs  ", t, indicator_snp.size() - 1);
+      ProgressBar("Reading bgen SNPs  ", t, indicator_snp.size() - 1);
     }
 
     id.clear();
@@ -2997,6 +3029,7 @@ bool bgenKin(const string &file_oxford, vector<int> &indicator_snp,
 
 // Read header to determine which column contains which item.
 bool ReadHeader_io(const string &line, HEADER &header) {
+  debug_msg("entered");
   string rs_ptr[] = {"rs",    "RS",    "snp",  "SNP",  "snps",      "SNPS",
                      "snpid", "SNPID", "rsid", "RSID", "MarkerName"};
   set<string> rs_set(rs_ptr, rs_ptr + 11); // create a set of 11 items
@@ -3264,6 +3297,7 @@ bool ReadHeader_io(const string &line, HEADER &header) {
 // it is not included in the analysis.
 bool ReadFile_cat(const string &file_cat, map<string, size_t> &mapRS2cat,
                   size_t &n_vc) {
+  debug_msg("entered");
   mapRS2cat.clear();
 
   igzstream infile(file_cat.c_str(), igzstream::in);
@@ -3348,6 +3382,7 @@ bool ReadFile_cat(const string &file_cat, map<string, size_t> &mapRS2cat,
 
 bool ReadFile_mcat(const string &file_mcat, map<string, size_t> &mapRS2cat,
                    size_t &n_vc) {
+  debug_msg("entered");
   mapRS2cat.clear();
 
   igzstream infile(file_mcat.c_str(), igzstream::in);
@@ -3386,6 +3421,8 @@ bool BimbamKinUncentered(const string &file_geno, const set<string> ksnps,
                          const map<string, size_t> &mapRS2cat,
                          const vector<SNPINFO> &snpInfo, const gsl_matrix *W,
                          gsl_matrix *matrix_kin, gsl_vector *vector_ns) {
+  debug_msg("entered");
+  debug_msg("BimbamKinUncentered");
   igzstream infile(file_geno.c_str(), igzstream::in);
   if (!infile) {
     cout << "error reading genotype file:" << file_geno << endl;
@@ -3576,6 +3613,7 @@ bool PlinkKin(const string &file_bed, const int display_pace,
               const map<string, size_t> &mapRS2cat,
               const vector<SNPINFO> &snpInfo, const gsl_matrix *W,
               gsl_matrix *matrix_kin, gsl_vector *vector_ns) {
+  debug_msg("entered");
   ifstream infile(file_bed.c_str(), ios::binary);
   if (!infile) {
     cout << "error reading bed file:" << file_bed << endl;
@@ -3801,6 +3839,7 @@ bool MFILEKin(const size_t mfile_mode, const string &file_mfile,
               const map<string, size_t> &mapRS2cat,
               const vector<vector<SNPINFO>> &msnpInfo, const gsl_matrix *W,
               gsl_matrix *matrix_kin, gsl_vector *vector_ns) {
+  debug_msg("entered");
   size_t n_vc = vector_ns->size, ni_test = matrix_kin->size1;
   gsl_matrix_set_zero(matrix_kin);
   gsl_vector_set_zero(vector_ns);
@@ -3876,6 +3915,7 @@ bool MFILEKin(const size_t mfile_mode, const string &file_mfile,
 
 // Read var file, store mapRS2wsnp.
 bool ReadFile_wsnp(const string &file_wsnp, map<string, double> &mapRS2weight) {
+  debug_msg("entered");
   mapRS2weight.clear();
 
   igzstream infile(file_wsnp.c_str(), igzstream::in);
@@ -3901,6 +3941,7 @@ bool ReadFile_wsnp(const string &file_wsnp, map<string, double> &mapRS2weight) {
 
 bool ReadFile_wsnp(const string &file_wcat, const size_t n_vc,
                    map<string, vector<double>> &mapRS2wvector) {
+  debug_msg("entered");
   mapRS2wvector.clear();
 
   igzstream infile(file_wcat.c_str(), igzstream::in);
@@ -3985,6 +4026,7 @@ void ReadFile_beta(const string &file_beta,
                    vector<size_t> &vec_ni, vector<double> &vec_weight,
                    vector<double> &vec_z2, size_t &ni_total, size_t &ns_total,
                    size_t &ns_test) {
+  debug_msg("entered");
   vec_cat.clear();
   vec_ni.clear();
   vec_weight.clear();
@@ -4171,6 +4213,7 @@ void ReadFile_beta(const string &file_beta,
 void ReadFile_beta(const string &file_beta, const map<string, double> &mapRS2wA,
                    map<string, string> &mapRS2A1,
                    map<string, double> &mapRS2z) {
+  debug_msg("entered");
   mapRS2A1.clear();
   mapRS2z.clear();
 
@@ -4332,6 +4375,7 @@ void Calcq(const size_t n_block, const vector<size_t> &vec_cat,
            const vector<size_t> &vec_ni, const vector<double> &vec_weight,
            const vector<double> &vec_z2, gsl_matrix *Vq, gsl_vector *q,
            gsl_vector *s) {
+  debug_msg("entered");
   gsl_matrix_set_zero(Vq);
   gsl_vector_set_zero(q);
   gsl_vector_set_zero(s);
@@ -4485,6 +4529,7 @@ void Calcq(const size_t n_block, const vector<size_t> &vec_cat,
 
 // Read vector file.
 void ReadFile_vector(const string &file_vec, gsl_vector *vec) {
+  debug_msg("entered");
   igzstream infile(file_vec.c_str(), igzstream::in);
   if (!infile) {
     cout << "error! fail to open vector file: " << file_vec << endl;
@@ -4507,6 +4552,7 @@ void ReadFile_vector(const string &file_vec, gsl_vector *vec) {
 }
 
 void ReadFile_matrix(const string &file_mat, gsl_matrix *mat) {
+  debug_msg("entered");
   igzstream infile(file_mat.c_str(), igzstream::in);
   if (!infile) {
     cout << "error! fail to open matrix file: " << file_mat << endl;
@@ -4533,6 +4579,7 @@ void ReadFile_matrix(const string &file_mat, gsl_matrix *mat) {
 
 void ReadFile_matrix(const string &file_mat, gsl_matrix *mat1,
                      gsl_matrix *mat2) {
+  debug_msg("entered");
   igzstream infile(file_mat.c_str(), igzstream::in);
   if (!infile) {
     cout << "error! fail to open matrix file: " << file_mat << endl;
@@ -4569,6 +4616,7 @@ void ReadFile_matrix(const string &file_mat, gsl_matrix *mat1,
 // Read study file.
 void ReadFile_study(const string &file_study, gsl_matrix *Vq_mat,
                     gsl_vector *q_vec, gsl_vector *s_vec, size_t &ni) {
+  debug_msg("entered");
   string Vqfile = file_study + ".Vq.txt";
   string sfile = file_study + ".size.txt";
   string qfile = file_study + ".q.txt";
@@ -4594,6 +4642,7 @@ void ReadFile_study(const string &file_study, gsl_matrix *Vq_mat,
 // Read reference file.
 void ReadFile_ref(const string &file_ref, gsl_matrix *S_mat,
                   gsl_matrix *Svar_mat, gsl_vector *s_vec, size_t &ni) {
+  debug_msg("entered");
   string sfile = file_ref + ".size.txt";
   string Sfile = file_ref + ".S.txt";
 
@@ -4617,6 +4666,7 @@ void ReadFile_ref(const string &file_ref, gsl_matrix *S_mat,
 // Read mstudy file.
 void ReadFile_mstudy(const string &file_mstudy, gsl_matrix *Vq_mat,
                      gsl_vector *q_vec, gsl_vector *s_vec, size_t &ni) {
+  debug_msg("entered");
   gsl_matrix_set_zero(Vq_mat);
   gsl_vector_set_zero(q_vec);
   gsl_vector_set_zero(s_vec);
@@ -4707,6 +4757,7 @@ void ReadFile_mstudy(const string &file_mstudy, gsl_matrix *Vq_mat,
 // Read reference file.
 void ReadFile_mref(const string &file_mref, gsl_matrix *S_mat,
                    gsl_matrix *Svar_mat, gsl_vector *s_vec, size_t &ni) {
+  debug_msg("entered");
   gsl_matrix_set_zero(S_mat);
   gsl_matrix_set_zero(Svar_mat);
   gsl_vector_set_zero(s_vec);

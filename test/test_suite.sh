@@ -30,13 +30,13 @@ testUnivariateLinearMixedModelFullLOCO1() {
     assertEquals 0 $?
     outfn=output/$outn.assoc.txt
     assertEquals "951" `wc -l < $outfn`
-    assertEquals "267509369.79" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+    assertEquals "267507851.98" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
 testCenteredRelatednessMatrixK() {
     $gemma -g ../example/mouse_hs1940.geno.txt.gz \
            -p ../example/mouse_hs1940.pheno.txt \
-           -gk -o mouse_hs1940
+           -gk -o mouse_hs1940 -debug
     assertEquals 0 $?
     outfn=output/mouse_hs1940.cXX.txt
     assertEquals "1940" `wc -l < $outfn`
@@ -52,13 +52,14 @@ testUnivariateLinearMixedModel() {
            -a ../example/mouse_hs1940.anno.txt \
            -k ./output/mouse_hs1940.cXX.txt \
            -lmm \
-           -o mouse_hs1940_CD8_lmm
+           -o mouse_hs1940_CD8_lmm \
+           -debug
     assertEquals 0 $?
     grep "total computation time" < output/mouse_hs1940_CD8_lmm.log.txt
     assertEquals 0 $?
     outfn=output/mouse_hs1940_CD8_lmm.assoc.txt
-    assertEquals "118459" `wc -w < $outfn`
-    assertEquals "4038557453.62" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+    assertEquals "129228" `wc -w < $outfn`
+    assertEquals "4038540440.86" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
 testMultivariateLinearMixedModel() {
@@ -67,7 +68,8 @@ testMultivariateLinearMixedModel() {
            -n 1 6 \
            -a ../example/mouse_hs1940.anno.txt \
            -k ./output/mouse_hs1940.cXX.txt \
-           -lmm -o mouse_hs1940_CD8MCH_lmm
+           -lmm -o mouse_hs1940_CD8MCH_lmm \
+           -debug
     assertEquals 0 $?
 
     outfn=output/mouse_hs1940_CD8MCH_lmm.assoc.txt
@@ -81,7 +83,8 @@ testPlinkStandardRelatednessMatrixK() {
     outfn=output/$testname.sXX.txt
     rm -f $outfn
     $gemma -bfile $datadir/HLC \
-           -gk 2 -o $testname
+           -gk 2 -o $testname \
+           -debug
     assertEquals 0 $?
     assertEquals "427" `wc -l < $outfn`
     assertEquals "-358.07" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
@@ -97,11 +100,12 @@ testPlinkMultivariateLinearMixedModel() {
            -lmm 1 \
            -maf 0.1 \
            -c $datadir/HLC_covariates.txt \
+           -debug \
            -o $testname
     assertEquals 0 $?
     outfn=output/$testname.assoc.txt
     assertEquals "223243" `wc -l < $outfn`
-    assertEquals "89756559859.06" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+    assertEquals "89757159113.77" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
 shunit2=`which shunit2`

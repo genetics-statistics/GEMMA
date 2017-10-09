@@ -290,6 +290,7 @@ void LmCalcP(const size_t test_mode, const double yPwy, const double xPwy,
 }
 
 void LM::AnalyzeGene(const gsl_matrix *W, const gsl_vector *x) {
+  debug_msg("entering");
   ifstream infile(file_gene.c_str(), ifstream::in);
   if (!infile) {
     cout << "error reading gene expression file:" << file_gene << endl;
@@ -361,7 +362,7 @@ void LM::AnalyzeGene(const gsl_matrix *W, const gsl_vector *x) {
     time_opt += (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
 
     // Store summary data.
-    SUMSTAT SNPs = {beta, se, 0.0, 0.0, p_wald, p_lrt, p_score};
+    SUMSTAT SNPs = {beta, se, 0.0, 0.0, p_wald, p_lrt, p_score, -0.0 };
     sumStat.push_back(SNPs);
   }
   cout << endl;
@@ -382,6 +383,7 @@ void LM::AnalyzeGene(const gsl_matrix *W, const gsl_vector *x) {
 
 // WJA added
 void LM::Analyzebgen(const gsl_matrix *W, const gsl_vector *y) {
+  debug_msg("entering");
   string file_bgen = file_oxford + ".bgen";
   ifstream infile(file_bgen.c_str(), ios::binary);
   if (!infile) {
@@ -585,7 +587,7 @@ void LM::Analyzebgen(const gsl_matrix *W, const gsl_vector *y) {
     time_opt += (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
 
     // Store summary data.
-    SUMSTAT SNPs = {beta, se, 0.0, 0.0, p_wald, p_lrt, p_score};
+    SUMSTAT SNPs = {beta, se, 0.0, 0.0, p_wald, p_lrt, p_score, -0.0};
     sumStat.push_back(SNPs);
   }
   cout << endl;
@@ -606,6 +608,7 @@ void LM::Analyzebgen(const gsl_matrix *W, const gsl_vector *y) {
 }
 
 void LM::AnalyzeBimbam(const gsl_matrix *W, const gsl_vector *y) {
+  debug_msg("entering");
   igzstream infile(file_geno.c_str(), igzstream::in);
   if (!infile) {
     cout << "error reading genotype file:" << file_geno << endl;
@@ -699,7 +702,7 @@ void LM::AnalyzeBimbam(const gsl_matrix *W, const gsl_vector *y) {
     time_opt += (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
 
     // Store summary data.
-    SUMSTAT SNPs = {beta, se, 0.0, 0.0, p_wald, p_lrt, p_score};
+    SUMSTAT SNPs = {beta, se, 0.0, 0.0, p_wald, p_lrt, p_score, -0.0};
     sumStat.push_back(SNPs);
   }
   cout << endl;
@@ -720,6 +723,7 @@ void LM::AnalyzeBimbam(const gsl_matrix *W, const gsl_vector *y) {
 }
 
 void LM::AnalyzePlink(const gsl_matrix *W, const gsl_vector *y) {
+  debug_msg("entering");
   string file_bed = file_bfile + ".bed";
   ifstream infile(file_bed.c_str(), ios::binary);
   if (!infile) {
@@ -840,7 +844,7 @@ void LM::AnalyzePlink(const gsl_matrix *W, const gsl_vector *y) {
             p_lrt, p_score);
 
     // store summary data
-    SUMSTAT SNPs = {beta, se, 0.0, 0.0, p_wald, p_lrt, p_score};
+    SUMSTAT SNPs = {beta, se, 0.0, 0.0, p_wald, p_lrt, p_score, -0.0};
     sumStat.push_back(SNPs);
 
     time_opt += (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
