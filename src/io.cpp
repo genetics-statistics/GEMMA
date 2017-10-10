@@ -283,7 +283,7 @@ bool ReadFile_anno(const string &file_anno, map<string, string> &mapRS2chr,
 
     ch_ptr = strtok(NULL, " , \t");
     enforce_str(ch_ptr, line + " Bad format");
-    ulong b_pos;
+    long b_pos;
     if (strcmp(ch_ptr, "NA") == 0) {
       b_pos = -9;
     } else {
