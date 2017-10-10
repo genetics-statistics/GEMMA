@@ -49,7 +49,7 @@
 
 using namespace std;
 
-GEMMA::GEMMA(void) : version("0.97.2"), date("08/21/2017"), year("2017") {}
+GEMMA::GEMMA(void) : version("0.97.3"), date("10/10/2017"), year("2017") {}
 
 void gemma_gsl_error_handler (const char * reason,
                               const char * file,
