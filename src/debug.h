@@ -28,6 +28,11 @@ inline void fail_at_msg(bool strict, const char *__file, int __line, const char 
   if (strict)
     exit(1);
 }
+
+# ifndef __ASSERT_VOID_CAST
+# define __ASSERT_VOID_CAST (void)
+# endif
+
 #if defined NDEBUG
 
 #define warning_msg(msg) cerr << "**** WARNING: " << msg << endl;
