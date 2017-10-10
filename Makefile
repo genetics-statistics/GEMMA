@@ -33,7 +33,7 @@
 # Set this variable to either LNX or MAC
 SYS                    = LNX # LNX|MAC (Linux is the default)
 # Leave blank after "=" to disable; put "= 1" to enable
-DIST_NAME              = gemma-0.97.2
+DIST_NAME              = gemma-0.97.3
 DEBUG                  = 1   # DEBUG mode, set DEBUG=0 for a release
 SHOW_COMPILER_WARNINGS =
 WITH_LAPACK            = 1
@@ -92,7 +92,7 @@ HDR =
 LIBS_LNX_D_LAPACK = -llapack
 LIBS_LNX_D_BLAS = -lblas
 LIBS_LNX_D_OPENBLAS = -lopenblas
-LIBS_MAC_D_LAPACK = -framework Veclib
+LIBS_MAC_D_LAPACK = -framework Accelerate
 # LIBS_LNX_S_LAPACK = /usr/lib/libgsl.a  /usr/lib/libgslcblas.a /usr/lib/lapack/liblapack.a -lz
 LIBS_LNX_S_LAPACK = /usr/lib/lapack/liblapack.a -lgfortran  /usr/lib/atlas-base/libatlas.a /usr/lib/libblas/libblas.a -Wl,--allow-multiple-definition
 
