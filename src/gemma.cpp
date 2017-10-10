@@ -424,8 +424,8 @@ void GEMMA::PrintHelp(size_t option) {
             "default 1)"
          << endl;
     cout << " -pace     [num]          "
-         << " specify terminal display update pace (default 100000 SNPs or "
-            "100000 iterations)."
+         << " specify terminal display update pace (default 1,000 SNPs or "
+            "1,000 iterations)."
          << endl;
     cout << " -outdir   [path]         "
          << " specify output directory path (default \"./output/\")" << endl;
