@@ -34,8 +34,8 @@ void do_validate_K(const gsl_matrix *K, bool do_check, bool strict, const char *
       warning_at_msg(__file,__line,"K is ill conditioned!");
     if (!isMatrixSymmetric(K))
       fail_at_msg(strict,__file,__line,"K is not symmetric!" );
-    bool negative_values;
-    if (negative_values = has_negative_values_but_one(eigenvalues)) {
+    bool negative_values = has_negative_values_but_one(eigenvalues);
+    if (negative_values) {
       warning_at_msg(__file,__line,"K has more than one negative eigenvalues!");
     }
     if (count_small>0 && negative_values && !isMatrixPositiveDefinite(K))
