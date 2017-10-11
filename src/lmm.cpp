@@ -136,10 +136,10 @@ void LMM::WriteFiles() {
   auto sumstats = [&] (SUMSTAT st) {
     outfile << scientific << setprecision(6);
 
-    if (a_mode != 2)
+    if (a_mode != 2) {
       outfile << st.beta << "\t";
-
-    outfile << st.se << "\t";
+      outfile << st.se << "\t";
+    }
 
     outfile << st.logl_H1 << "\t";
 
@@ -1328,8 +1328,8 @@ void LMM::Analyze(std::function< SnpNameValues(size_t) >& fetch_snp,
       time_start = clock();
       FUNC_PARAM param1 = {false, ni_test, n_cvt, eval, Uab, ab, 0};
 
-      double lambda_mle = 0, lambda_remle = 0, beta = 0, se = 0, p_wald = 0;
-      double p_lrt = 0, p_score = 0;
+      double lambda_mle = 0.0, lambda_remle = 0.0, beta = 0.0, se = 0.0, p_wald = 0.0;
+      double p_lrt = 0.0, p_score = 0.0;
       double logl_H1 = 0.0;
 
       // 3 is before 1.
