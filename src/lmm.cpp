@@ -1197,7 +1197,7 @@ void LMM::AnalyzeGene(const gsl_matrix *U, const gsl_vector *eval,
   for (size_t t = 0; t < ng_total; t++) {
     !safeGetline(infile, line).eof();
     if (t % d_pace == 0 || t == ng_total - 1) {
-      ProgressBar("Performing Analysis ", t, ng_total - 1);
+      ProgressBar("Performing Analysis", t, ng_total - 1);
     }
     ch_ptr = strtok((char *)line.c_str(), " , \t");
     rs = ch_ptr;
@@ -1269,26 +1269,6 @@ void LMM::AnalyzeGene(const gsl_matrix *U, const gsl_vector *eval,
   return;
 }
 
-/*
-
-AnalyzeBimBam, AnalyzeGene and AnalyzePlink contain duplicate logic -
-and they differ now because the first has LOCO support. To add LOCO
-support to PLINK we'll converge on logic and make the functions DRY.
-
-The functions can be split into:
-
-1. Initialization
-2. Partially read genotype data (batch processing)
-3. LMM on the submatrix
-4. Collate the results
-5. Cleanup
-
-The only thing specific regarding the input file format is (2). The
-way to solve is is to put that reader in a function that gets passed
-in.
-
- */
-
 void LMM::Analyze(std::function< SnpNameValues(size_t) >& fetch_snp,
                   const gsl_matrix *U, const gsl_vector *eval,
                   const gsl_matrix *UtW, const gsl_vector *Uty,
@@ -1305,6 +1285,7 @@ void LMM::Analyze(std::function< SnpNameValues(size_t) >& fetch_snp,
   size_t n_index = (n_cvt + 2 + 1) * (n_cvt + 2) / 2;
 
   const size_t inds = U->size1;
+  enforce(inds == ni_test);
   gsl_vector *x = gsl_vector_alloc(inds); // #inds
   gsl_vector *x_miss = gsl_vector_alloc(inds);
   gsl_vector *Utx = gsl_vector_alloc(U->size2);
@@ -1317,6 +1298,7 @@ void LMM::Analyze(std::function< SnpNameValues(size_t) >& fetch_snp,
   gsl_matrix *Xlarge = gsl_matrix_alloc(inds, msize);
   gsl_matrix *UtXlarge = gsl_matrix_alloc(inds, msize);
   enforce_msg(Xlarge && UtXlarge, "Xlarge memory check"); // just to be sure
+  enforce(Xlarge->size1 == inds);
   gsl_matrix_set_zero(Xlarge);
   gsl_matrix_set_zero(Uab);
   CalcUab(UtW, Uty, Uab);
@@ -1375,10 +1357,12 @@ void LMM::Analyze(std::function< SnpNameValues(size_t) >& fetch_snp,
     }
   };
 
-  for (size_t t = 0; t < indicator_snp.size(); ++t) {
-    // for every SNP
-    if (t % d_pace == 0 || t == (ns_total - 1)) {
-      ProgressBar("Reading SNPs  ", t, ns_total - 1);
+  const auto num_snps = indicator_snp.size();
+  const size_t progress_step = (num_snps/20>d_pace ? num_snps/20 : d_pace);
+
+  for (size_t t = 0; t < num_snps; ++t) {
+    if (t % progress_step == 0 || t == (num_snps - 1)) {
+      ProgressBar("Reading SNPs", t, num_snps - 1);
     }
     if (indicator_snp[t] == 0)
       continue;
@@ -1391,34 +1375,51 @@ void LMM::Analyze(std::function< SnpNameValues(size_t) >& fetch_snp,
     if (process_gwasnps && gwasnps.count(snp) == 0)
       continue;
 
-    double x_mean = 0.0;
-    int c_phen = 0;
-    int n_miss = 0;
+    // drop missing idv and plug mean values for missing geno
+    double x_total = 0.0; // sum genotype values to compute x_mean
+    uint pos = 0;         // position in target vector
+    uint n_miss = 0;
     gsl_vector_set_zero(x_miss);
     for (size_t i = 0; i < ni_total; ++i) {
       // get the genotypes per individual and compute stats per SNP
-      if (indicator_idv[i] == 0) // skip individual column
+      if (indicator_idv[i] == 0) // skip individual
         continue;
 
       double geno = gs[i];
       if (std::isnan(geno)) {
-        gsl_vector_set(x_miss, c_phen, 0.0);
+        gsl_vector_set(x_miss, pos, 1.0);
         n_miss++;
       } else {
-        gsl_vector_set(x, c_phen, geno);
-        gsl_vector_set(x_miss, c_phen, 1.0);
-        x_mean += geno;
+        gsl_vector_set(x, pos, geno);
+        x_total += geno;
       }
-      c_phen++;
+      pos++;
     }
+    enforce(pos == ni_test);
 
-    x_mean /= (double)(ni_test - n_miss);
+    const double x_mean = x_total/(double)(ni_test - n_miss);
 
+    // plug x_mean back into missing values
     for (size_t i = 0; i < ni_test; ++i) {
-      if (gsl_vector_get(x_miss, i) == 0) {
+      if (gsl_vector_get(x_miss, i) == 1.0) {
         gsl_vector_set(x, i, x_mean);
       }
     }
+
+    /* this is what below GxE does
+    for (size_t i = 0; i < ni_test; ++i) {
+      auto geno = gsl_vector_get(x, i);
+      if (std::isnan(geno)) {
+        gsl_vector_set(x, i, x_mean);
+        geno = x_mean;
+      }
+      if (x_mean > 1.0) {
+        gsl_vector_set(x, i, 2 - geno);
+      }
+    }
+    */
+    enforce(x->size == ni_test);
+
     // copy genotype values for SNP into Xlarge cache
     gsl_vector_view Xlarge_col = gsl_matrix_column(Xlarge, c % msize);
     gsl_vector_memcpy(&Xlarge_col.vector, x);
@@ -1513,45 +1514,43 @@ void LMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
 
   // fetch_snp is a callback function for every SNP row
   std::function<SnpNameValues(size_t)>  fetch_snp = [&](size_t num) {
-
     gs.assign (ni_total,nan("")); // wipe values
     // n_bit, and 3 is the number of magic numbers.
     auto t = num;
     infile.seekg(t * n_bit + 3);
-    for (size_t i = 0; i < ni_total; ++i) {
-      auto ci_total = 0;
-      auto ci_test = 0;
-      for (int i = 0; i < n_bit; ++i) {
-        infile.read(ch, 1);
-        bset8 = ch[0];
+    auto ci_total = 0;
+    auto ci_test = 0;
+    // ---- for all genotypes
+    for (int i = 0; i < n_bit; ++i) {
+      infile.read(ch, 1);
+      bset8 = ch[0];
 
-        // Minor allele homozygous: 2.0; major: 0.0.
-        for (size_t j = 0; j < 4; ++j) {
-          if ((i == (n_bit - 1)) && ci_total == (int)ni_total) {
-            break;
-          }
-          if (indicator_idv[ci_total] == 0) {
-            ci_total++;
-            continue;
-          }
-
-          if (bset8[2 * j] == 0) {
-            if (bset8[2 * j + 1] == 0) {
-              gs[ci_test] = 2.0;
-            } else {
-              gs[ci_test] = 1.0;
-            }
-          } else {
-            if (bset8[2 * j + 1] == 1) {
-              gs[ci_test] = 0.0;
-            } else {
-              gs[ci_test] = nan(""); // already set to NaN
-            }
-          }
-
-          ci_total++;
-          ci_test++;
+      // Minor allele homozygous: 2.0; major: 0.0.
+      for (size_t j = 0; j < 4; ++j) {
+        if ((i == (n_bit - 1)) && ci_total == (int)ni_total) {
+          break;
         }
+        if (indicator_idv[ci_total] == 0) { // skip individual
+          ci_total++;
+          continue;
+        }
+
+        if (bset8[2 * j] == 0) {
+          if (bset8[2 * j + 1] == 0) {
+            gs[ci_test] = 2.0;
+          } else {
+            gs[ci_test] = 1.0;
+          }
+        } else {
+          if (bset8[2 * j + 1] == 1) {
+            gs[ci_test] = 0.0;
+          } else {
+            gs[ci_test] = nan(""); // already set to NaN - originally was -9.0
+          }
+        }
+
+        ci_total++;
+        ci_test++;
       }
     }
     string snp="unknown";
@@ -1936,7 +1935,7 @@ void LMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval,
   for (size_t t = 0; t < indicator_snp.size(); ++t) {
     !safeGetline(infile, line).eof();
     if (t % d_pace == 0 || t == (ns_total - 1)) {
-      ProgressBar("Reading SNPs  ", t, ns_total - 1);
+      ProgressBar("Reading SNPs", t, ns_total - 1);
     }
     if (indicator_snp[t] == 0) {
       continue;
@@ -2096,7 +2095,7 @@ void LMM::AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval,
 
   for (vector<SNPINFO>::size_type t = 0; t < snpInfo.size(); ++t) {
     if (t % d_pace == 0 || t == snpInfo.size() - 1) {
-      ProgressBar("Reading SNPs  ", t, snpInfo.size() - 1);
+      ProgressBar("Reading SNPs", t, snpInfo.size() - 1);
     }
     if (indicator_snp[t] == 0) {
       continue;

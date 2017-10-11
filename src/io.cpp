@@ -56,7 +56,7 @@ void ProgressBar(string str, double p, double total, double ratio) {
   cout << str << " ";
   cout << std::string(barsize,'=');
   cout << std::string(50-barsize,' ');
-  cout << setprecision(0) << fixed << progress << "%";
+  cout << setprecision(0) << fixed << " " << progress << "%";
   if (ratio != -1.0)
     cout << setprecision(2) << "    " << ratio;
   cout << "\r" << flush;

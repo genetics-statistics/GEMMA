@@ -28,7 +28,7 @@
 
 using namespace std;
 
-#define LMM_BATCH_SIZE 10000 // used for batch processing
+#define LMM_BATCH_SIZE 1000 // used for batch processing
 
 class FUNC_PARAM {
 
