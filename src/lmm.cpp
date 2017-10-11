@@ -104,10 +104,10 @@ void LMM::WriteFiles() {
   }
 
   auto common_header = [&] () {
-    if (a_mode != 2)
+    if (a_mode != 2) {
       outfile << "beta" << "\t";
-
-    outfile << "se" << "\t";
+      outfile << "se" << "\t";
+    }
 
     outfile << "logl_H1" << "\t";  // we may make this an option
 

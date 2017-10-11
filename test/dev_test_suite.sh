@@ -44,7 +44,7 @@ testBXDLMMLikelihoodRatio() {
     assertEquals 0 $?
 
     outfn=output/$outn.assoc.txt
-    assertEquals "80498" `wc -w < $outfn`
+    assertEquals "73180" `wc -w < $outfn`
     assertEquals "3088458212.93" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
