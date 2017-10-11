@@ -1424,7 +1424,7 @@ void LMM::Analyze(std::function< SnpNameValues(size_t) >& fetch_snp,
     gsl_vector_memcpy(&Xlarge_col.vector, x);
     c++; // count SNPs going in
 
-    if (c == msize)
+    if (c % msize == 0)
       batch_compute(msize);
   }
   batch_compute(c % msize);
