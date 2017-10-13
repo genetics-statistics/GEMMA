@@ -42,6 +42,7 @@
 
 #include "gzstream.h"
 #include "io.h"
+#include "fastblas.h"
 #include "lapack.h"
 #include "lmm.h"
 
@@ -1315,7 +1316,7 @@ void LMM::Analyze(std::function< SnpNameValues(size_t) >& fetch_snp,
         gsl_matrix_submatrix(UtXlarge, 0, 0, inds, l);
 
     time_start = clock();
-    eigenlib_dgemm("T", "N", 1.0, U, &Xlarge_sub.matrix, 0.0,
+    fast_dgemm("T", "N", 1.0, U, &Xlarge_sub.matrix, 0.0,
                    &UtXlarge_sub.matrix);
     time_UtX += (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
 

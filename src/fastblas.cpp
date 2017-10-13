@@ -24,6 +24,9 @@
 #include "debug.h"
 #include "fastblas.h"
 #include "mathfunc.h"
+#ifndef NDEBUG
+#include "eigenlib.h"
+#endif
 
 using namespace std;
 
@@ -169,28 +172,6 @@ static void fast_cblas_dgemm(const char *TransA, const char *TransB, const doubl
   blasint lda = (transA==CblasNoTrans ? K : M );
   blasint ldb = (transB==CblasNoTrans ? N : K );
   blasint ldc = N;
-  cout << rowsA << endl;
-  assert(transA == CblasNoTrans);
-  assert(transB == CblasNoTrans);
-  assert(rowsA == 2000);
-  assert(colsA == 200);
-  assert(lda == K);
-  assert(ldb == N);
-  assert(ldc == N);
-  assert(A->size2 == A->tda);
-  assert(B->size2 == B->tda);
-  assert(C->size2 == C->tda);
-
-  // cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
-  //             m, n, k, alpha, A, k, B, n, beta, C, n);
-  // m = 2000, k = 200, n = 1000;
-  assert(M==2000);
-  assert(K==200);
-  assert(N==1000);
-
-  auto k = K;
-  auto m = M;
-  auto n = N;
 
   fast_cblas_dgemm(CblasRowMajor, transA, transB, M, N, K, alpha,
               /* A */ A->data,
@@ -209,4 +190,13 @@ void fast_dgemm(const char *TransA, const char *TransB, const double alpha,
                 const gsl_matrix *A, const gsl_matrix *B, const double beta,
                 gsl_matrix *C) {
   fast_cblas_dgemm(TransA,TransB,alpha,A,B,beta,C);
+
+  #ifndef NDEBUG
+  if (is_strict_mode() && !is_no_check_mode()) {
+    // ---- validate with original implementation
+    gsl_matrix *C1 = gsl_matrix_alloc(C->size1,C->size2);
+    eigenlib_dgemm(TransA,TransB,alpha,A,B,beta,C1);
+    enforce_msg(gsl_matrix_equal(C,C1),"dgemm outcomes are not equal for fast & eigenlib");
+  }
+  #endif
 }

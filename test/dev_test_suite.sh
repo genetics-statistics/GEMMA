@@ -11,7 +11,8 @@ testBXDStandardRelatednessMatrixKSingularError() {
            -c ../example/BXD_covariates.txt \
            -a ../example/BXD_snps.txt \
            -gk \
-           -debug -o $outn
+           -debug -strict \
+           -o $outn
     assertEquals 22 $? # should show singular error
 }
 
@@ -23,7 +24,7 @@ testBXDStandardRelatednessMatrixK() {
            -c ../example/BXD_covariates2.txt \
            -a ../example/BXD_snps.txt \
            -gk \
-           -debug \
+           -debug -strict \
            -o $outn
     assertEquals 0 $?
     outfn=output/$outn.cXX.txt
@@ -39,7 +40,7 @@ testBXDLMMLikelihoodRatio() {
            -a ../example/BXD_snps.txt \
            -k ./output/BXD.cXX.txt \
            -lmm 2 -maf 0.1 \
-           -debug \
+           -debug -strict \
            -o $outn
     assertEquals 0 $?
 
