@@ -10,6 +10,15 @@ void gemma_gsl_error_handler (const char * reason,
                               const char * file,
                               int line, int gsl_errno);
 
+void debug_set_debug_mode(bool setting);
+void debug_set_no_check_mode(bool setting);
+void debug_set_strict_mode(bool setting);
+
+bool is_debug_mode();
+bool is_no_check_mode();
+bool is_strict_mode();
+
+gsl_matrix *gsl_matrix_safe_alloc(size_t rows,size_t cols);
 
 // Validation routines
 void do_validate_K(const gsl_matrix *K, bool do_check, bool strict, const char *__file, int __line);

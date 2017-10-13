@@ -66,15 +66,17 @@ else
   CPP = g++
 endif
 
-ifdef OPENBLAS
-  WITH_LAPACK =  # OPENBLAS usually includes LAPACK
+ifdef WITH_OPENBLAS
+  OPENBLAS=1
+  # WITH_LAPACK =  # OPENBLAS usually includes LAPACK
+  CPPFLAGS += -DOPENBLAS
 endif
 
 ifdef DEBUG
-  CPPFLAGS = -g $(GCC_FLAGS) -std=gnu++11 -isystem/$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
+  CPPFLAGS += -g $(GCC_FLAGS) -std=gnu++11 -isystem/$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
 else
   # release mode
-  CPPFLAGS = -DNDEBUG $(GCC_FLAGS) -std=gnu++11 -isystem/$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
+  CPPFLAGS += -DNDEBUG $(GCC_FLAGS) -std=gnu++11 -isystem/$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
 endif
 
 ifdef SHOW_COMPILER_WARNINGS

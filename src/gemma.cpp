@@ -23,6 +23,17 @@
 #include <iostream>
 #include <string>
 #include <sys/stat.h>
+#ifdef OPENBLAS
+#pragma message "Compiling with OPENBLAS"
+extern "C" {
+  // these functions are defined in cblas.h - but if we include that we
+  // conflicts with other BLAS includes
+  int openblas_get_num_threads(void);
+  int openblas_get_parallel(void);
+  char* openblas_get_config(void);
+  char* openblas_get_corename(void);
+}
+#endif
 
 #include "gsl/gsl_blas.h"
 #include "gsl/gsl_cdf.h"
@@ -1578,10 +1589,13 @@ void GEMMA::Assign(int argc, char **argv, PARAM &cPar) {
       cPar.window_ns = atoi(str.c_str());
     } else if (strcmp(argv[i], "-debug") == 0) {
       cPar.mode_debug = true;
+      debug_set_debug_mode(true);
     } else if (strcmp(argv[i], "-no-check") == 0) {
       cPar.mode_check = false;
+      debug_set_no_check_mode(true);
     } else if (strcmp(argv[i], "-strict") == 0) {
       cPar.mode_strict = true;
+      debug_set_strict_mode(true);
     } else {
       cout << "error! unrecognized option: " << argv[i] << endl;
       cPar.error = true;
@@ -3081,9 +3095,16 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
   }
 
   outfile << "##" << endl;
-  outfile << "## GEMMA Version = " << version << endl;
-  outfile << "## GSL Version   = " << GSL_VERSION << endl;
-  outfile << "## Eigen Version = " << EIGEN_WORLD_VERSION << "." << EIGEN_MAJOR_VERSION << "." << EIGEN_MINOR_VERSION << endl;
+  outfile << "## GEMMA Version    = " << version << endl;
+  outfile << "## GSL Version      = " << GSL_VERSION << endl;
+  outfile << "## Eigen Version    = " << EIGEN_WORLD_VERSION << "." << EIGEN_MAJOR_VERSION << "." << EIGEN_MINOR_VERSION << endl;
+  #ifdef OPENBLAS
+  outfile << "## OpenBlas         = " << openblas_get_config() << " - " << openblas_get_corename() << endl;
+
+  outfile << "##   threads        = " << openblas_get_num_threads() << endl;
+  string* pStr = new string[4] { "sequential", "threaded", "openmp" };
+  outfile << "##   parallel type  = " << pStr[openblas_get_parallel()] << endl;
+  #endif
 
   outfile << "##" << endl;
   outfile << "## Command Line Input = ";

@@ -14,7 +14,7 @@ GEMMA runs on Linux and MAC OSX and the runtime has the following
 dependencies:
 
 * C++ tool chain >= 4.9
-* GNU Science library (GSL) 1.x (GEMMA does not currently work with GSL >= 2).
+* GNU Science library (GSL) 1.x (note that 2.x is not yet supported)
 * blas/openblas
 * lapack
 * [Eigen3 library](http://eigen.tuxfamily.org/dox/)
@@ -100,3 +100,46 @@ GEMMA includes the shunit2 test framework (version 2.0).
 or
 
     ./run_tests.sh
+
+## Optimizing performance
+
+### OpenBlas
+
+Linking against a built-from-source OpenBlas is a first optimization
+step because it will optimize code for the local architecture. When
+you check the output .log file of GEMMA after a run, it will tell you
+how the linked-in OpenBlas was compiled.
+
+To link a new version, compile OpenBlas as per
+[instructions](http://www.openblas.net/).  You can start with the default:
+
+    make -j 4
+
+or play with the switches
+
+    make USE_THREAD=1 NUM_THREADS=16 NO_AFFINITY=1 -j 4
+
+rendering for example:
+
+        OpenBLAS build complete. (BLAS CBLAS)
+        OS               ... Linux
+        Architecture     ... x86_64
+        BINARY           ... 64bit
+        C compiler       ... GCC  (command line : gcc)
+        Library Name     ... libopenblas_haswellp-r0.3.0.dev.a (Multi threaded; Max num-threads is 16)
+
+        To install the library, you can run "make PREFIX=/path/to/your/installation install".
+
+
+This generates a static library which you can link using the full path
+with using the GEMMA Makefile:
+
+    time env OPENBLAS_NUM_THREADS=4 make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 LIBS="~/tmp/OpenBLAS/libopenblas_haswellp-r0.3.0.dev.a -lgsl -lgslcblas -pthread -lz  -llapack" WITH_OPENBLAS=1 -j 4 fast-check
+
+    make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 LIBS="~/tmp/OpenBLAS/libopenblas_haswellp-r0.3.0.dev.a -lgsl -lgslcblas -pthread -lz  -llapack" WITH_OPENBLAS=1 -j 4 unittests
+
+Batch of 1000:
+
+real    4m24.923s
+user    4m33.576s
+sys     0m11.004s

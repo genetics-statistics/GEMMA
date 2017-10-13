@@ -26,7 +26,7 @@
 #include <set>
 #include <vector>
 
-#define K_BATCH_SIZE 1000 // #snps used for batched K
+#define K_BATCH_SIZE 10000 // #snps used for batched K
 #define DEFAULT_PACE 1000
 
 using namespace std;

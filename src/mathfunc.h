@@ -27,7 +27,7 @@
 #define EIGEN_MINVALUE 1e-10
 
 using namespace std;
-using namespace Eigen;
+
 
 bool has_nan(const vector<double> v);
 
@@ -43,6 +43,7 @@ bool isMatrixPositiveDefinite(const gsl_matrix *G);
 bool isMatrixIllConditioned(const gsl_vector *eigenvalues, double max_ratio=CONDITIONED_MAXRATIO);
 bool isMatrixSymmetric(const gsl_matrix *G);
 gsl_vector *getEigenValues(const gsl_matrix *G);
+double sum(const double *m, size_t rows, size_t cols);
 double SumVector(const gsl_vector *v);
 double CenterVector(gsl_vector *y);
 void CenterVector(gsl_vector *y, const gsl_matrix *W);
@@ -57,6 +58,6 @@ void KroneckerSym(const gsl_matrix *K, const gsl_matrix *V, gsl_matrix *H);
 double UcharToDouble02(const unsigned char c);
 unsigned char Double02ToUchar(const double dosage);
 void uchar_matrix_get_row(const vector<vector<unsigned char>> &X,
-                          const size_t i_row, VectorXd &x_row);
+                          const size_t i_row, Eigen::VectorXd &x_row);
 
 #endif

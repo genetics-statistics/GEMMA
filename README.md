@@ -162,11 +162,12 @@ unpack the file.
 LAPACK and BLAS libraries. There is no need to install these
 libraries.
 
-### Building from source
+### Optimizing performance
 
-*Note that GEMMA currently does not work with GSL 2.x. We recommend
-linking to the latest version of GSL 1.x, which is GSL 1.16 as of this
-writing.*
+Precompiled binaries and libraries may not be optimal for your particular
+hardware. See [INSTALL.md](INSTALL.md).
+
+### Building from source
 
 More information on source code, dependencies and installation can be
 found in [INSTALL.md](INSTALL.md).
@@ -180,7 +181,8 @@ Dept. of Biostatistics<br>
 University of Michigan<br>
 2012-2017
 
-Peter Carbonetto, Tim Flutre, Matthew Stephens, Pjotr Prins and others
-have also contributed to the development of this software.
+Peter Carbonetto, Tim Flutre, Matthew Stephens,
+[Pjotr Prins](http://thebird.nl/) and others have also contributed to
+the development of this software.
 
 [latest_release]: https://github.com/genetics-statistics/GEMMA/releases "Most recent stable releases"

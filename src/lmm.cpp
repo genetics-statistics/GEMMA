@@ -39,6 +39,7 @@
 #include "gsl/gsl_vector.h"
 
 #include "eigenlib.h"
+
 #include "gzstream.h"
 #include "io.h"
 #include "lapack.h"
@@ -1269,6 +1270,7 @@ void LMM::AnalyzeGene(const gsl_matrix *U, const gsl_vector *eval,
   return;
 }
 
+
 void LMM::Analyze(std::function< SnpNameValues(size_t) >& fetch_snp,
                   const gsl_matrix *U, const gsl_vector *eval,
                   const gsl_matrix *UtW, const gsl_vector *Uty,
@@ -1358,7 +1360,7 @@ void LMM::Analyze(std::function< SnpNameValues(size_t) >& fetch_snp,
   };
 
   const auto num_snps = indicator_snp.size();
-  const size_t progress_step = (num_snps/20>d_pace ? num_snps/20 : d_pace);
+  const size_t progress_step = (num_snps/50>d_pace ? num_snps/50 : d_pace);
 
   for (size_t t = 0; t < num_snps; ++t) {
     if (t % progress_step == 0 || t == (num_snps - 1)) {
@@ -1429,6 +1431,7 @@ void LMM::Analyze(std::function< SnpNameValues(size_t) >& fetch_snp,
       batch_compute(msize);
   }
   batch_compute(c % msize);
+  ProgressBar("Reading SNPs", num_snps - 1, num_snps - 1);
   // cout << "Counted SNPs " << c << " sumStat " << sumStat.size() << endl;
   cout << endl;
 

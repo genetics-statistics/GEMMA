@@ -313,6 +313,13 @@ bool isMatrixIllConditioned(const gsl_vector *eigenvalues, double max_ratio) {
   return ret_valid;
 }
 
+double sum(const double *m, size_t rows, size_t cols) {
+  double sum = 0.0;
+  for (auto i = 0; i<rows*cols; i++)
+    sum += m[i];
+  return sum;
+}
+
 double SumVector(const gsl_vector *v) {
   double sum = 0;
   for (int i = 0; i < v->size; i++ ) {

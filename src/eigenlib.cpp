@@ -17,15 +17,17 @@
 */
 
 #include "Eigen/Dense"
-#include "gsl/gsl_linalg.h"
+// #include "gsl/gsl_linalg.h"
 #include "gsl/gsl_matrix.h"
-#include "gsl/gsl_vector.h"
+// #include "gsl/gsl_vector.h"
 #include <cmath>
 #include <iostream>
 #include <vector>
+#include <cblas.h>
 
 using namespace std;
 using namespace Eigen;
+
 
 // On two different clusters, compare eigen vs lapack/gsl:
 //
@@ -57,8 +59,6 @@ void eigenlib_dgemm(const char *TransA, const char *TransB, const double alpha,
       C_mat = alpha * A_mat.transpose() * B_mat.transpose() + beta * C_mat;
     }
   }
-
-  return;
 }
 
 void eigenlib_dgemv(const char *TransA, const double alpha, const gsl_matrix *A,
@@ -75,15 +75,12 @@ void eigenlib_dgemv(const char *TransA, const double alpha, const gsl_matrix *A,
   } else {
     y_vec = alpha * A_mat.transpose() * x_vec + beta * y_vec;
   }
-
-  return;
 }
 
 void eigenlib_invert(gsl_matrix *A) {
   Map<Matrix<double, Dynamic, Dynamic, RowMajor>> A_mat(A->data, A->size1,
                                                         A->size2);
   A_mat = A_mat.inverse();
-  return;
 }
 
 void eigenlib_dsyr(const double alpha, const gsl_vector *b, gsl_matrix *A) {
@@ -92,7 +89,6 @@ void eigenlib_dsyr(const double alpha, const gsl_vector *b, gsl_matrix *A) {
   Map<Matrix<double, Dynamic, 1>, 0, OuterStride<Dynamic>> b_vec(
       b->data, b->size, OuterStride<Dynamic>(b->stride));
   A_mat = alpha * b_vec * b_vec.transpose() + A_mat;
-  return;
 }
 
 void eigenlib_eigensymm(const gsl_matrix *G, gsl_matrix *U, gsl_vector *eval) {
@@ -108,5 +104,4 @@ void eigenlib_eigensymm(const gsl_matrix *G, gsl_matrix *U, gsl_vector *eval) {
     abort();
   eval_vec = es.eigenvalues();
   U_mat = es.eigenvectors();
-  return;
 }
