@@ -26,8 +26,8 @@
 #include <set>
 #include <vector>
 
-#define K_BATCH_SIZE 10000 // #snps used for batched K
-#define DEFAULT_PACE 1000
+#define K_BATCH_SIZE 20000 // #snps used for batched K
+#define DEFAULT_PACE 1000  // for display only
 
 using namespace std;
 
@@ -116,11 +116,11 @@ public:
 class PARAM {
 public:
   // IO-related parameters
-  bool mode_check = true;   // run data checks (slower)
-  bool mode_strict = false; // exit on some data checks
-  bool mode_silence;
-  bool mode_debug = false;
-  uint issue; // enable tests for issue on github tracker
+  // bool mode_check = true;   // run data checks (slower)
+  // bool mode_strict = false; // exit on some data checks
+  // bool mode_silence;
+  // bool mode_debug = false;
+  // uint issue; // enable tests for issue on github tracker
 
   uint a_mode; // Analysis mode, 1/2/3/4 for Frequentist tests
   int k_mode; // Kinship read mode: 1: n by n matrix, 2: id/id/k_value;

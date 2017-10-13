@@ -10,6 +10,7 @@
 #include "debug.h"
 #include "mathfunc.h"
 #include "fastblas.h"
+#include "fastopenblas.h"
 
 using namespace std;
 

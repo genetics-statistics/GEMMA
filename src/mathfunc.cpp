@@ -49,6 +49,7 @@
 
 #include "debug.h"
 #include "eigenlib.h"
+#include "fastblas.h"
 #include "lapack.h"
 #include "mathfunc.h"
 
@@ -388,20 +389,16 @@ void StandardizeVector(gsl_vector *y) {
 void CalcUtX(const gsl_matrix *U, gsl_matrix *UtX) {
   gsl_matrix *X = gsl_matrix_alloc(UtX->size1, UtX->size2);
   gsl_matrix_memcpy(X, UtX);
-  eigenlib_dgemm("T", "N", 1.0, U, X, 0.0, UtX);
+  fast_dgemm("T", "N", 1.0, U, X, 0.0, UtX);
   gsl_matrix_free(X);
-
-  return;
 }
 
 void CalcUtX(const gsl_matrix *U, const gsl_matrix *X, gsl_matrix *UtX) {
-  eigenlib_dgemm("T", "N", 1.0, U, X, 0.0, UtX);
-  return;
+  fast_dgemm("T", "N", 1.0, U, X, 0.0, UtX);
 }
 
 void CalcUtX(const gsl_matrix *U, const gsl_vector *x, gsl_vector *Utx) {
   gsl_blas_dgemv(CblasTrans, 1.0, U, x, 0.0, Utx);
-  return;
 }
 
 // Kronecker product.

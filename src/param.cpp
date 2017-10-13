@@ -66,7 +66,7 @@ void LOCO_set_Snps(set<string> &ksnps, set<string> &gwasnps,
 // (indicator_idv[x] == 1). This should match indicator_cvt etc. If
 // this gives problems with certain sets we can simply trim to size.
 
-void trim_individuals(vector<int> &idvs, size_t ni_max, bool debug) {
+void trim_individuals(vector<int> &idvs, size_t ni_max) {
   if (ni_max) {
     size_t count = 0;
     for (auto ind = idvs.begin(); ind != idvs.end(); ++ind) {
@@ -76,7 +76,7 @@ void trim_individuals(vector<int> &idvs, size_t ni_max, bool debug) {
         break;
     }
     if (count != idvs.size()) {
-      if (debug)
+      if (is_debug_mode())
         cout << "**** TEST MODE: trim individuals from " << idvs.size()
              << " to " << count << endl;
       idvs.resize(count);
@@ -87,7 +87,7 @@ void trim_individuals(vector<int> &idvs, size_t ni_max, bool debug) {
 // ---- PARAM class implementation
 
 PARAM::PARAM(void)
-    : mode_silence(false), a_mode(0), k_mode(1), d_pace(DEFAULT_PACE),
+    : a_mode(0), k_mode(1), d_pace(DEFAULT_PACE),
       file_out("result"), path_out("./output/"), miss_level(0.05),
       maf_level(0.01), hwe_level(0), r2_level(0.9999), l_min(1e-5), l_max(1e5),
       n_region(10), p_nr(0.001), em_prec(0.0001), nr_prec(0.0001),
@@ -221,7 +221,7 @@ void PARAM::ReadFiles(void) {
   } else {
     n_cvt = 1;
   }
-  trim_individuals(indicator_cvt, ni_max, mode_debug);
+  trim_individuals(indicator_cvt, ni_max);
 
   if (!file_gxe.empty()) {
     if (ReadFile_column(file_gxe, indicator_gxe, gxe, 1) == false) {
@@ -234,7 +234,7 @@ void PARAM::ReadFiles(void) {
     }
   }
 
-  trim_individuals(indicator_idv, ni_max, mode_debug);
+  trim_individuals(indicator_idv, ni_max);
 
   // Read genotype and phenotype file for PLINK format.
   if (!file_bfile.empty()) {
@@ -302,11 +302,11 @@ void PARAM::ReadFiles(void) {
     gsl_matrix *W = gsl_matrix_alloc(ni_test, n_cvt);
     CopyCvt(W);
 
-    trim_individuals(indicator_idv, ni_max, mode_debug);
-    trim_individuals(indicator_cvt, ni_max, mode_debug);
+    trim_individuals(indicator_idv, ni_max);
+    trim_individuals(indicator_cvt, ni_max);
     if (ReadFile_geno(file_geno, setSnps, W, indicator_idv, indicator_snp,
                       maf_level, miss_level, hwe_level, r2_level, mapRS2chr,
-                      mapRS2bp, mapRS2cM, snpInfo, ns_test, mode_debug) == false) {
+                      mapRS2bp, mapRS2cM, snpInfo, ns_test) == false) {
       error = true;
     }
     gsl_matrix_free(W);
@@ -416,7 +416,7 @@ void PARAM::ReadFiles(void) {
     while (!safeGetline(infile, file_name).eof()) {
       if (ReadFile_geno(file_name, setSnps, W, indicator_idv, indicator_snp,
                         maf_level, miss_level, hwe_level, r2_level, mapRS2chr,
-                        mapRS2bp, mapRS2cM, snpInfo, ns_test_tmp, mode_debug) == false) {
+                        mapRS2bp, mapRS2cM, snpInfo, ns_test_tmp) == false) {
         error = true;
       }
 
@@ -1282,7 +1282,7 @@ void PARAM::ReadGenotypes(gsl_matrix *UtX, gsl_matrix *K, const bool calc_K) {
     }
   } else {
     if (ReadFile_geno(file_geno, indicator_idv, indicator_snp, UtX, K,
-                      calc_K, mode_debug) == false) {
+                      calc_K) == false) {
       error = true;
     }
   }
@@ -1302,7 +1302,7 @@ void PARAM::ReadGenotypes(vector<vector<unsigned char>> &Xt, gsl_matrix *K,
     }
   } else {
     if (ReadFile_geno(file_geno, indicator_idv, indicator_snp, Xt, K, calc_K,
-                      ni_test, ns_test, mode_debug) == false) {
+                      ni_test, ns_test) == false) {
       error = true;
     }
   }

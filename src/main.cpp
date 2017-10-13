@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
     return EXIT_FAILURE;
   }
 
-  if (cPar.mode_silence) {
+  if (is_quiet_mode()) {
     stringstream ss;
     cout.rdbuf(ss.rdbuf());
   }

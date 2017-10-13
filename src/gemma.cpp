@@ -721,6 +721,7 @@ void GEMMA::PrintHelp(size_t option) {
     cout << " -debug                   debug output" << endl;
     cout << " -nind       [num]        read up to num individuals" << endl;
     cout << " -issue      [num]        enable tests relevant to issue tracker" << endl;
+    cout << " -legacy                  run gemma in legacy mode" << endl;
     cout << endl;
   }
 
@@ -766,7 +767,7 @@ void GEMMA::Assign(int argc, char **argv, PARAM &cPar) {
       str.assign(argv[i]);
       cPar.file_mbfile = str;
     } else if (strcmp(argv[i], "-silence") == 0) {
-      cPar.mode_silence = true;
+      debug_set_quiet_mode(true);
     } else if (strcmp(argv[i], "-g") == 0) {
       if (argv[i + 1] == NULL || argv[i + 1][0] == '-') {
         continue;
@@ -1367,8 +1368,9 @@ void GEMMA::Assign(int argc, char **argv, PARAM &cPar) {
       ++i;
       str.clear();
       str.assign(argv[i]);
-      cPar.issue = atoi(str.c_str()); // for testing purposes
-      enforce(cPar.issue > 0);
+      auto issue = atoi(str.c_str()); // for testing purposes
+      enforce(issue > 0);
+      debug_set_issue(issue);
     } else if (strcmp(argv[i], "-emp") == 0) {
       if (argv[i + 1] == NULL || argv[i + 1][0] == '-') {
         continue;
@@ -1588,14 +1590,16 @@ void GEMMA::Assign(int argc, char **argv, PARAM &cPar) {
       str.assign(argv[i]);
       cPar.window_ns = atoi(str.c_str());
     } else if (strcmp(argv[i], "-debug") == 0) {
-      cPar.mode_debug = true;
+      // cPar.mode_debug = true;
       debug_set_debug_mode(true);
     } else if (strcmp(argv[i], "-no-check") == 0) {
-      cPar.mode_check = false;
+      // cPar.mode_check = false;
       debug_set_no_check_mode(true);
     } else if (strcmp(argv[i], "-strict") == 0) {
-      cPar.mode_strict = true;
+      // cPar.mode_strict = true;
       debug_set_strict_mode(true);
+    } else if (strcmp(argv[i], "-legacy") == 0) {
+      debug_set_legacy_mode(true);
     } else {
       cout << "error! unrecognized option: " << argv[i] << endl;
       cPar.error = true;
@@ -1742,7 +1746,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
     // center matrix G
     CenterMatrix(G);
     CenterMatrix(G_full);
-    validate_K(G,cPar.mode_check,cPar.mode_strict);
+    validate_K(G);
 
     // eigen-decomposition and calculate trace_G
     cout << "Start Eigen-Decomposition..." << endl;
@@ -1882,7 +1886,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
     }
 
     // Now we have the Kinship matrix test it
-    validate_K(G,cPar.mode_check,cPar.mode_strict);
+    validate_K(G);
 
     if (cPar.a_mode == 21) {
       cPar.WriteMatrix(G, "cXX");
@@ -2323,7 +2327,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
 
         // center matrix G
         CenterMatrix(G);
-        validate_K(G,cPar.mode_check,cPar.mode_strict);
+        validate_K(G);
 
         (cPar.v_traceG).clear();
         double d = 0;
@@ -2532,7 +2536,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
     gsl_vector *eval = gsl_vector_calloc(Y->size1);
     gsl_vector *env = gsl_vector_alloc(Y->size1);
     gsl_vector *weight = gsl_vector_alloc(Y->size1);
-    assert_issue(cPar.issue == 26, UtY->data[0] == 0.0);
+    assert_issue(is_issue(26), UtY->data[0] == 0.0);
 
     // set covariates matrix W and phenotype matrix Y
     // an intercept should be included in W,
@@ -2552,7 +2556,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
 
       // center matrix G
       CenterMatrix(G);
-      validate_K(G,cPar.mode_check,cPar.mode_strict);
+      validate_K(G);
 
       // is residual weights are provided, then
       if (!cPar.file_weight.empty()) {
@@ -2633,7 +2637,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
       CalcUtX(U, W, UtW);
       CalcUtX(U, Y, UtY);
 
-      assert_issue(cPar.issue == 26, ROUND(UtY->data[0]) == -16.6143);
+      assert_issue(is_issue(26), ROUND(UtY->data[0]) == -16.6143);
 
       LMM cLmm;
       cLmm.CopyFromParam(cPar);
@@ -2650,7 +2654,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
       // calculate UtW and Uty
       CalcUtX(U, W, UtW);
       CalcUtX(U, Y, UtY);
-      assert_issue(cPar.issue == 26, ROUND(UtY->data[0]) == -16.6143);
+      assert_issue(is_issue(26), ROUND(UtY->data[0]) == -16.6143);
 
       // calculate REMLE/MLE estimate and pve for univariate model
       if (cPar.n_ph == 1) { // one phenotype
@@ -2658,7 +2662,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
         gsl_vector_view se_beta = gsl_matrix_row(se_B, 0);
         gsl_vector_view UtY_col = gsl_matrix_column(UtY, 0);
 
-        assert_issue(cPar.issue == 26, ROUND(UtY->data[0]) == -16.6143);
+        assert_issue(is_issue(26), ROUND(UtY->data[0]) == -16.6143);
 
         CalcLambda('L', eval, UtW, &UtY_col.vector, cPar.l_min, cPar.l_max,
                    cPar.n_region, cPar.l_mle_null, cPar.logl_mle_H0);
@@ -2857,7 +2861,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
 
         // center matrix G
         CenterMatrix(G);
-        validate_K(G,cPar.mode_check,cPar.mode_strict);
+        validate_K(G);
       } else {
         cPar.ReadGenotypes(UtX, G, true);
       }
@@ -2968,7 +2972,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
 
           // center matrix G
           CenterMatrix(G);
-          validate_K(G,cPar.mode_check,cPar.mode_strict);
+          validate_K(G);
 
         } else {
           cPar.ReadGenotypes(UtX, G, true);

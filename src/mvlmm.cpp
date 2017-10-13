@@ -39,6 +39,7 @@
 #include "gsl/gsl_vector.h"
 
 #include "eigenlib.h"
+#include "fastblas.h"
 #include "gzstream.h"
 #include "io.h"
 #include "lapack.h"
@@ -3250,8 +3251,8 @@ void MVLMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
           gsl_matrix_submatrix(UtXlarge, 0, 0, UtXlarge->size1, l);
 
       time_start = clock();
-      eigenlib_dgemm("T", "N", 1.0, U, &Xlarge_sub.matrix, 0.0,
-                     &UtXlarge_sub.matrix);
+      fast_dgemm("T", "N", 1.0, U, &Xlarge_sub.matrix, 0.0,
+                 &UtXlarge_sub.matrix);
       time_UtX += (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
 
       gsl_matrix_set_zero(Xlarge);
@@ -3717,7 +3718,7 @@ void MVLMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
           gsl_matrix_submatrix(UtXlarge, 0, 0, UtXlarge->size1, l);
 
       time_start = clock();
-      eigenlib_dgemm("T", "N", 1.0, U, &Xlarge_sub.matrix, 0.0,
+      fast_dgemm("T", "N", 1.0, U, &Xlarge_sub.matrix, 0.0,
                      &UtXlarge_sub.matrix);
       time_UtX += (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
 

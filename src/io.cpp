@@ -41,6 +41,7 @@
 
 #include "debug.h"
 #include "eigenlib.h"
+#include "fastblas.h"
 #include "gzstream.h"
 #include "io.h"
 #include "lapack.h"
@@ -594,7 +595,7 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
                    const double &r2_level, map<string, string> &mapRS2chr,
                    map<string, long int> &mapRS2bp,
                    map<string, double> &mapRS2cM, vector<SNPINFO> &snpInfo,
-                   size_t &ns_test, bool debug) {
+                   size_t &ns_test) {
   debug_msg("entered");
   indicator_snp.clear();
   snpInfo.clear();
@@ -667,7 +668,7 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
     }
 
     if (mapRS2bp.count(rs) == 0) {
-      if (debug && count_warnings++ < 10) {
+      if (is_debug_mode() && count_warnings++ < 10) {
         std::string msg = "Can't figure out position for ";
         msg += rs;
         debug_msg(msg);
@@ -1454,12 +1455,12 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
 
     // compute kinship matrix and return in matrix_kin a SNP at a time
     if (ns_test % msize == 0) {
-      eigenlib_dgemm("N", "T", 1.0, Xlarge, Xlarge, 1.0, matrix_kin);
+      fast_dgemm("N", "T", 1.0, Xlarge, Xlarge, 1.0, matrix_kin);
       gsl_matrix_set_zero(Xlarge);
     }
   }
   if (ns_test % msize != 0) {
-    eigenlib_dgemm("N", "T", 1.0, Xlarge, Xlarge, 1.0, matrix_kin);
+    fast_dgemm("N", "T", 1.0, Xlarge, Xlarge, 1.0, matrix_kin);
   }
   cout << endl;
 
@@ -1600,13 +1601,13 @@ bool PlinkKin(const string &file_bed, vector<int> &indicator_snp,
     ns_test++;
 
     if (ns_test % msize == 0) {
-      eigenlib_dgemm("N", "T", 1.0, Xlarge, Xlarge, 1.0, matrix_kin);
+      fast_dgemm("N", "T", 1.0, Xlarge, Xlarge, 1.0, matrix_kin);
       gsl_matrix_set_zero(Xlarge);
     }
   }
 
   if (ns_test % msize != 0) {
-    eigenlib_dgemm("N", "T", 1.0, Xlarge, Xlarge, 1.0, matrix_kin);
+    fast_dgemm("N", "T", 1.0, Xlarge, Xlarge, 1.0, matrix_kin);
   }
 
   cout << endl;
@@ -1633,7 +1634,7 @@ bool PlinkKin(const string &file_bed, vector<int> &indicator_snp,
 // genotype and calculate K.
 bool ReadFile_geno(const string file_geno, vector<int> &indicator_idv,
                    vector<int> &indicator_snp, gsl_matrix *UtX, gsl_matrix *K,
-                   const bool calc_K, bool debug) {
+                   const bool calc_K) {
   debug_msg("entered");
   igzstream infile(file_geno.c_str(), igzstream::in);
   if (!infile) {
@@ -1738,7 +1739,7 @@ bool ReadFile_geno(const string &file_geno, vector<int> &indicator_idv,
                    vector<int> &indicator_snp,
                    vector<vector<unsigned char>> &Xt, gsl_matrix *K,
                    const bool calc_K, const size_t ni_test,
-                   const size_t ns_test, bool debug) {
+                   const size_t ns_test) {
   debug_msg("entered");
   igzstream infile(file_geno.c_str(), igzstream::in);
   if (!infile) {
@@ -2757,7 +2758,7 @@ bool BimbamKinUncentered(const string &file_geno, const set<string> ksnps,
         ns_vec[0]++;
 
         if (ns_vec[0] % msize == 0) {
-          eigenlib_dgemm("N", "T", 1.0, Xlarge, Xlarge, 1.0, matrix_kin);
+          fast_dgemm("N", "T", 1.0, Xlarge, Xlarge, 1.0, matrix_kin);
           gsl_matrix_set_zero(Xlarge);
         }
       } else if (mapRS2cat.count(rs) != 0) {
@@ -2774,7 +2775,7 @@ bool BimbamKinUncentered(const string &file_geno, const set<string> ksnps,
               gsl_matrix_submatrix(Xlarge, 0, msize * i_vc, ni_test, msize);
           gsl_matrix_view kin_sub = gsl_matrix_submatrix(
               matrix_kin, 0, ni_test * i_vc, ni_test, ni_test);
-          eigenlib_dgemm("N", "T", 1.0, &X_sub.matrix, &X_sub.matrix, 1.0,
+          fast_dgemm("N", "T", 1.0, &X_sub.matrix, &X_sub.matrix, 1.0,
                          &kin_sub.matrix);
 
           gsl_matrix_set_zero(&X_sub.matrix);
@@ -2790,7 +2791,7 @@ bool BimbamKinUncentered(const string &file_geno, const set<string> ksnps,
           gsl_matrix_submatrix(Xlarge, 0, msize * i_vc, ni_test, msize);
       gsl_matrix_view kin_sub =
           gsl_matrix_submatrix(matrix_kin, 0, ni_test * i_vc, ni_test, ni_test);
-      eigenlib_dgemm("N", "T", 1.0, &X_sub.matrix, &X_sub.matrix, 1.0,
+      fast_dgemm("N", "T", 1.0, &X_sub.matrix, &X_sub.matrix, 1.0,
                      &kin_sub.matrix);
     }
   }
@@ -2983,7 +2984,7 @@ bool PlinkKin(const string &file_bed, const int display_pace,
         ns_vec[0]++;
 
         if (ns_vec[0] % msize == 0) {
-          eigenlib_dgemm("N", "T", 1.0, Xlarge, Xlarge, 1.0, matrix_kin);
+          fast_dgemm("N", "T", 1.0, Xlarge, Xlarge, 1.0, matrix_kin);
           gsl_matrix_set_zero(Xlarge);
         }
       } else if (mapRS2cat.count(rs) != 0) {
@@ -3000,7 +3001,7 @@ bool PlinkKin(const string &file_bed, const int display_pace,
               gsl_matrix_submatrix(Xlarge, 0, msize * i_vc, ni_test, msize);
           gsl_matrix_view kin_sub = gsl_matrix_submatrix(
               matrix_kin, 0, ni_test * i_vc, ni_test, ni_test);
-          eigenlib_dgemm("N", "T", 1.0, &X_sub.matrix, &X_sub.matrix, 1.0,
+          fast_dgemm("N", "T", 1.0, &X_sub.matrix, &X_sub.matrix, 1.0,
                          &kin_sub.matrix);
 
           gsl_matrix_set_zero(&X_sub.matrix);

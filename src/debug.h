@@ -13,18 +13,25 @@ void gemma_gsl_error_handler (const char * reason,
 void debug_set_debug_mode(bool setting);
 void debug_set_no_check_mode(bool setting);
 void debug_set_strict_mode(bool setting);
+void debug_set_quiet_mode(bool setting);
+void debug_set_issue(uint issue);
+void debug_set_legacy_mode(bool setting);
 
 bool is_debug_mode();
 bool is_no_check_mode();
+bool is_check_mode();
 bool is_strict_mode();
+bool is_quiet_mode();
+bool is_issue(uint issue);
+bool is_legacy_mode();
 
 gsl_matrix *gsl_matrix_safe_alloc(size_t rows,size_t cols);
 
 // Validation routines
-void do_validate_K(const gsl_matrix *K, bool do_check, bool strict, const char *__file, int __line);
+void do_validate_K(const gsl_matrix *K, const char *__file, int __line);
 
 #define ROUND(f) round(f * 10000.)/10000
-#define validate_K(K,check,strict) do_validate_K(K,check,strict,__FILE__,__LINE__)
+#define validate_K(K) do_validate_K(K,__FILE__,__LINE__)
 
 #define warning_at_msg(__file,__line,msg) cerr << "**** WARNING: " << msg << " in " << __file << " at line " << __line << endl;
 
