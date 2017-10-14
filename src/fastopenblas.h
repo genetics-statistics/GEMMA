@@ -6,19 +6,21 @@
 #include <cblas.h>   // For OpenBlas
 #include "gsl/gsl_matrix.h"
 
-void fast_cblas_dgemm(OPENBLAS_CONST enum CBLAS_ORDER Order,
-                      OPENBLAS_CONST enum CBLAS_TRANSPOSE TransA,
-                      OPENBLAS_CONST enum CBLAS_TRANSPOSE TransB,
-                      OPENBLAS_CONST blasint M,
-                      OPENBLAS_CONST blasint N,
-                      OPENBLAS_CONST blasint K,
-                      OPENBLAS_CONST double alpha,
-                      OPENBLAS_CONST double *A,
-                      OPENBLAS_CONST blasint lda,
-                      OPENBLAS_CONST double *B,
-                      OPENBLAS_CONST blasint ldb,
-                      OPENBLAS_CONST double beta,
+#ifndef
+
+void fast_cblas_dgemm(const enum CBLAS_ORDER Order,
+                      const enum CBLAS_TRANSPOSE TransA,
+                      const enum CBLAS_TRANSPOSE TransB,
+                      const blasint M,
+                      const blasint N,
+                      const blasint K,
+                      const double alpha,
+                      const double *A,
+                      const blasint lda,
+                      const double *B,
+                      const blasint ldb,
+                      const double beta,
                       double *C,
-                      OPENBLAS_CONST blasint ldc);
+                      const blasint ldc);
 
 #endif

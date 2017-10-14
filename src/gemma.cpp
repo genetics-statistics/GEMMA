@@ -3087,6 +3087,9 @@ void GEMMA::BatchRun(PARAM &cPar) {
   return;
 }
 
+#include "Eigen/Dense"
+// using namespace Eigen;
+
 void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
   string file_str;
   file_str = cPar.path_out + "/" + cPar.file_out;
@@ -3103,6 +3106,7 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
   outfile << "## GSL Version      = " << GSL_VERSION << endl;
   outfile << "## Eigen Version    = " << EIGEN_WORLD_VERSION << "." << EIGEN_MAJOR_VERSION << "." << EIGEN_MINOR_VERSION << endl;
   #ifdef OPENBLAS
+
   outfile << "## OpenBlas         = " << openblas_get_config() << " - " << openblas_get_corename() << endl;
 
   outfile << "##   threads        = " << openblas_get_num_threads() << endl;

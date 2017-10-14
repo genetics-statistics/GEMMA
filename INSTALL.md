@@ -115,7 +115,8 @@ To link a new version, compile OpenBlas as per
 
     make -j 4
 
-or play with the switches
+or play with the switches (note NO_AFFINITY may be needed in a future
+version)
 
     make USE_THREAD=1 NUM_THREADS=16 NO_AFFINITY=1 -j 4
 

@@ -41,7 +41,7 @@
 #include "gsl/gsl_min.h"
 #include "gsl/gsl_multiroots.h"
 
-#include "Eigen/Dense"
+// #include "Eigen/Dense"
 
 #include "eigenlib.h"
 #include "gzstream.h"
@@ -53,7 +53,7 @@
 #include "vc.h"
 
 using namespace std;
-using namespace Eigen;
+// using namespace Eigen;
 
 // In this file, X, Y are already transformed (i.e. UtX and UtY).
 void VC::CopyFromParam(PARAM &cPar) {

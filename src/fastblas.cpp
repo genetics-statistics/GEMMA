@@ -24,6 +24,7 @@
 #include "debug.h"
 #include "fastblas.h"
 #include "mathfunc.h"
+#include <string.h>
 #ifndef NDEBUG
 #include "eigenlib.h"
 #endif
@@ -61,20 +62,20 @@ gsl_matrix *fast_copy(gsl_matrix *m, const double *mem) {
 /*
     Helper function fast_cblas_dgemm runs the local dgemm
 */
-void fast_cblas_dgemm(OPENBLAS_CONST enum CBLAS_ORDER Order,
-                      OPENBLAS_CONST enum CBLAS_TRANSPOSE TransA,
-                      OPENBLAS_CONST enum CBLAS_TRANSPOSE TransB,
-                      OPENBLAS_CONST blasint M,
-                      OPENBLAS_CONST blasint N,
-                      OPENBLAS_CONST blasint K,
-                      OPENBLAS_CONST double alpha,
-                      OPENBLAS_CONST double *A,
-                      OPENBLAS_CONST blasint lda,
-                      OPENBLAS_CONST double *B,
-                      OPENBLAS_CONST blasint ldb,
-                      OPENBLAS_CONST double beta,
+void fast_cblas_dgemm(const enum CBLAS_ORDER Order,
+                      const enum CBLAS_TRANSPOSE TransA,
+                      const enum CBLAS_TRANSPOSE TransB,
+                      const blasint M,
+                      const blasint N,
+                      const blasint K,
+                      const double alpha,
+                      const double *A,
+                      const blasint lda,
+                      const double *B,
+                      const blasint ldb,
+                      const double beta,
                       double *C,
-                      OPENBLAS_CONST blasint ldc) {
+                      const blasint ldc) {
 #ifndef NDEBUG
   size_t i,j;
   if (is_debug_mode()) {

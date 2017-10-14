@@ -29,7 +29,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "Eigen/Dense"
+// #include "Eigen/Dense"
 #include "gsl/gsl_blas.h"
 #include "gsl/gsl_cdf.h"
 #include "gsl/gsl_eigen.h"
@@ -46,7 +46,7 @@
 #include "param.h"
 
 using namespace std;
-using namespace Eigen;
+// using namespace Eigen;
 
 void LDR::CopyFromParam(PARAM &cPar) {
   a_mode = cPar.a_mode;
@@ -70,8 +70,10 @@ void LDR::CopyFromParam(PARAM &cPar) {
   return;
 }
 
+
 void LDR::CopyToParam(PARAM &cPar) { return; }
 
+/*
 // X is a p by n matrix.
 void LDR::VB(const vector<vector<unsigned char>> &Xt, const gsl_matrix *W_gsl,
              const gsl_vector *y_gsl) {
@@ -107,3 +109,4 @@ void LDR::VB(const vector<vector<unsigned char>> &Xt, const gsl_matrix *W_gsl,
 
   return;
 }
+*/

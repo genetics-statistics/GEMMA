@@ -32,7 +32,7 @@
 #include <tuple>
 #include <vector>
 
-#include "Eigen/Dense"
+// #include "Eigen/Dense"
 
 #include "gsl/gsl_version.h"
 
@@ -54,7 +54,7 @@
 #include "mathfunc.h"
 
 using namespace std;
-using namespace Eigen;
+// using namespace Eigen;
 
 bool has_nan(const vector<double> v) {
   for (const auto& e: v) {
@@ -524,6 +524,7 @@ unsigned char Double02ToUchar(const double dosage) {
   return (int)(dosage * 100);
 }
 
+/*
 void uchar_matrix_get_row(const vector<vector<unsigned char>> &X,
                           const size_t i_row, VectorXd &x_row) {
   if (i_row < X.size()) {
@@ -535,3 +536,5 @@ void uchar_matrix_get_row(const vector<vector<unsigned char>> &X,
     exit(1);
   }
 }
+
+*/

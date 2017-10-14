@@ -3017,7 +3017,7 @@ bool PlinkKin(const string &file_bed, const int display_pace,
           gsl_matrix_submatrix(Xlarge, 0, msize * i_vc, ni_test, msize);
       gsl_matrix_view kin_sub =
           gsl_matrix_submatrix(matrix_kin, 0, ni_test * i_vc, ni_test, ni_test);
-      eigenlib_dgemm("N", "T", 1.0, &X_sub.matrix, &X_sub.matrix, 1.0,
+      fast_dgemm("N", "T", 1.0, &X_sub.matrix, &X_sub.matrix, 1.0,
                      &kin_sub.matrix);
     }
   }

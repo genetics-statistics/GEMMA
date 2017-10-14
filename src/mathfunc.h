@@ -19,7 +19,7 @@
 #ifndef __MATHFUNC_H__
 #define __MATHFUNC_H__
 
-#include "Eigen/Dense"
+// #include "Eigen/Dense"
 #include "gsl/gsl_matrix.h"
 #include "gsl/gsl_vector.h"
 
@@ -57,7 +57,7 @@ void KroneckerSym(const gsl_matrix *K, const gsl_matrix *V, gsl_matrix *H);
 
 double UcharToDouble02(const unsigned char c);
 unsigned char Double02ToUchar(const double dosage);
-void uchar_matrix_get_row(const vector<vector<unsigned char>> &X,
-                          const size_t i_row, Eigen::VectorXd &x_row);
+// void uchar_matrix_get_row(const vector<vector<unsigned char>> &X,
+//                          const size_t i_row, Eigen::VectorXd &x_row);
 
 #endif
