@@ -49,6 +49,11 @@ inline void fail_at_msg(bool strict, const char *__file, int __line, const char 
 # define __ASSERT_VOID_CAST (void)
 # endif
 
+inline void fail_msg(const char *msg) {
+  std::cerr << "**** FAILED: " << msg << std::endl;
+  exit(5);
+}
+
 #if defined NDEBUG
 
 #define warning_msg(msg) cerr << "**** WARNING: " << msg << endl;

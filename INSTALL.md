@@ -88,6 +88,9 @@ should compile with GCC_FLAGS="" to disable optimizations (-O3). E.g.
 
     make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 WITH_OPENBLAS=1 GCC_FLAGS=
 
+If you get older OpenBlas errors you may need to add
+OPENBLAS_LEGACY=1.
+
 Other options, such as compiling with warnings, are listed in the
 Makefile.
 

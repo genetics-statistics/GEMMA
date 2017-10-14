@@ -182,7 +182,7 @@ static void fast_cblas_dgemm(const char *TransA, const char *TransB, const doubl
                  C->data, C->tda);
 
   } else {
-    throw invalid_argument("Range error in dgemm");
+    fail_msg("Range error in dgemm");
   }
 }
 
