@@ -46,6 +46,7 @@ DEBUG                  = 1   # DEBUG mode, set DEBUG=0 for a release
 SHOW_COMPILER_WARNINGS =
 WITH_LAPACK            = 1
 WITH_OPENBLAS          =     # Defaults to LAPACK - OPENBLAS may be faster
+OPENBLAS_LEGACY        =     # Using older OpenBlas
 FORCE_STATIC           =     # Static linking of libraries
 GCC_FLAGS              = -O3 # extra flags -Wl,--allow-multiple-definition
 TRAVIS_CI              =     # used by TRAVIS for testing
@@ -70,6 +71,9 @@ ifdef WITH_OPENBLAS
   OPENBLAS=1
   # WITH_LAPACK =  # OPENBLAS usually includes LAPACK
   CPPFLAGS += -DOPENBLAS
+  ifdef OPENBLAS_LEGACY
+    CPPFLAGS += -DOPENBLAS_LEGACY
+  endif
 endif
 
 ifdef DEBUG

@@ -3088,7 +3088,9 @@ void GEMMA::BatchRun(PARAM &cPar) {
 }
 
 #include "Eigen/Dense"
+#if defined(OPENBLAS) && !defined(OPENBLAS_LEGACY)
 #include <openblas_config.h>
+#endif
 
 void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
   string file_str;
@@ -3105,15 +3107,18 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
   outfile << "## GEMMA Version    = " << version << endl;
   outfile << "## GSL Version      = " << GSL_VERSION << endl;
   outfile << "## Eigen Version    = " << EIGEN_WORLD_VERSION << "." << EIGEN_MAJOR_VERSION << "." << EIGEN_MINOR_VERSION << endl;
-  #ifdef OPENBLAS
+#ifdef OPENBLAS
 
-  outfile << "## OpenBlas         =" << OPENBLAS_VERSION << " - " << openblas_get_config() << endl; //  For more recent OpenBlas: << " - " << openblas_get_corename() << endl;
-
-  // outfile << "##   threads        = " << openblas_get_num_threads() << endl;
-  outfile << "##   threads        = " << OPENBLAS_GEMM_MULTITHREAD_THRESHOLD << endl;
+  #ifndef OPENBLAS_LEGACY
+  outfile << "## OpenBlas         =" << OPENBLAS_VERSION << " - " << openblas_get_config() << endl;
+  outfile << "##   arch           = " << openblas_get_corename() << endl;
+  outfile << "##   threads        = " << openblas_get_num_threads() << endl;
+  #else
+  outfile << "## OpenBlas         = " << openblas_get_config() << endl;
+  #endif
   string* pStr = new string[4] { "sequential", "threaded", "openmp" };
   outfile << "##   parallel type  = " << pStr[openblas_get_parallel()] << endl;
-  #endif
+#endif
 
   outfile << "##" << endl;
   outfile << "## Command Line Input = ";
