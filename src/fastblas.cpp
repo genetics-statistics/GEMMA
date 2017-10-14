@@ -26,9 +26,7 @@
 #include "fastblas.h"
 #include "mathfunc.h"
 #include <string.h>
-#ifndef NDEBUG
 #include "eigenlib.h"
-#endif
 
 using namespace std;
 
