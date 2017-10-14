@@ -20,3 +20,5 @@ void fast_cblas_dgemm(const enum CBLAS_ORDER Order,
                       const double beta,
                       double *C,
                       const size_t ldc);
+
+#endif // __FASTOPENBLAS_H_

@@ -19,9 +19,9 @@
 #ifndef __EIGENLIB_H__
 #define __EIGENLIB_H__
 
-#include <vector>
+// #include <vector>
 
-using namespace std;
+// using namespace std;
 
 void eigenlib_dgemm(const char *TransA, const char *TransB, const double alpha,
                     const gsl_matrix *A, const gsl_matrix *B, const double beta,

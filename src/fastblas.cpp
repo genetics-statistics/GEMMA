@@ -17,6 +17,7 @@
 */
 
 #include "gsl/gsl_matrix.h"
+#include <algorithm>    // std::min
 #include <cmath>
 #include <iomanip>
 #include <vector>
@@ -79,6 +80,7 @@ void fast_cblas_dgemm(const enum CBLAS_ORDER Order,
 #ifndef NDEBUG
   size_t i,j;
   if (is_debug_mode()) {
+    #ifdef DISABLED
     printf (" Top left corner of matrix A: \n");
     for (i=0; i<min(M,6); i++) {
       for (j=0; j<min(K,6); j++) {
@@ -102,6 +104,7 @@ void fast_cblas_dgemm(const enum CBLAS_ORDER Order,
       }
       printf ("\n");
     }
+    #endif
 
     cout << scientific << setprecision(3) << "* RowMajor " << Order << "\t" ;
     cout << "transA " << TransA << "\t" ;
@@ -126,6 +129,7 @@ void fast_cblas_dgemm(const enum CBLAS_ORDER Order,
   cblas_dgemm(Order,TransA,TransB,M,N,K,alpha,A,lda,B,ldb,beta,C,ldc);
 
 #ifndef NDEBUG
+  #ifdef DISABLED
   if (is_debug_mode()) {
     printf (" Top left corner of matrix A (cols=k %i, rows=m %i): \n",K,M);
     for (i=0; i<min(M,6); i++) {
@@ -151,6 +155,7 @@ void fast_cblas_dgemm(const enum CBLAS_ORDER Order,
       printf ("\n");
     }
   }
+  #endif
 #endif // NDEBUG
 }
 
