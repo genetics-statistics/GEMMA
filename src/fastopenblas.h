@@ -6,7 +6,7 @@
 #include <cblas.h>   // For OpenBlas
 #include "gsl/gsl_matrix.h"
 
-#ifndef
+typedef long blasint;
 
 void fast_cblas_dgemm(const enum CBLAS_ORDER Order,
                       const enum CBLAS_TRANSPOSE TransA,
@@ -22,5 +22,3 @@ void fast_cblas_dgemm(const enum CBLAS_ORDER Order,
                       const double beta,
                       double *C,
                       const blasint ldc);
-
-#endif
