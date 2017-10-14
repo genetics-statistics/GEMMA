@@ -3088,7 +3088,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
 }
 
 #include "Eigen/Dense"
-// using namespace Eigen;
+#include <openblas_config.h>
 
 void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
   string file_str;
@@ -3107,7 +3107,7 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
   outfile << "## Eigen Version    = " << EIGEN_WORLD_VERSION << "." << EIGEN_MAJOR_VERSION << "." << EIGEN_MINOR_VERSION << endl;
   #ifdef OPENBLAS
 
-  outfile << "## OpenBlas         = " << openblas_get_config() << " - " << openblas_get_corename() << endl;
+  outfile << "## OpenBlas         =" << OPENBLAS_VERSION << " - " << openblas_get_config() << " - " << openblas_get_corename() << endl;
 
   outfile << "##   threads        = " << openblas_get_num_threads() << endl;
   string* pStr = new string[4] { "sequential", "threaded", "openmp" };
