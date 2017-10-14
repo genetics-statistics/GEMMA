@@ -165,7 +165,7 @@ libraries.
 ### Optimizing performance
 
 Precompiled binaries and libraries may not be optimal for your particular
-hardware. See [INSTALL.md](INSTALL.md).
+hardware. See [INSTALL.md](INSTALL.md) for speeding up tips.
 
 ### Building from source
 
