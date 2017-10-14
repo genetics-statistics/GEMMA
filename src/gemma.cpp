@@ -3107,9 +3107,10 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
   outfile << "## Eigen Version    = " << EIGEN_WORLD_VERSION << "." << EIGEN_MAJOR_VERSION << "." << EIGEN_MINOR_VERSION << endl;
   #ifdef OPENBLAS
 
-  outfile << "## OpenBlas         =" << OPENBLAS_VERSION << " - " << openblas_get_config() << " - " << openblas_get_corename() << endl;
+  outfile << "## OpenBlas         =" << OPENBLAS_VERSION << " - " << openblas_get_config() << endl; //  For more recent OpenBlas: << " - " << openblas_get_corename() << endl;
 
-  outfile << "##   threads        = " << openblas_get_num_threads() << endl;
+  // outfile << "##   threads        = " << openblas_get_num_threads() << endl;
+  outfile << "##   threads        = " << OPENBLAS_GEMM_MULTITHREAD_THRESHOLD << endl;
   string* pStr = new string[4] { "sequential", "threaded", "openmp" };
   outfile << "##   parallel type  = " << pStr[openblas_get_parallel()] << endl;
   #endif
