@@ -80,8 +80,8 @@ double VectorVar(const gsl_vector *v) {
 // Center the matrix G.
 void CenterMatrix(gsl_matrix *G) {
   double d;
-  gsl_vector *w = gsl_vector_alloc(G->size1);
-  gsl_vector *Gw = gsl_vector_alloc(G->size1);
+  gsl_vector *w = gsl_vector_safe_alloc(G->size1);
+  gsl_vector *Gw = gsl_vector_safe_alloc(G->size1);
   gsl_vector_set_all(w, 1.0);
 
   gsl_blas_dgemv(CblasNoTrans, 1.0, G, w, 0.0, Gw);
@@ -105,7 +105,7 @@ void CenterMatrix(gsl_matrix *G) {
 // Center the matrix G.
 void CenterMatrix(gsl_matrix *G, const gsl_vector *w) {
   double d, wtw;
-  gsl_vector *Gw = gsl_vector_alloc(G->size1);
+  gsl_vector *Gw = gsl_vector_safe_alloc(G->size1);
 
   gsl_blas_ddot(w, w, &wtw);
   gsl_blas_dgemv(CblasNoTrans, 1.0, G, w, 0.0, Gw);
@@ -127,12 +127,12 @@ void CenterMatrix(gsl_matrix *G, const gsl_vector *w) {
 
 // Center the matrix G.
 void CenterMatrix(gsl_matrix *G, const gsl_matrix *W) {
-  gsl_matrix *WtW = gsl_matrix_alloc(W->size2, W->size2);
-  gsl_matrix *WtWi = gsl_matrix_alloc(W->size2, W->size2);
-  gsl_matrix *WtWiWt = gsl_matrix_alloc(W->size2, G->size1);
-  gsl_matrix *GW = gsl_matrix_alloc(G->size1, W->size2);
-  gsl_matrix *WtGW = gsl_matrix_alloc(W->size2, W->size2);
-  gsl_matrix *Gtmp = gsl_matrix_alloc(G->size1, G->size1);
+  gsl_matrix *WtW = gsl_matrix_safe_alloc(W->size2, W->size2);
+  gsl_matrix *WtWi = gsl_matrix_safe_alloc(W->size2, W->size2);
+  gsl_matrix *WtWiWt = gsl_matrix_safe_alloc(W->size2, G->size1);
+  gsl_matrix *GW = gsl_matrix_safe_alloc(G->size1, W->size2);
+  gsl_matrix *WtGW = gsl_matrix_safe_alloc(W->size2, W->size2);
+  gsl_matrix *Gtmp = gsl_matrix_safe_alloc(G->size1, G->size1);
 
   gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, W, W, 0.0, WtW);
 
@@ -227,7 +227,7 @@ bool isMatrixSymmetric(const gsl_matrix *G) {
 
 bool isMatrixPositiveDefinite(const gsl_matrix *G) {
   enforce(G->size1 == G->size2);
-  auto G2 = gsl_matrix_alloc(G->size1, G->size2);
+  auto G2 = gsl_matrix_safe_alloc(G->size1, G->size2);
   enforce_gsl(gsl_matrix_memcpy(G2,G));
   auto handler = gsl_set_error_handler_off();
 #if GSL_MAJOR_VERSION >= 2 && GSL_MINOR_VERSION >= 3
@@ -242,11 +242,11 @@ bool isMatrixPositiveDefinite(const gsl_matrix *G) {
 
 gsl_vector *getEigenValues(const gsl_matrix *G) {
   enforce(G->size1 == G->size2);
-  auto G2 = gsl_matrix_alloc(G->size1, G->size2);
+  auto G2 = gsl_matrix_safe_alloc(G->size1, G->size2);
   enforce_gsl(gsl_matrix_memcpy(G2,G));
   auto eworkspace = gsl_eigen_symm_alloc(G->size1);
   enforce(eworkspace);
-  gsl_vector *eigenvalues = gsl_vector_alloc(G->size1);
+  gsl_vector *eigenvalues = gsl_vector_safe_alloc(G->size1);
   enforce_gsl(gsl_eigen_symm(G2, eigenvalues, eworkspace));
   gsl_eigen_symm_free(eworkspace);
   gsl_matrix_free(G2);
@@ -345,9 +345,9 @@ double CenterVector(gsl_vector *y) {
 
 // Center the vector y.
 void CenterVector(gsl_vector *y, const gsl_matrix *W) {
-  gsl_matrix *WtW = gsl_matrix_alloc(W->size2, W->size2);
-  gsl_vector *Wty = gsl_vector_alloc(W->size2);
-  gsl_vector *WtWiWty = gsl_vector_alloc(W->size2);
+  gsl_matrix *WtW = gsl_matrix_safe_alloc(W->size2, W->size2);
+  gsl_vector *Wty = gsl_vector_safe_alloc(W->size2);
+  gsl_vector *WtWiWty = gsl_vector_safe_alloc(W->size2);
 
   gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, W, W, 0.0, WtW);
   gsl_blas_dgemv(CblasTrans, 1.0, W, y, 0.0, Wty);
@@ -387,7 +387,7 @@ void StandardizeVector(gsl_vector *y) {
 
 // Calculate UtX.
 void CalcUtX(const gsl_matrix *U, gsl_matrix *UtX) {
-  gsl_matrix *X = gsl_matrix_alloc(UtX->size1, UtX->size2);
+  gsl_matrix *X = gsl_matrix_safe_alloc(UtX->size1, UtX->size2);
   gsl_matrix_memcpy(X, UtX);
   fast_dgemm("T", "N", 1.0, U, X, 0.0, UtX);
   gsl_matrix_free(X);

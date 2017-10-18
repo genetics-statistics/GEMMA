@@ -363,9 +363,9 @@ double LogL_f(double l, void *params) {
   double f = 0.0, logdet_h = 0.0, d;
   size_t index_yy;
 
-  gsl_matrix *Pab = gsl_matrix_alloc(n_cvt + 2, n_index);
-  gsl_vector *Hi_eval = gsl_vector_alloc((p->eval)->size);
-  gsl_vector *v_temp = gsl_vector_alloc((p->eval)->size);
+  gsl_matrix *Pab = gsl_matrix_safe_alloc(n_cvt + 2, n_index);
+  gsl_vector *Hi_eval = gsl_vector_safe_alloc((p->eval)->size);
+  gsl_vector *v_temp = gsl_vector_safe_alloc((p->eval)->size);
 
   gsl_vector_memcpy(v_temp, p->eval);
   gsl_vector_scale(v_temp, l);
@@ -413,11 +413,11 @@ double LogL_dev1(double l, void *params) {
   double dev1 = 0.0, trace_Hi = 0.0;
   size_t index_yy;
 
-  gsl_matrix *Pab = gsl_matrix_alloc(n_cvt + 2, n_index);
-  gsl_matrix *PPab = gsl_matrix_alloc(n_cvt + 2, n_index);
-  gsl_vector *Hi_eval = gsl_vector_alloc((p->eval)->size);
-  gsl_vector *HiHi_eval = gsl_vector_alloc((p->eval)->size);
-  gsl_vector *v_temp = gsl_vector_alloc((p->eval)->size);
+  gsl_matrix *Pab = gsl_matrix_safe_alloc(n_cvt + 2, n_index);
+  gsl_matrix *PPab = gsl_matrix_safe_alloc(n_cvt + 2, n_index);
+  gsl_vector *Hi_eval = gsl_vector_safe_alloc((p->eval)->size);
+  gsl_vector *HiHi_eval = gsl_vector_safe_alloc((p->eval)->size);
+  gsl_vector *v_temp = gsl_vector_safe_alloc((p->eval)->size);
 
   gsl_vector_memcpy(v_temp, p->eval);
   gsl_vector_scale(v_temp, l);
@@ -476,13 +476,13 @@ double LogL_dev2(double l, void *params) {
   double dev2 = 0.0, trace_Hi = 0.0, trace_HiHi = 0.0;
   size_t index_yy;
 
-  gsl_matrix *Pab = gsl_matrix_alloc(n_cvt + 2, n_index);
-  gsl_matrix *PPab = gsl_matrix_alloc(n_cvt + 2, n_index);
-  gsl_matrix *PPPab = gsl_matrix_alloc(n_cvt + 2, n_index);
-  gsl_vector *Hi_eval = gsl_vector_alloc((p->eval)->size);
-  gsl_vector *HiHi_eval = gsl_vector_alloc((p->eval)->size);
-  gsl_vector *HiHiHi_eval = gsl_vector_alloc((p->eval)->size);
-  gsl_vector *v_temp = gsl_vector_alloc((p->eval)->size);
+  gsl_matrix *Pab = gsl_matrix_safe_alloc(n_cvt + 2, n_index);
+  gsl_matrix *PPab = gsl_matrix_safe_alloc(n_cvt + 2, n_index);
+  gsl_matrix *PPPab = gsl_matrix_safe_alloc(n_cvt + 2, n_index);
+  gsl_vector *Hi_eval = gsl_vector_safe_alloc((p->eval)->size);
+  gsl_vector *HiHi_eval = gsl_vector_safe_alloc((p->eval)->size);
+  gsl_vector *HiHiHi_eval = gsl_vector_safe_alloc((p->eval)->size);
+  gsl_vector *v_temp = gsl_vector_safe_alloc((p->eval)->size);
 
   gsl_vector_memcpy(v_temp, p->eval);
   gsl_vector_scale(v_temp, l);
@@ -553,13 +553,13 @@ void LogL_dev12(double l, void *params, double *dev1, double *dev2) {
   double trace_Hi = 0.0, trace_HiHi = 0.0;
   size_t index_yy;
 
-  gsl_matrix *Pab = gsl_matrix_alloc(n_cvt + 2, n_index);
-  gsl_matrix *PPab = gsl_matrix_alloc(n_cvt + 2, n_index);
-  gsl_matrix *PPPab = gsl_matrix_alloc(n_cvt + 2, n_index);
-  gsl_vector *Hi_eval = gsl_vector_alloc((p->eval)->size);
-  gsl_vector *HiHi_eval = gsl_vector_alloc((p->eval)->size);
-  gsl_vector *HiHiHi_eval = gsl_vector_alloc((p->eval)->size);
-  gsl_vector *v_temp = gsl_vector_alloc((p->eval)->size);
+  gsl_matrix *Pab = gsl_matrix_safe_alloc(n_cvt + 2, n_index);
+  gsl_matrix *PPab = gsl_matrix_safe_alloc(n_cvt + 2, n_index);
+  gsl_matrix *PPPab = gsl_matrix_safe_alloc(n_cvt + 2, n_index);
+  gsl_vector *Hi_eval = gsl_vector_safe_alloc((p->eval)->size);
+  gsl_vector *HiHi_eval = gsl_vector_safe_alloc((p->eval)->size);
+  gsl_vector *HiHiHi_eval = gsl_vector_safe_alloc((p->eval)->size);
+  gsl_vector *v_temp = gsl_vector_safe_alloc((p->eval)->size);
 
   gsl_vector_memcpy(v_temp, p->eval);
   gsl_vector_scale(v_temp, l);
@@ -636,10 +636,10 @@ double LogRL_f(double l, void *params) {
   double f = 0.0, logdet_h = 0.0, logdet_hiw = 0.0, d;
   size_t index_ww;
 
-  gsl_matrix *Pab = gsl_matrix_alloc(n_cvt + 2, n_index);
-  gsl_matrix *Iab = gsl_matrix_alloc(n_cvt + 2, n_index);
-  gsl_vector *Hi_eval = gsl_vector_alloc((p->eval)->size);
-  gsl_vector *v_temp = gsl_vector_alloc((p->eval)->size);
+  gsl_matrix *Pab = gsl_matrix_safe_alloc(n_cvt + 2, n_index);
+  gsl_matrix *Iab = gsl_matrix_safe_alloc(n_cvt + 2, n_index);
+  gsl_vector *Hi_eval = gsl_vector_safe_alloc((p->eval)->size);
+  gsl_vector *v_temp = gsl_vector_safe_alloc((p->eval)->size);
 
   gsl_vector_memcpy(v_temp, p->eval);
   gsl_vector_scale(v_temp, l);
@@ -701,11 +701,11 @@ double LogRL_dev1(double l, void *params) {
   double dev1 = 0.0, trace_Hi = 0.0;
   size_t index_ww;
 
-  gsl_matrix *Pab = gsl_matrix_alloc(n_cvt + 2, n_index);
-  gsl_matrix *PPab = gsl_matrix_alloc(n_cvt + 2, n_index);
-  gsl_vector *Hi_eval = gsl_vector_alloc((p->eval)->size);
-  gsl_vector *HiHi_eval = gsl_vector_alloc((p->eval)->size);
-  gsl_vector *v_temp = gsl_vector_alloc((p->eval)->size);
+  gsl_matrix *Pab = gsl_matrix_safe_alloc(n_cvt + 2, n_index);
+  gsl_matrix *PPab = gsl_matrix_safe_alloc(n_cvt + 2, n_index);
+  gsl_vector *Hi_eval = gsl_vector_safe_alloc((p->eval)->size);
+  gsl_vector *HiHi_eval = gsl_vector_safe_alloc((p->eval)->size);
+  gsl_vector *v_temp = gsl_vector_safe_alloc((p->eval)->size);
 
   gsl_vector_memcpy(v_temp, p->eval);
   gsl_vector_scale(v_temp, l);
@@ -777,13 +777,13 @@ double LogRL_dev2(double l, void *params) {
   double dev2 = 0.0, trace_Hi = 0.0, trace_HiHi = 0.0;
   size_t index_ww;
 
-  gsl_matrix *Pab = gsl_matrix_alloc(n_cvt + 2, n_index);
-  gsl_matrix *PPab = gsl_matrix_alloc(n_cvt + 2, n_index);
-  gsl_matrix *PPPab = gsl_matrix_alloc(n_cvt + 2, n_index);
-  gsl_vector *Hi_eval = gsl_vector_alloc((p->eval)->size);
-  gsl_vector *HiHi_eval = gsl_vector_alloc((p->eval)->size);
-  gsl_vector *HiHiHi_eval = gsl_vector_alloc((p->eval)->size);
-  gsl_vector *v_temp = gsl_vector_alloc((p->eval)->size);
+  gsl_matrix *Pab = gsl_matrix_safe_alloc(n_cvt + 2, n_index);
+  gsl_matrix *PPab = gsl_matrix_safe_alloc(n_cvt + 2, n_index);
+  gsl_matrix *PPPab = gsl_matrix_safe_alloc(n_cvt + 2, n_index);
+  gsl_vector *Hi_eval = gsl_vector_safe_alloc((p->eval)->size);
+  gsl_vector *HiHi_eval = gsl_vector_safe_alloc((p->eval)->size);
+  gsl_vector *HiHiHi_eval = gsl_vector_safe_alloc((p->eval)->size);
+  gsl_vector *v_temp = gsl_vector_safe_alloc((p->eval)->size);
 
   gsl_vector_memcpy(v_temp, p->eval);
   gsl_vector_scale(v_temp, l);
@@ -867,13 +867,13 @@ void LogRL_dev12(double l, void *params, double *dev1, double *dev2) {
   double trace_Hi = 0.0, trace_HiHi = 0.0;
   size_t index_ww;
 
-  gsl_matrix *Pab = gsl_matrix_alloc(n_cvt + 2, n_index);
-  gsl_matrix *PPab = gsl_matrix_alloc(n_cvt + 2, n_index);
-  gsl_matrix *PPPab = gsl_matrix_alloc(n_cvt + 2, n_index);
-  gsl_vector *Hi_eval = gsl_vector_alloc((p->eval)->size);
-  gsl_vector *HiHi_eval = gsl_vector_alloc((p->eval)->size);
-  gsl_vector *HiHiHi_eval = gsl_vector_alloc((p->eval)->size);
-  gsl_vector *v_temp = gsl_vector_alloc((p->eval)->size);
+  gsl_matrix *Pab = gsl_matrix_safe_alloc(n_cvt + 2, n_index);
+  gsl_matrix *PPab = gsl_matrix_safe_alloc(n_cvt + 2, n_index);
+  gsl_matrix *PPPab = gsl_matrix_safe_alloc(n_cvt + 2, n_index);
+  gsl_vector *Hi_eval = gsl_vector_safe_alloc((p->eval)->size);
+  gsl_vector *HiHi_eval = gsl_vector_safe_alloc((p->eval)->size);
+  gsl_vector *HiHiHi_eval = gsl_vector_safe_alloc((p->eval)->size);
+  gsl_vector *v_temp = gsl_vector_safe_alloc((p->eval)->size);
 
   gsl_vector_memcpy(v_temp, p->eval);
   gsl_vector_scale(v_temp, l);
@@ -947,9 +947,9 @@ void LMM::CalcRLWald(const double &l, const FUNC_PARAM &params, double &beta,
 
   int df = (int)ni_test - (int)n_cvt - 1;
 
-  gsl_matrix *Pab = gsl_matrix_alloc(n_cvt + 2, n_index);
-  gsl_vector *Hi_eval = gsl_vector_alloc(params.eval->size);
-  gsl_vector *v_temp = gsl_vector_alloc(params.eval->size);
+  gsl_matrix *Pab = gsl_matrix_safe_alloc(n_cvt + 2, n_index);
+  gsl_vector *Hi_eval = gsl_vector_safe_alloc(params.eval->size);
+  gsl_vector *v_temp = gsl_vector_safe_alloc(params.eval->size);
 
   gsl_vector_memcpy(v_temp, params.eval);
   gsl_vector_scale(v_temp, l);
@@ -989,9 +989,9 @@ void LMM::CalcRLScore(const double &l, const FUNC_PARAM &params, double &beta,
 
   int df = (int)ni_test - (int)n_cvt - 1;
 
-  gsl_matrix *Pab = gsl_matrix_alloc(n_cvt + 2, n_index);
-  gsl_vector *Hi_eval = gsl_vector_alloc(params.eval->size);
-  gsl_vector *v_temp = gsl_vector_alloc(params.eval->size);
+  gsl_matrix *Pab = gsl_matrix_safe_alloc(n_cvt + 2, n_index);
+  gsl_vector *Hi_eval = gsl_vector_safe_alloc(params.eval->size);
+  gsl_vector *v_temp = gsl_vector_safe_alloc(params.eval->size);
 
   gsl_vector_memcpy(v_temp, params.eval);
   gsl_vector_scale(v_temp, l);
@@ -1030,7 +1030,7 @@ void CalcUab(const gsl_matrix *UtW, const gsl_vector *Uty, gsl_matrix *Uab) {
   size_t index_ab;
   size_t n_cvt = UtW->size2;
 
-  gsl_vector *u_a = gsl_vector_alloc(Uty->size);
+  gsl_vector *u_a = gsl_vector_safe_alloc(Uty->size);
 
   for (size_t a = 1; a <= n_cvt + 2; ++a) {
     if (a == n_cvt + 1) {
@@ -1096,8 +1096,8 @@ void Calcab(const gsl_matrix *W, const gsl_vector *y, gsl_vector *ab) {
   size_t n_cvt = W->size2;
 
   double d;
-  gsl_vector *v_a = gsl_vector_alloc(y->size);
-  gsl_vector *v_b = gsl_vector_alloc(y->size);
+  gsl_vector *v_a = gsl_vector_safe_alloc(y->size);
+  gsl_vector *v_b = gsl_vector_safe_alloc(y->size);
 
   for (size_t a = 1; a <= n_cvt + 2; ++a) {
     if (a == n_cvt + 1) {
@@ -1141,7 +1141,7 @@ void Calcab(const gsl_matrix *W, const gsl_vector *y, const gsl_vector *x,
   size_t n_cvt = W->size2;
 
   double d;
-  gsl_vector *v_b = gsl_vector_alloc(y->size);
+  gsl_vector *v_b = gsl_vector_safe_alloc(y->size);
 
   for (size_t b = 1; b <= n_cvt + 2; ++b) {
     index_ab = GetabIndex(n_cvt + 1, b, n_cvt);
@@ -1188,10 +1188,10 @@ void LMM::AnalyzeGene(const gsl_matrix *U, const gsl_vector *eval,
   // Calculate basic quantities.
   size_t n_index = (n_cvt + 2 + 1) * (n_cvt + 2) / 2;
 
-  gsl_vector *y = gsl_vector_alloc(U->size1);
-  gsl_vector *Uty = gsl_vector_alloc(U->size2);
-  gsl_matrix *Uab = gsl_matrix_alloc(U->size2, n_index);
-  gsl_vector *ab = gsl_vector_alloc(n_index);
+  gsl_vector *y = gsl_vector_safe_alloc(U->size1);
+  gsl_vector *Uty = gsl_vector_safe_alloc(U->size2);
+  gsl_matrix *Uab = gsl_matrix_safe_alloc(U->size2, n_index);
+  gsl_vector *ab = gsl_vector_safe_alloc(n_index);
 
   // Header.
   getline(infile, line);
@@ -1289,17 +1289,17 @@ void LMM::Analyze(std::function< SnpNameValues(size_t) >& fetch_snp,
 
   const size_t inds = U->size1;
   enforce(inds == ni_test);
-  gsl_vector *x = gsl_vector_alloc(inds); // #inds
-  gsl_vector *x_miss = gsl_vector_alloc(inds);
-  gsl_vector *Utx = gsl_vector_alloc(U->size2);
-  gsl_matrix *Uab = gsl_matrix_alloc(U->size2, n_index);
-  gsl_vector *ab = gsl_vector_alloc(n_index);
+  gsl_vector *x = gsl_vector_safe_alloc(inds); // #inds
+  gsl_vector *x_miss = gsl_vector_safe_alloc(inds);
+  gsl_vector *Utx = gsl_vector_safe_alloc(U->size2);
+  gsl_matrix *Uab = gsl_matrix_safe_alloc(U->size2, n_index);
+  gsl_vector *ab = gsl_vector_safe_alloc(n_index);
 
   // Create a large matrix with LMM_BATCH_SIZE columns for batched processing
   // const size_t msize=(process_gwasnps ? 1 : LMM_BATCH_SIZE);
   const size_t msize = LMM_BATCH_SIZE;
-  gsl_matrix *Xlarge = gsl_matrix_alloc(inds, msize);
-  gsl_matrix *UtXlarge = gsl_matrix_alloc(inds, msize);
+  gsl_matrix *Xlarge = gsl_matrix_safe_alloc(inds, msize);
+  gsl_matrix *UtXlarge = gsl_matrix_safe_alloc(inds, msize);
   enforce_msg(Xlarge && UtXlarge, "Xlarge memory check"); // just to be sure
   enforce(Xlarge->size1 == inds);
   gsl_matrix_set_zero(Xlarge);
@@ -1573,10 +1573,10 @@ void MatrixCalcLR(const gsl_matrix *U, const gsl_matrix *UtX,
                   vector<pair<size_t, double>> &pos_loglr) {
   double logl_H0, logl_H1, log_lr, lambda0, lambda1;
 
-  gsl_vector *w = gsl_vector_alloc(Uty->size);
-  gsl_matrix *Utw = gsl_matrix_alloc(Uty->size, 1);
-  gsl_matrix *Uab = gsl_matrix_alloc(Uty->size, 6);
-  gsl_vector *ab = gsl_vector_alloc(6);
+  gsl_vector *w = gsl_vector_safe_alloc(Uty->size);
+  gsl_matrix *Utw = gsl_matrix_safe_alloc(Uty->size, 1);
+  gsl_matrix *Uab = gsl_matrix_safe_alloc(Uty->size, 6);
+  gsl_vector *ab = gsl_vector_safe_alloc(6);
 
   gsl_vector_set_zero(ab);
   gsl_vector_set_all(w, 1.0);
@@ -1781,8 +1781,8 @@ void CalcLambda(const char func_name, const gsl_vector *eval,
   size_t n_cvt = UtW->size2, ni_test = UtW->size1;
   size_t n_index = (n_cvt + 2 + 1) * (n_cvt + 2) / 2;
 
-  gsl_matrix *Uab = gsl_matrix_alloc(ni_test, n_index);
-  gsl_vector *ab = gsl_vector_alloc(n_index);
+  gsl_matrix *Uab = gsl_matrix_safe_alloc(ni_test, n_index);
+  gsl_vector *ab = gsl_vector_safe_alloc(n_index);
 
   gsl_matrix_set_zero(Uab);
   CalcUab(UtW, Uty, Uab);
@@ -1804,8 +1804,8 @@ void CalcPve(const gsl_vector *eval, const gsl_matrix *UtW,
   size_t n_cvt = UtW->size2, ni_test = UtW->size1;
   size_t n_index = (n_cvt + 2 + 1) * (n_cvt + 2) / 2;
 
-  gsl_matrix *Uab = gsl_matrix_alloc(ni_test, n_index);
-  gsl_vector *ab = gsl_vector_alloc(n_index);
+  gsl_matrix *Uab = gsl_matrix_safe_alloc(ni_test, n_index);
+  gsl_vector *ab = gsl_vector_safe_alloc(n_index);
 
   gsl_matrix_set_zero(Uab);
   CalcUab(UtW, Uty, Uab);
@@ -1831,15 +1831,15 @@ void CalcLmmVgVeBeta(const gsl_vector *eval, const gsl_matrix *UtW,
   size_t n_cvt = UtW->size2, ni_test = UtW->size1;
   size_t n_index = (n_cvt + 2 + 1) * (n_cvt + 2) / 2;
 
-  gsl_matrix *Uab = gsl_matrix_alloc(ni_test, n_index);
-  gsl_vector *ab = gsl_vector_alloc(n_index);
-  gsl_matrix *Pab = gsl_matrix_alloc(n_cvt + 2, n_index);
-  gsl_vector *Hi_eval = gsl_vector_alloc(eval->size);
-  gsl_vector *v_temp = gsl_vector_alloc(eval->size);
-  gsl_matrix *HiW = gsl_matrix_alloc(eval->size, UtW->size2);
-  gsl_matrix *WHiW = gsl_matrix_alloc(UtW->size2, UtW->size2);
-  gsl_vector *WHiy = gsl_vector_alloc(UtW->size2);
-  gsl_matrix *Vbeta = gsl_matrix_alloc(UtW->size2, UtW->size2);
+  gsl_matrix *Uab = gsl_matrix_safe_alloc(ni_test, n_index);
+  gsl_vector *ab = gsl_vector_safe_alloc(n_index);
+  gsl_matrix *Pab = gsl_matrix_safe_alloc(n_cvt + 2, n_index);
+  gsl_vector *Hi_eval = gsl_vector_safe_alloc(eval->size);
+  gsl_vector *v_temp = gsl_vector_safe_alloc(eval->size);
+  gsl_matrix *HiW = gsl_matrix_safe_alloc(eval->size, UtW->size2);
+  gsl_matrix *WHiW = gsl_matrix_safe_alloc(UtW->size2, UtW->size2);
+  gsl_vector *WHiy = gsl_vector_safe_alloc(UtW->size2);
+  gsl_matrix *Vbeta = gsl_matrix_safe_alloc(UtW->size2, UtW->size2);
 
   gsl_matrix_set_zero(Uab);
   CalcUab(UtW, Uty, Uab);
@@ -1921,13 +1921,13 @@ void LMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval,
   // Calculate basic quantities.
   size_t n_index = (n_cvt + 2 + 2 + 1) * (n_cvt + 2 + 2) / 2;
 
-  gsl_vector *x = gsl_vector_alloc(U->size1);
-  gsl_vector *x_miss = gsl_vector_alloc(U->size1);
-  gsl_vector *Utx = gsl_vector_alloc(U->size2);
-  gsl_matrix *Uab = gsl_matrix_alloc(U->size2, n_index);
-  gsl_vector *ab = gsl_vector_alloc(n_index);
+  gsl_vector *x = gsl_vector_safe_alloc(U->size1);
+  gsl_vector *x_miss = gsl_vector_safe_alloc(U->size1);
+  gsl_vector *Utx = gsl_vector_safe_alloc(U->size2);
+  gsl_matrix *Uab = gsl_matrix_safe_alloc(U->size2, n_index);
+  gsl_vector *ab = gsl_vector_safe_alloc(n_index);
 
-  gsl_matrix *UtW_expand = gsl_matrix_alloc(U->size1, UtW->size2 + 2);
+  gsl_matrix *UtW_expand = gsl_matrix_safe_alloc(U->size1, UtW->size2 + 2);
   gsl_matrix_view UtW_expand_mat =
       gsl_matrix_submatrix(UtW_expand, 0, 0, U->size1, UtW->size2);
   gsl_matrix_memcpy(&UtW_expand_mat.matrix, UtW);
@@ -2071,12 +2071,12 @@ void LMM::AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval,
   // Calculate basic quantities.
   size_t n_index = (n_cvt + 2 + 2 + 1) * (n_cvt + 2 + 2) / 2;
 
-  gsl_vector *x = gsl_vector_alloc(U->size1);
-  gsl_vector *Utx = gsl_vector_alloc(U->size2);
-  gsl_matrix *Uab = gsl_matrix_alloc(U->size2, n_index);
-  gsl_vector *ab = gsl_vector_alloc(n_index);
+  gsl_vector *x = gsl_vector_safe_alloc(U->size1);
+  gsl_vector *Utx = gsl_vector_safe_alloc(U->size2);
+  gsl_matrix *Uab = gsl_matrix_safe_alloc(U->size2, n_index);
+  gsl_vector *ab = gsl_vector_safe_alloc(n_index);
 
-  gsl_matrix *UtW_expand = gsl_matrix_alloc(U->size1, UtW->size2 + 2);
+  gsl_matrix *UtW_expand = gsl_matrix_safe_alloc(U->size1, UtW->size2 + 2);
   gsl_matrix_view UtW_expand_mat =
       gsl_matrix_submatrix(UtW_expand, 0, 0, U->size1, UtW->size2);
   gsl_matrix_memcpy(&UtW_expand_mat.matrix, UtW);

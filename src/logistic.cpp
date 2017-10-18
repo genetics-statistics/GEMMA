@@ -7,6 +7,7 @@
 #include <stdio.h>
 
 #include "logistic.h"
+#include "debug.h"
 
 // I need to bundle all the data that goes to the function to optimze
 // together.
@@ -135,7 +136,7 @@ void wgsl_mixed_optim_hessian(const gsl_vector *beta, void *params,
   int K = p->X->size2;
   int Kc = p->Xc->size2;
   int npar = beta->size;
-  gsl_vector *gn = gsl_vector_alloc(npar); // gn
+  gsl_vector *gn = gsl_vector_safe_alloc(npar); // gn
 
   // Intitialize Hessian out necessary ???
   gsl_matrix_set_zero(out);
@@ -226,11 +227,11 @@ int logistic_mixed_fit(gsl_vector *beta, gsl_matrix_int *X,
   // Initial fit.
   mLogLik = wgsl_mixed_optim_f(beta, &p);
 
-  gsl_matrix *myH = gsl_matrix_alloc(npar, npar); // Hessian matrix.
-  gsl_vector *stBeta = gsl_vector_alloc(npar);    // Direction to move.
+  gsl_matrix *myH = gsl_matrix_safe_alloc(npar, npar); // Hessian matrix.
+  gsl_vector *stBeta = gsl_vector_safe_alloc(npar);    // Direction to move.
 
-  gsl_vector *myG = gsl_vector_alloc(npar); // Gradient.
-  gsl_vector *tau = gsl_vector_alloc(npar); // tau for QR.
+  gsl_vector *myG = gsl_vector_safe_alloc(npar); // Gradient.
+  gsl_vector *tau = gsl_vector_safe_alloc(npar); // tau for QR.
 
   for (iter = 0; iter < 100; iter++) {
     wgsl_mixed_optim_hessian(beta, &p, myH); // Calculate Hessian.
@@ -456,11 +457,11 @@ int logistic_cat_fit(gsl_vector *beta, gsl_matrix_int *X, gsl_vector_int *nlev,
   // Initial fit.
   mLogLik = wgsl_cat_optim_f(beta, &p);
 
-  gsl_matrix *myH = gsl_matrix_alloc(npar, npar); // Hessian matrix.
-  gsl_vector *stBeta = gsl_vector_alloc(npar);    // Direction to move.
+  gsl_matrix *myH = gsl_matrix_safe_alloc(npar, npar); // Hessian matrix.
+  gsl_vector *stBeta = gsl_vector_safe_alloc(npar);    // Direction to move.
 
-  gsl_vector *myG = gsl_vector_alloc(npar); // Gradient.
-  gsl_vector *tau = gsl_vector_alloc(npar); // tau for QR.
+  gsl_vector *myG = gsl_vector_safe_alloc(npar); // Gradient.
+  gsl_vector *tau = gsl_vector_safe_alloc(npar); // tau for QR.
 
   for (iter = 0; iter < 100; iter++) {
     wgsl_cat_optim_hessian(beta, &p, myH); // Calculate Hessian.
@@ -596,7 +597,7 @@ void wgsl_cont_optim_hessian(const gsl_vector *beta, void *params,
   int n = p->y->size;
   int Kc = p->Xc->size2;
   int npar = beta->size;
-  gsl_vector *gn = gsl_vector_alloc(npar); // gn.
+  gsl_vector *gn = gsl_vector_safe_alloc(npar); // gn.
 
   // Intitialize Hessian out necessary ???
 
@@ -673,11 +674,11 @@ int logistic_cont_fit(gsl_vector *beta,
   // Initial fit.
   mLogLik = wgsl_cont_optim_f(beta, &p);
 
-  gsl_matrix *myH = gsl_matrix_alloc(npar, npar); // Hessian matrix.
-  gsl_vector *stBeta = gsl_vector_alloc(npar);    // Direction to move.
+  gsl_matrix *myH = gsl_matrix_safe_alloc(npar, npar); // Hessian matrix.
+  gsl_vector *stBeta = gsl_vector_safe_alloc(npar);    // Direction to move.
 
-  gsl_vector *myG = gsl_vector_alloc(npar); // Gradient.
-  gsl_vector *tau = gsl_vector_alloc(npar); // tau for QR.
+  gsl_vector *myG = gsl_vector_safe_alloc(npar); // Gradient.
+  gsl_vector *tau = gsl_vector_safe_alloc(npar); // tau for QR.
 
   for (iter = 0; iter < 100; iter++) {
     wgsl_cont_optim_hessian(beta, &p, myH); // Calculate Hessian.

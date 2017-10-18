@@ -19,7 +19,7 @@
 #include "mathfunc.h"
 
 static bool debug_mode     = false;
-static bool debug_check    = false; // check data/algorithms
+static bool debug_check    = true;  // check data/algorithms
 static bool debug_strict   = false; // fail on error
 static bool debug_quiet    = false;
 static uint debug_issue    = 0;     // github issues
@@ -54,6 +54,22 @@ gsl_matrix *gsl_matrix_safe_alloc(size_t rows,size_t cols) {
     gsl_matrix_set_all(m, nan(""));
   }
   return m;
+}
+
+/*
+  Helper function to make sure gsl allocations do their job because
+  gsl_vector_alloc does not initiatize values (behaviour that changed
+  in GSL2) we introduced a 'strict mode' by initializing the buffer
+  with NaNs. This happens when NO-CHECKS is not set
+  (i.e. -no-checks option).
+*/
+gsl_vector *gsl_vector_safe_alloc(size_t n) {
+  gsl_vector *v = gsl_vector_alloc(n);
+  enforce_msg(v,"Not enough memory"); // just to be sure when there is no error handler set
+  if (is_check_mode()) {
+    gsl_vector_set_all(v, nan(""));
+  }
+  return v;
 }
 
 // Helper function called by macro validate_K(K, check)

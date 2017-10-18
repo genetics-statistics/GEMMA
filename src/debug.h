@@ -26,6 +26,7 @@ bool is_issue(uint issue);
 bool is_legacy_mode();
 
 gsl_matrix *gsl_matrix_safe_alloc(size_t rows,size_t cols);
+gsl_vector *gsl_vector_safe_alloc(size_t n);
 
 // Validation routines
 void do_validate_K(const gsl_matrix *K, const char *__file, int __line);

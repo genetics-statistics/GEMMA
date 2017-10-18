@@ -197,7 +197,7 @@ void fast_dgemm(const char *TransA, const char *TransB, const double alpha,
   } else {
     fast_cblas_dgemm(TransA,TransB,alpha,A,B,beta,C);
 
-    #ifndef NDEBUG
+    #ifdef DISABLE
     if (is_check_mode()) {
       // ---- validate with original implementation
       gsl_matrix *C1 = gsl_matrix_alloc(C->size1,C->size2);

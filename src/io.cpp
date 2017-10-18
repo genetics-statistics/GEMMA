@@ -606,12 +606,12 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
     return false;
   }
 
-  gsl_vector *genotype = gsl_vector_alloc(W->size1);
-  gsl_vector *genotype_miss = gsl_vector_alloc(W->size1);
-  gsl_matrix *WtW = gsl_matrix_alloc(W->size2, W->size2);
-  gsl_matrix *WtWi = gsl_matrix_alloc(W->size2, W->size2);
-  gsl_vector *Wtx = gsl_vector_alloc(W->size2);
-  gsl_vector *WtWiWtx = gsl_vector_alloc(W->size2);
+  gsl_vector *genotype = gsl_vector_safe_alloc(W->size1);
+  gsl_vector *genotype_miss = gsl_vector_safe_alloc(W->size1);
+  gsl_matrix *WtW = gsl_matrix_safe_alloc(W->size2, W->size2);
+  gsl_matrix *WtWi = gsl_matrix_safe_alloc(W->size2, W->size2);
+  gsl_vector *Wtx = gsl_vector_safe_alloc(W->size2);
+  gsl_vector *WtWiWtx = gsl_vector_safe_alloc(W->size2);
   gsl_permutation *pmt = gsl_permutation_alloc(W->size2);
 
   gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, W, W, 0.0, WtW);
@@ -817,12 +817,12 @@ bool ReadFile_bed(const string &file_bed, const set<string> &setSnps,
     return false;
   }
 
-  gsl_vector *genotype = gsl_vector_alloc(W->size1);
-  gsl_vector *genotype_miss = gsl_vector_alloc(W->size1);
-  gsl_matrix *WtW = gsl_matrix_alloc(W->size2, W->size2);
-  gsl_matrix *WtWi = gsl_matrix_alloc(W->size2, W->size2);
-  gsl_vector *Wtx = gsl_vector_alloc(W->size2);
-  gsl_vector *WtWiWtx = gsl_vector_alloc(W->size2);
+  gsl_vector *genotype = gsl_vector_safe_alloc(W->size1);
+  gsl_vector *genotype_miss = gsl_vector_safe_alloc(W->size1);
+  gsl_matrix *WtW = gsl_matrix_safe_alloc(W->size2, W->size2);
+  gsl_matrix *WtWi = gsl_matrix_safe_alloc(W->size2, W->size2);
+  gsl_vector *Wtx = gsl_vector_safe_alloc(W->size2);
+  gsl_vector *WtWiWtx = gsl_vector_safe_alloc(W->size2);
   gsl_permutation *pmt = gsl_permutation_alloc(W->size2);
 
   gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, W, W, 0.0, WtW);
@@ -1366,12 +1366,12 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
   bool process_ksnps = ksnps.size();
 
   size_t ni_total = matrix_kin->size1;
-  gsl_vector *geno = gsl_vector_alloc(ni_total);
-  gsl_vector *geno_miss = gsl_vector_alloc(ni_total);
+  gsl_vector *geno = gsl_vector_safe_alloc(ni_total);
+  gsl_vector *geno_miss = gsl_vector_safe_alloc(ni_total);
 
   // Xlarge contains inds x markers
   const size_t msize = K_BATCH_SIZE;
-  gsl_matrix *Xlarge = gsl_matrix_alloc(ni_total, msize);
+  gsl_matrix *Xlarge = gsl_matrix_safe_alloc(ni_total, msize);
   enforce_msg(Xlarge, "allocate Xlarge");
 
   gsl_matrix_set_zero(Xlarge);
@@ -1506,14 +1506,14 @@ bool PlinkKin(const string &file_bed, vector<int> &indicator_snp,
   double d, geno_mean, geno_var;
 
   size_t ni_total = matrix_kin->size1;
-  gsl_vector *geno = gsl_vector_alloc(ni_total);
+  gsl_vector *geno = gsl_vector_safe_alloc(ni_total);
 
   size_t ns_test = 0;
   int n_bit;
 
   // Create a large matrix.
   const size_t msize = K_BATCH_SIZE;
-  gsl_matrix *Xlarge = gsl_matrix_alloc(ni_total, msize);
+  gsl_matrix *Xlarge = gsl_matrix_safe_alloc(ni_total, msize);
   gsl_matrix_set_zero(Xlarge);
 
   // Calculate n_bit and c, the number of bit for each snp.
@@ -1649,8 +1649,8 @@ bool ReadFile_geno(const string file_geno, vector<int> &indicator_idv,
     gsl_matrix_set_zero(K);
   }
 
-  gsl_vector *genotype = gsl_vector_alloc(UtX->size1);
-  gsl_vector *genotype_miss = gsl_vector_alloc(UtX->size1);
+  gsl_vector *genotype = gsl_vector_safe_alloc(UtX->size1);
+  gsl_vector *genotype_miss = gsl_vector_safe_alloc(UtX->size1);
   double geno, geno_mean;
   size_t n_miss;
 
@@ -1760,8 +1760,8 @@ bool ReadFile_geno(const string &file_geno, vector<int> &indicator_idv,
     gsl_matrix_set_zero(K);
   }
 
-  gsl_vector *genotype = gsl_vector_alloc(ni_test);
-  gsl_vector *genotype_miss = gsl_vector_alloc(ni_test);
+  gsl_vector *genotype = gsl_vector_safe_alloc(ni_test);
+  gsl_vector *genotype_miss = gsl_vector_safe_alloc(ni_test);
   double geno, geno_mean;
   size_t n_miss;
 
@@ -1879,7 +1879,7 @@ bool ReadFile_bed(const string &file_bed, vector<int> &indicator_idv,
     gsl_matrix_set_zero(K);
   }
 
-  gsl_vector *genotype = gsl_vector_alloc(UtX->size1);
+  gsl_vector *genotype = gsl_vector_safe_alloc(UtX->size1);
 
   double geno, geno_mean;
   size_t n_miss;
@@ -2015,7 +2015,7 @@ bool ReadFile_bed(const string &file_bed, vector<int> &indicator_idv,
     gsl_matrix_set_zero(K);
   }
 
-  gsl_vector *genotype = gsl_vector_alloc(ni_test);
+  gsl_vector *genotype = gsl_vector_safe_alloc(ni_test);
 
   double geno, geno_mean;
   size_t n_miss;
@@ -2658,13 +2658,13 @@ bool BimbamKinUncentered(const string &file_geno, const set<string> ksnps,
   double d, geno_mean, geno_var;
 
   size_t ni_test = matrix_kin->size1;
-  gsl_vector *geno = gsl_vector_alloc(ni_test);
-  gsl_vector *geno_miss = gsl_vector_alloc(ni_test);
+  gsl_vector *geno = gsl_vector_safe_alloc(ni_test);
+  gsl_vector *geno_miss = gsl_vector_safe_alloc(ni_test);
 
-  gsl_vector *Wtx = gsl_vector_alloc(W->size2);
-  gsl_matrix *WtW = gsl_matrix_alloc(W->size2, W->size2);
-  gsl_matrix *WtWi = gsl_matrix_alloc(W->size2, W->size2);
-  gsl_vector *WtWiWtx = gsl_vector_alloc(W->size2);
+  gsl_vector *Wtx = gsl_vector_safe_alloc(W->size2);
+  gsl_matrix *WtW = gsl_matrix_safe_alloc(W->size2, W->size2);
+  gsl_matrix *WtWi = gsl_matrix_safe_alloc(W->size2, W->size2);
+  gsl_vector *WtWiWtx = gsl_vector_safe_alloc(W->size2);
   gsl_permutation *pmt = gsl_permutation_alloc(W->size2);
 
   gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, W, W, 0.0, WtW);
@@ -2681,7 +2681,7 @@ bool BimbamKinUncentered(const string &file_geno, const set<string> ksnps,
 
   // Create a large matrix.
   const size_t msize = K_BATCH_SIZE;
-  gsl_matrix *Xlarge = gsl_matrix_alloc(ni_test, msize * n_vc);
+  gsl_matrix *Xlarge = gsl_matrix_safe_alloc(ni_test, msize * n_vc);
   gsl_matrix_set_zero(Xlarge);
 
   size_t ns_test = 0;
@@ -2850,12 +2850,12 @@ bool PlinkKin(const string &file_bed, const int display_pace,
 
   size_t ni_test = matrix_kin->size1;
   size_t ni_total = indicator_idv.size();
-  gsl_vector *geno = gsl_vector_alloc(ni_test);
+  gsl_vector *geno = gsl_vector_safe_alloc(ni_test);
 
-  gsl_vector *Wtx = gsl_vector_alloc(W->size2);
-  gsl_matrix *WtW = gsl_matrix_alloc(W->size2, W->size2);
-  gsl_matrix *WtWi = gsl_matrix_alloc(W->size2, W->size2);
-  gsl_vector *WtWiWtx = gsl_vector_alloc(W->size2);
+  gsl_vector *Wtx = gsl_vector_safe_alloc(W->size2);
+  gsl_matrix *WtW = gsl_matrix_safe_alloc(W->size2, W->size2);
+  gsl_matrix *WtWi = gsl_matrix_safe_alloc(W->size2, W->size2);
+  gsl_vector *WtWiWtx = gsl_vector_safe_alloc(W->size2);
   gsl_permutation *pmt = gsl_permutation_alloc(W->size2);
 
   gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, W, W, 0.0, WtW);
@@ -2875,7 +2875,7 @@ bool PlinkKin(const string &file_bed, const int display_pace,
 
   // Create a large matrix.
   const size_t msize = K_BATCH_SIZE;
-  gsl_matrix *Xlarge = gsl_matrix_alloc(ni_test, msize * n_vc);
+  gsl_matrix *Xlarge = gsl_matrix_safe_alloc(ni_test, msize * n_vc);
   gsl_matrix_set_zero(Xlarge);
 
   // Calculate n_bit and c, the number of bit for each SNP.
@@ -3074,8 +3074,8 @@ bool MFILEKin(const size_t mfile_mode, const string &file_mfile,
 
   string file_name;
 
-  gsl_matrix *kin_tmp = gsl_matrix_alloc(matrix_kin->size1, matrix_kin->size2);
-  gsl_vector *ns_tmp = gsl_vector_alloc(vector_ns->size);
+  gsl_matrix *kin_tmp = gsl_matrix_safe_alloc(matrix_kin->size1, matrix_kin->size2);
+  gsl_vector *ns_tmp = gsl_vector_safe_alloc(vector_ns->size);
 
   size_t l = 0;
   double d;
@@ -3843,7 +3843,7 @@ void ReadFile_study(const string &file_study, gsl_matrix *Vq_mat,
   string sfile = file_study + ".size.txt";
   string qfile = file_study + ".q.txt";
 
-  gsl_vector *s = gsl_vector_alloc(s_vec->size + 1);
+  gsl_vector *s = gsl_vector_safe_alloc(s_vec->size + 1);
 
   ReadFile_matrix(Vqfile, Vq_mat);
   ReadFile_vector(sfile, s);
@@ -3868,7 +3868,7 @@ void ReadFile_ref(const string &file_ref, gsl_matrix *S_mat,
   string sfile = file_ref + ".size.txt";
   string Sfile = file_ref + ".S.txt";
 
-  gsl_vector *s = gsl_vector_alloc(s_vec->size + 1);
+  gsl_vector *s = gsl_vector_safe_alloc(s_vec->size + 1);
 
   ReadFile_vector(sfile, s);
   ReadFile_matrix(Sfile, S_mat, Svar_mat);
@@ -3894,9 +3894,9 @@ void ReadFile_mstudy(const string &file_mstudy, gsl_matrix *Vq_mat,
   gsl_vector_set_zero(s_vec);
   ni = 0;
 
-  gsl_matrix *Vq_sub = gsl_matrix_alloc(Vq_mat->size1, Vq_mat->size2);
-  gsl_vector *q_sub = gsl_vector_alloc(q_vec->size);
-  gsl_vector *s = gsl_vector_alloc(s_vec->size + 1);
+  gsl_matrix *Vq_sub = gsl_matrix_safe_alloc(Vq_mat->size1, Vq_mat->size2);
+  gsl_vector *q_sub = gsl_vector_safe_alloc(q_vec->size);
+  gsl_vector *s = gsl_vector_safe_alloc(s_vec->size + 1);
 
   igzstream infile(file_mstudy.c_str(), igzstream::in);
   if (!infile) {
@@ -3985,9 +3985,9 @@ void ReadFile_mref(const string &file_mref, gsl_matrix *S_mat,
   gsl_vector_set_zero(s_vec);
   ni = 0;
 
-  gsl_matrix *S_sub = gsl_matrix_alloc(S_mat->size1, S_mat->size2);
-  gsl_matrix *Svar_sub = gsl_matrix_alloc(Svar_mat->size1, Svar_mat->size2);
-  gsl_vector *s = gsl_vector_alloc(s_vec->size + 1);
+  gsl_matrix *S_sub = gsl_matrix_safe_alloc(S_mat->size1, S_mat->size2);
+  gsl_matrix *Svar_sub = gsl_matrix_safe_alloc(Svar_mat->size1, Svar_mat->size2);
+  gsl_vector *s = gsl_vector_safe_alloc(s_vec->size + 1);
 
   igzstream infile(file_mref.c_str(), igzstream::in);
   if (!infile) {

@@ -1636,7 +1636,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
   if (cPar.a_mode == 41 || cPar.a_mode == 42) {
     gsl_vector *y_prdt;
 
-    y_prdt = gsl_vector_alloc(cPar.ni_total - cPar.ni_test);
+    y_prdt = gsl_vector_safe_alloc(cPar.ni_total - cPar.ni_test);
 
     // set to zero
     gsl_vector_set_zero(y_prdt);
@@ -1648,8 +1648,8 @@ void GEMMA::BatchRun(PARAM &cPar) {
     if (!cPar.file_kin.empty() && !cPar.file_ebv.empty()) {
       cout << "Adding Breeding Values ... " << endl;
 
-      gsl_matrix *G = gsl_matrix_alloc(cPar.ni_total, cPar.ni_total);
-      gsl_vector *u_hat = gsl_vector_alloc(cPar.ni_test);
+      gsl_matrix *G = gsl_matrix_safe_alloc(cPar.ni_total, cPar.ni_total);
+      gsl_vector *u_hat = gsl_vector_safe_alloc(cPar.ni_test);
 
       // read kinship matrix and set u_hat
       vector<int> indicator_all;
@@ -1707,25 +1707,25 @@ void GEMMA::BatchRun(PARAM &cPar) {
   if (cPar.a_mode == 43) {
     // first, use individuals with full phenotypes to obtain estimates of Vg and
     // Ve
-    gsl_matrix *Y = gsl_matrix_alloc(cPar.ni_test, cPar.n_ph);
-    gsl_matrix *W = gsl_matrix_alloc(Y->size1, cPar.n_cvt);
-    gsl_matrix *G = gsl_matrix_alloc(Y->size1, Y->size1);
-    gsl_matrix *U = gsl_matrix_alloc(Y->size1, Y->size1);
-    gsl_matrix *UtW = gsl_matrix_alloc(Y->size1, W->size2);
-    gsl_matrix *UtY = gsl_matrix_alloc(Y->size1, Y->size2);
-    gsl_vector *eval = gsl_vector_alloc(Y->size1);
+    gsl_matrix *Y = gsl_matrix_safe_alloc(cPar.ni_test, cPar.n_ph);
+    gsl_matrix *W = gsl_matrix_safe_alloc(Y->size1, cPar.n_cvt);
+    gsl_matrix *G = gsl_matrix_safe_alloc(Y->size1, Y->size1);
+    gsl_matrix *U = gsl_matrix_safe_alloc(Y->size1, Y->size1);
+    gsl_matrix *UtW = gsl_matrix_safe_alloc(Y->size1, W->size2);
+    gsl_matrix *UtY = gsl_matrix_safe_alloc(Y->size1, Y->size2);
+    gsl_vector *eval = gsl_vector_safe_alloc(Y->size1);
 
-    gsl_matrix *Y_full = gsl_matrix_alloc(cPar.ni_cvt, cPar.n_ph);
-    gsl_matrix *W_full = gsl_matrix_alloc(Y_full->size1, cPar.n_cvt);
+    gsl_matrix *Y_full = gsl_matrix_safe_alloc(cPar.ni_cvt, cPar.n_ph);
+    gsl_matrix *W_full = gsl_matrix_safe_alloc(Y_full->size1, cPar.n_cvt);
 
     // set covariates matrix W and phenotype matrix Y
     // an intercept should be included in W,
     cPar.CopyCvtPhen(W, Y, 0);
     cPar.CopyCvtPhen(W_full, Y_full, 1);
 
-    gsl_matrix *Y_hat = gsl_matrix_alloc(Y_full->size1, cPar.n_ph);
-    gsl_matrix *G_full = gsl_matrix_alloc(Y_full->size1, Y_full->size1);
-    gsl_matrix *H_full = gsl_matrix_alloc(Y_full->size1 * Y_hat->size2,
+    gsl_matrix *Y_hat = gsl_matrix_safe_alloc(Y_full->size1, cPar.n_ph);
+    gsl_matrix *G_full = gsl_matrix_safe_alloc(Y_full->size1, Y_full->size1);
+    gsl_matrix *H_full = gsl_matrix_safe_alloc(Y_full->size1 * Y_hat->size2,
                                           Y_full->size1 * Y_hat->size2);
 
     // read relatedness matrix G, and matrix G_full
@@ -1761,8 +1761,8 @@ void GEMMA::BatchRun(PARAM &cPar) {
     // calculate variance component and beta estimates
     // and then obtain predicted values
     if (cPar.n_ph == 1) {
-      gsl_vector *beta = gsl_vector_alloc(W->size2);
-      gsl_vector *se_beta = gsl_vector_alloc(W->size2);
+      gsl_vector *beta = gsl_vector_safe_alloc(W->size2);
+      gsl_vector *se_beta = gsl_vector_safe_alloc(W->size2);
 
       double lambda, logl, vg, ve;
       gsl_vector_view UtY_col = gsl_matrix_column(UtY, 0);
@@ -1792,10 +1792,10 @@ void GEMMA::BatchRun(PARAM &cPar) {
       gsl_vector_free(beta);
       gsl_vector_free(se_beta);
     } else {
-      gsl_matrix *Vg = gsl_matrix_alloc(cPar.n_ph, cPar.n_ph);
-      gsl_matrix *Ve = gsl_matrix_alloc(cPar.n_ph, cPar.n_ph);
-      gsl_matrix *B = gsl_matrix_alloc(cPar.n_ph, W->size2);
-      gsl_matrix *se_B = gsl_matrix_alloc(cPar.n_ph, W->size2);
+      gsl_matrix *Vg = gsl_matrix_safe_alloc(cPar.n_ph, cPar.n_ph);
+      gsl_matrix *Ve = gsl_matrix_safe_alloc(cPar.n_ph, cPar.n_ph);
+      gsl_matrix *B = gsl_matrix_safe_alloc(cPar.n_ph, W->size2);
+      gsl_matrix *se_B = gsl_matrix_safe_alloc(cPar.n_ph, W->size2);
 
       // obtain estimates
       CalcMvLmmVgVeBeta(eval, UtW, UtY, cPar.em_iter, cPar.nr_iter,
@@ -1873,7 +1873,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
   if (cPar.a_mode == 21 || cPar.a_mode == 22) {
     cout << "Calculating Relatedness Matrix ... " << endl;
 
-    gsl_matrix *G = gsl_matrix_alloc(cPar.ni_total, cPar.ni_total);
+    gsl_matrix *G = gsl_matrix_safe_alloc(cPar.ni_total, cPar.ni_total);
     enforce_msg(G, "allocate G"); // just to be sure
 
     time_start = clock();
@@ -1918,8 +1918,8 @@ void GEMMA::BatchRun(PARAM &cPar) {
   if (cPar.a_mode == 25 || cPar.a_mode == 26) {
     cout << "Calculating the S Matrix ... " << endl;
 
-    gsl_matrix *S = gsl_matrix_alloc(cPar.n_vc * 2, cPar.n_vc);
-    gsl_vector *ns = gsl_vector_alloc(cPar.n_vc + 1);
+    gsl_matrix *S = gsl_matrix_safe_alloc(cPar.n_vc * 2, cPar.n_vc);
+    gsl_vector *ns = gsl_vector_safe_alloc(cPar.n_vc + 1);
     gsl_matrix_set_zero(S);
     gsl_vector_set_zero(ns);
 
@@ -1928,13 +1928,13 @@ void GEMMA::BatchRun(PARAM &cPar) {
         gsl_matrix_submatrix(S, cPar.n_vc, 0, cPar.n_vc, cPar.n_vc);
     gsl_vector_view ns_vec = gsl_vector_subvector(ns, 0, cPar.n_vc);
 
-    gsl_matrix *K = gsl_matrix_alloc(cPar.ni_test, cPar.n_vc * cPar.ni_test);
-    gsl_matrix *A = gsl_matrix_alloc(cPar.ni_test, cPar.n_vc * cPar.ni_test);
+    gsl_matrix *K = gsl_matrix_safe_alloc(cPar.ni_test, cPar.n_vc * cPar.ni_test);
+    gsl_matrix *A = gsl_matrix_safe_alloc(cPar.ni_test, cPar.n_vc * cPar.ni_test);
     gsl_matrix_set_zero(K);
     gsl_matrix_set_zero(A);
 
-    gsl_vector *y = gsl_vector_alloc(cPar.ni_test);
-    gsl_matrix *W = gsl_matrix_alloc(cPar.ni_test, cPar.n_cvt);
+    gsl_vector *y = gsl_vector_safe_alloc(cPar.ni_test);
+    gsl_matrix *W = gsl_matrix_safe_alloc(cPar.ni_test, cPar.n_cvt);
 
     cPar.CopyCvtPhen(W, y, 0);
 
@@ -1971,9 +1971,9 @@ void GEMMA::BatchRun(PARAM &cPar) {
   // Compute the q vector, that is used for variance component estimation using
   // summary statistics
   if (cPar.a_mode == 27 || cPar.a_mode == 28) {
-    gsl_matrix *Vq = gsl_matrix_alloc(cPar.n_vc, cPar.n_vc);
-    gsl_vector *q = gsl_vector_alloc(cPar.n_vc);
-    gsl_vector *s = gsl_vector_alloc(cPar.n_vc + 1);
+    gsl_matrix *Vq = gsl_matrix_safe_alloc(cPar.n_vc, cPar.n_vc);
+    gsl_vector *q = gsl_vector_safe_alloc(cPar.n_vc);
+    gsl_vector *s = gsl_vector_safe_alloc(cPar.n_vc + 1);
     gsl_vector_set_zero(q);
     gsl_vector_set_zero(s);
 
@@ -2029,8 +2029,8 @@ void GEMMA::BatchRun(PARAM &cPar) {
   // LM.
   if (cPar.a_mode == 51 || cPar.a_mode == 52 || cPar.a_mode == 53 ||
       cPar.a_mode == 54) { // Fit LM
-    gsl_matrix *Y = gsl_matrix_alloc(cPar.ni_test, cPar.n_ph);
-    gsl_matrix *W = gsl_matrix_alloc(Y->size1, cPar.n_cvt);
+    gsl_matrix *Y = gsl_matrix_safe_alloc(cPar.ni_test, cPar.n_ph);
+    gsl_matrix *W = gsl_matrix_safe_alloc(Y->size1, cPar.n_cvt);
 
     // set covariates matrix W and phenotype matrix Y
     // an intercept should be included in W,
@@ -2082,16 +2082,16 @@ void GEMMA::BatchRun(PARAM &cPar) {
       cPar.UpdateSNP(mapRS2wK);
 
       // Setup matrices and vectors.
-      gsl_matrix *S = gsl_matrix_alloc(cPar.n_vc * 2, cPar.n_vc);
-      gsl_matrix *Vq = gsl_matrix_alloc(cPar.n_vc, cPar.n_vc);
-      gsl_vector *q = gsl_vector_alloc(cPar.n_vc);
-      gsl_vector *s = gsl_vector_alloc(cPar.n_vc + 1);
+      gsl_matrix *S = gsl_matrix_safe_alloc(cPar.n_vc * 2, cPar.n_vc);
+      gsl_matrix *Vq = gsl_matrix_safe_alloc(cPar.n_vc, cPar.n_vc);
+      gsl_vector *q = gsl_vector_safe_alloc(cPar.n_vc);
+      gsl_vector *s = gsl_vector_safe_alloc(cPar.n_vc + 1);
 
-      gsl_matrix *K = gsl_matrix_alloc(cPar.ni_test, cPar.n_vc * cPar.ni_test);
-      gsl_matrix *A = gsl_matrix_alloc(cPar.ni_test, cPar.n_vc * cPar.ni_test);
+      gsl_matrix *K = gsl_matrix_safe_alloc(cPar.ni_test, cPar.n_vc * cPar.ni_test);
+      gsl_matrix *A = gsl_matrix_safe_alloc(cPar.ni_test, cPar.n_vc * cPar.ni_test);
 
-      gsl_vector *y = gsl_vector_alloc(cPar.ni_test);
-      gsl_matrix *W = gsl_matrix_alloc(cPar.ni_test, cPar.n_cvt);
+      gsl_vector *y = gsl_vector_safe_alloc(cPar.ni_test);
+      gsl_matrix *W = gsl_matrix_safe_alloc(cPar.ni_test, cPar.n_cvt);
 
       gsl_matrix_set_zero(K);
       gsl_matrix_set_zero(A);
@@ -2218,16 +2218,16 @@ void GEMMA::BatchRun(PARAM &cPar) {
 
       cPar.n_vc = cPar.n_vc - 1;
 
-      gsl_matrix *S = gsl_matrix_alloc(2 * cPar.n_vc, cPar.n_vc);
-      gsl_matrix *Vq = gsl_matrix_alloc(cPar.n_vc, cPar.n_vc);
-      // gsl_matrix *V=gsl_matrix_alloc (cPar.n_vc+1,
+      gsl_matrix *S = gsl_matrix_safe_alloc(2 * cPar.n_vc, cPar.n_vc);
+      gsl_matrix *Vq = gsl_matrix_safe_alloc(cPar.n_vc, cPar.n_vc);
+      // gsl_matrix *V=gsl_matrix_safe_alloc (cPar.n_vc+1,
       // (cPar.n_vc*(cPar.n_vc+1))/2*(cPar.n_vc+1) );
-      // gsl_matrix *Vslope=gsl_matrix_alloc (n_lines+1,
+      // gsl_matrix *Vslope=gsl_matrix_safe_alloc (n_lines+1,
       // (n_lines*(n_lines+1))/2*(n_lines+1) );
-      gsl_vector *q = gsl_vector_alloc(cPar.n_vc);
-      gsl_vector *s_study = gsl_vector_alloc(cPar.n_vc);
-      gsl_vector *s_ref = gsl_vector_alloc(cPar.n_vc);
-      gsl_vector *s = gsl_vector_alloc(cPar.n_vc + 1);
+      gsl_vector *q = gsl_vector_safe_alloc(cPar.n_vc);
+      gsl_vector *s_study = gsl_vector_safe_alloc(cPar.n_vc);
+      gsl_vector *s_ref = gsl_vector_safe_alloc(cPar.n_vc);
+      gsl_vector *s = gsl_vector_safe_alloc(cPar.n_vc + 1);
 
       gsl_matrix_set_zero(S);
       gsl_matrix_view S_mat =
@@ -2286,9 +2286,9 @@ void GEMMA::BatchRun(PARAM &cPar) {
       gsl_vector_free(s_ref);
       gsl_vector_free(s);
     } else {
-      gsl_matrix *Y = gsl_matrix_alloc(cPar.ni_test, cPar.n_ph);
-      gsl_matrix *W = gsl_matrix_alloc(Y->size1, cPar.n_cvt);
-      gsl_matrix *G = gsl_matrix_alloc(Y->size1, Y->size1 * cPar.n_vc);
+      gsl_matrix *Y = gsl_matrix_safe_alloc(cPar.ni_test, cPar.n_ph);
+      gsl_matrix *W = gsl_matrix_safe_alloc(Y->size1, cPar.n_cvt);
+      gsl_matrix *G = gsl_matrix_safe_alloc(Y->size1, Y->size1 * cPar.n_vc);
 
       // set covariates matrix W and phenotype matrix Y
       // an intercept should be included in W,
@@ -2365,9 +2365,9 @@ void GEMMA::BatchRun(PARAM &cPar) {
   // the genotypes
   if (cPar.a_mode == 66 || cPar.a_mode == 67) {
     // read reference file first
-    gsl_matrix *S = gsl_matrix_alloc(cPar.n_vc, cPar.n_vc);
-    gsl_matrix *Svar = gsl_matrix_alloc(cPar.n_vc, cPar.n_vc);
-    gsl_vector *s_ref = gsl_vector_alloc(cPar.n_vc);
+    gsl_matrix *S = gsl_matrix_safe_alloc(cPar.n_vc, cPar.n_vc);
+    gsl_matrix *Svar = gsl_matrix_safe_alloc(cPar.n_vc, cPar.n_vc);
+    gsl_vector *s_ref = gsl_vector_safe_alloc(cPar.n_vc);
 
     gsl_matrix_set_zero(S);
     gsl_matrix_set_zero(Svar);
@@ -2392,14 +2392,14 @@ void GEMMA::BatchRun(PARAM &cPar) {
     cPar.ObtainWeight(setSnps_beta, mapRS2wK);
 
     // set up matrices and vector
-    gsl_matrix *Xz = gsl_matrix_alloc(cPar.ni_test, cPar.n_vc);
-    gsl_matrix *XWz = gsl_matrix_alloc(cPar.ni_test, cPar.n_vc);
+    gsl_matrix *Xz = gsl_matrix_safe_alloc(cPar.ni_test, cPar.n_vc);
+    gsl_matrix *XWz = gsl_matrix_safe_alloc(cPar.ni_test, cPar.n_vc);
     gsl_matrix *XtXWz =
-        gsl_matrix_alloc(mapRS2wK.size(), cPar.n_vc * cPar.n_vc);
-    gsl_vector *w = gsl_vector_alloc(mapRS2wK.size());
-    gsl_vector *w1 = gsl_vector_alloc(mapRS2wK.size());
-    gsl_vector *z = gsl_vector_alloc(mapRS2wK.size());
-    gsl_vector *s_vec = gsl_vector_alloc(cPar.n_vc);
+        gsl_matrix_safe_alloc(mapRS2wK.size(), cPar.n_vc * cPar.n_vc);
+    gsl_vector *w = gsl_vector_safe_alloc(mapRS2wK.size());
+    gsl_vector *w1 = gsl_vector_safe_alloc(mapRS2wK.size());
+    gsl_vector *z = gsl_vector_safe_alloc(mapRS2wK.size());
+    gsl_vector *s_vec = gsl_vector_safe_alloc(cPar.n_vc);
 
     vector<size_t> vec_cat, vec_size;
     vector<double> vec_z;
@@ -2523,19 +2523,19 @@ void GEMMA::BatchRun(PARAM &cPar) {
   if (cPar.a_mode == 1 || cPar.a_mode == 2 || cPar.a_mode == 3 ||
       cPar.a_mode == 4 || cPar.a_mode == 5 ||
       cPar.a_mode == 31) { // Fit LMM or mvLMM or eigen
-    gsl_matrix *Y = gsl_matrix_alloc(cPar.ni_test, cPar.n_ph);
+    gsl_matrix *Y = gsl_matrix_safe_alloc(cPar.ni_test, cPar.n_ph);
     enforce_msg(Y, "allocate Y"); // just to be sure
-    gsl_matrix *W = gsl_matrix_alloc(Y->size1, cPar.n_cvt);
-    gsl_matrix *B = gsl_matrix_alloc(Y->size2, W->size2); // B is a d by c
+    gsl_matrix *W = gsl_matrix_safe_alloc(Y->size1, cPar.n_cvt);
+    gsl_matrix *B = gsl_matrix_safe_alloc(Y->size2, W->size2); // B is a d by c
                                                           // matrix
-    gsl_matrix *se_B = gsl_matrix_alloc(Y->size2, W->size2);
-    gsl_matrix *G = gsl_matrix_alloc(Y->size1, Y->size1);
-    gsl_matrix *U = gsl_matrix_alloc(Y->size1, Y->size1);
+    gsl_matrix *se_B = gsl_matrix_safe_alloc(Y->size2, W->size2);
+    gsl_matrix *G = gsl_matrix_safe_alloc(Y->size1, Y->size1);
+    gsl_matrix *U = gsl_matrix_safe_alloc(Y->size1, Y->size1);
     gsl_matrix *UtW = gsl_matrix_calloc(Y->size1, W->size2);
     gsl_matrix *UtY = gsl_matrix_calloc(Y->size1, Y->size2);
     gsl_vector *eval = gsl_vector_calloc(Y->size1);
-    gsl_vector *env = gsl_vector_alloc(Y->size1);
-    gsl_vector *weight = gsl_vector_alloc(Y->size1);
+    gsl_vector *env = gsl_vector_safe_alloc(Y->size1);
+    gsl_vector *weight = gsl_vector_safe_alloc(Y->size1);
     assert_issue(is_issue(26), UtY->data[0] == 0.0);
 
     // set covariates matrix W and phenotype matrix Y
@@ -2667,26 +2667,22 @@ void GEMMA::BatchRun(PARAM &cPar) {
         CalcLambda('L', eval, UtW, &UtY_col.vector, cPar.l_min, cPar.l_max,
                    cPar.n_region, cPar.l_mle_null, cPar.logl_mle_H0);
         assert(!std::isnan(UtY->data[0]));
-        assert(!std::isnan(B->data[0]));
-        assert(!std::isnan(se_B->data[0]));
 
         CalcLmmVgVeBeta(eval, UtW, &UtY_col.vector, cPar.l_mle_null,
                         cPar.vg_mle_null, cPar.ve_mle_null, &beta.vector,
                         &se_beta.vector);
 
         assert(!std::isnan(UtY->data[0]));
-        assert(!std::isnan(B->data[0]));
-        assert(!std::isnan(se_B->data[0]));
 
         cPar.beta_mle_null.clear();
         cPar.se_beta_mle_null.clear();
+        assert(!std::isnan(B->data[0]));
+        assert(!std::isnan(se_B->data[0]));
         for (size_t i = 0; i < B->size2; i++) {
           cPar.beta_mle_null.push_back(gsl_matrix_get(B, 0, i));
           cPar.se_beta_mle_null.push_back(gsl_matrix_get(se_B, 0, i));
         }
         assert(!std::isnan(UtY->data[0]));
-        assert(!std::isnan(B->data[0]));
-        assert(!std::isnan(se_B->data[0]));
         assert(!std::isnan(cPar.beta_mle_null.front()));
         assert(!std::isnan(cPar.se_beta_mle_null.front()));
 
@@ -2698,6 +2694,9 @@ void GEMMA::BatchRun(PARAM &cPar) {
 
         cPar.beta_remle_null.clear();
         cPar.se_beta_remle_null.clear();
+        assert(!std::isnan(B->data[0]));
+        assert(!std::isnan(se_B->data[0]));
+
         for (size_t i = 0; i < B->size2; i++) {
           cPar.beta_remle_null.push_back(gsl_matrix_get(B, 0, i));
           cPar.se_beta_remle_null.push_back(gsl_matrix_get(se_B, 0, i));
@@ -2709,11 +2708,11 @@ void GEMMA::BatchRun(PARAM &cPar) {
 
         // calculate and output residuals
         if (cPar.a_mode == 5) {
-          gsl_vector *Utu_hat = gsl_vector_alloc(Y->size1);
-          gsl_vector *Ute_hat = gsl_vector_alloc(Y->size1);
-          gsl_vector *u_hat = gsl_vector_alloc(Y->size1);
-          gsl_vector *e_hat = gsl_vector_alloc(Y->size1);
-          gsl_vector *y_hat = gsl_vector_alloc(Y->size1);
+          gsl_vector *Utu_hat = gsl_vector_safe_alloc(Y->size1);
+          gsl_vector *Ute_hat = gsl_vector_safe_alloc(Y->size1);
+          gsl_vector *u_hat = gsl_vector_safe_alloc(Y->size1);
+          gsl_vector *e_hat = gsl_vector_safe_alloc(Y->size1);
+          gsl_vector *y_hat = gsl_vector_safe_alloc(Y->size1);
 
           // obtain Utu and Ute
           gsl_vector_memcpy(y_hat, &UtY_col.vector);
@@ -2816,10 +2815,10 @@ void GEMMA::BatchRun(PARAM &cPar) {
 
   // BSLMM
   if (cPar.a_mode == 11 || cPar.a_mode == 12 || cPar.a_mode == 13) {
-    gsl_vector *y = gsl_vector_alloc(cPar.ni_test);
-    gsl_matrix *W = gsl_matrix_alloc(y->size, cPar.n_cvt);
-    gsl_matrix *G = gsl_matrix_alloc(y->size, y->size);
-    gsl_matrix *UtX = gsl_matrix_alloc(y->size, cPar.ns_test);
+    gsl_vector *y = gsl_vector_safe_alloc(cPar.ni_test);
+    gsl_matrix *W = gsl_matrix_safe_alloc(y->size, cPar.n_cvt);
+    gsl_matrix *G = gsl_matrix_safe_alloc(y->size, y->size);
+    gsl_matrix *UtX = gsl_matrix_safe_alloc(y->size, cPar.ns_test);
 
     // set covariates matrix W and phenotype vector y
     // an intercept should be included in W,
@@ -2842,10 +2841,10 @@ void GEMMA::BatchRun(PARAM &cPar) {
       cBslmm.CopyToParam(cPar);
       // else, if rho!=1
     } else {
-      gsl_matrix *U = gsl_matrix_alloc(y->size, y->size);
-      gsl_vector *eval = gsl_vector_alloc(y->size);
-      gsl_matrix *UtW = gsl_matrix_alloc(y->size, W->size2);
-      gsl_vector *Uty = gsl_vector_alloc(y->size);
+      gsl_matrix *U = gsl_matrix_safe_alloc(y->size, y->size);
+      gsl_vector *eval = gsl_vector_safe_alloc(y->size);
+      gsl_matrix *UtW = gsl_matrix_safe_alloc(y->size, W->size2);
+      gsl_vector *Uty = gsl_vector_safe_alloc(y->size);
 
       // read relatedness matrix G
       if (!(cPar.file_kin).empty()) {
@@ -2926,10 +2925,10 @@ void GEMMA::BatchRun(PARAM &cPar) {
   // BSLMM-DAP
   if (cPar.a_mode == 14 || cPar.a_mode == 15 || cPar.a_mode == 16) {
     if (cPar.a_mode == 14) {
-      gsl_vector *y = gsl_vector_alloc(cPar.ni_test);
-      gsl_matrix *W = gsl_matrix_alloc(y->size, cPar.n_cvt);
-      gsl_matrix *G = gsl_matrix_alloc(y->size, y->size);
-      gsl_matrix *UtX = gsl_matrix_alloc(y->size, cPar.ns_test);
+      gsl_vector *y = gsl_vector_safe_alloc(cPar.ni_test);
+      gsl_matrix *W = gsl_matrix_safe_alloc(y->size, cPar.n_cvt);
+      gsl_matrix *G = gsl_matrix_safe_alloc(y->size, y->size);
+      gsl_matrix *UtX = gsl_matrix_safe_alloc(y->size, cPar.ns_test);
 
       // set covariates matrix W and phenotype vector y
       // an intercept should be included in W,
@@ -2953,10 +2952,10 @@ void GEMMA::BatchRun(PARAM &cPar) {
         cBslmm.CopyToParam(cPar);
         // else, if rho!=1
       } else {
-        gsl_matrix *U = gsl_matrix_alloc(y->size, y->size);
-        gsl_vector *eval = gsl_vector_alloc(y->size);
-        gsl_matrix *UtW = gsl_matrix_alloc(y->size, W->size2);
-        gsl_vector *Uty = gsl_vector_alloc(y->size);
+        gsl_matrix *U = gsl_matrix_safe_alloc(y->size, y->size);
+        gsl_vector *eval = gsl_vector_safe_alloc(y->size);
+        gsl_matrix *UtW = gsl_matrix_safe_alloc(y->size, W->size2);
+        gsl_vector *Uty = gsl_vector_safe_alloc(y->size);
 
         // read relatedness matrix G
         if (!(cPar.file_kin).empty()) {
