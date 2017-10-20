@@ -44,13 +44,13 @@ bool is_legacy_mode() { return debug_legacy; };
   Helper function to make sure gsl allocations do their job because
   gsl_matrix_alloc does not initiatize values (behaviour that changed
   in GSL2) we introduced a 'strict mode' by initializing the buffer
-  with NaNs. This happens when NO-CHECKS is not set
-  (i.e. -no-checks option).
+  with NaNs. This happens when NO-CHECKS is not set (default) and with
+  DEBUG (i.e. -debug option).
 */
 gsl_matrix *gsl_matrix_safe_alloc(size_t rows,size_t cols) {
   gsl_matrix *m = gsl_matrix_alloc(rows,cols);
   enforce_msg(m,"Not enough memory"); // just to be sure when there is no error handler set
-  if (is_check_mode()) {
+  if (is_check_mode() && is_debug_mode()) {
     gsl_matrix_set_all(m, nan(""));
   }
   return m;
@@ -60,19 +60,20 @@ gsl_matrix *gsl_matrix_safe_alloc(size_t rows,size_t cols) {
   Helper function to make sure gsl allocations do their job because
   gsl_vector_alloc does not initiatize values (behaviour that changed
   in GSL2) we introduced a 'strict mode' by initializing the buffer
-  with NaNs. This happens when NO-CHECKS is not set
-  (i.e. -no-checks option).
+  with NaNs. This happens when NO-CHECKS is not set and with DEBUG
+  (i.e. -debug option).
 */
 gsl_vector *gsl_vector_safe_alloc(size_t n) {
   gsl_vector *v = gsl_vector_alloc(n);
   enforce_msg(v,"Not enough memory"); // just to be sure when there is no error handler set
-  if (is_check_mode()) {
+  if (is_check_mode() && is_debug_mode()) {
     gsl_vector_set_all(v, nan(""));
   }
   return v;
 }
 
-// Helper function called by macro validate_K(K, check)
+// Helper function called by macro validate_K(K, check). K is validated
+// unless -no-check option is used.
 void do_validate_K(const gsl_matrix *K, const char *__file, int __line) {
   if (is_check_mode()) {
     // debug_msg("Validating K");
