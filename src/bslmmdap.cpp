@@ -116,16 +116,16 @@ void ReadFile_hyb(const string &file_hyp, vector<double> &vec_sa2,
   getline(infile, line);
 
   while (!safeGetline(infile, line).eof()) {
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
-    ch_ptr = strtok(NULL, " , \t");
+    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe(NULL, " , \t");
 
-    ch_ptr = strtok(NULL, " , \t");
+    ch_ptr = strtok_safe(NULL, " , \t");
     vec_sa2.push_back(atof(ch_ptr));
 
-    ch_ptr = strtok(NULL, " , \t");
+    ch_ptr = strtok_safe(NULL, " , \t");
     vec_sb2.push_back(atof(ch_ptr));
 
-    ch_ptr = strtok(NULL, " , \t");
+    ch_ptr = strtok_safe(NULL, " , \t");
     vec_wab.push_back(atof(ch_ptr));
   }
 
@@ -160,11 +160,11 @@ void ReadFile_bf(const string &file_bf, vector<string> &vec_rs,
   while (!safeGetline(infile, line).eof()) {
     flag_block = 0;
 
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
     rs = ch_ptr;
     vec_rs.push_back(rs);
 
-    ch_ptr = strtok(NULL, " , \t");
+    ch_ptr = strtok_safe(NULL, " , \t");
     if (t == 0) {
       block = ch_ptr;
     } else {
@@ -223,7 +223,7 @@ void ReadFile_cat(const string &file_cat, const vector<string> &vec_rs,
 
   // Read header.
   HEADER header;
-  !safeGetline(infile, line).eof();
+  safeGetline(infile, line).eof();
   ReadHeader_io(line, header);
 
   // Use the header to determine the number of categories.
@@ -238,7 +238,7 @@ void ReadFile_cat(const string &file_cat, const vector<string> &vec_rs,
 
   // Read the following lines to record mapRS2cat.
   while (!safeGetline(infile, line).eof()) {
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
 
     if (header.rs_col == 0) {
       rs = chr + ":" + pos;
@@ -248,6 +248,7 @@ void ReadFile_cat(const string &file_cat, const vector<string> &vec_rs,
     catd.clear();
 
     for (size_t i = 0; i < header.coln; i++) {
+      enforce(ch_ptr);
       if (header.rs_col != 0 && header.rs_col == i + 1) {
         rs = ch_ptr;
       } else if (header.chr_col != 0 && header.chr_col == i + 1) {

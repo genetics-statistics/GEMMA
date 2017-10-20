@@ -227,7 +227,7 @@ void PRDT::AnalyzeBimbam(gsl_vector *y_prdt) {
 
   // Start reading genotypes and analyze.
   for (size_t t = 0; t < ns_total; ++t) {
-    !safeGetline(infile, line).eof();
+    safeGetline(infile, line).eof();
     if (t % d_pace == 0 || t == (ns_total - 1)) {
       ProgressBar("Reading SNPs  ", t, ns_total - 1);
     }

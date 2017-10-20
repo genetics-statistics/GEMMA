@@ -72,6 +72,13 @@ gsl_vector *gsl_vector_safe_alloc(size_t n) {
   return v;
 }
 
+char *do_strtok_safe(char *tokenize, const char *delimiters, const char *__pretty_function, const char *__file, int __line) {
+  auto token = strtok(tokenize,delimiters);
+  if (token == NULL && (is_debug_mode() || is_strict_mode()))
+    fail_at_msg(__file,__line,string("strtok failed in ") + __pretty_function);
+  return token;
+}
+
 // Helper function called by macro validate_K(K, check). K is validated
 // unless -no-check option is used.
 void do_validate_K(const gsl_matrix *K, const char *__file, int __line) {
@@ -88,13 +95,13 @@ void do_validate_K(const gsl_matrix *K, const char *__file, int __line) {
     if (!isMatrixIllConditioned(eigenvalues))
       warning_at_msg(__file,__line,"K is ill conditioned!");
     if (!isMatrixSymmetric(K))
-      fail_at_msg(is_strict_mode(),__file,__line,"K is not symmetric!" );
+      warnfail_at_msg(is_strict_mode(),__file,__line,"K is not symmetric!" );
     const bool negative_values = has_negative_values_but_one(eigenvalues);
     if (negative_values) {
       warning_at_msg(__file,__line,"K has more than one negative eigenvalues!");
     }
     if (count_small>1 && negative_values && !isMatrixPositiveDefinite(K))
-      fail_at_msg(is_strict_mode(),__file,__line,"K is not positive definite!");
+      warnfail_at_msg(is_strict_mode(),__file,__line,"K is not positive definite!");
     gsl_vector_free(eigenvalues);
   }
 }

@@ -28,6 +28,9 @@ bool is_legacy_mode();
 gsl_matrix *gsl_matrix_safe_alloc(size_t rows,size_t cols);
 gsl_vector *gsl_vector_safe_alloc(size_t n);
 
+char *do_strtok_safe(char *tokenize, const char *delimiters, const char *__pretty_function, const char *__file, int __line);
+#define strtok_safe(string,delimiters) do_strtok_safe(string,delimiters,__PRETTY_FUNCTION__,__FILE__,__LINE__)
+
 // Validation routines
 void do_validate_K(const gsl_matrix *K, const char *__file, int __line);
 
@@ -36,7 +39,7 @@ void do_validate_K(const gsl_matrix *K, const char *__file, int __line);
 
 #define warning_at_msg(__file,__line,msg) cerr << "**** WARNING: " << msg << " in " << __file << " at line " << __line << endl;
 
-inline void fail_at_msg(bool strict, const char *__file, int __line, const char *msg) {
+inline void warnfail_at_msg(bool strict, const char *__file, int __line, const char *msg) {
   if (strict)
     std::cerr << "**** STRICT FAIL: ";
   else
@@ -46,11 +49,21 @@ inline void fail_at_msg(bool strict, const char *__file, int __line, const char 
     exit(1);
 }
 
+inline void fail_at_msg(const char *__file, int __line, std::string msg) {
+  std::cerr << msg << " in " << __file << " at line " << __line << std::endl;
+  exit(1);
+}
+
 # ifndef __ASSERT_VOID_CAST
 # define __ASSERT_VOID_CAST (void)
 # endif
 
 inline void fail_msg(const char *msg) {
+  std::cerr << "**** FAILED: " << msg << std::endl;
+  exit(5);
+}
+
+inline void fail_msg(std::string msg) {
   std::cerr << "**** FAILED: " << msg << std::endl;
   exit(5);
 }

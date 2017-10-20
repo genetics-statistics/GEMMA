@@ -333,12 +333,12 @@ void LM::AnalyzeGene(const gsl_matrix *W, const gsl_vector *x) {
     if (t % d_pace == 0 || t == ng_total - 1) {
       ProgressBar("Performing Analysis", t, ng_total - 1);
     }
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
     rs = ch_ptr;
 
     c_phen = 0;
     for (size_t i = 0; i < indicator_idv.size(); ++i) {
-      ch_ptr = strtok(NULL, " , \t");
+      ch_ptr = strtok_safe(NULL, " , \t");
       if (indicator_idv[i] == 0) {
         continue;
       }
@@ -427,16 +427,16 @@ void LM::AnalyzeBimbam(const gsl_matrix *W, const gsl_vector *y) {
       continue;
     }
 
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
-    ch_ptr = strtok(NULL, " , \t");
-    ch_ptr = strtok(NULL, " , \t");
+    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe(NULL, " , \t");
+    ch_ptr = strtok_safe(NULL, " , \t");
 
     x_mean = 0.0;
     c_phen = 0;
     n_miss = 0;
     gsl_vector_set_zero(x_miss);
     for (size_t i = 0; i < ni_total; ++i) {
-      ch_ptr = strtok(NULL, " , \t");
+      ch_ptr = strtok_safe(NULL, " , \t");
       if (indicator_idv[i] == 0) {
         continue;
       }

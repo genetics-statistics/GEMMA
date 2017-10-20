@@ -16,12 +16,12 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <iostream>
+#include <string>
 #include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <fstream>
-#include <iostream>
-#include <string>
 #include <sys/stat.h>
 
 #include "gsl/gsl_blas.h"
@@ -899,7 +899,7 @@ void PARAM::CheckParam(void) {
   if (!loco.empty()) {
     enforce_msg((a_mode >= 1 && a_mode <= 4) || a_mode == 21 || a_mode == 22,
                 "LOCO only works with LMM and K");
-    enforce_msg(file_bfile.empty(), "LOCO does not work with PLink (yet)");
+    // enforce_msg(file_bfile.empty(), "LOCO does not work with PLink (yet)");
     enforce_msg(file_gxe.empty(), "LOCO does not support GXE (yet)");
     enforce_msg(!file_anno.empty(),
                 "LOCO requires annotation file (-a switch)");
@@ -1317,7 +1317,7 @@ void PARAM::CalcKin(gsl_matrix *matrix_kin) {
 
   if (!file_bfile.empty()) {
     file_str = file_bfile + ".bed";
-    enforce_msg(loco.empty(), "FIXME: LOCO nyi");
+    // enforce_msg(loco.empty(), "FIXME: LOCO nyi");
     if (PlinkKin(file_str, indicator_snp, a_mode - 20, d_pace, matrix_kin) ==
         false) {
       error = true;

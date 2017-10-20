@@ -152,7 +152,7 @@ bool ReadFile_snps_header(const string &file_snps, set<string> &setSnps) {
 
   // Read header.
   HEADER header;
-  !safeGetline(infile, line).eof();
+  safeGetline(infile, line).eof();
   ReadHeader_io(line, header);
 
   if (header.rs_col == 0 && (header.chr_col == 0 || header.pos_col == 0)) {
@@ -208,7 +208,7 @@ bool ReadFile_log(const string &file_log, double &pheno_mean) {
   size_t flag = 0;
 
   while (getline(infile, line)) {
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
     ch_ptr = strtok(NULL, " , \t");
 
     if (ch_ptr != NULL && strcmp(ch_ptr, "estimated") == 0) {
@@ -216,7 +216,7 @@ bool ReadFile_log(const string &file_log, double &pheno_mean) {
       if (ch_ptr != NULL && strcmp(ch_ptr, "mean") == 0) {
         ch_ptr = strtok(NULL, " , \t");
         if (ch_ptr != NULL && strcmp(ch_ptr, "=") == 0) {
-          ch_ptr = strtok(NULL, " , \t");
+          ch_ptr = strtok_safe(NULL, " , \t");
           pheno_mean = atof(ch_ptr);
           flag = 1;
         }
@@ -314,7 +314,7 @@ bool ReadFile_column(const string &file_pheno, vector<int> &indicator_idv,
   string id;
   double p;
   while (!safeGetline(infile, line).eof()) {
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
     for (int i = 0; i < (p_column - 1); ++i) {
       ch_ptr = strtok(NULL, " , \t");
     }
@@ -486,17 +486,17 @@ bool ReadFile_bim(const string &file_bim, vector<SNPINFO> &snpInfo) {
   string minor;
 
   while (getline(infile, line)) {
-    ch_ptr = strtok((char *)line.c_str(), " \t");
+    ch_ptr = strtok_safe((char *)line.c_str(), " \t");
     chr = ch_ptr;
-    ch_ptr = strtok(NULL, " \t");
+    ch_ptr = strtok_safe(NULL, " \t");
     rs = ch_ptr;
-    ch_ptr = strtok(NULL, " \t");
+    ch_ptr = strtok_safe(NULL, " \t");
     cM = atof(ch_ptr);
-    ch_ptr = strtok(NULL, " \t");
+    ch_ptr = strtok_safe(NULL, " \t");
     b_pos = atol(ch_ptr);
-    ch_ptr = strtok(NULL, " \t");
+    ch_ptr = strtok_safe(NULL, " \t");
     minor = ch_ptr;
-    ch_ptr = strtok(NULL, " \t");
+    ch_ptr = strtok_safe(NULL, " \t");
     major = ch_ptr;
 
     SNPINFO sInfo = {chr, rs, cM, b_pos, minor, major, 0, -9, -9, 0, 0, 0};
@@ -542,12 +542,12 @@ bool ReadFile_fam(const string &file_fam, vector<vector<int>> &indicator_pheno,
   }
 
   while (!safeGetline(infile, line).eof()) {
-    ch_ptr = strtok((char *)line.c_str(), " \t");
-    ch_ptr = strtok(NULL, " \t");
+    ch_ptr = strtok_safe((char *)line.c_str(), " \t");
+    ch_ptr = strtok_safe(NULL, " \t");
     id = ch_ptr;
-    ch_ptr = strtok(NULL, " \t");
-    ch_ptr = strtok(NULL, " \t");
-    ch_ptr = strtok(NULL, " \t");
+    ch_ptr = strtok_safe(NULL, " \t");
+    ch_ptr = strtok_safe(NULL, " \t");
+    ch_ptr = strtok_safe(NULL, " \t");
     ch_ptr = strtok(NULL, " \t");
 
     size_t i = 0;
@@ -649,11 +649,11 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
   file_pos = 0;
   auto count_warnings = 0;
   while (!safeGetline(infile, line).eof()) {
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
     rs = ch_ptr;
-    ch_ptr = strtok(NULL, " , \t");
+    ch_ptr = strtok_safe(NULL, " , \t");
     minor = ch_ptr;
-    ch_ptr = strtok(NULL, " , \t");
+    ch_ptr = strtok_safe(NULL, " , \t");
     major = ch_ptr;
 
     if (setSnps.size() != 0 && setSnps.count(rs) == 0) {
@@ -694,7 +694,7 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
     c_idv = 0;
     gsl_vector_set_zero(genotype_miss);
     for (int i = 0; i < ni_total; ++i) {
-      ch_ptr = strtok(NULL, " , \t");
+      ch_ptr = strtok_safe(NULL, " , \t");
       if (indicator_idv[i] == 0)
         continue;
 
@@ -1004,13 +1004,13 @@ bool Bimbam_ReadOneSNP(const size_t inc, const vector<int> &indicator_idv,
   bool flag = false;
 
   for (size_t i = 0; i < inc; i++) {
-    !safeGetline(infile, line).eof();
+    safeGetline(infile, line).eof();
   }
 
   if (!safeGetline(infile, line).eof()) {
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
-    ch_ptr = strtok(NULL, " , \t");
-    ch_ptr = strtok(NULL, " , \t");
+    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe(NULL, " , \t");
+    ch_ptr = strtok_safe(NULL, " , \t");
 
     geno_mean = 0.0;
     double d;
@@ -1018,7 +1018,7 @@ bool Bimbam_ReadOneSNP(const size_t inc, const vector<int> &indicator_idv,
     vector<size_t> geno_miss;
 
     for (size_t i = 0; i < ni_total; ++i) {
-      ch_ptr = strtok(NULL, " , \t");
+      ch_ptr = strtok_safe(NULL, " , \t");
       if (indicator_idv[i] == 0) {
         continue;
       }
@@ -1134,9 +1134,7 @@ void ReadFile_kin(const string &file_kin, vector<int> &indicator_idv,
     size_t i_test = 0, i_total = 0, j_test = 0, j_total = 0;
     while (getline(infile, line)) {
       if (i_total == ni_total) {
-        cout << "error! number of rows in the kinship "
-             << "file is larger than the number of phentypes." << endl;
-        error = true;
+        fail_msg("number of rows in the kinship file is larger than the number of phentypes");
       }
 
       if (indicator_idv[i_total] == 0) {
@@ -1149,10 +1147,7 @@ void ReadFile_kin(const string &file_kin, vector<int> &indicator_idv,
       ch_ptr = strtok((char *)line.c_str(), " , \t");
       while (ch_ptr != NULL) {
         if (j_total == ni_total) {
-          cout << "error! number of columns in the "
-               << "kinship file is larger than the number"
-               << " of phenotypes for row = " << i_total << endl;
-          error = true;
+          fail_msg(string("number of columns in the kinship file is larger than the number of individuals for row = ")+to_string(i_total));
         }
 
         d = atof(ch_ptr);
@@ -1165,18 +1160,14 @@ void ReadFile_kin(const string &file_kin, vector<int> &indicator_idv,
         ch_ptr = strtok(NULL, " , \t");
       }
       if (j_total != ni_total) {
-        cout << "error! number of columns in the kinship "
-             << "file do not match the number of phentypes for "
-             << "row = " << i_total << endl;
-        error = true;
+        string msg = "number of columns in the kinship file does not match the number of individuals for row = " + to_string( i_total );
+        fail_msg(msg);
       }
       i_total++;
       i_test++;
     }
     if (i_total != ni_total) {
-      cout << "error! number of rows in the kinship file do "
-           << "not match the number of phenotypes." << endl;
-      error = true;
+      fail_msg("number of rows in the kinship file does not match the number of individuals.");
     }
   } else {
     map<size_t, size_t> mapID2ID;
@@ -1193,11 +1184,11 @@ void ReadFile_kin(const string &file_kin, vector<int> &indicator_idv,
     size_t n_id1, n_id2;
 
     while (getline(infile, line)) {
-      ch_ptr = strtok((char *)line.c_str(), " , \t");
+      ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
       id1 = ch_ptr;
-      ch_ptr = strtok(NULL, " , \t");
+      ch_ptr = strtok_safe(NULL, " , \t");
       id2 = ch_ptr;
-      ch_ptr = strtok(NULL, " , \t");
+      ch_ptr = strtok_safe(NULL, " , \t");
       d = atof(ch_ptr);
       if (mapID2num.count(id1) == 0 || mapID2num.count(id2) == 0) {
         continue;
@@ -1212,9 +1203,10 @@ void ReadFile_kin(const string &file_kin, vector<int> &indicator_idv,
 
       Cov_d = gsl_matrix_get(G, n_id1, n_id2);
       if (Cov_d != 0 && Cov_d != d) {
-        cout << "error! redundant and unequal terms in the "
+        cerr << "error! redundant and unequal terms in the "
              << "kinship file, for id1 = " << id1 << " and id2 = " << id2
              << endl;
+        fail_msg("");
       } else {
         gsl_matrix_set(G, n_id1, n_id2, d);
         gsl_matrix_set(G, n_id2, n_id1, d);
@@ -1253,7 +1245,6 @@ void ReadFile_mk(const string &file_mk, vector<int> &indicator_idv,
 
   infile.close();
   infile.clear();
-  return;
 }
 
 void ReadFile_eigenU(const string &file_ku, bool &error, gsl_matrix *U) {
@@ -1329,7 +1320,7 @@ void ReadFile_eigenD(const string &file_kd, bool &error, gsl_vector *eval) {
       error = true;
     }
 
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
     d = atof(ch_ptr);
 
     ch_ptr = strtok(NULL, " , \t");
@@ -1380,7 +1371,7 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
   size_t ns_test = 0;
   for (size_t t = 0; t < indicator_snp.size(); ++t) {
     string line;
-    !safeGetline(infile, line).eof();
+    safeGetline(infile, line).eof();
     if (t % display_pace == 0 || t == (indicator_snp.size() - 1)) {
       ProgressBar("Reading SNPs", t, indicator_snp.size() - 1);
     }
@@ -1662,21 +1653,21 @@ bool ReadFile_geno(const string file_geno, vector<int> &indicator_idv,
   int c_idv = 0, c_snp = 0;
 
   for (int i = 0; i < ns_total; ++i) {
-    !safeGetline(infile, line).eof();
+    safeGetline(infile, line).eof();
     if (indicator_snp[i] == 0) {
       continue;
     }
 
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
-    ch_ptr = strtok(NULL, " , \t");
-    ch_ptr = strtok(NULL, " , \t");
+    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe(NULL, " , \t");
+    ch_ptr = strtok_safe(NULL, " , \t");
 
     c_idv = 0;
     geno_mean = 0;
     n_miss = 0;
     gsl_vector_set_zero(genotype_miss);
     for (int j = 0; j < ni_total; ++j) {
-      ch_ptr = strtok(NULL, " , \t");
+      ch_ptr = strtok_safe(NULL, " , \t");
       if (indicator_idv[j] == 0) {
         continue;
       }
@@ -1771,21 +1762,21 @@ bool ReadFile_geno(const string &file_geno, vector<int> &indicator_idv,
   size_t c_idv = 0, c_snp = 0;
 
   for (size_t i = 0; i < ns_total; ++i) {
-    !safeGetline(infile, line).eof();
+    safeGetline(infile, line).eof();
     if (indicator_snp[i] == 0) {
       continue;
     }
 
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
-    ch_ptr = strtok(NULL, " , \t");
-    ch_ptr = strtok(NULL, " , \t");
+    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe(NULL, " , \t");
+    ch_ptr = strtok_safe(NULL, " , \t");
 
     c_idv = 0;
     geno_mean = 0;
     n_miss = 0;
     gsl_vector_set_zero(genotype_miss);
     for (uint j = 0; j < ni_total; ++j) {
-      ch_ptr = strtok(NULL, " , \t");
+      ch_ptr = strtok_safe(NULL, " , \t");
       if (indicator_idv[j] == 0) {
         continue;
       }
@@ -2135,7 +2126,7 @@ bool ReadFile_est(const string &file_est, const vector<size_t> &est_column,
   size_t n = *max_element(est_column.begin(), est_column.end());
 
   while (getline(infile, line)) {
-    ch_ptr = strtok((char *)line.c_str(), " \t");
+    ch_ptr = strtok_safe((char *)line.c_str(), " \t");
 
     alpha = 0.0;
     beta = 0.0;
@@ -2154,7 +2145,7 @@ bool ReadFile_est(const string &file_est, const vector<size_t> &est_column,
         gamma = atof(ch_ptr);
       }
       if (i < n) {
-        ch_ptr = strtok(NULL, " \t");
+        ch_ptr = strtok_safe(NULL, " \t");
       }
     }
 
@@ -2212,7 +2203,7 @@ bool ReadFile_gene(const string &file_gene, vector<double> &vec_read,
   getline(infile, line);
 
   while (getline(infile, line)) {
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
     rs = ch_ptr;
 
     ch_ptr = strtok(NULL, " , \t");
@@ -2536,7 +2527,7 @@ bool ReadFile_cat(const string &file_cat, map<string, size_t> &mapRS2cat,
 
   // Read header.
   HEADER header;
-  !safeGetline(infile, line).eof();
+  safeGetline(infile, line).eof();
   ReadHeader_io(line, header);
 
   // Use the header to count the number of categories.
@@ -2562,10 +2553,11 @@ bool ReadFile_cat(const string &file_cat, map<string, size_t> &mapRS2cat,
 
   // Read the following lines to record mapRS2cat.
   while (!safeGetline(infile, line).eof()) {
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
 
     i_cat = 0;
     for (size_t i = 0; i < header.coln; i++) {
+      enforce(ch_ptr);
       if (header.rs_col != 0 && header.rs_col == i + 1) {
         rs = ch_ptr;
       } else if (header.chr_col != 0 && header.chr_col == i + 1) {
@@ -2686,16 +2678,16 @@ bool BimbamKinUncentered(const string &file_geno, const set<string> ksnps,
 
   size_t ns_test = 0;
   for (size_t t = 0; t < indicator_snp.size(); ++t) {
-    !safeGetline(infile, line).eof();
+    safeGetline(infile, line).eof();
     if (t % display_pace == 0 || t == (indicator_snp.size() - 1)) {
       ProgressBar("Reading SNPs", t, indicator_snp.size() - 1);
     }
     if (indicator_snp[t] == 0)
       continue;
 
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
-    ch_ptr = strtok(NULL, " , \t");
-    ch_ptr = strtok(NULL, " , \t");
+    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe(NULL, " , \t");
+    ch_ptr = strtok_safe(NULL, " , \t");
 
     rs = snpInfo[t].rs_number; // This line is new.
 
@@ -2709,7 +2701,7 @@ bool BimbamKinUncentered(const string &file_geno, const set<string> ksnps,
       if (indicator_idv[i] == 0) {
         continue;
       }
-      ch_ptr = strtok(NULL, " , \t");
+      ch_ptr = strtok_safe(NULL, " , \t");
       if (strcmp(ch_ptr, "NA") == 0) {
         gsl_vector_set(geno_miss, i, 0);
         n_miss++;
@@ -3151,9 +3143,9 @@ bool ReadFile_wsnp(const string &file_wsnp, map<string, double> &mapRS2weight) {
   double weight;
 
   while (!safeGetline(infile, line).eof()) {
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
     rs = ch_ptr;
-    ch_ptr = strtok(NULL, " , \t");
+    ch_ptr = strtok_safe(NULL, " , \t");
     weight = atof(ch_ptr);
     mapRS2weight[rs] = weight;
   }
@@ -3182,17 +3174,18 @@ bool ReadFile_wsnp(const string &file_wcat, const size_t n_vc,
 
   // Read header.
   HEADER header;
-  !safeGetline(infile, line).eof();
+  safeGetline(infile, line).eof();
   ReadHeader_io(line, header);
 
   while (!safeGetline(infile, line).eof()) {
     if (isBlankLine(line)) {
       continue;
     }
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
 
     size_t t = 0;
     for (size_t i = 0; i < header.coln; i++) {
+      enforce(ch_ptr);
       if (header.rs_col != 0 && header.rs_col == i + 1) {
         rs = ch_ptr;
       } else if (header.chr_col != 0 && header.chr_col == i + 1) {
@@ -3274,7 +3267,7 @@ void ReadFile_beta(const string &file_beta,
 
   // Read header.
   HEADER header;
-  !safeGetline(infile, line).eof();
+  safeGetline(infile, line).eof();
   ReadHeader_io(line, header);
 
   if (header.n_col == 0) {
@@ -3296,7 +3289,7 @@ void ReadFile_beta(const string &file_beta,
     if (isBlankLine(line)) {
       continue;
     }
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
 
     z = 0;
     beta = 0;
@@ -3311,6 +3304,7 @@ void ReadFile_beta(const string &file_beta,
     af = 0;
     var_x = 0;
     for (size_t i = 0; i < header.coln; i++) {
+      enforce(ch_ptr);
       if (header.rs_col != 0 && header.rs_col == i + 1) {
         rs = ch_ptr;
       }
@@ -3456,7 +3450,7 @@ void ReadFile_beta(const string &file_beta, const map<string, double> &mapRS2wA,
 
   // Read header.
   HEADER header;
-  !safeGetline(infile, line).eof();
+  safeGetline(infile, line).eof();
   ReadHeader_io(line, header);
 
   if (header.n_col == 0) {
@@ -3477,7 +3471,7 @@ void ReadFile_beta(const string &file_beta, const map<string, double> &mapRS2wA,
     if (isBlankLine(line)) {
       continue;
     }
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
 
     z = 0;
     beta = 0;
@@ -3492,6 +3486,7 @@ void ReadFile_beta(const string &file_beta, const map<string, double> &mapRS2wA,
     af = 0;
     var_x = 0;
     for (size_t i = 0; i < header.coln; i++) {
+      enforce(ch_ptr);
       if (header.rs_col != 0 && header.rs_col == i + 1) {
         rs = ch_ptr;
       }
@@ -3762,8 +3757,8 @@ void ReadFile_vector(const string &file_vec, gsl_vector *vec) {
   char *ch_ptr;
 
   for (size_t i = 0; i < vec->size; i++) {
-    !safeGetline(infile, line).eof();
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
+    safeGetline(infile, line).eof();
+    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
     gsl_vector_set(vec, i, atof(ch_ptr));
   }
 
@@ -3785,9 +3780,10 @@ void ReadFile_matrix(const string &file_mat, gsl_matrix *mat) {
   char *ch_ptr;
 
   for (size_t i = 0; i < mat->size1; i++) {
-    !safeGetline(infile, line).eof();
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
+    safeGetline(infile, line).eof();
+    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
     for (size_t j = 0; j < mat->size2; j++) {
+      enforce(ch_ptr);
       gsl_matrix_set(mat, i, j, atof(ch_ptr));
       ch_ptr = strtok(NULL, " , \t");
     }
@@ -3812,18 +3808,20 @@ void ReadFile_matrix(const string &file_mat, gsl_matrix *mat1,
   char *ch_ptr;
 
   for (size_t i = 0; i < mat1->size1; i++) {
-    !safeGetline(infile, line).eof();
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
+    safeGetline(infile, line).eof();
+    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
     for (size_t j = 0; j < mat1->size2; j++) {
+      enforce(ch_ptr);
       gsl_matrix_set(mat1, i, j, atof(ch_ptr));
       ch_ptr = strtok(NULL, " , \t");
     }
   }
 
   for (size_t i = 0; i < mat2->size1; i++) {
-    !safeGetline(infile, line).eof();
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
+    safeGetline(infile, line).eof();
+    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
     for (size_t j = 0; j < mat2->size2; j++) {
+      enforce(ch_ptr);
       gsl_matrix_set(mat2, i, j, atof(ch_ptr));
       ch_ptr = strtok(NULL, " , \t");
     }

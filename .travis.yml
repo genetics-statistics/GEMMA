@@ -1,46 +1,52 @@
 language: C++
-compiler: gcc
 matrix:
+  # OSX testing is under development
+  # allow_failures:
+  #   - os: osx
   include:
     - os: linux
+      compiler: gcc
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
           packages:
+            # Our dev environment is a more recent GNU C++ and GSL2
             - g++-4.9
+            - libopenblas-dev 
+            - zlib1g-dev
+            - libeigen3-dev
+            - libgsl0-dev
+            - liblapack-dev
+            # - gfortran-dev for static
       env:
-         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-6
+         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9 && EIGEN_INCLUDE_PATH=/usr/include/eigen3"
+    - os: osx
+      compiler: clang
       env:
-        - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+         - MATRIX_EVAL="EIGEN_INCLUDE_PATH=/usr/local/include/eigen3"
+#     - os: linux
+#       addons:
+#         apt:
+#           sources:
+#             - ubuntu-toolchain-r-test
+#           packages:
+#             - g++-6
+#       env:
+#         - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
 before_install:
-  - sudo apt-get -qq update
-  - sudo apt-get install -y libopenblas-dev zlib1g-dev
-  - sudo apt-get install -y libeigen3-dev
-  - sudo apt-get install -y libgsl0-dev
-  - sudo apt-get install -y liblapack-dev
-  # for the static release version we need the following
-  # - sudo apt-get install -y gfortran-dev
-  - dpkg -l
-  - eval "${MATRIX_EVAL}"
-  - $CXX --version
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update && brew install gsl openblas zlib eigen lapack ; fi
 script:
+  - echo $MATRIX_EVAL
   - eval "${MATRIX_EVAL}"
   - $CXX --version
   # build and test debug version
-  - make CXX=$CXX WITH_OPENBLAS=1 OPENBLAS_LEGACY=1 -j 4
-  - time make CXX=$CXX WITH_OPENBLAS=1 check
-  - make clean
-  # build and test release version
-  - make CXX=$CXX DEBUG= FORCE_DYNAMIC=1 WITH_OPENBLAS=1 OPENBLAS_LEGACY=1 -j 4
-  - time make CXX=$CXX DEBUG= WITH_OPENBLAS=1 check
+  - make CXX=$CXX EIGEN_INCLUDE_PATH=$EIGEN_INCLUDE_PATH WITH_OPENBLAS=1 OPENBLAS_LEGACY=1 -j 4
+  - time make CXX=$CXX WITH_OPENBLAS=1 EIGEN_INCLUDE_PATH=$EIGEN_INCLUDE_PATH WITH_OPENBLAS=1 OPENBLAS_LEGACY=1  check
+  # - make clean
+  # build and test release version (integration test mostly)
+  # - make CXX=$CXX EIGEN_INCLUDE_PATH=$EIGEN_INCLUDE_PATH DEBUG= FORCE_DYNAMIC=1 WITH_OPENBLAS=1 OPENBLAS_LEGACY=1 -j 4
+  # - time make CXX=$CXX DEBUG= WITH_OPENBLAS=1 fast-check
   # build static release (fast-check only)
   # - make clean
   # - make CXX=$CXX TRAVIS_CI=1 -j 4 fast-check

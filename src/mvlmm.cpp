@@ -3189,7 +3189,7 @@ void MVLMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
     t_last++;
   }
   for (size_t t = 0; t < indicator_snp.size(); ++t) {
-    !safeGetline(infile, line).eof();
+    safeGetline(infile, line).eof();
     if (t % d_pace == 0 || t == (ns_total - 1)) {
       ProgressBar("Reading SNPs", t, ns_total - 1);
     }
@@ -3197,16 +3197,16 @@ void MVLMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
       continue;
     }
 
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
-    ch_ptr = strtok(NULL, " , \t");
-    ch_ptr = strtok(NULL, " , \t");
+    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe(NULL, " , \t");
+    ch_ptr = strtok_safe(NULL, " , \t");
 
     x_mean = 0.0;
     c_phen = 0;
     n_miss = 0;
     gsl_vector_set_zero(x_miss);
     for (size_t i = 0; i < ni_total; ++i) {
-      ch_ptr = strtok(NULL, " , \t");
+      ch_ptr = strtok_safe(NULL, " , \t");
       if (indicator_idv[i] == 0) {
         continue;
       }
@@ -4166,7 +4166,7 @@ void MVLMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval,
 
   // Start reading genotypes and analyze.
   for (size_t t = 0; t < indicator_snp.size(); ++t) {
-    !safeGetline(infile, line).eof();
+    safeGetline(infile, line).eof();
     if (t % d_pace == 0 || t == (ns_total - 1)) {
       ProgressBar("Reading SNPs", t, ns_total - 1);
     }
@@ -4174,16 +4174,16 @@ void MVLMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval,
       continue;
     }
 
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
-    ch_ptr = strtok(NULL, " , \t");
-    ch_ptr = strtok(NULL, " , \t");
+    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe(NULL, " , \t");
+    ch_ptr = strtok_safe(NULL, " , \t");
 
     x_mean = 0.0;
     c_phen = 0;
     n_miss = 0;
     gsl_vector_set_zero(x_miss);
     for (size_t i = 0; i < ni_total; ++i) {
-      ch_ptr = strtok(NULL, " , \t");
+      ch_ptr = strtok_safe(NULL, " , \t");
       if (indicator_idv[i] == 0) {
         continue;
       }

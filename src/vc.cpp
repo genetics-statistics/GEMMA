@@ -663,7 +663,7 @@ void ReadFile_cor(const string &file_cor, const set<string> &setSnps,
   HEADER header;
 
   // Header.
-  !safeGetline(infile, line).eof();
+  safeGetline(infile, line).eof();
   ReadHeader_vc(line, header);
 
   if (header.n_col == 0) {
@@ -678,7 +678,7 @@ void ReadFile_cor(const string &file_cor, const set<string> &setSnps,
   while (!safeGetline(infile, line).eof()) {
 
     // do not read cor values this time; upto col_n-1.
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
 
     n_total = 0;
     n_mis = 0;
@@ -688,6 +688,7 @@ void ReadFile_cor(const string &file_cor, const set<string> &setSnps,
     d_cm = 0;
     d_pos = 0;
     for (size_t i = 0; i < header.coln - 1; i++) {
+      enforce(ch_ptr);
       if (header.rs_col != 0 && header.rs_col == i + 1) {
         rs = ch_ptr;
       }
@@ -822,7 +823,7 @@ void ReadFile_beta(const bool flag_priorscale, const string &file_beta,
 
   // Read header.
   HEADER header;
-  !safeGetline(infile, line).eof();
+  safeGetline(infile, line).eof();
   ReadHeader_vc(line, header);
 
   if (header.n_col == 0) {
@@ -844,7 +845,7 @@ void ReadFile_beta(const bool flag_priorscale, const string &file_beta,
   }
 
   while (!safeGetline(infile, line).eof()) {
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
 
     z = 0;
     beta = 0;
@@ -857,6 +858,7 @@ void ReadFile_beta(const bool flag_priorscale, const string &file_beta,
     af = 0;
     var_x = 0;
     for (size_t i = 0; i < header.coln; i++) {
+      enforce(ch_ptr);
       if (header.rs_col != 0 && header.rs_col == i + 1) {
         rs = ch_ptr;
       }
@@ -1055,7 +1057,7 @@ void ReadFile_cor(const string &file_cor, const vector<string> &vec_rs,
   // Header.
   HEADER header;
 
-  !safeGetline(infile, line).eof();
+  safeGetline(infile, line).eof();
   ReadHeader_vc(line, header);
 
   while (!safeGetline(infile, line).eof()) {
@@ -1063,8 +1065,9 @@ void ReadFile_cor(const string &file_cor, const vector<string> &vec_rs,
     // Do not read cor values this time; upto col_n-1.
     d_pos1 = 0;
     d_cm1 = 0;
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
     for (size_t i = 0; i < header.coln - 1; i++) {
+      enforce(ch_ptr);
       if (header.rs_col != 0 && header.rs_col == i + 1) {
         rs = ch_ptr;
       }
@@ -2238,7 +2241,7 @@ bool BimbamXwz(const string &file_geno, const int display_pace,
   gsl_vector_mul(wz, w);
 
   for (size_t t = 0; t < indicator_snp.size(); ++t) {
-    !safeGetline(infile, line).eof();
+    safeGetline(infile, line).eof();
     if (t % display_pace == 0 || t == (indicator_snp.size() - 1)) {
       ProgressBar("Reading SNPs  ", t, indicator_snp.size() - 1);
     }
@@ -2246,9 +2249,9 @@ bool BimbamXwz(const string &file_geno, const int display_pace,
       continue;
     }
 
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
-    ch_ptr = strtok(NULL, " , \t");
-    ch_ptr = strtok(NULL, " , \t");
+    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe(NULL, " , \t");
+    ch_ptr = strtok_safe(NULL, " , \t");
 
     geno_mean = 0.0;
     n_miss = 0;
@@ -2260,7 +2263,7 @@ bool BimbamXwz(const string &file_geno, const int display_pace,
       if (indicator_idv[i] == 0) {
         continue;
       }
-      ch_ptr = strtok(NULL, " , \t");
+      ch_ptr = strtok_safe(NULL, " , \t");
       if (strcmp(ch_ptr, "NA") == 0) {
         gsl_vector_set(geno_miss, i, 0);
         n_miss++;
@@ -2491,7 +2494,7 @@ bool BimbamXtXwz(const string &file_geno, const int display_pace,
   gsl_vector *geno_miss = gsl_vector_alloc(ni_test);
 
   for (size_t t = 0; t < indicator_snp.size(); ++t) {
-    !safeGetline(infile, line).eof();
+    safeGetline(infile, line).eof();
     if (t % display_pace == 0 || t == (indicator_snp.size() - 1)) {
       ProgressBar("Reading SNPs  ", t, indicator_snp.size() - 1);
     }
@@ -2499,9 +2502,9 @@ bool BimbamXtXwz(const string &file_geno, const int display_pace,
       continue;
     }
 
-    ch_ptr = strtok((char *)line.c_str(), " , \t");
-    ch_ptr = strtok(NULL, " , \t");
-    ch_ptr = strtok(NULL, " , \t");
+    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe(NULL, " , \t");
+    ch_ptr = strtok_safe(NULL, " , \t");
 
     geno_mean = 0.0;
     n_miss = 0;
@@ -2513,7 +2516,7 @@ bool BimbamXtXwz(const string &file_geno, const int display_pace,
       if (indicator_idv[i] == 0) {
         continue;
       }
-      ch_ptr = strtok(NULL, " , \t");
+      ch_ptr = strtok_safe(NULL, " , \t");
       if (strcmp(ch_ptr, "NA") == 0) {
         gsl_vector_set(geno_miss, i, 0);
         n_miss++;

@@ -84,6 +84,49 @@ testUnivariateLinearMixedModelLOCO1() {
     assertEquals "15465346.22" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
+testPlinkCenteredRelatednessMatrixKLOCO1() {
+    return 0
+    outn=mouse_hs1940_Plink_LOCO1
+    rm -f output/$outn.*
+    $gemma -bfile ../example/mouse_hs1940 \
+           -a ../example/mouse_hs1940.anno.txt \
+           -snps ../example/mouse_hs1940_snps.txt \
+           -nind 400 \
+           -loco 1 \
+           -gk \
+           -debug \
+           -o $outn
+    assertEquals 0 $?
+    grep "total computation time" < output/$outn.log.txt
+    outfn=output/$outn.cXX.txt
+    assertEquals 0 $?
+    assertEquals "400" `wc -l < $outfn`
+    assertEquals "0.312" `head -c 5 $outfn`
+    assertEquals "71.03" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+}
+
+
+testPlinkUnivariateLinearMixedModelLOCO1() {
+    return 0
+    outn=mouse_hs1940_CD8_Plink_LOCO1_lmm
+    rm -f output/$outn.*
+    $gemma -bfile ../example/mouse_hs1940 \
+	   -n 1 \
+	   -loco 1 \
+           -k ./output/mouse_hs1940_Plink_LOCO1.cXX.txt \
+           -a ../example/mouse_hs1940.anno.txt \
+	   -snps ../example/mouse_hs1940_snps.txt -lmm \
+	   -nind 400 \
+	   -debug \
+           -o $outn
+    assertEquals 0 $?
+    grep "total computation time" < output/$outn.log.txt
+    assertEquals 0 $?
+    outfn=output/$outn.assoc.txt
+    assertEquals "68" `wc -l < $outfn`
+    assertEquals "15465346.22" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+}
+
 shunit2=`which shunit2`
 
 if [ -x "$shunit2" ]; then

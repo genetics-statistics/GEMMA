@@ -42,15 +42,15 @@
 SYS                    = LNX # LNX|MAC (Linux is the default)
 # Leave blank after "=" to disable; put "= 1" to enable
 DIST_NAME              = gemma-0.97.3
-DEBUG                  = 1   # DEBUG mode, set DEBUG=0 for a release
+DEBUG                  = 1                # DEBUG mode, set DEBUG=0 for a release
 SHOW_COMPILER_WARNINGS =
 WITH_LAPACK            = 1
-WITH_OPENBLAS          =     # Defaults to LAPACK - OPENBLAS may be faster
-OPENBLAS_LEGACY        =     # Using older OpenBlas
-FORCE_STATIC           =     # Static linking of libraries
-GCC_FLAGS              = -O3 # extra flags -Wl,--allow-multiple-definition
-TRAVIS_CI              =     # used by TRAVIS for testing
-EIGEN_INCLUDE_PATH=/usr/include/eigen3
+WITH_OPENBLAS          =                  # Defaults to LAPACK - OPENBLAS may be faster
+OPENBLAS_LEGACY        =                  # Using older OpenBlas
+FORCE_STATIC           =                  # Static linking of libraries
+GCC_FLAGS              = -O3 -std=gnu++11 # extra flags -Wl,--allow-multiple-definition
+TRAVIS_CI              =                  # used by TRAVIS for testing
+EIGEN_INCLUDE_PATH     = /usr/include/eigen3
 
 # --------------------------------------------------------------------
 # Edit below this line with caution
@@ -67,6 +67,11 @@ else
   CPP = g++
 endif
 
+ifeq ($(CPP), clang++)
+  # macOS Homebrew settings (as used on Travis-CI)
+  GCC_FLAGS=-O3 -std=c++11 -stdlib=libc++ -isystem//usr/local/opt/openblas/include -isystem//usr/local/include/eigen3 -Wl,-L/usr/local/opt/openblas/lib
+endif
+
 ifdef WITH_OPENBLAS
   OPENBLAS=1
   # WITH_LAPACK =  # OPENBLAS usually includes LAPACK
@@ -77,10 +82,10 @@ ifdef WITH_OPENBLAS
 endif
 
 ifdef DEBUG
-  CPPFLAGS += -g $(GCC_FLAGS) -std=gnu++11 -isystem/$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
+  CPPFLAGS += -g $(GCC_FLAGS) -isystem/$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
 else
   # release mode
-  CPPFLAGS += -DNDEBUG $(GCC_FLAGS) -std=gnu++11 -isystem/$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
+  CPPFLAGS += -DNDEBUG $(GCC_FLAGS) -isystem/$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
 endif
 
 ifdef SHOW_COMPILER_WARNINGS
