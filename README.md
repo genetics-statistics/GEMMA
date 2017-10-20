@@ -172,6 +172,37 @@ hardware. See [INSTALL.md](INSTALL.md) for speeding up tips.
 More information on source code, dependencies and installation can be
 found in [INSTALL.md](INSTALL.md).
 
+## Reporting a GEMMA bug or issue
+
+GEMMA has an
+[issue tracker](https://github.com/genetics-statistics/GEMMA/issues)
+on github. Before posting an issue search the issue tracker first. It
+is likely someone may have encountered something similiar. Also try
+running the latest version of GEMMA to make sure it has not been fixed
+already. When reporting an issue include the output of the program and
+the contents of the .log.txt file in the output directory. We may ask
+you for your data to resolve the issue (treated confidentially). Check
+list:
+
+1. [X] I have found and issue with GEMMA
+2. [ ] I have searched for it on the [issue tracker](https://github.com/genetics-statistics/GEMMA/issues) (incl. closed issues)
+3. [ ] I have tried the latest release of GEMMA
+4. [ ] I have posted a new issue on the issue tracker or added to an existing one
+5. [ ] I have included the output of GEMMA
+6. [ ] I have included the relevant .log.txt file in the output directory
+7. [ ] I have made available the data to reproduce the problem (optional)
+
+Please always remember that GEMMA is written and maintained by
+volunteers with good intentions. Our time is valuable too. By helping
+us as much as possible we can provide this tool for everyone to use.
+
+## Code of conduct
+
+By using GEMMA and communicating with its communtity you implicitely
+agree to abide by the
+[code of conduct](https://software-carpentry.org/conduct/) as
+published by the Software Carpentry initiative.
+
 ## Credits
 
 The *GEMMA* software was developed by:
