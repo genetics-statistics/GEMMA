@@ -1989,8 +1989,8 @@ void GEMMA::BatchRun(PARAM &cPar) {
                   vec_weight, vec_z2, cPar.ni_total, cPar.ns_total,
                   cPar.ns_test);
     cout << "## number of total individuals = " << cPar.ni_total << endl;
-    cout << "## number of total SNPs = " << cPar.ns_total << endl;
-    cout << "## number of analyzed SNPs = " << cPar.ns_test << endl;
+    cout << "## number of total SNPs/var = " << cPar.ns_total << endl;
+    cout << "## number of analyzed SNPs/var = " << cPar.ns_test << endl;
     cout << "## number of variance components = " << cPar.n_vc << endl;
     cout << "Calculating the q vector ... " << endl;
     Calcq(cPar.n_block, vec_cat, vec_ni, vec_weight, vec_z2, Vq, q,
@@ -2119,8 +2119,8 @@ void GEMMA::BatchRun(PARAM &cPar) {
 
       cout << "Study Panel: " << endl;
       cout << "## number of total individuals = " << cPar.ni_study << endl;
-      cout << "## number of total SNPs = " << cPar.ns_study << endl;
-      cout << "## number of analyzed SNPs = " << cPar.ns_test << endl;
+      cout << "## number of total SNPs/var = " << cPar.ns_study << endl;
+      cout << "## number of analyzed SNPs/var = " << cPar.ns_test << endl;
       cout << "## number of variance components = " << cPar.n_vc << endl;
 
       // compute q
@@ -3053,7 +3053,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
       }
 
       cout << "## number of blocks = " << BF.size() << endl;
-      cout << "## number of analyzed SNPs = " << vec_rs.size() << endl;
+      cout << "## number of analyzed SNPs/var = " << vec_rs.size() << endl;
       cout << "## grid size for hyperparameters = " << wab.size() << endl;
       cout << "## number of continuous annotations = " << kc << endl;
       cout << "## number of discrete annotations = " << kd << endl;
@@ -3132,7 +3132,6 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
   tm *ptm = localtime(&rawtime);
 
   outfile << "## Date = " << asctime(ptm);
-  // ptm->tm_year<<":"<<ptm->tm_month<<":"<<ptm->tm_day":"<<ptm->tm_hour<<":"<<ptm->tm_min<<endl;
 
   outfile << "##" << endl;
   outfile << "## Summary Statistics:" << endl;
@@ -3142,11 +3141,6 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
             << cPar.ni_study << endl;
     outfile << "## number of total individuals in the reference = "
             << cPar.ni_ref << endl;
-    // outfile<<"## number of total SNPs in the sample = "<<cPar.ns_study<<endl;
-    // outfile<<"## number of total SNPs in the reference panel =
-    // "<<cPar.ns_ref<<endl;
-    // outfile<<"## number of analyzed SNPs = "<<cPar.ns_test<<endl;
-    // outfile<<"## number of analyzed SNP pairs = "<<cPar.ns_pair<<endl;
     outfile << "## number of variance components = " << cPar.n_vc << endl;
 
     outfile << "## pve estimates = ";
@@ -3196,11 +3190,11 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
             << cPar.ni_study << endl;
     outfile << "## number of total individuals in the reference = "
             << cPar.ni_total << endl;
-    outfile << "## number of total SNPs in the sample = " << cPar.ns_study
+    outfile << "## number of total SNPs/var in the sample = " << cPar.ns_study
             << endl;
-    outfile << "## number of total SNPs in the reference panel = "
+    outfile << "## number of total SNPs/var in the reference panel = "
             << cPar.ns_total << endl;
-    outfile << "## number of analyzed SNPs = " << cPar.ns_test << endl;
+    outfile << "## number of analyzed SNPs/var = " << cPar.ns_test << endl;
     outfile << "## number of variance components = " << cPar.n_vc << endl;
   } else if (!cPar.file_beta.empty() &&
              (cPar.a_mode == 66 || cPar.a_mode == 67)) {
@@ -3208,9 +3202,9 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
             << cPar.ni_total << endl;
     outfile << "## number of total individuals in the reference = "
             << cPar.ni_ref << endl;
-    outfile << "## number of total SNPs in the sample = " << cPar.ns_total
+    outfile << "## number of total SNPs/var in the sample = " << cPar.ns_total
             << endl;
-    outfile << "## number of analyzed SNPs = " << cPar.ns_test << endl;
+    outfile << "## number of analyzed SNPs/var = " << cPar.ns_test << endl;
     outfile << "## number of variance components = " << cPar.n_vc << endl;
 
     outfile << "## pve estimates = ";
@@ -3280,10 +3274,10 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
       outfile << "## number of total genes = " << cPar.ng_total << endl;
       outfile << "## number of analyzed genes = " << cPar.ng_test << endl;
     } else if (cPar.file_epm.empty()) {
-      outfile << "## number of total SNPs = " << cPar.ns_total << endl;
-      outfile << "## number of analyzed SNPs = " << cPar.ns_test << endl;
+      outfile << "## number of total SNPs/var = " << cPar.ns_total << endl;
+      outfile << "## number of analyzed SNPs/var = " << cPar.ns_test << endl;
     } else {
-      outfile << "## number of analyzed SNPs = " << cPar.ns_test << endl;
+      outfile << "## number of analyzed SNPs/var = " << cPar.ns_test << endl;
     }
 
     if (cPar.a_mode == 13) {
