@@ -17,6 +17,7 @@
 */
 
 #include <iostream>
+#include <iomanip>
 #include <string>
 #include <algorithm>
 #include <cmath>
@@ -1136,15 +1137,15 @@ void PARAM::CheckData(void) {
       cout << "## number of total genes = " << ng_total << endl;
     } else if (file_epm.empty() && a_mode != 43 && a_mode != 5) {
       if (!loco.empty())
-        cout << "## leave one chromosome out (LOCO) = " << loco << endl;
-      cout << "## number of total SNPs    = " << ns_total << endl;
+        cout << "## leave one chromosome out (LOCO) = " << setw(8) << loco << endl;
+      cout << "## number of total SNPs/var        = " << setw(8) << ns_total << endl;
       if (setSnps.size())
-        cout << "## number of considered SNPS = " << setSnps.size() << endl;
+        cout << "## number of considered SNPS       = " << setw(8) << setSnps.size() << endl;
       if (setKSnps.size())
-        cout << "## number of SNPS for K    = " << setKSnps.size() << endl;
+        cout << "## number of SNPS for K            = " << setw(8) << setKSnps.size() << endl;
       if (setGWASnps.size())
-        cout << "## number of SNPS for GWAS = " << setGWASnps.size() << endl;
-      cout << "## number of analyzed SNPs = " << ns_test << endl;
+        cout << "## number of SNPS for GWAS         = " << setw(8) << setGWASnps.size() << endl;
+      cout << "## number of analyzed SNPs         = " << setw(8) << ns_test << endl;
     } else {
     }
   }
