@@ -17,7 +17,8 @@ encourage contributions, for example, by forking the repository,
 making your changes to the code, and issuing a pull request.
 
 Currently, GEMMA is supported for 64-bit Mac OS X and Linux
-platforms. *Windows is not currently supported.* If you are interested
+platforms. *Windows is not currently supported.* though you can
+run GEMMA in a Linux VM or [container](https://docs.docker.com/docker-for-windows/). If you are interested
 in helping to make GEMMA available on Windows platforms (e.g., by
 providing installation instructions for Windows, or by contributing
 Windows binaries) please post a note in the
