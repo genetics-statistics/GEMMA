@@ -38,10 +38,12 @@
 #
 #      https://github.com/genetics-statistics/GEMMA/blob/master/INSTALL.md
 
+GEMMA_VERSION = $(shell cat ./VERSION)
+
 # Set this variable to either LNX or MAC
 SYS                    = LNX # LNX|MAC (Linux is the default)
 # Leave blank after "=" to disable; put "= 1" to enable
-DIST_NAME              = gemma-0.97.3
+DIST_NAME              = gemma-$(GEMMA_VERSION)
 DEBUG                  = 1                # DEBUG mode, set DEBUG=0 for a release
 SHOW_COMPILER_WARNINGS =
 WITH_LAPACK            = 1
@@ -132,13 +134,16 @@ ifdef WITH_LAPACK
   endif
 endif
 
-HDR          = $(wildcard src/*.h)
+HDR          = $(wildcard src/*.h) ./src/version.h
 SOURCES      = $(wildcard src/*.cpp)
 
 # all
 OBJS = $(SOURCES:.cpp=.o)
 
-all: $(OUTPUT)
+./src/version.h:
+	./scripts/gen_version_info.sh > src/version.h
+
+all: ./src/version.h $(OUTPUT)
 
 $(OUTPUT): $(OBJS)
 	$(CPP) $(CPPFLAGS) $(OBJS) $(LIBS) -o $(OUTPUT)
@@ -173,16 +178,18 @@ check: fast-check slow-check
 check-all: check lengthy-check
 
 clean:
+	rm $(SRC_DIR)/version.h
 	rm -vf $(SRC_DIR)/*.o
 	rm -vf $(SRC_DIR)/*~
 	rm -vf $(TEST_SRC_DIR)/*.o
 	rm -vf $(OUTPUT)
 	rm -vf ./bin/unittests-gemma
 
-DIST_COMMON = COPYING.txt README.txt Makefile
+DIST_COMMON = *.md LICENSE VERSION Makefile
 DIST_SUBDIRS = src doc example bin
 
-tar:
+tar: version all
+	@echo "Creating $(DIST_NAME)"
 	mkdir -p ./$(DIST_NAME)
 	cp $(DIST_COMMON) ./$(DIST_NAME)/
 	cp -r $(DIST_SUBDIRS) ./$(DIST_NAME)/
