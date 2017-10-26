@@ -1525,7 +1525,7 @@ void LMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
     auto ci_total = 0;
     auto ci_test = 0;
     // ---- for all genotypes
-    for (int i = 0; i < n_bit; ++i) {
+    for (uint i = 0; i < n_bit; ++i) {
       infile.read(ch, 1);
       bset8 = ch[0];
 
