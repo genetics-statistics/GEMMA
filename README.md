@@ -182,21 +182,20 @@ on github. For general support GEMMA has a mailing list at
 Before posting an issue search the issue tracker and mailing list
 first. It is likely someone may have encountered something
 similiar. Also try running the latest version of GEMMA to make sure it
-has not been fixed already. Support questions should be aimed at the
-mailing list. The issue tracker is for development issues around the
-software itself. When reporting an issue include the output of the
-program and the contents of the .log.txt file in the output
-directory. We may ask you for your data to resolve the issue (treated
-confidentially).
+has not been fixed already. Support/installation questions should be
+aimed at the mailing list. The issue tracker is for development issues
+around the software itself. When reporting an issue include the output
+of the program and the contents of the .log.txt file in the output
+directory.
 
 ### Check list:
 
 1. [X] I have found and issue with GEMMA
-2. [ ] I have searched for it on the [issue tracker](https://github.com/genetics-statistics/GEMMA/issues) (incl. closed issues)
+2. [ ] I have searched for it on the [issue tracker](https://github.com/genetics-statistics/GEMMA/issues?q=is%3Aissue) (incl. closed issues)
 3. [ ] I have searched for it on the [mailing list](https://groups.google.com/forum/#!forum/gemma-discussion)
 4. [ ] I have tried the latest [release](https://github.com/genetics-statistics/GEMMA/releases) of GEMMA
 5. [ ] I have read and agreed to below code of conduct
-6. [ ] If it is a support question I have posted it to the [mailing list](https://groups.google.com/forum/#!forum/gemma-discussion)
+6. [ ] If it is a support/install question I have posted it to the [mailing list](https://groups.google.com/forum/#!forum/gemma-discussion)
 7. [ ] If it is software development related I have posted a new issue on the [issue tracker](https://github.com/genetics-statistics/GEMMA/issues) or added to an existing one
 8. [ ] In the message I have included the output of my GEMMA run
 9. [ ] In the message I have included the relevant .log.txt file in the output directory
