@@ -33,13 +33,14 @@
 # Set this variable to either LNX or MAC
 SYS                    = MAC # LNX|MAC (Linux is the default)
 # Leave blank after "=" to disable; put "= 1" to enable
-DIST_NAME              = gemma-0.97.2
+DIST_NAME              = gemma-0.97.3
 DEBUG                  =     # DEBUG mode, set DEBUG= for a release
 SHOW_COMPILER_WARNINGS =
 WITH_LAPACK            = 1
 WITH_OPENBLAS          =     # Defaults to LAPACK - OPENBLAS may be faster
 FORCE_STATIC           =     # Static linking of libraries
-GCC_FLAGS              = -O3 -I/usr/local/Cellar/gsl/2.4/include -I./eigen
+GCC_FLAGS              = -O3 -I/usr/local/Cellar/gsl/2.4/include -I./eigen \
+                         -I/System/Library/Frameworks/Accelerate.framework/Versions/Current/Frameworks/vecLib.framework/Headers
 TRAVIS_CI              =     # used by TRAVIS for testing
 EIGEN_INCLUDE_PATH=
 CXX = g++
