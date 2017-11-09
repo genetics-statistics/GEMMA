@@ -77,7 +77,7 @@ inline void fail_msg(std::string msg) {
 #else // DEBUG
 
 #define warning_msg(msg) cerr << "**** WARNING: " << msg << " in " << __FILE__ << " at line " << __LINE__ << " in " << __FUNCTION__ << endl;
-#define debug_msg(msg) cerr << "**** DEBUG: " << msg << " in " << __FILE__ << " at line " << __LINE__ << " in " << __FUNCTION__ << endl;
+#define debug_msg(msg) (is_debug_mode() && cerr << "**** DEBUG: " << msg << " in " << __FILE__ << " at line " << __LINE__ << " in " << __FUNCTION__ << endl);
 #define assert_issue(is_issue, expr) \
   ((is_issue) ? enforce_msg(expr,"FAIL: ISSUE assert") : __ASSERT_VOID_CAST(0))
 

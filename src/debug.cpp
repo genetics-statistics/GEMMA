@@ -22,7 +22,7 @@ static bool debug_mode     = false;
 static bool debug_check    = true;  // check data/algorithms
 static bool debug_strict   = false; // fail on error
 static bool debug_quiet    = false;
-static uint debug_issue    = 0;     // github issues
+static uint debug_issue    = 0;     // track github issues
 static bool debug_legacy   = false; // legacy mode
 
 void debug_set_debug_mode(bool setting) { debug_mode = setting; }
