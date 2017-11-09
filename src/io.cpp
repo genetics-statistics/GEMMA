@@ -2133,19 +2133,23 @@ bool ReadFile_est(const string &file_est, const vector<size_t> &est_column,
     gamma = 1.0;
     for (size_t i = 0; i < n + 1; ++i) {
       if (i == est_column[0] - 1) {
+        enforce(ch_ptr);
         rs = ch_ptr;
       }
       if (i == est_column[1] - 1) {
+        enforce(ch_ptr);
         alpha = atof(ch_ptr);
       }
       if (i == est_column[2] - 1) {
+        enforce(ch_ptr);
         beta = atof(ch_ptr);
       }
       if (i == est_column[3] - 1) {
+        enforce(ch_ptr);
         gamma = atof(ch_ptr);
       }
       if (i < n) {
-        ch_ptr = strtok_safe(NULL, " \t");
+        ch_ptr = strtok(NULL, " \t");
       }
     }
 

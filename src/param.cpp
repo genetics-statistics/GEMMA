@@ -894,7 +894,6 @@ void PARAM::CheckParam(void) {
   enforce_fexists(file_snps, "open file");
   enforce_fexists(file_ksnps, "open file");
   enforce_fexists(file_gwasnps, "open file");
-  enforce_fexists(file_log, "open file");
   enforce_fexists(file_anno, "open file");
 
   if (!loco.empty()) {
@@ -908,54 +907,14 @@ void PARAM::CheckParam(void) {
     enforce_msg(file_gwasnps.empty(), "LOCO does not allow -gwasnps switch");
   }
 
-  str = file_kin;
-  if (!str.empty() && stat(str.c_str(), &fileInfo) == -1) {
-    cout << "error! fail to open relatedness matrix file: " << str << endl;
-    error = true;
-  }
-
-  str = file_mk;
-  if (!str.empty() && stat(str.c_str(), &fileInfo) == -1) {
-    cout << "error! fail to open relatedness matrix file: " << str << endl;
-    error = true;
-  }
-
-  str = file_cvt;
-  if (!str.empty() && stat(str.c_str(), &fileInfo) == -1) {
-    cout << "error! fail to open covariates file: " << str << endl;
-    error = true;
-  }
-
-  str = file_gxe;
-  if (!str.empty() && stat(str.c_str(), &fileInfo) == -1) {
-    cout << "error! fail to open environmental covariate file: " << str << endl;
-    error = true;
-  }
-
-  str = file_weight;
-  if (!str.empty() && stat(str.c_str(), &fileInfo) == -1) {
-    cout << "error! fail to open the residual weight file: " << str << endl;
-    error = true;
-  }
-
-  str = file_epm;
-  if (!str.empty() && stat(str.c_str(), &fileInfo) == -1) {
-    cout << "error! fail to open estimated parameter file: " << str << endl;
-    error = true;
-  }
-
-  str = file_ebv;
-  if (!str.empty() && stat(str.c_str(), &fileInfo) == -1) {
-    cout << "error! fail to open estimated breeding value file: " << str
-         << endl;
-    error = true;
-  }
-
-  str = file_read;
-  if (!str.empty() && stat(str.c_str(), &fileInfo) == -1) {
-    cout << "error! fail to open total read file: " << str << endl;
-    error = true;
-  }
+  enforce_fexists(file_kin, "open file");
+  enforce_fexists(file_mk, "open file");
+  enforce_fexists(file_cvt, "open file");
+  enforce_fexists(file_gxe, "open file");
+  enforce_fexists(file_weight, "open file");
+  enforce_fexists(file_epm, "open file");
+  enforce_fexists(file_ebv, "open file");
+  enforce_fexists(file_read, "open file");
 
   // Check if files are compatible with analysis mode.
   if (k_mode == 2 && !file_geno.empty()) {

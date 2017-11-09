@@ -366,10 +366,4 @@ public:
 
 size_t GetabIndex(const size_t a, const size_t b, const size_t n_cvt);
 
-// Helpers for checking parameters
-#define enforce_fexists(fn, msg)                                               \
-  if (!fn.empty())                                                             \
-    enforce_msg(stat(fn.c_str(), &fileInfo) == 0,                              \
-                ((std::string(__STRING(fn)) + ": " + msg).c_str()));
-
 #endif

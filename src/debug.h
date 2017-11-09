@@ -70,18 +70,18 @@ inline void fail_msg(std::string msg) {
 
 #if defined NDEBUG
 
-#define warning_msg(msg) cerr << "**** WARNING: " << msg << endl;
-#define debug_msg(msg)
-#define assert_issue(is_issue, expr)
+  #define warning_msg(msg) cerr << "**** WARNING: " << msg << endl;
+  #define debug_msg(msg)
+  #define assert_issue(is_issue, expr)
 
 #else // DEBUG
 
-#define warning_msg(msg) cerr << "**** WARNING: " << msg << " in " << __FILE__ << " at line " << __LINE__ << " in " << __FUNCTION__ << endl;
-#define debug_msg(msg) (is_debug_mode() && cerr << "**** DEBUG: " << msg << " in " << __FILE__ << " at line " << __LINE__ << " in " << __FUNCTION__ << endl);
-#define assert_issue(is_issue, expr) \
-  ((is_issue) ? enforce_msg(expr,"FAIL: ISSUE assert") : __ASSERT_VOID_CAST(0))
+  #define warning_msg(msg) cerr << "**** WARNING: " << msg << " in " << __FILE__ << " at line " << __LINE__ << " in " << __FUNCTION__ << endl;
+  #define debug_msg(msg) (is_debug_mode() && cerr << "**** DEBUG: " << msg << " in " << __FILE__ << " at line " << __LINE__ << " in " << __FUNCTION__ << endl);
+  #define assert_issue(is_issue, expr) \
+    ((is_issue) ? enforce_msg(expr,"FAIL: ISSUE assert") : __ASSERT_VOID_CAST(0))
 
-#endif
+#endif // NDEBUG
 
 // enforce works like assert but also when NDEBUG is set (i.e., it
 // always works). enforce_msg prints message instead of expr
@@ -121,5 +121,11 @@ inline void __enforce_fail(const char *__assertion, const char *__file,
        ? __ASSERT_VOID_CAST(0)                                                 \
        : __enforce_fail(gsl_strerror(COMBINE(res, __LINE__)), __FILE__,         \
                         __LINE__, __ASSERT_FUNCTION))
+
+#define enforce_fexists(fn, msg)                                               \
+  if (!fn.empty())                                                             \
+    enforce_msg(stat(fn.c_str(), &fileInfo) == 0,                              \
+                ((std::string(__STRING(fn)) + " " + fn + ": " + msg).c_str()));
+
 
 #endif

@@ -16,6 +16,29 @@ testBslmm() {
     assertEquals "4043967139.42" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn2`
 }
 
+testBslmm2() {
+    $gemma -g ../example/mouse_hs1940.geno.txt.gz \
+           -p ../example/mouse_hs1940.pheno.txt \
+           -n 2 -debug \
+           -a ../example/mouse_hs1940.anno.txt \
+           -gk 1 -o mouse_hs1940_CD8_train
+    assertEquals 0 $?
+    $gemma -g ../example/mouse_hs1940.geno.txt.gz \
+           -p ../example/mouse_hs1940.pheno.txt \
+           -n 2 -debug \
+           -epm ./output/mouse_hs1940_CD8_bslmm.param.txt \
+           -emu ./output/mouse_hs1940_CD8_bslmm.log.txt \
+           -ebv ./output/mouse_hs1940_CD8_bslmm.bv.txt \
+           -k ./output/mouse_hs1940_CD8_train.cXX.txt \
+           -predict \
+           -o mouse_hs1940_CD8_prdt_k
+    assertEquals 0 $?
+    outfn=output/$outn.hyp.txt
+    assertEquals "45181.93" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+    ../bin/gemma -g mouse_hs1940.geno.txt.gz -p mouse_hs1940.pheno.txt -n 4 -epm ./output/mouse_hs1940_CD8_bslmm_cc1.param.txt -emu ./output/mouse_hs1940_CD8_bslmm_cc1.log.txt -predict -o mouse_hs1940_CD8_prdt_cc1
+    exit 1
+}
+
 testCenteredRelatednessMatrixKFullLOCO1() {
     outn=mouse_hs1940_full_LOCO1
     $gemma -g ../example/mouse_hs1940.geno.txt.gz \
