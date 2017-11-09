@@ -30,10 +30,12 @@
 #
 #      https://github.com/genetics-statistics/GEMMA/blob/master/INSTALL.md
 
+GEMMA_VERSION = $(shell cat ./VERSION)
+
 # Set this variable to either LNX or MAC
 SYS                    = MAC # LNX|MAC (Linux is the default)
 # Leave blank after "=" to disable; put "= 1" to enable
-DIST_NAME              = gemma-0.97.3
+DIST_NAME              = gemma-$(GEMMA_VERSION)
 DEBUG                  =     # DEBUG mode, set DEBUG= for a release
 SHOW_COMPILER_WARNINGS =
 WITH_LAPACK            = 1
