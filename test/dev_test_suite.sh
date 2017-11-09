@@ -32,6 +32,23 @@ testBXDStandardRelatednessMatrixK() {
     assertEquals "-116.11" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
+testBXDLMLikelihoodRatio() {
+    outn=BXD_LM_LR
+    $gemma -g ../example/BXD_geno.txt.gz \
+           -p ../example/BXD_pheno.txt \
+           -c ../example/BXD_covariates2.txt \
+           -a ../example/BXD_snps.txt \
+           -k ./output/BXD.cXX.txt \
+           -lm 4 -maf 0.1 \
+           -debug \
+           -o $outn
+    assertEquals 0 $?
+
+    outfn=output/$outn.assoc.txt
+    assertEquals "95134" `wc -w < $outfn`
+    assertEquals "3089042886.28" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+}
+
 testBXDLMMLikelihoodRatio() {
     outn=BXD_LMM_LR
     $gemma -g ../example/BXD_geno.txt.gz \
