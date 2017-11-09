@@ -89,13 +89,16 @@ LIBS += -framework Accelerate \
   /usr/local/Cellar/gsl/2.4/lib/libgsl.a \
   /usr/local/Cellar/gsl/2.4/lib/libgslcblas.a
 
-HDR          = $(wildcard src/*.h)
+HDR          = $(wildcard src/*.h) ./src/version.h
 SOURCES      = $(wildcard src/*.cpp)
 
 # all
 OBJS = $(SOURCES:.cpp=.o)
 
 all: $(OUTPUT)
+
+./src/version.h:
+	./scripts/gen_version_info.sh > src/version.h
 
 <print-% : ; @echo $* = $($*)
 
@@ -132,6 +135,7 @@ check: fast-check slow-check
 check-all: check lengthy-check
 
 clean:
+	rm -vf $(SRC_DIR)/version.h
 	rm -vf $(SRC_DIR)/*.o
 	rm -vf $(SRC_DIR)/*~
 	rm -vf $(TEST_SRC_DIR)/*.o

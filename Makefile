@@ -104,10 +104,6 @@ endif
 
 OUTPUT = $(BIN_DIR)/gemma
 
-SOURCES = $(SRC_DIR)/main.cpp
-
-HDR =
-
 # Detailed libary paths, D for dynamic and S for static
 
 LIBS_LNX_D_LAPACK = -llapack
@@ -140,22 +136,25 @@ SOURCES      = $(wildcard src/*.cpp)
 # all
 OBJS = $(SOURCES:.cpp=.o)
 
+all: $(OUTPUT)
+
 ./src/version.h:
 	./scripts/gen_version_info.sh > src/version.h
-
-all: ./src/version.h $(OUTPUT)
 
 $(OUTPUT): $(OBJS)
 	$(CPP) $(CPPFLAGS) $(OBJS) $(LIBS) -o $(OUTPUT)
 
-$(OBJS)  : $(HDR)
+$(OBJS): $(HDR)
 
-.cpp.o:
-	$(CPP) $(CPPFLAGS) $(HEADERS) -c $*.cpp -o $*.o
+# .cpp.o:
+# 	$(CPP) $(CPPFLAGS) -c $*.cpp -o $*.o
+
 .SUFFIXES : .cpp .c .o $(SUFFIXES)
 
-unittests: all contrib/catch-1.9.7/catch.hpp $(TEST_SRC_DIR)/unittests-main.o $(TEST_SRC_DIR)/unittests-math.o
+./bin/unittests-gemma: contrib/catch-1.9.7/catch.hpp $(TEST_SRC_DIR)/unittests-main.o $(TEST_SRC_DIR)/unittests-math.o $(OBJS)
 	$(CPP) $(CPPFLAGS) $(TEST_SRC_DIR)/unittests-main.o  $(TEST_SRC_DIR)/unittests-math.o $(filter-out src/main.o, $(OBJS)) $(LIBS) -o ./bin/unittests-gemma
+
+unittests: ./bin/unittests-gemma
 	./bin/unittests-gemma
 
 fast-check: all unittests
