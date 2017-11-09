@@ -2,6 +2,20 @@
 
 gemma=../bin/gemma
 
+testBslmm() {
+    outn=mouse_hs1940_CD8_bslmm
+    $gemma -g ../example/mouse_hs1940.geno.txt.gz \
+           -p ../example/mouse_hs1940.pheno.txt \
+           -n 2 -a ../example/mouse_hs1940.anno.txt \
+           -bslmm -debug \
+           -o $outn -w 1000 -s 10000 -seed 1
+    assertEquals 0 $?
+    outfn1=output/$outn.hyp.txt
+    outfn2=output/$outn.param.txt
+    assertEquals "45181.93" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn1`
+    assertEquals "4043967139.42" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn2`
+}
+
 testCenteredRelatednessMatrixKFullLOCO1() {
     outn=mouse_hs1940_full_LOCO1
     $gemma -g ../example/mouse_hs1940.geno.txt.gz \

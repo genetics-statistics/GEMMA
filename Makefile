@@ -102,6 +102,8 @@ else
   endif
 endif
 
+.PHONY: all
+
 OUTPUT = $(BIN_DIR)/gemma
 
 # Detailed libary paths, D for dynamic and S for static
