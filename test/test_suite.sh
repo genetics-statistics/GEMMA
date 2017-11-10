@@ -75,7 +75,7 @@ testBslmm5() {
            -o $outn
     assertEquals 0 $?
     outfn=output/$outn.prdt.txt
-    assertEquals "-60.33" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+    assertEquals "550.67" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
 testCenteredRelatednessMatrixKFullLOCO1() {
