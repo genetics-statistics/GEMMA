@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
 
 gemma=../bin/gemma
+gemmaopts=-debug
 
 # Related to https://github.com/genetics-statistics/GEMMA/issues/78
 testBXDStandardRelatednessMatrixKSingularError() {
     outn=BXDerr
     rm -f output/$outn.*
-    $gemma -g ../example/BXD_geno.txt.gz \
+    $gemma $gemmaopts \
+           -g ../example/BXD_geno.txt.gz \
            -p ../example/BXD_pheno.txt \
            -c ../example/BXD_covariates.txt \
            -a ../example/BXD_snps.txt \
            -gk \
-           -debug \
            -o $outn
     assertEquals 22 $? # should show singular error
 }
@@ -19,12 +20,11 @@ testBXDStandardRelatednessMatrixKSingularError() {
 testBXDStandardRelatednessMatrixK() {
     outn=BXD
     rm -f output/$outn.*
-    $gemma -g ../example/BXD_geno.txt.gz \
+    $gemma $gemmaopts -g ../example/BXD_geno.txt.gz \
            -p ../example/BXD_pheno.txt \
            -c ../example/BXD_covariates2.txt \
            -a ../example/BXD_snps.txt \
            -gk \
-           -debug \
            -o $outn
     assertEquals 0 $?
     outfn=output/$outn.cXX.txt
@@ -34,13 +34,12 @@ testBXDStandardRelatednessMatrixK() {
 
 testBXDLMLikelihoodRatio() {
     outn=BXD_LM_LR
-    $gemma -g ../example/BXD_geno.txt.gz \
+    $gemma $gemmaopts -g ../example/BXD_geno.txt.gz \
            -p ../example/BXD_pheno.txt \
            -c ../example/BXD_covariates2.txt \
            -a ../example/BXD_snps.txt \
            -k ./output/BXD.cXX.txt \
            -lm 4 -maf 0.1 \
-           -debug \
            -o $outn
     assertEquals 0 $?
 
@@ -51,13 +50,12 @@ testBXDLMLikelihoodRatio() {
 
 testBXDLMMLikelihoodRatio() {
     outn=BXD_LMM_LR
-    $gemma -g ../example/BXD_geno.txt.gz \
+    $gemma $gemmaopts -g ../example/BXD_geno.txt.gz \
            -p ../example/BXD_pheno.txt \
            -c ../example/BXD_covariates2.txt \
            -a ../example/BXD_snps.txt \
            -k ./output/BXD.cXX.txt \
            -lmm 2 -maf 0.1 \
-           -debug \
            -o $outn
     assertEquals 0 $?
 
@@ -69,8 +67,8 @@ testBXDLMMLikelihoodRatio() {
 testCenteredRelatednessMatrixKLOCO1() {
     outn=mouse_hs1940_LOCO1
     rm -f output/$outn.*
-    $gemma -g ../example/mouse_hs1940.geno.txt.gz -p ../example/mouse_hs1940.pheno.txt \
-           -a ../example/mouse_hs1940.anno.txt -snps ../example/mouse_hs1940_snps.txt -nind 400 -loco 1 -gk -debug -o $outn
+    $gemma $gemmaopts -g ../example/mouse_hs1940.geno.txt.gz -p ../example/mouse_hs1940.pheno.txt \
+           -a ../example/mouse_hs1940.anno.txt -snps ../example/mouse_hs1940_snps.txt -nind 400 -loco 1 -gk -o $outn
     assertEquals 0 $?
     grep "total computation time" < output/$outn.log.txt
     outfn=output/$outn.cXX.txt
@@ -83,7 +81,7 @@ testCenteredRelatednessMatrixKLOCO1() {
 testUnivariateLinearMixedModelLOCO1() {
     outn=mouse_hs1940_CD8_LOCO1_lmm
     rm -f output/$outn.*
-    $gemma -g ../example/mouse_hs1940.geno.txt.gz \
+    $gemma $gemmaopts -g ../example/mouse_hs1940.geno.txt.gz \
            -p ../example/mouse_hs1940.pheno.txt \
 	   -n 1 \
 	   -loco 1 \
@@ -91,7 +89,6 @@ testUnivariateLinearMixedModelLOCO1() {
            -k ./output/mouse_hs1940_LOCO1.cXX.txt \
 	   -snps ../example/mouse_hs1940_snps.txt -lmm \
 	   -nind 400 \
-	   -debug \
            -o $outn
     assertEquals 0 $?
     grep "total computation time" < output/$outn.log.txt
@@ -105,13 +102,12 @@ testPlinkCenteredRelatednessMatrixKLOCO1() {
     return 0
     outn=mouse_hs1940_Plink_LOCO1
     rm -f output/$outn.*
-    $gemma -bfile ../example/mouse_hs1940 \
+    $gemma $gemmaopts -bfile ../example/mouse_hs1940 \
            -a ../example/mouse_hs1940.anno.txt \
            -snps ../example/mouse_hs1940_snps.txt \
            -nind 400 \
            -loco 1 \
            -gk \
-           -debug \
            -o $outn
     assertEquals 0 $?
     grep "total computation time" < output/$outn.log.txt
@@ -127,14 +123,13 @@ testPlinkUnivariateLinearMixedModelLOCO1() {
     return 0
     outn=mouse_hs1940_CD8_Plink_LOCO1_lmm
     rm -f output/$outn.*
-    $gemma -bfile ../example/mouse_hs1940 \
+    $gemma $gemmaopts -bfile ../example/mouse_hs1940 \
 	   -n 1 \
 	   -loco 1 \
            -k ./output/mouse_hs1940_Plink_LOCO1.cXX.txt \
            -a ../example/mouse_hs1940.anno.txt \
 	   -snps ../example/mouse_hs1940_snps.txt -lmm \
 	   -nind 400 \
-	   -debug \
            -o $outn
     assertEquals 0 $?
     grep "total computation time" < output/$outn.log.txt

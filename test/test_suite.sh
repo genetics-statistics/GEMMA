@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 
 gemma=../bin/gemma
+gemmaopts=-debug
 
-testBslmm() {
+testBslmm1() {
     outn=mouse_hs1940_CD8_bslmm
-    $gemma -g ../example/mouse_hs1940.geno.txt.gz \
+    $gemma $gemmaopts -g ../example/mouse_hs1940.geno.txt.gz \
            -p ../example/mouse_hs1940.pheno.txt \
            -n 2 -a ../example/mouse_hs1940.anno.txt \
-           -bslmm -debug \
+           -bslmm \
            -o $outn -w 1000 -s 10000 -seed 1
     assertEquals 0 $?
     outfn1=output/$outn.hyp.txt
@@ -17,34 +18,72 @@ testBslmm() {
 }
 
 testBslmm2() {
-    $gemma -g ../example/mouse_hs1940.geno.txt.gz \
+    outn=mouse_hs1940_CD8_train
+    $gemma $gemmaopts -g ../example/mouse_hs1940.geno.txt.gz \
            -p ../example/mouse_hs1940.pheno.txt \
-           -n 2 -debug \
+           -n 2 \
            -a ../example/mouse_hs1940.anno.txt \
-           -gk 1 -o mouse_hs1940_CD8_train
+           -gk 1 -o $outn
     assertEquals 0 $?
-    $gemma -g ../example/mouse_hs1940.geno.txt.gz \
+    outfn=output/$outn.cXX.txt
+    assertEquals "579.66" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+}
+
+testBslmm3() {
+    ## Fit a binary trait using a linear model
+    outn=mouse_hs1940_CD8_bslmm_cc1
+    $gemma $gemmaopts \
+           -g ../example/mouse_hs1940.geno.txt.gz \
            -p ../example/mouse_hs1940.pheno.txt \
-           -n 2 -debug \
+           -n 4 \
+           -a ../example/mouse_hs1940.anno.txt \
+           -bslmm \
+           -o $outn \
+           -w 1000 -s 10000 -seed 1
+    assertEquals 0 $?
+    outfn=output/$outn.hyp.txt
+    assertEquals "29130.74" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+}
+
+testBslmm4() {
+    outn=mouse_hs1940_CD8_prdt_k
+    $gemma $gemmaopts -g ../example/mouse_hs1940.geno.txt.gz \
+           -p ../example/mouse_hs1940.pheno.txt \
+           -n 2 \
            -epm ./output/mouse_hs1940_CD8_bslmm.param.txt \
            -emu ./output/mouse_hs1940_CD8_bslmm.log.txt \
            -ebv ./output/mouse_hs1940_CD8_bslmm.bv.txt \
            -k ./output/mouse_hs1940_CD8_train.cXX.txt \
            -predict \
-           -o mouse_hs1940_CD8_prdt_k
+           -o $outn
     assertEquals 0 $?
-    outfn=output/$outn.hyp.txt
-    assertEquals "45181.93" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
-    ../bin/gemma -g mouse_hs1940.geno.txt.gz -p mouse_hs1940.pheno.txt -n 4 -epm ./output/mouse_hs1940_CD8_bslmm_cc1.param.txt -emu ./output/mouse_hs1940_CD8_bslmm_cc1.log.txt -predict -o mouse_hs1940_CD8_prdt_cc1
-    exit 1
+    outfn=output/$outn.prdt.txt
+    assertEquals "-60.33" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+}
+
+testBslmm5() {
+    ## Now, do prediction in the test set for the binary traits
+    ## If the traits were fitted using the linear model, then:
+    outn=mouse_hs1940_CD8_prdt_cc1
+    $gemma $gemmaopts \
+           -g ../example/mouse_hs1940.geno.txt.gz \
+           -p ../example/mouse_hs1940.pheno.txt \
+           -n 4 \
+           -epm ./output/mouse_hs1940_CD8_bslmm_cc1.param.txt \
+           -emu ./output/mouse_hs1940_CD8_bslmm_cc1.log.txt \
+           -predict \
+           -o $outn
+    assertEquals 0 $?
+    outfn=output/$outn.prdt.txt
+    assertEquals "-60.33" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
 testCenteredRelatednessMatrixKFullLOCO1() {
     outn=mouse_hs1940_full_LOCO1
-    $gemma -g ../example/mouse_hs1940.geno.txt.gz \
+    $gemma $gemmaopts -g ../example/mouse_hs1940.geno.txt.gz \
            -p ../example/mouse_hs1940.pheno.txt \
            -a ../example/mouse_hs1940.anno.txt \
-           -loco 1 -gk -debug -o $outn
+           -loco 1 -gk -o $outn
     assertEquals 0 $?
     outfn=output/$outn.cXX.txt
     assertEquals "1940" `wc -l < $outfn`
@@ -53,14 +92,13 @@ testCenteredRelatednessMatrixKFullLOCO1() {
 
 testUnivariateLinearMixedModelFullLOCO1() {
     outn=mouse_hs1940_CD8_full_LOCO1_lmm
-    $gemma -g ../example/mouse_hs1940.geno.txt.gz \
+    $gemma $gemmaopts -g ../example/mouse_hs1940.geno.txt.gz \
            -p ../example/mouse_hs1940.pheno.txt \
 	   -n 1 \
 	   -loco 1 \
            -a ../example/mouse_hs1940.anno.txt \
            -k ./output/mouse_hs1940_full_LOCO1.cXX.txt \
 	   -lmm \
-	   -debug \
            -o $outn
     assertEquals 0 $?
     grep "total computation time" < output/$outn.log.txt
@@ -71,9 +109,9 @@ testUnivariateLinearMixedModelFullLOCO1() {
 }
 
 testCenteredRelatednessMatrixK() {
-    $gemma -g ../example/mouse_hs1940.geno.txt.gz \
+    $gemma $gemmaopts -g ../example/mouse_hs1940.geno.txt.gz \
            -p ../example/mouse_hs1940.pheno.txt \
-           -gk -o mouse_hs1940 -debug
+           -gk -o mouse_hs1940
     assertEquals 0 $?
     outfn=output/mouse_hs1940.cXX.txt
     assertEquals "1940" `wc -l < $outfn`
@@ -83,14 +121,13 @@ testCenteredRelatednessMatrixK() {
 }
 
 testUnivariateLinearMixedModel() {
-    $gemma -g ../example/mouse_hs1940.geno.txt.gz \
+    $gemma $gemmaopts -g ../example/mouse_hs1940.geno.txt.gz \
            -p ../example/mouse_hs1940.pheno.txt \
            -n 1 \
            -a ../example/mouse_hs1940.anno.txt \
            -k ./output/mouse_hs1940.cXX.txt \
            -lmm \
-           -o mouse_hs1940_CD8_lmm \
-           -debug
+           -o mouse_hs1940_CD8_lmm
     assertEquals 0 $?
     grep "total computation time" < output/mouse_hs1940_CD8_lmm.log.txt
     assertEquals 0 $?
@@ -100,13 +137,12 @@ testUnivariateLinearMixedModel() {
 }
 
 testLinearMixedModelPhenotypes() {
-    $gemma -g ../example/mouse_hs1940.geno.txt.gz \
+    $gemma $gemmaopts -g ../example/mouse_hs1940.geno.txt.gz \
            -p ../example/mouse_hs1940.pheno.txt \
            -n 1 6 \
            -a ../example/mouse_hs1940.anno.txt \
            -k ./output/mouse_hs1940.cXX.txt \
-           -lmm -o mouse_hs1940_CD8MCH_lmm \
-           -debug
+           -lmm -o mouse_hs1940_CD8MCH_lmm
     assertEquals 0 $?
 
     outfn=output/mouse_hs1940_CD8MCH_lmm.assoc.txt
@@ -119,9 +155,8 @@ testPlinkStandardRelatednessMatrixK() {
     datadir=../example
     outfn=output/$testname.sXX.txt
     rm -f $outfn
-    $gemma -bfile $datadir/HLC \
-           -gk 2 -o $testname \
-           -debug
+    $gemma $gemmaopts -bfile $datadir/HLC \
+           -gk 2 -o $testname
     assertEquals 0 $?
     assertEquals "427" `wc -l < $outfn`
     assertEquals "-358.07" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
@@ -132,12 +167,11 @@ testPlinkStandardRelatednessMatrixK() {
 testPlinkLinearMixedModelCovariates() {
     testname=testPlinkLinearMixedModelCovariates
     datadir=../example
-    $gemma -bfile $datadir/HLC \
+    $gemma $gemmaopts -bfile $datadir/HLC \
            -k output/testPlinkStandardRelatednessMatrixK.sXX.txt \
            -lmm 1 \
            -maf 0.1 \
            -c $datadir/HLC_covariates.txt \
-           -debug \
            -o $testname
     assertEquals 0 $?
     outfn=output/$testname.assoc.txt

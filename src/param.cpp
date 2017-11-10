@@ -911,6 +911,7 @@ void PARAM::CheckParam(void) {
   enforce_fexists(file_mk, "open file");
   enforce_fexists(file_cvt, "open file");
   enforce_fexists(file_gxe, "open file");
+  enforce_fexists(file_log, "open file");
   enforce_fexists(file_weight, "open file");
   enforce_fexists(file_epm, "open file");
   enforce_fexists(file_ebv, "open file");
