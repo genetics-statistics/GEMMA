@@ -1935,7 +1935,7 @@ void VC::CalcVCacl(const gsl_matrix *K, const gsl_matrix *W,
   size_t n1 = K->size1, n2 = K->size2;
   size_t n_vc = n2 / n1;
 
-  double d, y2_sum, tau_inv, se_tau_inv;
+  double d, y2_sum, tau_inv;
 
   // New matrices/vectors.
   gsl_matrix *K_scale = gsl_matrix_alloc(n1, n2);
@@ -2134,7 +2134,7 @@ void VC::CalcVCacl(const gsl_matrix *K, const gsl_matrix *W,
   // Compute variance for tau_inv.
   gsl_blas_dgemv(CblasNoTrans, 1.0, V_mat, y_scale, 0.0, n1_vec);
   gsl_blas_ddot(y_scale, n1_vec, &d);
-  se_tau_inv = sqrt(2 * d) / (double)n1;
+  // auto se_tau_inv = sqrt(2 * d) / (double)n1;  UNUSED
 
   // Transform pve back to the original scale and save data.
   v_pve.clear();

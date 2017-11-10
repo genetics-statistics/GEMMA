@@ -211,8 +211,8 @@ bool isMatrixSymmetric(const gsl_matrix *G) {
   auto m = G->data;
   // upper triangle
   auto size = G->size1;
-  for(auto c = 0; c < size; c++) {
-    for(auto r = 0; r < c; r++) {
+  for(size_t c = 0; c < size; c++) {
+    for(size_t r = 0; r < c; r++) {
       int x1 = c, y1 = r, x2 = r, y2 = c;
       auto idx1 = y1*size+x1, idx2 = y2*size+x2;
       // printf("(%d,%d %f - %d,%d %f)",x1,y1,m[idx1],x2,y2,m[idx2]);
@@ -261,7 +261,7 @@ tuple<double, double, double> abs_minmax(const gsl_vector *v) {
   auto min  = std::abs(v->data[0]);
   auto min1 = std::abs(v->data[0]);
   auto max  = std::abs(v->data[0]);
-  for (auto i=0; i<v->size; i++) {
+  for (size_t i=0; i<v->size; i++) {
     auto value = std::abs(v->data[i]);
     if (value < min) {
       min1 = min;
@@ -277,7 +277,7 @@ tuple<double, double, double> abs_minmax(const gsl_vector *v) {
 // the lowest value
 bool has_negative_values_but_one(const gsl_vector *v) {
   bool one_skipped = false;
-  for (auto i=0; i<v->size; i++) {
+  for (size_t i=0; i<v->size; i++) {
     if (v->data[i] < 0.0) {
       if (one_skipped)
         return true;
@@ -289,7 +289,7 @@ bool has_negative_values_but_one(const gsl_vector *v) {
 
 uint count_small_values(const gsl_vector *v, double min) {
   uint count = 0;
-  for (auto i=0; i<v->size; i++) {
+  for (size_t i=0; i<v->size; i++) {
     if (v->data[i] < min)
       count += 1;
   }
@@ -316,14 +316,14 @@ bool isMatrixIllConditioned(const gsl_vector *eigenvalues, double max_ratio) {
 
 double sum(const double *m, size_t rows, size_t cols) {
   double sum = 0.0;
-  for (auto i = 0; i<rows*cols; i++)
+  for (size_t i = 0; i<rows*cols; i++)
     sum += m[i];
   return sum;
 }
 
 double SumVector(const gsl_vector *v) {
   double sum = 0;
-  for (int i = 0; i < v->size; i++ ) {
+  for (size_t i = 0; i < v->size; i++ ) {
     sum += gsl_vector_get(v, i);
   }
   return( sum );

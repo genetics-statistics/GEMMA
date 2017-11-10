@@ -659,13 +659,13 @@ void single_ct_regression(const gsl_matrix_int *Xd,
     sum_pip[i] = sum[i] = 0;
   }
 
-  for (int i = 0; i < Xd->size1; i++) {
+  for (size_t i = 0; i < Xd->size1; i++) {
     int cat = gsl_matrix_int_get(Xd, i, 0);
     sum_pip[cat] += gsl_vector_get(pip_vec, i);
     sum[cat] += 1;
   }
 
-  for (int i = 0; i < Xd->size1; i++) {
+  for (size_t i = 0; i < Xd->size1; i++) {
     int cat = gsl_matrix_int_get(Xd, i, 0);
     gsl_vector_set(prior_vec, i, sum_pip[cat] / sum[cat]);
   }
@@ -684,7 +684,7 @@ void BSLMMDAP::DAP_EstimateHyper(
     const vector<double> &vec_sa2, const vector<double> &vec_sb2,
     const vector<double> &wab, const vector<vector<vector<double>>> &BF,
     gsl_matrix *Ac, gsl_matrix_int *Ad, gsl_vector_int *dlevel) {
-  clock_t time_start;
+  // clock_t time_start;
 
   // Set up BF.
   double h, rho, sigma_a2, sigma_b2, d, s, logm, logm_save;
