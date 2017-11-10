@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 gemma=../bin/gemma
-gemmaopts=-debug
+gemmaopts="-debug"
 
 testBslmm1() {
     outn=mouse_hs1940_CD8_bslmm
