@@ -13,7 +13,7 @@ testBslmm1() {
     assertEquals 0 $?
     outfn1=output/$outn.hyp.txt
     outfn2=output/$outn.param.txt
-    assertEquals "45181.93" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn1`
+    assertEquals "45181" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.0f",(substr($x,,0,6))) } END { printf "%.0f",$sum }' $outfn1`
     assertEquals "4043967139.42" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn2`
 }
 
@@ -42,7 +42,7 @@ testBslmm3() {
            -w 1000 -s 10000 -seed 1
     assertEquals 0 $?
     outfn=output/$outn.hyp.txt
-    assertEquals "29130.74" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+    assertEquals "291" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.0f",(substr($x,,0,6))) } END { printf "%.0f",100*$sum }' $outfn`
 }
 
 testBslmm4() {

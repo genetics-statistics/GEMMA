@@ -267,16 +267,16 @@ void PARAM::ReadFiles(void) {
     ProcessCvtPhen();
 
     // Obtain covariate matrix.
-    gsl_matrix *W = gsl_matrix_alloc(ni_test, n_cvt);
-    CopyCvt(W);
+    auto W1 = gsl_matrix_safe_alloc(ni_test, n_cvt);
+    CopyCvt(W1);
 
     file_str = file_bfile + ".bed";
-    if (ReadFile_bed(file_str, setSnps, W, indicator_idv, indicator_snp,
+    if (ReadFile_bed(file_str, setSnps, W1, indicator_idv, indicator_snp,
                      snpInfo, maf_level, miss_level, hwe_level, r2_level,
                      ns_test) == false) {
       error = true;
     }
-    gsl_matrix_free(W);
+    gsl_matrix_free(W1);
     ns_total = indicator_snp.size();
   }
 
@@ -300,17 +300,17 @@ void PARAM::ReadFiles(void) {
     ProcessCvtPhen();
 
     // Obtain covariate matrix.
-    gsl_matrix *W = gsl_matrix_alloc(ni_test, n_cvt);
-    CopyCvt(W);
+    auto W2 = gsl_matrix_safe_alloc(ni_test, n_cvt);
+    CopyCvt(W2);
 
     trim_individuals(indicator_idv, ni_max);
     trim_individuals(indicator_cvt, ni_max);
-    if (ReadFile_geno(file_geno, setSnps, W, indicator_idv, indicator_snp,
+    if (ReadFile_geno(file_geno, setSnps, W2, indicator_idv, indicator_snp,
                       maf_level, miss_level, hwe_level, r2_level, mapRS2chr,
                       mapRS2bp, mapRS2cM, snpInfo, ns_test) == false) {
       error = true;
     }
-    gsl_matrix_free(W);
+    gsl_matrix_free(W2);
 
     ns_total = indicator_snp.size();
   }
@@ -326,7 +326,7 @@ void PARAM::ReadFiles(void) {
 
     string file_name;
     size_t t = 0, ns_test_tmp = 0;
-    gsl_matrix *W;
+    gsl_matrix *W3 = NULL;
     while (!safeGetline(infile, file_name).eof()) {
       file_str = file_name + ".bim";
 
@@ -358,12 +358,12 @@ void PARAM::ReadFiles(void) {
         ProcessCvtPhen();
 
         // Obtain covariate matrix.
-        W = gsl_matrix_alloc(ni_test, n_cvt);
-        CopyCvt(W);
+        W3 = gsl_matrix_safe_alloc(ni_test, n_cvt);
+        CopyCvt(W3);
       }
 
       file_str = file_name + ".bed";
-      if (ReadFile_bed(file_str, setSnps, W, indicator_idv, indicator_snp,
+      if (ReadFile_bed(file_str, setSnps, W3, indicator_idv, indicator_snp,
                        snpInfo, maf_level, miss_level, hwe_level, r2_level,
                        ns_test_tmp) == false) {
         error = true;
@@ -376,7 +376,7 @@ void PARAM::ReadFiles(void) {
       t++;
     }
 
-    gsl_matrix_free(W);
+    if (W3) gsl_matrix_free(W3);
 
     infile.close();
     infile.clear();
@@ -402,8 +402,8 @@ void PARAM::ReadFiles(void) {
     ProcessCvtPhen();
 
     // Obtain covariate matrix.
-    gsl_matrix *W = gsl_matrix_alloc(ni_test, n_cvt);
-    CopyCvt(W);
+    gsl_matrix *W4 = gsl_matrix_safe_alloc(ni_test, n_cvt);
+    CopyCvt(W4);
 
     igzstream infile(file_mgeno.c_str(), igzstream::in);
     if (!infile) {
@@ -415,7 +415,7 @@ void PARAM::ReadFiles(void) {
     string file_name;
     size_t ns_test_tmp;
     while (!safeGetline(infile, file_name).eof()) {
-      if (ReadFile_geno(file_name, setSnps, W, indicator_idv, indicator_snp,
+      if (ReadFile_geno(file_name, setSnps, W4, indicator_idv, indicator_snp,
                         maf_level, miss_level, hwe_level, r2_level, mapRS2chr,
                         mapRS2bp, mapRS2cM, snpInfo, ns_test_tmp) == false) {
         error = true;
@@ -427,7 +427,7 @@ void PARAM::ReadFiles(void) {
       ns_total += indicator_snp.size();
     }
 
-    gsl_matrix_free(W);
+    gsl_matrix_free(W4);
 
     infile.close();
     infile.clear();
@@ -455,8 +455,8 @@ void PARAM::ReadFiles(void) {
     ProcessCvtPhen();
 
     // Obtain covariate matrix.
-    gsl_matrix *W = gsl_matrix_alloc(ni_test, n_cvt);
-    CopyCvt(W);
+    // gsl_matrix *W5 = gsl_matrix_alloc(ni_test, n_cvt);
+    // CopyCvt(W5);
 
     if (ReadFile_gene(file_gene, vec_read, snpInfo, ng_total) == false) {
       error = true;
