@@ -152,7 +152,7 @@ void ReadFile_bf(const string &file_bf, vector<string> &vec_rs,
   vector<vector<double>> mat_bf;
   char *ch_ptr;
 
-  size_t bf_size, flag_block;
+  size_t bf_size = 0, flag_block;
 
   getline(infile, line);
 
@@ -687,7 +687,7 @@ void BSLMMDAP::DAP_EstimateHyper(
   // clock_t time_start;
 
   // Set up BF.
-  double h, rho, sigma_a2, sigma_b2, d, s, logm, logm_save;
+  double h, rho, sigma_a2, sigma_b2, d, s, logm, logm_save = nan("");
   size_t t1, t2;
   size_t n_grid = wab.size(), ns_test = vec_rs.size();
 

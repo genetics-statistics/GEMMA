@@ -38,15 +38,15 @@ gsl_matrix *fast_copy(gsl_matrix *m, const double *mem) {
   auto rows = m->size1;
   auto cols = m->size2;
   if (is_strict_mode()) { // slower correct version
-    for (auto r=0; r<rows; r++) {
-      for (auto c=0; c<cols; c++) {
+    for (size_t r=0; r<rows; r++) {
+      for (size_t c=0; c<cols; c++) {
         gsl_matrix_set(m,r,c,mem[r*cols+c]);
       }
     }
   } else { // faster goes by row
     auto v = gsl_vector_calloc(cols);
     enforce(v); // just to be sure
-    for (auto r=0; r<rows; r++) {
+    for (size_t r=0; r<rows; r++) {
       assert(v->size == cols);
       assert(v->block->size == cols);
       assert(v->stride == 1);
@@ -76,9 +76,9 @@ void fast_cblas_dgemm(const enum CBLAS_ORDER Order,
                       double *C,
                       const size_t ldc) {
 #ifndef NDEBUG
-  size_t i,j;
   if (is_debug_mode()) {
     #ifdef DISABLED
+    size_t i,j;
     printf (" Top left corner of matrix A: \n");
     for (i=0; i<min(M,6); i++) {
       for (j=0; j<min(K,6); j++) {

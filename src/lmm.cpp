@@ -1502,15 +1502,14 @@ void LMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
   ifstream infile(file_bed.c_str(), ios::binary);
   enforce_msg(infile,"error reading genotype (.bed) file");
 
-  bitset<8> bset8;
-  char ch[1]; // buffer
+  char ch[1]; // 1 byte buffer
   // Calculate n_bit and c, the number of bit for each SNP.
   const size_t n_bit = (ni_total % 4 == 0 ? ni_total / 4 : ni_total / 4 + 1);
 
   // first three magic numbers.
   for (int i = 0; i < 3; ++i) {
     infile.read(ch, 1);
-    const bitset<8> b = ch[0];
+    // const bitset<8> b = ch[0];  b is never used
   }
 
   std::vector <double> gs;
@@ -1527,7 +1526,7 @@ void LMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
     // ---- for all genotypes
     for (uint i = 0; i < n_bit; ++i) {
       infile.read(ch, 1);
-      bset8 = ch[0];
+      bitset<8> bset8 = ch[0];
 
       // Minor allele homozygous: 2.0; major: 0.0.
       for (size_t j = 0; j < 4; ++j) {
