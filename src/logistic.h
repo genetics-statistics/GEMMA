@@ -58,8 +58,8 @@ int logistic_cont_fit(gsl_vector *beta, // Vector of parameters
                       double lambdaL1,  // Regularization L1, 0 if not used.
                       double lambdaL2); // Regularization L2, 0 if not used.
 
-double fLogit_cont(gsl_vector *beta,
-                   gsl_matrix *Xc, // Continuous covariates matrix Nobs x Kc.
-                   gsl_vector *y, double lambdaL1, double lambdaL2);
+double fLogit_cont(const gsl_vector *beta,
+                   const gsl_matrix *Xc, // Continuous covariates matrix Nobs x Kc.
+                   const gsl_vector *y, double lambdaL1, double lambdaL2);
 
 #endif

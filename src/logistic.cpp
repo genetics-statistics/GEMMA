@@ -43,12 +43,12 @@ double fLogit_mixed(gsl_vector *beta, gsl_matrix_int *X, gsl_vector_int *nlev,
   for (int i = 0; i < n; ++i) {
     double Xbetai = beta->data[0];
     int iParm = 1;
-    for (int k = 0; k < X->size2; ++k) {
+    for (size_t k = 0; k < X->size2; ++k) {
       if (gsl_matrix_int_get(X, i, k) > 0)
         Xbetai += beta->data[gsl_matrix_int_get(X, i, k) - 1 + iParm];
       iParm += nlev->data[k] - 1;
     }
-    for (int k = 0; k < (Xc->size2); ++k)
+    for (size_t k = 0; k < (Xc->size2); ++k)
       Xbetai += gsl_matrix_get(Xc, i, k) * beta->data[iParm++];
     total += y->data[i] * Xbetai - gsl_sf_log_1plusx(gsl_sf_exp(Xbetai));
   }
@@ -63,16 +63,16 @@ void logistic_mixed_pred(gsl_vector *beta,     // Vector of parameters
                                                // obs x Kc (NULL if not used).
                          gsl_vector *yhat) {   // Vector of prob. predicted by
                                                // the logistic
-  for (int i = 0; i < X->size1; ++i) {
+  for (size_t i = 0; i < X->size1; ++i) {
     double Xbetai = beta->data[0];
     int iParm = 1;
-    for (int k = 0; k < X->size2; ++k) {
+    for (size_t k = 0; k < X->size2; ++k) {
       if (gsl_matrix_int_get(X, i, k) > 0)
         Xbetai += beta->data[gsl_matrix_int_get(X, i, k) - 1 + iParm];
       iParm += nlev->data[k] - 1;
     }
     // Adding the continuous.
-    for (int k = 0; k < (Xc->size2); ++k)
+    for (size_t k = 0; k < (Xc->size2); ++k)
       Xbetai += gsl_matrix_get(Xc, i, k) * beta->data[iParm++];
     yhat->data[i] = 1 / (1 + gsl_sf_exp(-Xbetai));
   }
@@ -192,11 +192,8 @@ void wgsl_mixed_optim_hessian(const gsl_vector *beta, void *params,
 }
 
 double wgsl_mixed_optim_f(gsl_vector *v, void *params) {
-  double mLogLik = 0;
   fix_parm_mixed_T *p = (fix_parm_mixed_T *)params;
-  mLogLik =
-      fLogit_mixed(v, p->X, p->nlev, p->Xc, p->y, p->lambdaL1, p->lambdaL2);
-  return mLogLik;
+  return fLogit_mixed(v, p->X, p->nlev, p->Xc, p->y, p->lambdaL1, p->lambdaL2);
 }
 
 // Compute both f and df together.
@@ -210,7 +207,7 @@ void wgsl_mixed_optim_fdf(gsl_vector *x, void *params, double *f,
 int logistic_mixed_fit(gsl_vector *beta, gsl_matrix_int *X,
                        gsl_vector_int *nlev, gsl_matrix *Xc, gsl_vector *y,
                        double lambdaL1, double lambdaL2) {
-  double mLogLik = 0;
+  // double mLogLik = 0;
   fix_parm_mixed_T p;
   int npar = beta->size;
   int iter = 0;
@@ -225,7 +222,7 @@ int logistic_mixed_fit(gsl_vector *beta, gsl_matrix_int *X,
   p.lambdaL2 = lambdaL2;
 
   // Initial fit.
-  mLogLik = wgsl_mixed_optim_f(beta, &p);
+  // auto mLogLik = wgsl_mixed_optim_f(beta, &p);
 
   gsl_matrix *myH = gsl_matrix_safe_alloc(npar, npar); // Hessian matrix.
   gsl_vector *stBeta = gsl_vector_safe_alloc(npar);    // Direction to move.
@@ -251,7 +248,7 @@ int logistic_mixed_fit(gsl_vector *beta, gsl_matrix_int *X,
   }
 
   // Final fit.
-  mLogLik = wgsl_mixed_optim_f(beta, &p);
+  // mLogLik = wgsl_mixed_optim_f(beta, &p);
 
   gsl_vector_free(tau);
   gsl_vector_free(stBeta);
@@ -299,7 +296,7 @@ double fLogit_cat(gsl_vector *beta, gsl_matrix_int *X, gsl_vector_int *nlev,
   for (int i = 0; i < n; ++i) {
     double Xbetai = beta->data[0];
     int iParm = 1;
-    for (int k = 0; k < X->size2; ++k) {
+    for (size_t k = 0; k < X->size2; ++k) {
       if (gsl_matrix_int_get(X, i, k) > 0)
         Xbetai += beta->data[gsl_matrix_int_get(X, i, k) - 1 + iParm];
       iParm += nlev->data[k] - 1;
@@ -315,10 +312,10 @@ void logistic_cat_pred(gsl_vector *beta,     // Vector of parameters
                        gsl_vector_int *nlev, // Vector with #categories
                        gsl_vector *yhat) {   // Vector of prob. predicted by
                                              // the logistic.
-  for (int i = 0; i < X->size1; ++i) {
+  for (size_t i = 0; i < X->size1; ++i) {
     double Xbetai = beta->data[0];
     int iParm = 1;
-    for (int k = 0; k < X->size2; ++k) {
+    for (size_t k = 0; k < X->size2; ++k) {
       if (gsl_matrix_int_get(X, i, k) > 0)
         Xbetai += beta->data[gsl_matrix_int_get(X, i, k) - 1 + iParm];
       iParm += nlev->data[k] - 1;
@@ -441,7 +438,7 @@ void wgsl_cat_optim_fdf(gsl_vector *x, void *params, double *f,
 
 int logistic_cat_fit(gsl_vector *beta, gsl_matrix_int *X, gsl_vector_int *nlev,
                      gsl_vector *y, double lambdaL1, double lambdaL2) {
-  double mLogLik = 0;
+  // double mLogLik = 0;
   fix_parm_cat_T p;
   int npar = beta->size;
   int iter = 0;
@@ -454,8 +451,10 @@ int logistic_cat_fit(gsl_vector *beta, gsl_matrix_int *X, gsl_vector_int *nlev,
   p.lambdaL1 = lambdaL1;
   p.lambdaL2 = lambdaL2;
 
+#ifdef _RPR_DEBUG_
   // Initial fit.
-  mLogLik = wgsl_cat_optim_f(beta, &p);
+  auto mLogLik = wgsl_cat_optim_f(beta, &p);
+#endif
 
   gsl_matrix *myH = gsl_matrix_safe_alloc(npar, npar); // Hessian matrix.
   gsl_vector *stBeta = gsl_vector_safe_alloc(npar);    // Direction to move.
@@ -485,7 +484,7 @@ int logistic_cat_fit(gsl_vector *beta, gsl_matrix_int *X, gsl_vector_int *nlev,
   }
 
   // Final fit.
-  mLogLik = wgsl_cat_optim_f(beta, &p);
+  // mLogLik = wgsl_cat_optim_f(beta, &p);
 
   gsl_vector_free(tau);
   gsl_vector_free(stBeta);
@@ -508,7 +507,7 @@ typedef struct {
   double lambdaL2;
 } fix_parm_cont_T;
 
-double fLogit_cont(gsl_vector *beta, gsl_matrix *Xc, gsl_vector *y,
+double fLogit_cont(const gsl_vector *beta, const gsl_matrix *Xc, const gsl_vector *y,
                    double lambdaL1, double lambdaL2) {
   int n = y->size;
   int npar = beta->size;
@@ -532,7 +531,7 @@ double fLogit_cont(gsl_vector *beta, gsl_matrix *Xc, gsl_vector *y,
   for (int i = 0; i < n; ++i) {
     double Xbetai = beta->data[0];
     int iParm = 1;
-    for (int k = 0; k < (Xc->size2); ++k)
+    for (size_t k = 0; k < (Xc->size2); ++k)
       Xbetai += gsl_matrix_get(Xc, i, k) * beta->data[iParm++];
     total += y->data[i] * Xbetai - gsl_sf_log_1plusx(gsl_sf_exp(Xbetai));
   }
@@ -545,17 +544,17 @@ void logistic_cont_pred(gsl_vector *beta,   // Vector of parameters
                                             // Nobs x Kc (NULL if not used).
                         gsl_vector *yhat) { // Vector of prob. predicted by
                                             // the logistic.
-  for (int i = 0; i < Xc->size1; ++i) {
+  for (size_t i = 0; i < Xc->size1; ++i) {
     double Xbetai = beta->data[0];
     int iParm = 1;
-    for (int k = 0; k < (Xc->size2); ++k)
+    for (size_t k = 0; k < (Xc->size2); ++k)
       Xbetai += gsl_matrix_get(Xc, i, k) * beta->data[iParm++];
     yhat->data[i] = 1 / (1 + gsl_sf_exp(-Xbetai));
   }
 }
 
 // The gradient of f, df = (df/dx, df/dy).
-void wgsl_cont_optim_df(const gsl_vector *beta, void *params, gsl_vector *out) {
+void wgsl_cont_optim_df(const gsl_vector *beta, const void *params, gsl_vector *out) {
   fix_parm_cont_T *p = (fix_parm_cont_T *)params;
   int n = p->y->size;
   int Kc = p->Xc->size2;
@@ -640,7 +639,7 @@ void wgsl_cont_optim_hessian(const gsl_vector *beta, void *params,
   gsl_vector_free(gn);
 }
 
-double wgsl_cont_optim_f(gsl_vector *v, void *params) {
+double wgsl_cont_optim_f(const gsl_vector *v, const void *params) {
   double mLogLik = 0;
   fix_parm_cont_T *p = (fix_parm_cont_T *)params;
   mLogLik = fLogit_cont(v, p->Xc, p->y, p->lambdaL1, p->lambdaL2);
@@ -648,7 +647,7 @@ double wgsl_cont_optim_f(gsl_vector *v, void *params) {
 }
 
 // Compute both f and df together.
-void wgsl_cont_optim_fdf(gsl_vector *x, void *params, double *f,
+void wgsl_cont_optim_fdf(const gsl_vector *x, const void *params, double *f,
                          gsl_vector *df) {
   *f = wgsl_cont_optim_f(x, params);
   wgsl_cont_optim_df(x, params, df);
@@ -659,7 +658,6 @@ int logistic_cont_fit(gsl_vector *beta,
                                       // Nobs x Kc (NULL if not used).
                       gsl_vector *y, double lambdaL1, double lambdaL2) {
 
-  double mLogLik = 0;
   fix_parm_cont_T p;
   int npar = beta->size;
   int iter = 0;
@@ -671,8 +669,10 @@ int logistic_cont_fit(gsl_vector *beta,
   p.lambdaL1 = lambdaL1;
   p.lambdaL2 = lambdaL2;
 
+#ifdef _RPR_DEBUG_
   // Initial fit.
-  mLogLik = wgsl_cont_optim_f(beta, &p);
+  auto mLogLik = wgsl_cont_optim_f(beta, &p);
+#endif
 
   gsl_matrix *myH = gsl_matrix_safe_alloc(npar, npar); // Hessian matrix.
   gsl_vector *stBeta = gsl_vector_safe_alloc(npar);    // Direction to move.
@@ -702,7 +702,7 @@ int logistic_cont_fit(gsl_vector *beta,
   }
 
   // Final fit.
-  mLogLik = wgsl_cont_optim_f(beta, &p);
+  // mLogLik = wgsl_cont_optim_f(beta, &p);
 
   gsl_vector_free(tau);
   gsl_vector_free(stBeta);

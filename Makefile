@@ -50,7 +50,7 @@ WITH_LAPACK            = 1
 WITH_OPENBLAS          =                  # Defaults to LAPACK - OPENBLAS may be faster
 OPENBLAS_LEGACY        =                  # Using older OpenBlas
 FORCE_STATIC           =                  # Static linking of libraries
-GCC_FLAGS              = -O3 -std=gnu++11 # extra flags -Wl,--allow-multiple-definition
+GCC_FLAGS              = -Wall -O3 -std=gnu++11 # extra flags -Wl,--allow-multiple-definition
 TRAVIS_CI              =                  # used by TRAVIS for testing
 EIGEN_INCLUDE_PATH     = /usr/include/eigen3
 
