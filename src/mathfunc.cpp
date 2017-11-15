@@ -64,6 +64,33 @@ bool has_nan(const vector<double> v) {
   return false;
 }
 
+bool has_nan(const gsl_vector *v) {
+  for (size_t i = 0; i < v->size; ++i)
+    if (gsl_isnan(gsl_vector_get(v,i))) return true;
+  return false;
+}
+bool has_inf(const gsl_vector *v) {
+  for (size_t i = 0; i < v->size; ++i) {
+    auto value = gsl_vector_get(v,i);
+    if (gsl_isinf(value) != 0) return true;
+  }
+  return false;
+}
+bool has_nan(const gsl_matrix *m) {
+  for (size_t i = 0; i < m->size1; ++i)
+    for (size_t j = 0; j < m->size2; ++j)
+      if (gsl_isnan(gsl_matrix_get(m,i,j))) return true;
+  return false;
+}
+bool has_inf(const gsl_matrix *m) {
+  for (size_t i = 0; i < m->size1; ++i)
+    for (size_t j = 0; j < m->size2; ++j) {
+      auto value = gsl_matrix_get(m,i,j);
+      if (gsl_isinf(value) != 0) return true;
+    }
+  return false;
+}
+
 // calculate variance of a vector
 double VectorVar(const gsl_vector *v) {
   double d, m = 0.0, m2 = 0.0;
@@ -96,8 +123,8 @@ void CenterMatrix(gsl_matrix *G) {
     }
   }
 
-  gsl_vector_free(w);
-  gsl_vector_free(Gw);
+  gsl_vector_safe_free(w);
+  gsl_vector_safe_free(Gw);
 
   return;
 }
@@ -120,7 +147,7 @@ void CenterMatrix(gsl_matrix *G, const gsl_vector *w) {
     }
   }
 
-  gsl_vector_free(Gw);
+  gsl_vector_safe_free(Gw);
 
   return;
 }
@@ -156,12 +183,12 @@ void CenterMatrix(gsl_matrix *G, const gsl_matrix *W) {
 
   gsl_matrix_add(G, Gtmp);
 
-  gsl_matrix_free(WtW);
-  gsl_matrix_free(WtWi);
-  gsl_matrix_free(WtWiWt);
-  gsl_matrix_free(GW);
-  gsl_matrix_free(WtGW);
-  gsl_matrix_free(Gtmp);
+  gsl_matrix_safe_free(WtW);
+  gsl_matrix_safe_free(WtWi);
+  gsl_matrix_safe_free(WtWiWt);
+  gsl_matrix_safe_free(GW);
+  gsl_matrix_safe_free(WtGW);
+  gsl_matrix_safe_free(Gtmp);
 
   return;
 }
@@ -228,7 +255,7 @@ bool isMatrixSymmetric(const gsl_matrix *G) {
 bool isMatrixPositiveDefinite(const gsl_matrix *G) {
   enforce(G->size1 == G->size2);
   auto G2 = gsl_matrix_safe_alloc(G->size1, G->size2);
-  enforce_gsl(gsl_matrix_memcpy(G2,G));
+  enforce_gsl(gsl_matrix_safe_memcpy(G2,G));
   auto handler = gsl_set_error_handler_off();
 #if GSL_MAJOR_VERSION >= 2 && GSL_MINOR_VERSION >= 3
   auto s = gsl_linalg_cholesky_decomp1(G2);
@@ -236,20 +263,20 @@ bool isMatrixPositiveDefinite(const gsl_matrix *G) {
   auto s = gsl_linalg_cholesky_decomp(G2);
 #endif
   gsl_set_error_handler(handler);
-  gsl_matrix_free(G2);
+  gsl_matrix_safe_free(G2);
   return (s == GSL_SUCCESS);
 }
 
 gsl_vector *getEigenValues(const gsl_matrix *G) {
   enforce(G->size1 == G->size2);
   auto G2 = gsl_matrix_safe_alloc(G->size1, G->size2);
-  enforce_gsl(gsl_matrix_memcpy(G2,G));
+  enforce_gsl(gsl_matrix_safe_memcpy(G2,G));
   auto eworkspace = gsl_eigen_symm_alloc(G->size1);
   enforce(eworkspace);
   gsl_vector *eigenvalues = gsl_vector_safe_alloc(G->size1);
   enforce_gsl(gsl_eigen_symm(G2, eigenvalues, eworkspace));
   gsl_eigen_symm_free(eworkspace);
-  gsl_matrix_free(G2);
+  gsl_matrix_safe_free(G2);
   return eigenvalues;
 }
 
@@ -359,9 +386,9 @@ void CenterVector(gsl_vector *y, const gsl_matrix *W) {
 
   gsl_blas_dgemv(CblasNoTrans, -1.0, W, WtWiWty, 1.0, y);
 
-  gsl_matrix_free(WtW);
-  gsl_vector_free(Wty);
-  gsl_vector_free(WtWiWty);
+  gsl_matrix_safe_free(WtW);
+  gsl_vector_safe_free(Wty);
+  gsl_vector_safe_free(WtWiWty);
 
   return;
 }
@@ -388,9 +415,9 @@ void StandardizeVector(gsl_vector *y) {
 // Calculate UtX.
 void CalcUtX(const gsl_matrix *U, gsl_matrix *UtX) {
   gsl_matrix *X = gsl_matrix_safe_alloc(UtX->size1, UtX->size2);
-  gsl_matrix_memcpy(X, UtX);
+  gsl_matrix_safe_memcpy(X, UtX);
   fast_dgemm("T", "N", 1.0, U, X, 0.0, UtX);
-  gsl_matrix_free(X);
+  gsl_matrix_safe_free(X);
 }
 
 void CalcUtX(const gsl_matrix *U, const gsl_matrix *X, gsl_matrix *UtX) {
@@ -407,7 +434,7 @@ void Kronecker(const gsl_matrix *K, const gsl_matrix *V, gsl_matrix *H) {
     for (size_t j = 0; j < K->size2; j++) {
       gsl_matrix_view H_sub = gsl_matrix_submatrix(
           H, i * V->size1, j * V->size2, V->size1, V->size2);
-      gsl_matrix_memcpy(&H_sub.matrix, V);
+      gsl_matrix_safe_memcpy(&H_sub.matrix, V);
       gsl_matrix_scale(&H_sub.matrix, gsl_matrix_get(K, i, j));
     }
   }
@@ -420,13 +447,13 @@ void KroneckerSym(const gsl_matrix *K, const gsl_matrix *V, gsl_matrix *H) {
     for (size_t j = i; j < K->size2; j++) {
       gsl_matrix_view H_sub = gsl_matrix_submatrix(
           H, i * V->size1, j * V->size2, V->size1, V->size2);
-      gsl_matrix_memcpy(&H_sub.matrix, V);
+      gsl_matrix_safe_memcpy(&H_sub.matrix, V);
       gsl_matrix_scale(&H_sub.matrix, gsl_matrix_get(K, i, j));
 
       if (i != j) {
         gsl_matrix_view H_sub_sym = gsl_matrix_submatrix(
             H, j * V->size1, i * V->size2, V->size1, V->size2);
-        gsl_matrix_memcpy(&H_sub_sym.matrix, &H_sub.matrix);
+        gsl_matrix_safe_memcpy(&H_sub_sym.matrix, &H_sub.matrix);
       }
     }
   }

@@ -1673,8 +1673,8 @@ void GEMMA::BatchRun(PARAM &cPar) {
       // read u
       cPRDT.AddBV(G, u_hat, y_prdt);
 
-      gsl_matrix_free(G);
-      gsl_vector_free(u_hat);
+      gsl_matrix_safe_free(G);
+      gsl_vector_safe_free(u_hat);
     }
 
     // add beta
@@ -1701,7 +1701,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
 
     cPRDT.WriteFiles(y_prdt);
 
-    gsl_vector_free(y_prdt);
+    gsl_vector_safe_free(y_prdt);
   }
 
   // Prediction with kinship matrix only; for one or more phenotypes
@@ -1790,8 +1790,8 @@ void GEMMA::BatchRun(PARAM &cPar) {
       gsl_matrix_add(H_full, G_full);
 
       // free matrices
-      gsl_vector_free(beta);
-      gsl_vector_free(se_beta);
+      gsl_vector_safe_free(beta);
+      gsl_vector_safe_free(se_beta);
     } else {
       gsl_matrix *Vg = gsl_matrix_safe_alloc(cPar.n_ph, cPar.n_ph);
       gsl_matrix *Ve = gsl_matrix_safe_alloc(cPar.n_ph, cPar.n_ph);
@@ -1838,10 +1838,10 @@ void GEMMA::BatchRun(PARAM &cPar) {
       }
 
       // free matrices
-      gsl_matrix_free(Vg);
-      gsl_matrix_free(Ve);
-      gsl_matrix_free(B);
-      gsl_matrix_free(se_B);
+      gsl_matrix_safe_free(Vg);
+      gsl_matrix_safe_free(Ve);
+      gsl_matrix_safe_free(B);
+      gsl_matrix_safe_free(se_B);
     }
 
     PRDT cPRDT;
@@ -1855,19 +1855,19 @@ void GEMMA::BatchRun(PARAM &cPar) {
 
     cPRDT.WriteFiles(Y_full);
 
-    gsl_matrix_free(Y);
-    gsl_matrix_free(W);
-    gsl_matrix_free(G);
-    gsl_matrix_free(U);
-    gsl_matrix_free(UtW);
-    gsl_matrix_free(UtY);
-    gsl_vector_free(eval);
+    gsl_matrix_safe_free(Y);
+    gsl_matrix_safe_free(W);
+    gsl_matrix_safe_free(G);
+    gsl_matrix_safe_free(U);
+    gsl_matrix_safe_free(UtW);
+    gsl_matrix_safe_free(UtY);
+    gsl_vector_safe_free(eval);
 
-    gsl_matrix_free(Y_full);
-    gsl_matrix_free(Y_hat);
-    gsl_matrix_free(W_full);
-    gsl_matrix_free(G_full);
-    gsl_matrix_free(H_full);
+    gsl_matrix_safe_free(Y_full);
+    gsl_matrix_safe_free(Y_hat);
+    gsl_matrix_safe_free(W_full);
+    gsl_matrix_safe_free(G_full);
+    gsl_matrix_safe_free(H_full);
   }
 
   // Generate Kinship matrix (optionally using LOCO)
@@ -1895,7 +1895,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
       cPar.WriteMatrix(G, "sXX");
     }
 
-    gsl_matrix_free(G);
+    gsl_matrix_safe_free(G);
   }
 
   // Compute the LDSC weights (not implemented yet)
@@ -1959,14 +1959,14 @@ void GEMMA::BatchRun(PARAM &cPar) {
     cPar.WriteVector(ns, "size");
     cPar.WriteVar("snps");
 
-    gsl_matrix_free(S);
-    gsl_vector_free(ns);
+    gsl_matrix_safe_free(S);
+    gsl_vector_safe_free(ns);
 
-    gsl_matrix_free(A);
-    gsl_matrix_free(K);
+    gsl_matrix_safe_free(A);
+    gsl_matrix_safe_free(K);
 
-    gsl_vector_free(y);
-    gsl_matrix_free(K);
+    gsl_vector_safe_free(y);
+    gsl_matrix_safe_free(K);
   }
 
   // Compute the q vector, that is used for variance component estimation using
@@ -2008,9 +2008,9 @@ void GEMMA::BatchRun(PARAM &cPar) {
     cPar.WriteMatrix(Vq, "Vq");
     cPar.WriteVector(q, "q");
     cPar.WriteVector(s, "size");
-    gsl_matrix_free(Vq);
-    gsl_vector_free(q);
-    gsl_vector_free(s);
+    gsl_matrix_safe_free(Vq);
+    gsl_vector_safe_free(q);
+    gsl_vector_safe_free(s);
   }
 
   // Calculate SNP covariance.
@@ -2057,8 +2057,8 @@ void GEMMA::BatchRun(PARAM &cPar) {
       cLm.CopyToParam(cPar);
     }
     // release all matrices and vectors
-    gsl_matrix_free(Y);
-    gsl_matrix_free(W);
+    gsl_matrix_safe_free(Y);
+    gsl_matrix_safe_free(W);
   }
 
   // VC estimation with one or multiple kinship matrices
@@ -2186,15 +2186,15 @@ void GEMMA::BatchRun(PARAM &cPar) {
       cPar.WriteVector(q, "q");
       cPar.WriteVector(s, "size");
 
-      gsl_matrix_free(S);
-      gsl_matrix_free(Vq);
-      gsl_vector_free(q);
-      gsl_vector_free(s);
+      gsl_matrix_safe_free(S);
+      gsl_matrix_safe_free(Vq);
+      gsl_vector_safe_free(q);
+      gsl_vector_safe_free(s);
 
-      gsl_matrix_free(A);
-      gsl_matrix_free(K);
-      gsl_vector_free(y);
-      gsl_matrix_free(W);
+      gsl_matrix_safe_free(A);
+      gsl_matrix_safe_free(K);
+      gsl_vector_safe_free(y);
+      gsl_matrix_safe_free(W);
     } else if (!cPar.file_study.empty() || !cPar.file_mstudy.empty()) {
       if (!cPar.file_study.empty()) {
         string sfile = cPar.file_study + ".size.txt";
@@ -2270,7 +2270,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
       assert(!has_nan(cPar.v_se_pve));
 
       gsl_vector_view s_sub = gsl_vector_subvector(s, 0, cPar.n_vc);
-      gsl_vector_memcpy(&s_sub.vector, s_ref);
+      gsl_vector_safe_memcpy(&s_sub.vector, s_ref);
       gsl_vector_set(s, cPar.n_vc, cPar.ni_ref);
 
       cPar.WriteMatrix(S, "S");
@@ -2278,14 +2278,14 @@ void GEMMA::BatchRun(PARAM &cPar) {
       cPar.WriteVector(q, "q");
       cPar.WriteVector(s, "size");
 
-      gsl_matrix_free(S);
-      gsl_matrix_free(Vq);
-      // gsl_matrix_free (V);
-      // gsl_matrix_free (Vslope);
-      gsl_vector_free(q);
-      gsl_vector_free(s_study);
-      gsl_vector_free(s_ref);
-      gsl_vector_free(s);
+      gsl_matrix_safe_free(S);
+      gsl_matrix_safe_free(Vq);
+      // gsl_matrix_safe_free (V);
+      // gsl_matrix_safe_free (Vslope);
+      gsl_vector_safe_free(q);
+      gsl_vector_safe_free(s_study);
+      gsl_vector_safe_free(s_ref);
+      gsl_vector_safe_free(s);
     } else {
       gsl_matrix *Y = gsl_matrix_safe_alloc(cPar.ni_test, cPar.n_ph);
       gsl_matrix *W = gsl_matrix_safe_alloc(Y->size1, cPar.n_cvt);
@@ -2462,7 +2462,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
                cPar.mindicator_snp, vec_cat, w1, z, Xz);
     }
     if (cPar.a_mode == 66) {
-      gsl_matrix_memcpy(XWz, Xz);
+      gsl_matrix_safe_memcpy(XWz, Xz);
     } else if (cPar.a_mode == 67) {
       cout << "Calculating XWz ... " << endl;
 
@@ -2507,17 +2507,17 @@ void GEMMA::BatchRun(PARAM &cPar) {
              cPar.v_se_sigma2, cPar.v_enrich, cPar.v_se_enrich);
     assert(!has_nan(cPar.v_se_pve));
 
-    gsl_matrix_free(S);
-    gsl_matrix_free(Svar);
-    gsl_vector_free(s_ref);
+    gsl_matrix_safe_free(S);
+    gsl_matrix_safe_free(Svar);
+    gsl_vector_safe_free(s_ref);
 
-    gsl_matrix_free(Xz);
-    gsl_matrix_free(XWz);
-    gsl_matrix_free(XtXWz);
-    gsl_vector_free(w);
-    gsl_vector_free(w1);
-    gsl_vector_free(z);
-    gsl_vector_free(s_vec);
+    gsl_matrix_safe_free(Xz);
+    gsl_matrix_safe_free(XWz);
+    gsl_matrix_safe_free(XtXWz);
+    gsl_vector_safe_free(w);
+    gsl_vector_safe_free(w1);
+    gsl_vector_safe_free(z);
+    gsl_vector_safe_free(s_vec);
   }
 
   // LMM or mvLMM or Eigen-Decomposition
@@ -2716,7 +2716,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
           gsl_vector *y_hat = gsl_vector_safe_alloc(Y->size1);
 
           // obtain Utu and Ute
-          gsl_vector_memcpy(y_hat, &UtY_col.vector);
+          gsl_vector_safe_memcpy(y_hat, &UtY_col.vector);
           gsl_blas_dgemv(CblasNoTrans, -1.0, UtW, &beta.vector, 1.0, y_hat);
 
           double d, u, e;
@@ -2737,9 +2737,9 @@ void GEMMA::BatchRun(PARAM &cPar) {
           cPar.WriteVector(u_hat, "residU");
           cPar.WriteVector(e_hat, "residE");
 
-          gsl_vector_free(u_hat);
-          gsl_vector_free(e_hat);
-          gsl_vector_free(y_hat);
+          gsl_vector_safe_free(u_hat);
+          gsl_vector_safe_free(e_hat);
+          gsl_vector_safe_free(y_hat);
         }
       }
 
@@ -2802,16 +2802,16 @@ void GEMMA::BatchRun(PARAM &cPar) {
     }
 
     // release all matrices and vectors
-    gsl_matrix_free(Y);
-    gsl_matrix_free(W);
-    gsl_matrix_free(B);
-    gsl_matrix_free(se_B);
-    gsl_matrix_free(G);
-    gsl_matrix_free(U);
-    gsl_matrix_free(UtW);
-    gsl_matrix_free(UtY);
-    gsl_vector_free(eval);
-    gsl_vector_free(env);
+    gsl_matrix_safe_free(Y);
+    gsl_matrix_safe_free(W);
+    gsl_matrix_safe_free(B);
+    gsl_matrix_safe_free(se_B);
+    gsl_matrix_safe_free(G);
+    gsl_matrix_safe_free(U);
+    gsl_matrix_safe_free(UtW);
+    gsl_matrix_safe_free(UtY);
+    gsl_vector_safe_free(eval);
+    gsl_vector_safe_free(env);
   }
 
   // BSLMM
@@ -2912,15 +2912,15 @@ void GEMMA::BatchRun(PARAM &cPar) {
       }
 
       // release all matrices and vectors
-      gsl_matrix_free(G);
-      gsl_matrix_free(U);
-      gsl_matrix_free(UtW);
-      gsl_vector_free(eval);
-      gsl_vector_free(Uty);
+      gsl_matrix_safe_free(G);
+      gsl_matrix_safe_free(U);
+      gsl_matrix_safe_free(UtW);
+      gsl_vector_safe_free(eval);
+      gsl_vector_safe_free(Uty);
     }
-    gsl_matrix_free(W);
-    gsl_vector_free(y);
-    gsl_matrix_free(UtX);
+    gsl_matrix_safe_free(W);
+    gsl_vector_safe_free(y);
+    gsl_matrix_safe_free(UtX);
   }
 
   // BSLMM-DAP
@@ -3016,16 +3016,16 @@ void GEMMA::BatchRun(PARAM &cPar) {
         cBslmmDap.CopyToParam(cPar);
 
         // release all matrices and vectors
-        gsl_matrix_free(G);
-        gsl_matrix_free(U);
-        gsl_matrix_free(UtW);
-        gsl_vector_free(eval);
-        gsl_vector_free(Uty);
+        gsl_matrix_safe_free(G);
+        gsl_matrix_safe_free(U);
+        gsl_matrix_safe_free(UtW);
+        gsl_vector_safe_free(eval);
+        gsl_vector_safe_free(Uty);
       }
 
-      gsl_matrix_free(W);
-      gsl_vector_free(y);
-      gsl_matrix_free(UtX);
+      gsl_matrix_safe_free(W);
+      gsl_vector_safe_free(y);
+      gsl_matrix_safe_free(UtX);
     } else if (cPar.a_mode == 15) {
       // perform EM algorithm and estimate parameters
       vector<string> vec_rs;
@@ -3074,7 +3074,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
       cPar.time_opt = (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
       cBslmmDap.CopyToParam(cPar);
 
-      gsl_matrix_free(Ac);
+      gsl_matrix_safe_free(Ac);
       gsl_matrix_int_free(Ad);
       gsl_vector_int_free(dlevel);
     } else {

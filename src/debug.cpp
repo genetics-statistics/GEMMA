@@ -56,6 +56,55 @@ gsl_matrix *gsl_matrix_safe_alloc(size_t rows,size_t cols) {
   return m;
 }
 
+int gsl_matrix_safe_memcpy (gsl_matrix *dest, const gsl_matrix *src) {
+  enforce(dest->size1 == src->size1);
+  enforce(dest->size2 == src->size2);
+  return gsl_matrix_memcpy(dest,src);
+}
+
+void do_gsl_matrix_safe_free (gsl_matrix *m, const char *__pretty_function, const char *__file, int __line) {
+  enforce(m);
+  if (is_check_mode() && is_debug_mode()) {
+    bool has_NaN = has_nan(m);
+    bool has_Inf = has_inf(m);
+    if (has_NaN || has_Inf) {
+      std::string msg = "Matrix (size ";
+      msg += std::to_string(m->size1);
+      msg += "x";
+      msg += std::to_string(m->size2);
+      msg += ")";
+      if (has_Inf)
+        warnfail_at_msg(is_strict_mode(),__pretty_function,__file,__line,(msg+" contains Infinite on free!").c_str());
+      if (has_NaN)
+        warnfail_at_msg(is_strict_mode(),__pretty_function,__file,__line,(msg+" contains NaN on free!").c_str());
+    }
+  }
+  return gsl_matrix_free(m);
+}
+
+int gsl_vector_safe_memcpy (gsl_vector *dest, const gsl_vector *src) {
+  enforce(dest->size == src->size);
+  return gsl_vector_memcpy(dest,src);
+}
+
+void do_gsl_vector_safe_free (gsl_vector *v, const char *__pretty_function, const char *__file, int __line) {
+  enforce(v);
+  if (is_check_mode() && is_debug_mode()) {
+    bool has_NaN = has_nan(v);
+    bool has_Inf = has_inf(v);
+    if (has_NaN || has_Inf) {
+      std::string msg = "Vector (size ";
+      msg += std::to_string(v->size);
+      msg += ")";
+      if (has_Inf)
+        warnfail_at_msg(is_strict_mode(),__pretty_function,__file,__line,(msg+" contains Infinite on free!").c_str());
+      if (has_NaN)
+        warnfail_at_msg(is_strict_mode(),__pretty_function,__file,__line,(msg+" contains NaN on free!").c_str());
+    }
+  }
+  return gsl_vector_free(v);
+}
+
 /*
   Helper function to make sure gsl allocations do their job because
   gsl_vector_alloc does not initiatize values (behaviour that changed
@@ -81,7 +130,7 @@ char *do_strtok_safe(char *tokenize, const char *delimiters, const char *__prett
 
 // Helper function called by macro validate_K(K, check). K is validated
 // unless -no-check option is used.
-void do_validate_K(const gsl_matrix *K, const char *__file, int __line) {
+void do_validate_K(const gsl_matrix *K, const char *__pretty_function, const char *__file, int __line) {
   if (is_check_mode()) {
     // debug_msg("Validating K");
     auto eigenvalues = getEigenValues(K);
@@ -95,13 +144,13 @@ void do_validate_K(const gsl_matrix *K, const char *__file, int __line) {
     if (!isMatrixIllConditioned(eigenvalues))
       warning_at_msg(__file,__line,"K is ill conditioned!");
     if (!isMatrixSymmetric(K))
-      warnfail_at_msg(is_strict_mode(),__file,__line,"K is not symmetric!" );
+      warnfail_at_msg(is_strict_mode(),__pretty_function,__file,__line,"K is not symmetric!" );
     const bool negative_values = has_negative_values_but_one(eigenvalues);
     if (negative_values) {
       warning_at_msg(__file,__line,"K has more than one negative eigenvalues!");
     }
     if (count_small>1 && negative_values && !isMatrixPositiveDefinite(K))
-      warnfail_at_msg(is_strict_mode(),__file,__line,"K is not positive definite!");
+      warnfail_at_msg(is_strict_mode(),__pretty_function,__file,__line,"K is not positive definite!");
     gsl_vector_free(eigenvalues);
   }
 }

@@ -26,25 +26,32 @@ bool is_issue(uint issue);
 bool is_legacy_mode();
 
 gsl_matrix *gsl_matrix_safe_alloc(size_t rows,size_t cols);
+int gsl_matrix_safe_memcpy (gsl_matrix *dest, const gsl_matrix *src);
+void gsl_matrix_safe_free (gsl_matrix *v);
+void do_gsl_matrix_safe_free (gsl_matrix *m, const char *__pretty_function, const char *__file, int __line);
+
 gsl_vector *gsl_vector_safe_alloc(size_t n);
+int gsl_vector_safe_memcpy (gsl_vector *dest, const gsl_vector *src);
+void gsl_vector_safe_free (gsl_vector *v);
+void do_gsl_vector_safe_free (gsl_vector *v, const char *__pretty_function, const char *__file, int __line);
 
 char *do_strtok_safe(char *tokenize, const char *delimiters, const char *__pretty_function, const char *__file, int __line);
 #define strtok_safe(string,delimiters) do_strtok_safe(string,delimiters,__PRETTY_FUNCTION__,__FILE__,__LINE__)
 
 // Validation routines
-void do_validate_K(const gsl_matrix *K, const char *__file, int __line);
+void do_validate_K(const gsl_matrix *K, const char*__pretty_func, const char *__file, int __line);
 
 #define ROUND(f) round(f * 10000.)/10000
-#define validate_K(K) do_validate_K(K,__FILE__,__LINE__)
+#define validate_K(K) do_validate_K(K,__PRETTY_FUNCTION__,__FILE__,__LINE__)
 
 #define warning_at_msg(__file,__line,msg) cerr << "**** WARNING: " << msg << " in " << __file << " at line " << __line << endl;
 
-inline void warnfail_at_msg(bool strict, const char *__file, int __line, const char *msg) {
+inline void warnfail_at_msg(bool strict, const char *__function, const char *__file, int __line, const char *msg) {
   if (strict)
     std::cerr << "**** STRICT FAIL: ";
   else
     std::cerr << "**** WARNING: ";
-  std::cerr << msg << " in " << __file << " at line " << __line << std::endl;
+  std::cerr << msg << " in " << __file << " at line " << __line << " in " << __function << std::endl;
   if (strict)
     exit(1);
 }
@@ -127,5 +134,9 @@ inline void __enforce_fail(const char *__assertion, const char *__file,
     enforce_msg(stat(fn.c_str(), &fileInfo) == 0,                              \
                 ((std::string(__STRING(fn)) + " " + fn + ": " + msg).c_str()));
 
+#define gsl_matrix_safe_free(m) \
+  do_gsl_matrix_safe_free(m,__ASSERT_FUNCTION,__FILE__,__LINE__);
+#define gsl_vector_safe_free(v) \
+  do_gsl_vector_safe_free(v,__ASSERT_FUNCTION,__FILE__,__LINE__);
 
 #endif

@@ -30,6 +30,10 @@ using namespace std;
 
 
 bool has_nan(const vector<double> v);
+bool has_nan(const gsl_vector *v);
+bool has_inf(const gsl_vector *v);
+bool has_nan(const gsl_matrix *m);
+bool has_inf(const gsl_matrix *m);
 
 double VectorVar(const gsl_vector *v);
 void CenterMatrix(gsl_matrix *G);

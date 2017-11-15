@@ -367,12 +367,12 @@ double LogL_f(double l, void *params) {
   gsl_vector *Hi_eval = gsl_vector_safe_alloc((p->eval)->size);
   gsl_vector *v_temp = gsl_vector_safe_alloc((p->eval)->size);
 
-  gsl_vector_memcpy(v_temp, p->eval);
+  gsl_vector_safe_memcpy(v_temp, p->eval);
   gsl_vector_scale(v_temp, l);
   if (p->e_mode == 0) {
     gsl_vector_set_all(Hi_eval, 1.0);
   } else {
-    gsl_vector_memcpy(Hi_eval, v_temp);
+    gsl_vector_safe_memcpy(Hi_eval, v_temp);
   }
   gsl_vector_add_constant(v_temp, 1.0);
   gsl_vector_div(Hi_eval, v_temp);
@@ -391,9 +391,9 @@ double LogL_f(double l, void *params) {
   double P_yy = gsl_matrix_get(Pab, nc_total, index_yy);
   f = c - 0.5 * logdet_h - 0.5 * (double)ni_test * log(P_yy);
 
-  gsl_matrix_free(Pab);
-  gsl_vector_free(Hi_eval);
-  gsl_vector_free(v_temp);
+  gsl_matrix_safe_free(Pab); // FIXME
+  gsl_vector_safe_free(Hi_eval);
+  gsl_vector_safe_free(v_temp);
   return f;
 }
 
@@ -419,17 +419,17 @@ double LogL_dev1(double l, void *params) {
   gsl_vector *HiHi_eval = gsl_vector_safe_alloc((p->eval)->size);
   gsl_vector *v_temp = gsl_vector_safe_alloc((p->eval)->size);
 
-  gsl_vector_memcpy(v_temp, p->eval);
+  gsl_vector_safe_memcpy(v_temp, p->eval);
   gsl_vector_scale(v_temp, l);
   if (p->e_mode == 0) {
     gsl_vector_set_all(Hi_eval, 1.0);
   } else {
-    gsl_vector_memcpy(Hi_eval, v_temp);
+    gsl_vector_safe_memcpy(Hi_eval, v_temp);
   }
   gsl_vector_add_constant(v_temp, 1.0);
   gsl_vector_div(Hi_eval, v_temp);
 
-  gsl_vector_memcpy(HiHi_eval, Hi_eval);
+  gsl_vector_safe_memcpy(HiHi_eval, Hi_eval);
   gsl_vector_mul(HiHi_eval, Hi_eval);
 
   gsl_vector_set_all(v_temp, 1.0);
@@ -451,11 +451,11 @@ double LogL_dev1(double l, void *params) {
   double yPKPy = (P_yy - PP_yy) / l;
   dev1 = -0.5 * trace_HiK + 0.5 * (double)ni_test * yPKPy / P_yy;
 
-  gsl_matrix_free(Pab);
-  gsl_matrix_free(PPab);
-  gsl_vector_free(Hi_eval);
-  gsl_vector_free(HiHi_eval);
-  gsl_vector_free(v_temp);
+  gsl_matrix_safe_free(Pab);   // FIXME: may contain NaN
+  gsl_matrix_safe_free(PPab);  // FIXME: may contain NaN
+  gsl_vector_safe_free(Hi_eval);
+  gsl_vector_safe_free(HiHi_eval);
+  gsl_vector_safe_free(v_temp);
 
   return dev1;
 }
@@ -484,19 +484,19 @@ double LogL_dev2(double l, void *params) {
   gsl_vector *HiHiHi_eval = gsl_vector_safe_alloc((p->eval)->size);
   gsl_vector *v_temp = gsl_vector_safe_alloc((p->eval)->size);
 
-  gsl_vector_memcpy(v_temp, p->eval);
+  gsl_vector_safe_memcpy(v_temp, p->eval);
   gsl_vector_scale(v_temp, l);
   if (p->e_mode == 0) {
     gsl_vector_set_all(Hi_eval, 1.0);
   } else {
-    gsl_vector_memcpy(Hi_eval, v_temp);
+    gsl_vector_safe_memcpy(Hi_eval, v_temp);
   }
   gsl_vector_add_constant(v_temp, 1.0);
   gsl_vector_div(Hi_eval, v_temp);
 
-  gsl_vector_memcpy(HiHi_eval, Hi_eval);
+  gsl_vector_safe_memcpy(HiHi_eval, Hi_eval);
   gsl_vector_mul(HiHi_eval, Hi_eval);
-  gsl_vector_memcpy(HiHiHi_eval, HiHi_eval);
+  gsl_vector_safe_memcpy(HiHiHi_eval, HiHi_eval);
   gsl_vector_mul(HiHiHi_eval, Hi_eval);
 
   gsl_vector_set_all(v_temp, 1.0);
@@ -526,13 +526,13 @@ double LogL_dev2(double l, void *params) {
          0.5 * (double)ni_test * (2.0 * yPKPKPy * P_yy - yPKPy * yPKPy) /
              (P_yy * P_yy);
 
-  gsl_matrix_free(Pab);
-  gsl_matrix_free(PPab);
-  gsl_matrix_free(PPPab);
-  gsl_vector_free(Hi_eval);
-  gsl_vector_free(HiHi_eval);
-  gsl_vector_free(HiHiHi_eval);
-  gsl_vector_free(v_temp);
+  gsl_matrix_safe_free(Pab);  // FIXME
+  gsl_matrix_safe_free(PPab);
+  gsl_matrix_safe_free(PPPab);
+  gsl_vector_safe_free(Hi_eval);
+  gsl_vector_safe_free(HiHi_eval);
+  gsl_vector_safe_free(HiHiHi_eval);
+  gsl_vector_safe_free(v_temp);
 
   return dev2;
 }
@@ -561,19 +561,19 @@ void LogL_dev12(double l, void *params, double *dev1, double *dev2) {
   gsl_vector *HiHiHi_eval = gsl_vector_safe_alloc((p->eval)->size);
   gsl_vector *v_temp = gsl_vector_safe_alloc((p->eval)->size);
 
-  gsl_vector_memcpy(v_temp, p->eval);
+  gsl_vector_safe_memcpy(v_temp, p->eval);
   gsl_vector_scale(v_temp, l);
   if (p->e_mode == 0) {
     gsl_vector_set_all(Hi_eval, 1.0);
   } else {
-    gsl_vector_memcpy(Hi_eval, v_temp);
+    gsl_vector_safe_memcpy(Hi_eval, v_temp);
   }
   gsl_vector_add_constant(v_temp, 1.0);
   gsl_vector_div(Hi_eval, v_temp);
 
-  gsl_vector_memcpy(HiHi_eval, Hi_eval);
+  gsl_vector_safe_memcpy(HiHi_eval, Hi_eval);
   gsl_vector_mul(HiHi_eval, Hi_eval);
-  gsl_vector_memcpy(HiHiHi_eval, HiHi_eval);
+  gsl_vector_safe_memcpy(HiHiHi_eval, HiHi_eval);
   gsl_vector_mul(HiHiHi_eval, Hi_eval);
 
   gsl_vector_set_all(v_temp, 1.0);
@@ -606,13 +606,13 @@ void LogL_dev12(double l, void *params, double *dev1, double *dev2) {
           0.5 * (double)ni_test * (2.0 * yPKPKPy * P_yy - yPKPy * yPKPy) /
               (P_yy * P_yy);
 
-  gsl_matrix_free(Pab);
-  gsl_matrix_free(PPab);
-  gsl_matrix_free(PPPab);
-  gsl_vector_free(Hi_eval);
-  gsl_vector_free(HiHi_eval);
-  gsl_vector_free(HiHiHi_eval);
-  gsl_vector_free(v_temp);
+  gsl_matrix_safe_free(Pab);   // FIXME: may contain NaN
+  gsl_matrix_safe_free(PPab);  // FIXME: may contain NaN
+  gsl_matrix_safe_free(PPPab); // FIXME: may contain NaN
+  gsl_vector_safe_free(Hi_eval);
+  gsl_vector_safe_free(HiHi_eval);
+  gsl_vector_safe_free(HiHiHi_eval);
+  gsl_vector_safe_free(v_temp);
 
   return;
 }
@@ -641,12 +641,12 @@ double LogRL_f(double l, void *params) {
   gsl_vector *Hi_eval = gsl_vector_safe_alloc((p->eval)->size);
   gsl_vector *v_temp = gsl_vector_safe_alloc((p->eval)->size);
 
-  gsl_vector_memcpy(v_temp, p->eval);
+  gsl_vector_safe_memcpy(v_temp, p->eval);
   gsl_vector_scale(v_temp, l);
   if (p->e_mode == 0) {
     gsl_vector_set_all(Hi_eval, 1.0);
   } else {
-    gsl_vector_memcpy(Hi_eval, v_temp);
+    gsl_vector_safe_memcpy(Hi_eval, v_temp);
   }
   gsl_vector_add_constant(v_temp, 1.0);
   gsl_vector_div(Hi_eval, v_temp);
@@ -675,10 +675,10 @@ double LogRL_f(double l, void *params) {
   double c = 0.5 * df * (log(df) - log(2 * M_PI) - 1.0);
   f = c - 0.5 * logdet_h - 0.5 * logdet_hiw - 0.5 * df * log(P_yy);
 
-  gsl_matrix_free(Pab);
-  gsl_matrix_free(Iab);
-  gsl_vector_free(Hi_eval);
-  gsl_vector_free(v_temp);
+  gsl_matrix_safe_free(Pab);
+  gsl_matrix_safe_free(Iab);
+  gsl_vector_safe_free(Hi_eval);
+  gsl_vector_safe_free(v_temp);
   return f;
 }
 
@@ -707,17 +707,17 @@ double LogRL_dev1(double l, void *params) {
   gsl_vector *HiHi_eval = gsl_vector_safe_alloc((p->eval)->size);
   gsl_vector *v_temp = gsl_vector_safe_alloc((p->eval)->size);
 
-  gsl_vector_memcpy(v_temp, p->eval);
+  gsl_vector_safe_memcpy(v_temp, p->eval);
   gsl_vector_scale(v_temp, l);
   if (p->e_mode == 0) {
     gsl_vector_set_all(Hi_eval, 1.0);
   } else {
-    gsl_vector_memcpy(Hi_eval, v_temp);
+    gsl_vector_safe_memcpy(Hi_eval, v_temp);
   }
   gsl_vector_add_constant(v_temp, 1.0);
   gsl_vector_div(Hi_eval, v_temp);
 
-  gsl_vector_memcpy(HiHi_eval, Hi_eval);
+  gsl_vector_safe_memcpy(HiHi_eval, Hi_eval);
   gsl_vector_mul(HiHi_eval, Hi_eval);
 
   gsl_vector_set_all(v_temp, 1.0);
@@ -749,11 +749,11 @@ double LogRL_dev1(double l, void *params) {
 
   dev1 = -0.5 * trace_PK + 0.5 * df * yPKPy / P_yy;
 
-  gsl_matrix_free(Pab);
-  gsl_matrix_free(PPab);
-  gsl_vector_free(Hi_eval);
-  gsl_vector_free(HiHi_eval);
-  gsl_vector_free(v_temp);
+  gsl_matrix_safe_free(Pab);  // FIXME: may contain NaN
+  gsl_matrix_safe_free(PPab); // FIXME: may contain NaN
+  gsl_vector_safe_free(Hi_eval);
+  gsl_vector_safe_free(HiHi_eval);
+  gsl_vector_safe_free(v_temp);
 
   return dev1;
 }
@@ -785,19 +785,19 @@ double LogRL_dev2(double l, void *params) {
   gsl_vector *HiHiHi_eval = gsl_vector_safe_alloc((p->eval)->size);
   gsl_vector *v_temp = gsl_vector_safe_alloc((p->eval)->size);
 
-  gsl_vector_memcpy(v_temp, p->eval);
+  gsl_vector_safe_memcpy(v_temp, p->eval);
   gsl_vector_scale(v_temp, l);
   if (p->e_mode == 0) {
     gsl_vector_set_all(Hi_eval, 1.0);
   } else {
-    gsl_vector_memcpy(Hi_eval, v_temp);
+    gsl_vector_safe_memcpy(Hi_eval, v_temp);
   }
   gsl_vector_add_constant(v_temp, 1.0);
   gsl_vector_div(Hi_eval, v_temp);
 
-  gsl_vector_memcpy(HiHi_eval, Hi_eval);
+  gsl_vector_safe_memcpy(HiHi_eval, Hi_eval);
   gsl_vector_mul(HiHi_eval, Hi_eval);
-  gsl_vector_memcpy(HiHiHi_eval, HiHi_eval);
+  gsl_vector_safe_memcpy(HiHiHi_eval, HiHi_eval);
   gsl_vector_mul(HiHiHi_eval, Hi_eval);
 
   gsl_vector_set_all(v_temp, 1.0);
@@ -837,13 +837,13 @@ double LogRL_dev2(double l, void *params) {
   dev2 = 0.5 * trace_PKPK -
          0.5 * df * (2.0 * yPKPKPy * P_yy - yPKPy * yPKPy) / (P_yy * P_yy);
 
-  gsl_matrix_free(Pab);
-  gsl_matrix_free(PPab);
-  gsl_matrix_free(PPPab);
-  gsl_vector_free(Hi_eval);
-  gsl_vector_free(HiHi_eval);
-  gsl_vector_free(HiHiHi_eval);
-  gsl_vector_free(v_temp);
+  gsl_matrix_safe_free(Pab);  // FIXME
+  gsl_matrix_safe_free(PPab);
+  gsl_matrix_safe_free(PPPab);
+  gsl_vector_safe_free(Hi_eval);
+  gsl_vector_safe_free(HiHi_eval);
+  gsl_vector_safe_free(HiHiHi_eval);
+  gsl_vector_safe_free(v_temp);
 
   return dev2;
 }
@@ -875,19 +875,19 @@ void LogRL_dev12(double l, void *params, double *dev1, double *dev2) {
   gsl_vector *HiHiHi_eval = gsl_vector_safe_alloc((p->eval)->size);
   gsl_vector *v_temp = gsl_vector_safe_alloc((p->eval)->size);
 
-  gsl_vector_memcpy(v_temp, p->eval);
+  gsl_vector_safe_memcpy(v_temp, p->eval);
   gsl_vector_scale(v_temp, l);
   if (p->e_mode == 0) {
     gsl_vector_set_all(Hi_eval, 1.0);
   } else {
-    gsl_vector_memcpy(Hi_eval, v_temp);
+    gsl_vector_safe_memcpy(Hi_eval, v_temp);
   }
   gsl_vector_add_constant(v_temp, 1.0);
   gsl_vector_div(Hi_eval, v_temp);
 
-  gsl_vector_memcpy(HiHi_eval, Hi_eval);
+  gsl_vector_safe_memcpy(HiHi_eval, Hi_eval);
   gsl_vector_mul(HiHi_eval, Hi_eval);
-  gsl_vector_memcpy(HiHiHi_eval, HiHi_eval);
+  gsl_vector_safe_memcpy(HiHiHi_eval, HiHi_eval);
   gsl_vector_mul(HiHiHi_eval, Hi_eval);
 
   gsl_vector_set_all(v_temp, 1.0);
@@ -929,13 +929,13 @@ void LogRL_dev12(double l, void *params, double *dev1, double *dev2) {
   *dev2 = 0.5 * trace_PKPK -
           0.5 * df * (2.0 * yPKPKPy * P_yy - yPKPy * yPKPy) / (P_yy * P_yy);
 
-  gsl_matrix_free(Pab);
-  gsl_matrix_free(PPab);
-  gsl_matrix_free(PPPab);
-  gsl_vector_free(Hi_eval);
-  gsl_vector_free(HiHi_eval);
-  gsl_vector_free(HiHiHi_eval);
-  gsl_vector_free(v_temp);
+  gsl_matrix_safe_free(Pab);  // FIXME
+  gsl_matrix_safe_free(PPab);
+  gsl_matrix_safe_free(PPPab);
+  gsl_vector_safe_free(Hi_eval);
+  gsl_vector_safe_free(HiHi_eval);
+  gsl_vector_safe_free(HiHiHi_eval);
+  gsl_vector_safe_free(v_temp);
 
   return;
 }
@@ -951,12 +951,12 @@ void LMM::CalcRLWald(const double &l, const FUNC_PARAM &params, double &beta,
   gsl_vector *Hi_eval = gsl_vector_safe_alloc(params.eval->size);
   gsl_vector *v_temp = gsl_vector_safe_alloc(params.eval->size);
 
-  gsl_vector_memcpy(v_temp, params.eval);
+  gsl_vector_safe_memcpy(v_temp, params.eval);
   gsl_vector_scale(v_temp, l);
   if (params.e_mode == 0) {
     gsl_vector_set_all(Hi_eval, 1.0);
   } else {
-    gsl_vector_memcpy(Hi_eval, v_temp);
+    gsl_vector_safe_memcpy(Hi_eval, v_temp);
   }
   gsl_vector_add_constant(v_temp, 1.0);
   gsl_vector_div(Hi_eval, v_temp);
@@ -976,9 +976,9 @@ void LMM::CalcRLWald(const double &l, const FUNC_PARAM &params, double &beta,
   se = sqrt(1.0 / (tau * P_xx));
   p_wald = gsl_cdf_fdist_Q((P_yy - Px_yy) * tau, 1.0, df);
 
-  gsl_matrix_free(Pab);
-  gsl_vector_free(Hi_eval);
-  gsl_vector_free(v_temp);
+  gsl_matrix_safe_free(Pab);
+  gsl_vector_safe_free(Hi_eval);
+  gsl_vector_safe_free(v_temp);
   return;
 }
 
@@ -993,12 +993,12 @@ void LMM::CalcRLScore(const double &l, const FUNC_PARAM &params, double &beta,
   gsl_vector *Hi_eval = gsl_vector_safe_alloc(params.eval->size);
   gsl_vector *v_temp = gsl_vector_safe_alloc(params.eval->size);
 
-  gsl_vector_memcpy(v_temp, params.eval);
+  gsl_vector_safe_memcpy(v_temp, params.eval);
   gsl_vector_scale(v_temp, l);
   if (params.e_mode == 0) {
     gsl_vector_set_all(Hi_eval, 1.0);
   } else {
-    gsl_vector_memcpy(Hi_eval, v_temp);
+    gsl_vector_safe_memcpy(Hi_eval, v_temp);
   }
   gsl_vector_add_constant(v_temp, 1.0);
   gsl_vector_div(Hi_eval, v_temp);
@@ -1020,9 +1020,9 @@ void LMM::CalcRLScore(const double &l, const FUNC_PARAM &params, double &beta,
   p_score =
       gsl_cdf_fdist_Q((double)ni_test * P_xy * P_xy / (P_yy * P_xx), 1.0, df);
 
-  gsl_matrix_free(Pab);
-  gsl_vector_free(Hi_eval);
-  gsl_vector_free(v_temp);
+  gsl_matrix_safe_free(Pab);
+  gsl_vector_safe_free(Hi_eval);
+  gsl_vector_safe_free(v_temp);
   return;
 }
 
@@ -1038,10 +1038,10 @@ void CalcUab(const gsl_matrix *UtW, const gsl_vector *Uty, gsl_matrix *Uab) {
     }
 
     if (a == n_cvt + 2) {
-      gsl_vector_memcpy(u_a, Uty);
+      gsl_vector_safe_memcpy(u_a, Uty);
     } else {
       gsl_vector_const_view UtW_col = gsl_matrix_const_column(UtW, a - 1);
-      gsl_vector_memcpy(u_a, &UtW_col.vector);
+      gsl_vector_safe_memcpy(u_a, &UtW_col.vector);
     }
 
     for (size_t b = a; b >= 1; --b) {
@@ -1053,17 +1053,17 @@ void CalcUab(const gsl_matrix *UtW, const gsl_vector *Uty, gsl_matrix *Uab) {
       gsl_vector_view Uab_col = gsl_matrix_column(Uab, index_ab);
 
       if (b == n_cvt + 2) {
-        gsl_vector_memcpy(&Uab_col.vector, Uty);
+        gsl_vector_safe_memcpy(&Uab_col.vector, Uty);
       } else {
         gsl_vector_const_view UtW_col = gsl_matrix_const_column(UtW, b - 1);
-        gsl_vector_memcpy(&Uab_col.vector, &UtW_col.vector);
+        gsl_vector_safe_memcpy(&Uab_col.vector, &UtW_col.vector);
       }
 
       gsl_vector_mul(&Uab_col.vector, u_a);
     }
   }
 
-  gsl_vector_free(u_a);
+  gsl_vector_safe_free(u_a);
   return;
 }
 
@@ -1077,12 +1077,12 @@ void CalcUab(const gsl_matrix *UtW, const gsl_vector *Uty,
     gsl_vector_view Uab_col = gsl_matrix_column(Uab, index_ab);
 
     if (b == n_cvt + 2) {
-      gsl_vector_memcpy(&Uab_col.vector, Uty);
+      gsl_vector_safe_memcpy(&Uab_col.vector, Uty);
     } else if (b == n_cvt + 1) {
-      gsl_vector_memcpy(&Uab_col.vector, Utx);
+      gsl_vector_safe_memcpy(&Uab_col.vector, Utx);
     } else {
       gsl_vector_const_view UtW_col = gsl_matrix_const_column(UtW, b - 1);
-      gsl_vector_memcpy(&Uab_col.vector, &UtW_col.vector);
+      gsl_vector_safe_memcpy(&Uab_col.vector, &UtW_col.vector);
     }
 
     gsl_vector_mul(&Uab_col.vector, Utx);
@@ -1105,10 +1105,10 @@ void Calcab(const gsl_matrix *W, const gsl_vector *y, gsl_vector *ab) {
     }
 
     if (a == n_cvt + 2) {
-      gsl_vector_memcpy(v_a, y);
+      gsl_vector_safe_memcpy(v_a, y);
     } else {
       gsl_vector_const_view W_col = gsl_matrix_const_column(W, a - 1);
-      gsl_vector_memcpy(v_a, &W_col.vector);
+      gsl_vector_safe_memcpy(v_a, &W_col.vector);
     }
 
     for (size_t b = a; b >= 1; --b) {
@@ -1119,10 +1119,10 @@ void Calcab(const gsl_matrix *W, const gsl_vector *y, gsl_vector *ab) {
       index_ab = GetabIndex(a, b, n_cvt);
 
       if (b == n_cvt + 2) {
-        gsl_vector_memcpy(v_b, y);
+        gsl_vector_safe_memcpy(v_b, y);
       } else {
         gsl_vector_const_view W_col = gsl_matrix_const_column(W, b - 1);
-        gsl_vector_memcpy(v_b, &W_col.vector);
+        gsl_vector_safe_memcpy(v_b, &W_col.vector);
       }
 
       gsl_blas_ddot(v_a, v_b, &d);
@@ -1130,8 +1130,8 @@ void Calcab(const gsl_matrix *W, const gsl_vector *y, gsl_vector *ab) {
     }
   }
 
-  gsl_vector_free(v_a);
-  gsl_vector_free(v_b);
+  gsl_vector_safe_free(v_a);
+  gsl_vector_safe_free(v_b);
   return;
 }
 
@@ -1147,19 +1147,19 @@ void Calcab(const gsl_matrix *W, const gsl_vector *y, const gsl_vector *x,
     index_ab = GetabIndex(n_cvt + 1, b, n_cvt);
 
     if (b == n_cvt + 2) {
-      gsl_vector_memcpy(v_b, y);
+      gsl_vector_safe_memcpy(v_b, y);
     } else if (b == n_cvt + 1) {
-      gsl_vector_memcpy(v_b, x);
+      gsl_vector_safe_memcpy(v_b, x);
     } else {
       gsl_vector_const_view W_col = gsl_matrix_const_column(W, b - 1);
-      gsl_vector_memcpy(v_b, &W_col.vector);
+      gsl_vector_safe_memcpy(v_b, &W_col.vector);
     }
 
     gsl_blas_ddot(x, v_b, &d);
     gsl_vector_set(ab, index_ab, d);
   }
 
-  gsl_vector_free(v_b);
+  gsl_vector_safe_free(v_b);
   return;
 }
 
@@ -1260,10 +1260,10 @@ void LMM::AnalyzeGene(const gsl_matrix *U, const gsl_vector *eval,
   }
   cout << endl;
 
-  gsl_vector_free(y);
-  gsl_vector_free(Uty);
-  gsl_matrix_free(Uab);
-  gsl_vector_free(ab);
+  gsl_vector_safe_free(y);
+  gsl_vector_safe_free(Uty);
+  gsl_matrix_safe_free(Uab);
+  gsl_vector_safe_free(ab);
 
   infile.close();
   infile.clear();
@@ -1324,7 +1324,7 @@ void LMM::Analyze(std::function< SnpNameValues(size_t) >& fetch_snp,
     for (size_t i = 0; i < l; i++) {
       // for every batch...
       gsl_vector_view UtXlarge_col = gsl_matrix_column(UtXlarge, i);
-      gsl_vector_memcpy(Utx, &UtXlarge_col.vector);
+      gsl_vector_safe_memcpy(Utx, &UtXlarge_col.vector);
 
       CalcUab(UtW, Uty, Utx, Uab);
 
@@ -1425,7 +1425,7 @@ void LMM::Analyze(std::function< SnpNameValues(size_t) >& fetch_snp,
 
     // copy genotype values for SNP into Xlarge cache
     gsl_vector_view Xlarge_col = gsl_matrix_column(Xlarge, c % msize);
-    gsl_vector_memcpy(&Xlarge_col.vector, x);
+    gsl_vector_safe_memcpy(&Xlarge_col.vector, x);
     c++; // count SNPs going in
 
     if (c % msize == 0)
@@ -1436,14 +1436,14 @@ void LMM::Analyze(std::function< SnpNameValues(size_t) >& fetch_snp,
   // cout << "Counted SNPs " << c << " sumStat " << sumStat.size() << endl;
   cout << endl;
 
-  gsl_vector_free(x);
-  gsl_vector_free(x_miss);
-  gsl_vector_free(Utx);
-  gsl_matrix_free(Uab);
-  gsl_vector_free(ab);
+  gsl_vector_safe_free(x);
+  gsl_vector_safe_free(x_miss);
+  gsl_vector_safe_free(Utx);
+  gsl_matrix_safe_free(Uab);
+  gsl_vector_safe_free(ab);
 
-  gsl_matrix_free(Xlarge);
-  gsl_matrix_free(UtXlarge);
+  gsl_matrix_safe_free(Xlarge);
+  gsl_matrix_safe_free(UtXlarge);
 
 }
 
@@ -1598,10 +1598,10 @@ void MatrixCalcLR(const gsl_matrix *U, const gsl_matrix *UtX,
     pos_loglr.push_back(make_pair(i, log_lr));
   }
 
-  gsl_vector_free(w);
-  gsl_matrix_free(Utw);
-  gsl_matrix_free(Uab);
-  gsl_vector_free(ab);
+  gsl_vector_safe_free(w);
+  gsl_matrix_safe_free(Utw);
+  gsl_matrix_safe_free(Uab);
+  gsl_vector_safe_free(ab);
 
   return;
 }
@@ -1790,8 +1790,8 @@ void CalcLambda(const char func_name, const gsl_vector *eval,
 
   CalcLambda(func_name, param0, l_min, l_max, n_region, lambda, logl_H0);
 
-  gsl_matrix_free(Uab);
-  gsl_vector_free(ab);
+  gsl_matrix_safe_free(Uab);
+  gsl_vector_safe_free(ab);
 
   return;
 }
@@ -1816,8 +1816,8 @@ void CalcPve(const gsl_vector *eval, const gsl_matrix *UtW,
   pve = trace_G * lambda / (trace_G * lambda + 1.0);
   pve_se = trace_G / ((trace_G * lambda + 1.0) * (trace_G * lambda + 1.0)) * se;
 
-  gsl_matrix_free(Uab);
-  gsl_vector_free(ab);
+  gsl_matrix_safe_free(Uab);
+  gsl_vector_safe_free(ab);
   return;
 }
 
@@ -1843,14 +1843,14 @@ void CalcLmmVgVeBeta(const gsl_vector *eval, const gsl_matrix *UtW,
   gsl_matrix_set_zero(Uab);
   CalcUab(UtW, Uty, Uab);
 
-  gsl_vector_memcpy(v_temp, eval);
+  gsl_vector_safe_memcpy(v_temp, eval);
   gsl_vector_scale(v_temp, lambda);
   gsl_vector_set_all(Hi_eval, 1.0);
   gsl_vector_add_constant(v_temp, 1.0);
   gsl_vector_div(Hi_eval, v_temp);
 
   // Calculate beta.
-  gsl_matrix_memcpy(HiW, UtW);
+  gsl_matrix_safe_memcpy(HiW, UtW);
   for (size_t i = 0; i < UtW->size2; i++) {
     gsl_vector_view HiW_col = gsl_matrix_column(HiW, i);
     gsl_vector_mul(&HiW_col.vector, Hi_eval);
@@ -1881,15 +1881,15 @@ void CalcLmmVgVeBeta(const gsl_vector *eval, const gsl_matrix *UtW,
     gsl_vector_set(se_beta, i, sqrt(gsl_matrix_get(Vbeta, i, i)));
   }
 
-  gsl_matrix_free(Uab);
-  gsl_matrix_free(Pab);
-  gsl_vector_free(ab);
-  gsl_vector_free(Hi_eval);
-  gsl_vector_free(v_temp);
-  gsl_matrix_free(HiW);
-  gsl_matrix_free(WHiW);
-  gsl_vector_free(WHiy);
-  gsl_matrix_free(Vbeta);
+  gsl_matrix_safe_free(Uab);
+  gsl_matrix_safe_free(Pab);
+  gsl_vector_safe_free(ab);
+  gsl_vector_safe_free(Hi_eval);
+  gsl_vector_safe_free(v_temp);
+  gsl_matrix_safe_free(HiW);
+  gsl_matrix_safe_free(WHiW);
+  gsl_vector_safe_free(WHiy);
+  gsl_matrix_safe_free(Vbeta);
 
   gsl_permutation_free(pmt);
   return;
@@ -1929,7 +1929,7 @@ void LMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval,
   gsl_matrix *UtW_expand = gsl_matrix_safe_alloc(U->size1, UtW->size2 + 2);
   gsl_matrix_view UtW_expand_mat =
       gsl_matrix_submatrix(UtW_expand, 0, 0, U->size1, UtW->size2);
-  gsl_matrix_memcpy(&UtW_expand_mat.matrix, UtW);
+  gsl_matrix_safe_memcpy(&UtW_expand_mat.matrix, UtW);
   gsl_vector_view UtW_expand_env = gsl_matrix_column(UtW_expand, UtW->size2);
   gsl_blas_dgemv(CblasTrans, 1.0, U, env, 0.0, &UtW_expand_env.vector);
   gsl_vector_view UtW_expand_x = gsl_matrix_column(UtW_expand, UtW->size2 + 1);
@@ -2030,13 +2030,13 @@ void LMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval,
   }
   cout << endl;
 
-  gsl_vector_free(x);
-  gsl_vector_free(x_miss);
-  gsl_vector_free(Utx);
-  gsl_matrix_free(Uab);
-  gsl_vector_free(ab);
+  gsl_vector_safe_free(x);
+  gsl_vector_safe_free(x_miss);
+  gsl_vector_safe_free(Utx);
+  gsl_matrix_safe_free(Uab);
+  gsl_vector_safe_free(ab);
 
-  gsl_matrix_free(UtW_expand);
+  gsl_matrix_safe_free(UtW_expand);
 
   infile.close();
   infile.clear();
@@ -2078,7 +2078,7 @@ void LMM::AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval,
   gsl_matrix *UtW_expand = gsl_matrix_safe_alloc(U->size1, UtW->size2 + 2);
   gsl_matrix_view UtW_expand_mat =
       gsl_matrix_submatrix(UtW_expand, 0, 0, U->size1, UtW->size2);
-  gsl_matrix_memcpy(&UtW_expand_mat.matrix, UtW);
+  gsl_matrix_safe_memcpy(&UtW_expand_mat.matrix, UtW);
   gsl_vector_view UtW_expand_env = gsl_matrix_column(UtW_expand, UtW->size2);
   gsl_blas_dgemv(CblasTrans, 1.0, U, env, 0.0, &UtW_expand_env.vector);
   gsl_vector_view UtW_expand_x = gsl_matrix_column(UtW_expand, UtW->size2 + 1);
@@ -2208,12 +2208,12 @@ void LMM::AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval,
   }
   cout << endl;
 
-  gsl_vector_free(x);
-  gsl_vector_free(Utx);
-  gsl_matrix_free(Uab);
-  gsl_vector_free(ab);
+  gsl_vector_safe_free(x);
+  gsl_vector_safe_free(Utx);
+  gsl_matrix_safe_free(Uab);
+  gsl_vector_safe_free(ab);
 
-  gsl_matrix_free(UtW_expand);
+  gsl_matrix_safe_free(UtW_expand);
 
   infile.close();
   infile.clear();
