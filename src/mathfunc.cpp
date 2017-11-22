@@ -40,6 +40,7 @@
 #pragma message "GSL version " GSL_VERSION
 #endif
 
+#include "gsl/gsl_sys.h" // for gsl_isnan, gsl_isinf, gsl_isfinite
 #include "gsl/gsl_blas.h"
 #include "gsl/gsl_cdf.h"
 #include "gsl/gsl_linalg.h"
