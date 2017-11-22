@@ -719,7 +719,7 @@ double MphCalcP(const gsl_vector *eval, const gsl_vector *x_vec,
                 gsl_matrix *Vbeta) {
   size_t n_size = eval->size, c_size = W->size1, d_size = V_g->size1;
   size_t dc_size = d_size * c_size;
-  double delta, dl, d, d1, d2, dy, dx, dw, logdet_Ve, logdet_Q, p_value;
+  double delta, dl, d, d1, d2, dy, dx, dw; //  logdet_Ve, logdet_Q, p_value;
 
   gsl_vector *D_l = gsl_vector_alloc(d_size);
   gsl_matrix *UltVeh = gsl_matrix_alloc(d_size, d_size);
@@ -738,10 +738,12 @@ double MphCalcP(const gsl_vector *eval, const gsl_vector *x_vec,
   gsl_vector_set_zero(WHiy);
 
   // Eigen decomposition and calculate log|Ve|.
-  logdet_Ve = EigenProc(V_g, V_e, D_l, UltVeh, UltVehi);
+  // double logdet_Ve = EigenProc(V_g, V_e, D_l, UltVeh, UltVehi);
+  EigenProc(V_g, V_e, D_l, UltVeh, UltVehi);
 
   // Calculate Qi and log|Q|.
-  logdet_Q = CalcQi(eval, D_l, W, Qi);
+  // double logdet_Q = CalcQi(eval, D_l, W, Qi);
+  CalcQi(eval, D_l, W, Qi);
 
   // Calculate UltVehiY.
   gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, UltVehi, Y, 0.0, UltVehiY);
@@ -799,7 +801,7 @@ double MphCalcP(const gsl_vector *eval, const gsl_vector *x_vec,
   // Calculate test statistic and p value.
   gsl_blas_ddot(D_l, xPy, &d);
 
-  p_value = gsl_cdf_chisq_Q(d, (double)d_size);
+  double p_value = gsl_cdf_chisq_Q(d, (double)d_size);
 
   gsl_vector_free(D_l);
   gsl_matrix_free(UltVeh);
@@ -825,7 +827,7 @@ void MphCalcBeta(const gsl_vector *eval, const gsl_matrix *W,
                  gsl_matrix *se_B) {
   size_t n_size = eval->size, c_size = W->size1, d_size = V_g->size1;
   size_t dc_size = d_size * c_size;
-  double delta, dl, d, dy, dw, logdet_Ve, logdet_Q;
+  double delta, dl, d, dy, dw; // , logdet_Ve, logdet_Q;
 
   gsl_vector *D_l = gsl_vector_alloc(d_size);
   gsl_matrix *UltVeh = gsl_matrix_alloc(d_size, d_size);
@@ -840,10 +842,12 @@ void MphCalcBeta(const gsl_vector *eval, const gsl_matrix *W,
   gsl_vector_set_zero(WHiy);
 
   // Eigen decomposition and calculate log|Ve|.
-  logdet_Ve = EigenProc(V_g, V_e, D_l, UltVeh, UltVehi);
+  // double logdet_Ve = EigenProc(V_g, V_e, D_l, UltVeh, UltVehi);
+  EigenProc(V_g, V_e, D_l, UltVeh, UltVehi);
 
   // Calculate Qi and log|Q|.
-  logdet_Q = CalcQi(eval, D_l, W, Qi);
+  // double logdet_Q = CalcQi(eval, D_l, W, Qi);
+  CalcQi(eval, D_l, W, Qi);
 
   // Calculate UltVehiY.
   gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, UltVehi, Y, 0.0, UltVehiY);
@@ -2878,13 +2882,15 @@ void MphInitial(const size_t em_iter, const double em_prec,
 
   gsl_vector_set_zero(XHiy);
 
-  double logdet_Ve, logdet_Q, dl, d, delta, dx, dy;
+  double dl, d, delta, dx, dy;
 
   // Eigen decomposition and calculate log|Ve|.
-  logdet_Ve = EigenProc(V_g, V_e, D_l, UltVeh, UltVehi);
+  // double logdet_Ve = EigenProc(V_g, V_e, D_l, UltVeh, UltVehi);
+  EigenProc(V_g, V_e, D_l, UltVeh, UltVehi);
 
   // Calculate Qi and log|Q|.
-  logdet_Q = CalcQi(eval, D_l, X, Qi);
+  // double logdet_Q = CalcQi(eval, D_l, X, Qi);
+  CalcQi(eval, D_l, X, Qi);
 
   // Calculate UltVehiY.
   gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, UltVehi, Y, 0.0, UltVehiY);
@@ -3866,7 +3872,7 @@ void CalcMvLmmVgVeBeta(const gsl_vector *eval, const gsl_matrix *UtW,
   size_t n_size = UtY->size1, d_size = UtY->size2, c_size = UtW->size2;
   size_t dc_size = d_size * c_size, v_size = d_size * (d_size + 1) / 2;
 
-  double logl, crt_a, crt_b, crt_c;
+  double crt_a, crt_b, crt_c;
 
   // Large matrices for EM.
   gsl_matrix *U_hat = gsl_matrix_alloc(d_size, n_size);
@@ -3898,10 +3904,10 @@ void CalcMvLmmVgVeBeta(const gsl_vector *eval, const gsl_matrix *UtW,
   // Initial, EM, NR, and calculate B.
   MphInitial(em_iter, em_prec, nr_iter, nr_prec, eval, W, Y, l_min, l_max,
              n_region, V_g, V_e, B);
-  logl = MphEM('R', em_iter, em_prec, eval, W, Y, U_hat, E_hat, OmegaU, OmegaE,
-               UltVehiY, UltVehiBX, UltVehiU, UltVehiE, V_g, V_e, B);
-  logl = MphNR('R', nr_iter, nr_prec, eval, W, Y, Hi_all, xHi_all, Hiy_all, V_g,
-               V_e, Hessian, crt_a, crt_b, crt_c);
+  MphEM('R', em_iter, em_prec, eval, W, Y, U_hat, E_hat, OmegaU, OmegaE,
+        UltVehiY, UltVehiBX, UltVehiU, UltVehiE, V_g, V_e, B);
+  MphNR('R', nr_iter, nr_prec, eval, W, Y, Hi_all, xHi_all, Hiy_all, V_g,
+        V_e, Hessian, crt_a, crt_b, crt_c);
   MphCalcBeta(eval, W, Y, V_g, V_e, UltVehiY, B, se_B);
 
   // Free matrices.

@@ -3042,9 +3042,9 @@ void GEMMA::BatchRun(PARAM &cPar) {
       }
 
       // load annotations
-      gsl_matrix *Ac;
-      gsl_matrix_int *Ad;
-      gsl_vector_int *dlevel;
+      gsl_matrix *Ac = NULL;
+      gsl_matrix_int *Ad = NULL;
+      gsl_vector_int *dlevel = NULL;
       size_t kc, kd;
       if (!cPar.file_cat.empty()) {
         ReadFile_cat(cPar.file_cat, vec_rs, Ac, Ad, dlevel, kc, kd);

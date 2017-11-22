@@ -198,7 +198,7 @@ void VARCOV::CalcNB(vector<SNPINFO> &snpInfo_sort) {
            (snpInfo_sort[t2].cM - snpInfo_sort[t].cM < window_cm ||
             window_cm == 0) &&
            (snpInfo_sort[t2].base_position - snpInfo_sort[t].base_position <
-                window_bp ||
+            (long int) window_bp ||
             window_bp == 0) &&
            (n_nb < window_ns || window_ns == 0)) {
       t2++;
