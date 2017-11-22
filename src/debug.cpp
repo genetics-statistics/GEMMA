@@ -20,7 +20,7 @@
 
 static bool debug_mode     = false;
 static bool debug_check    = true;  // check data/algorithms
-static bool debug_strict   = false; // fail on error
+static bool debug_strict   = false; // fail on error, more rigorous checks
 static bool debug_quiet    = false;
 static uint debug_issue    = 0;     // track github issues
 static bool debug_legacy   = false; // legacy mode
@@ -64,7 +64,7 @@ int gsl_matrix_safe_memcpy (gsl_matrix *dest, const gsl_matrix *src) {
 
 void do_gsl_matrix_safe_free (gsl_matrix *m, const char *__pretty_function, const char *__file, int __line) {
   enforce(m);
-  if (is_check_mode() && is_debug_mode()) {
+  if (is_strict_mode() && is_check_mode() && is_debug_mode()) {
     bool has_NaN = has_nan(m);
     bool has_Inf = has_inf(m);
     if (has_NaN || has_Inf) {
@@ -89,7 +89,7 @@ int gsl_vector_safe_memcpy (gsl_vector *dest, const gsl_vector *src) {
 
 void do_gsl_vector_safe_free (gsl_vector *v, const char *__pretty_function, const char *__file, int __line) {
   enforce(v);
-  if (is_check_mode() && is_debug_mode()) {
+  if (is_strict_mode() && is_check_mode() && is_debug_mode()) {
     bool has_NaN = has_nan(v);
     bool has_Inf = has_inf(v);
     if (has_NaN || has_Inf) {

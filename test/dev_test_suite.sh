@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 gemma=../bin/gemma
-gemmaopts=-debug
+# gemmaopts="-debug -strict"
+gemmaopts="-debug"
 
 # Related to https://github.com/genetics-statistics/GEMMA/issues/78
 testBXDStandardRelatednessMatrixKSingularError() {

@@ -28,6 +28,9 @@
 
 using namespace std;
 
+inline bool is_nan(double f) {
+  return (std::isnan(f));
+}
 
 bool has_nan(const vector<double> v);
 bool has_nan(const gsl_vector *v);

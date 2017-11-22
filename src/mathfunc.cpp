@@ -58,7 +58,7 @@ using namespace std;
 
 bool has_nan(const vector<double> v) {
   for (const auto& e: v) {
-    if (std::isnan(e))
+    if (is_nan(e))
       return true;
   }
   return false;

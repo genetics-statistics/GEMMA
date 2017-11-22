@@ -45,6 +45,7 @@
 #include "fastblas.h"
 #include "lapack.h"
 #include "lmm.h"
+#include "mathfunc.h"
 
 using namespace std;
 
@@ -228,6 +229,7 @@ void CalcPab(const size_t n_cvt, const size_t e_mode, const gsl_vector *Hi_eval,
               gsl_matrix_const_column(Uab, index_ab);
           gsl_blas_ddot(Hi_eval, &Uab_col.vector, &p_ab);
           if (e_mode != 0) {
+            assert(false);
             p_ab = gsl_vector_get(ab, index_ab) - p_ab;
           }
           gsl_matrix_set(Pab, 0, index_ab, p_ab);
@@ -389,8 +391,10 @@ double LogL_f(double l, void *params) {
 
   index_yy = GetabIndex(n_cvt + 2, n_cvt + 2, n_cvt);
   double P_yy = gsl_matrix_get(Pab, nc_total, index_yy);
-  f = c - 0.5 * logdet_h - 0.5 * (double)ni_test * log(P_yy);
 
+  assert(!is_nan(P_yy));
+  f = c - 0.5 * logdet_h - 0.5 * (double)ni_test * log(P_yy);
+  assert(!is_nan(f));
   gsl_matrix_safe_free(Pab); // FIXME
   gsl_vector_safe_free(Hi_eval);
   gsl_vector_safe_free(v_temp);

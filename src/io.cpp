@@ -3265,8 +3265,7 @@ void ReadFile_beta(const string &file_beta,
   string type;
 
   string rs, chr, a1, a0, pos, cm;
-  double z = 0, beta = 0, se_beta = 0, chisq = 0, pvalue = 0, zsquare = 0,
-         af = 0, var_x = 0;
+  double z = 0, beta = 0, se_beta = 0, pvalue = 0, zsquare = 0; // af = 0;
   size_t n_total = 0, n_mis = 0, n_obs = 0, n_case = 0, n_control = 0;
 
   // Read header.
@@ -3298,15 +3297,15 @@ void ReadFile_beta(const string &file_beta,
     z = 0;
     beta = 0;
     se_beta = 0;
-    chisq = 0;
+    auto chisq = 0.0;
     pvalue = 0;
     n_total = 0;
     n_mis = 0;
     n_obs = 0;
     n_case = 0;
     n_control = 0;
-    af = 0;
-    var_x = 0;
+    // af = 0;
+    // auto var_x = 0.0;
     for (size_t i = 0; i < header.coln; i++) {
       enforce(ch_ptr);
       if (header.rs_col != 0 && header.rs_col == i + 1) {
@@ -3338,7 +3337,7 @@ void ReadFile_beta(const string &file_beta,
         se_beta = atof(ch_ptr);
       }
       if (header.chisq_col != 0 && header.chisq_col == i + 1) {
-        chisq = atof(ch_ptr);
+         chisq = atof(ch_ptr);
       }
       if (header.p_col != 0 && header.p_col == i + 1) {
         pvalue = atof(ch_ptr);
@@ -3359,12 +3358,12 @@ void ReadFile_beta(const string &file_beta,
       if (header.ncontrol_col != 0 && header.ncontrol_col == i + 1) {
         n_control = atoi(ch_ptr);
       }
-      if (header.af_col != 0 && header.af_col == i + 1) {
-        af = atof(ch_ptr);
-      }
-      if (header.var_col != 0 && header.var_col == i + 1) {
-        var_x = atof(ch_ptr);
-      }
+      // if (header.af_col != 0 && header.af_col == i + 1) {
+      //   af = atof(ch_ptr);
+      // }
+      // if (header.var_col != 0 && header.var_col == i + 1) {
+      //   var_x = atof(ch_ptr);
+      // }
 
       ch_ptr = strtok(NULL, " , \t");
     }
@@ -3397,9 +3396,9 @@ void ReadFile_beta(const string &file_beta,
     }
 
     // Obtain var_x.
-    if (header.var_col == 0 && header.af_col != 0) {
-      var_x = 2.0 * af * (1.0 - af);
-    }
+    // if (header.var_col == 0 && header.af_col != 0) {
+    //   var_x = 2.0 * af * (1.0 - af);
+    // }
 
     // If the SNP is also present in cor file, then do calculations.
     if ((mapRS2wA.size() == 0 || mapRS2wA.count(rs) != 0) &&
@@ -3448,7 +3447,7 @@ void ReadFile_beta(const string &file_beta, const map<string, double> &mapRS2wA,
   string type;
 
   string rs, chr, a1, a0, pos, cm;
-  double z = 0, beta = 0, se_beta = 0, chisq = 0, pvalue = 0, af = 0, var_x = 0;
+  double z = 0, beta = 0, se_beta = 0; // pvalue = 0, chisq=0, af = 0 , var_x = 0;
   size_t n_total = 0, n_mis = 0, n_obs = 0, n_case = 0, n_control = 0;
   size_t ni_total = 0, ns_total = 0, ns_test = 0;
 
@@ -3480,15 +3479,15 @@ void ReadFile_beta(const string &file_beta, const map<string, double> &mapRS2wA,
     z = 0;
     beta = 0;
     se_beta = 0;
-    chisq = 0;
-    pvalue = 0;
+    // chisq = 0;
+    // pvalue = 0;
     n_total = 0;
     n_mis = 0;
     n_obs = 0;
     n_case = 0;
     n_control = 0;
-    af = 0;
-    var_x = 0;
+    // af = 0;
+    // double var_x = 0;
     for (size_t i = 0; i < header.coln; i++) {
       enforce(ch_ptr);
       if (header.rs_col != 0 && header.rs_col == i + 1) {
@@ -3519,12 +3518,12 @@ void ReadFile_beta(const string &file_beta, const map<string, double> &mapRS2wA,
       if (header.sebeta_col != 0 && header.sebeta_col == i + 1) {
         se_beta = atof(ch_ptr);
       }
-      if (header.chisq_col != 0 && header.chisq_col == i + 1) {
-        chisq = atof(ch_ptr);
-      }
-      if (header.p_col != 0 && header.p_col == i + 1) {
-        pvalue = atof(ch_ptr);
-      }
+      // if (header.chisq_col != 0 && header.chisq_col == i + 1) {
+      //   chisq = atof(ch_ptr);
+      // }
+      // if (header.p_col != 0 && header.p_col == i + 1) {
+      //   pvalue = atof(ch_ptr);
+      // }
 
       if (header.n_col != 0 && header.n_col == i + 1) {
         n_total = atoi(ch_ptr);
@@ -3542,12 +3541,13 @@ void ReadFile_beta(const string &file_beta, const map<string, double> &mapRS2wA,
         n_control = atoi(ch_ptr);
       }
 
-      if (header.af_col != 0 && header.af_col == i + 1) {
-        af = atof(ch_ptr);
-      }
-      if (header.var_col != 0 && header.var_col == i + 1) {
-        var_x = atof(ch_ptr);
-      }
+      // if (header.af_col != 0 && header.af_col == i + 1) {
+      //   af = atof(ch_ptr);
+      // }
+
+      // if (header.var_col != 0 && header.var_col == i + 1) {
+      //   var_x = atof(ch_ptr);
+      // }
 
       ch_ptr = strtok(NULL, " , \t");
     }
