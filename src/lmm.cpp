@@ -1365,6 +1365,11 @@ void LMM::Analyze(std::function< SnpNameValues(size_t) >& fetch_snp,
   };
 
   const auto num_snps = indicator_snp.size();
+  enforce_msg(num_snps > 0,"Zero SNPs to process - data corrupt?");
+  if (num_snps < 50) {
+    cerr << num_snps << " SNPs" << endl;
+    warning_msg("very few SNPs processed");
+  }
   const size_t progress_step = (num_snps/50>d_pace ? num_snps/50 : d_pace);
 
   for (size_t t = 0; t < num_snps; ++t) {

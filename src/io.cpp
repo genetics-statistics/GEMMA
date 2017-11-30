@@ -52,10 +52,17 @@ using namespace std;
 // Print progress bar.
 void ProgressBar(string str, double p, double total, double ratio) {
   assert(p<=total);
+  assert(p>=0);
+  if (total <= 0.0) return;
   const double progress = (100.0 * p / total);
   const uint barsize = (int)(progress / 2.0); // characters
-  cout << str << " ";
-  cout << std::string(barsize,'=');
+  // cout << barsize << endl;
+  // cout << str << " ";
+  // cout << p << "/" << total << endl;
+  assert(barsize < 101); // corrupted data somehow
+  if (barsize > 0) {
+    cout << std::string(barsize,'=');
+  }
   cout << std::string(50-barsize,' ');
   cout << setprecision(0) << fixed << " " << progress << "%";
   if (ratio != -1.0)
