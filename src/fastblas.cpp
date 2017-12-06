@@ -124,6 +124,21 @@ void fast_cblas_dgemm(const enum CBLAS_ORDER Order,
   }
 #endif // NDEBUG
 
+  // Check for (integer) overflows
+  enforce(M>0);
+  enforce(N>0);
+  enforce(K>0);
+
+  blasint mi = M;
+  blasint ni = N;
+  blasint ki = K;
+  auto x1 = mi * ki;
+  enforce_msg(x1 / mi == ki, "matrix integer overflow - please use long int");
+  auto x2 = ni * ki;
+  enforce_msg(x2 / ni == ki, "matrix integer overflow - please use long int");
+  auto x3 = mi * ni;
+  enforce_msg(x3 / mi == ni, "matrix integer overflow - please use long int");
+
   cblas_dgemm(Order,TransA,TransB,M,N,K,alpha,A,lda,B,ldb,beta,C,ldc);
 
 #ifndef NDEBUG

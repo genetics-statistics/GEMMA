@@ -53,6 +53,7 @@ FORCE_STATIC           =                  # Static linking of libraries
 GCC_FLAGS              = -Wall -O3 -std=gnu++11 # extra flags -Wl,--allow-multiple-definition
 TRAVIS_CI              =                  # used by TRAVIS for testing
 EIGEN_INCLUDE_PATH     = /usr/include/eigen3
+OPENBLAS_INCLUDE_PATH  = /usr/local/opt/openblas/include
 
 # --------------------------------------------------------------------
 # Edit below this line with caution
@@ -71,14 +72,15 @@ endif
 
 ifeq ($(CPP), clang++)
   # macOS Homebrew settings (as used on Travis-CI)
-  GCC_FLAGS=-O3 -std=c++11 -stdlib=libc++ -isystem//usr/local/opt/openblas/include -isystem//usr/local/include/eigen3 -Wl,-L/usr/local/opt/openblas/lib
+  GCC_FLAGS=-O3 -std=c++11 -stdlib=libc++ -isystem/$(OPENBLAS_INCLUDE_PATH) -isystem//usr/local/include/eigen3 -Wl,-L/usr/local/opt/openblas/lib
 endif
 
 ifdef WITH_OPENBLAS
   OPENBLAS=1
   # WITH_LAPACK =  # OPENBLAS usually includes LAPACK
-  CPPFLAGS += -DOPENBLAS
+  CPPFLAGS += -DOPENBLAS -isystem/$(OPENBLAS_INCLUDE_PATH)
   ifdef OPENBLAS_LEGACY
+    # Legacy version (mostly for Travis-CI)
     CPPFLAGS += -DOPENBLAS_LEGACY
   endif
 endif
