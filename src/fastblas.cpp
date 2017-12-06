@@ -181,14 +181,14 @@ static void fast_cblas_dgemm(const char *TransA, const char *TransB, const doubl
   // C++ is row-major
   auto transA = (*TransA == 'N' || *TransA == 'n' ? CblasNoTrans : CblasTrans);
   auto transB = (*TransB == 'N' || *TransB == 'n' ? CblasNoTrans : CblasTrans);
-  const size_t M = C->size1;
-  const size_t N = C->size2;
-  const size_t MA = (transA == CblasNoTrans) ? A->size1 : A->size2;
-  const size_t NA = (transA == CblasNoTrans) ? A->size2 : A->size1;
-  const size_t MB = (transB == CblasNoTrans) ? B->size1 : B->size2;
-  const size_t NB = (transB == CblasNoTrans) ? B->size2 : B->size1;
+  const size_t M   = C->size1;
+  const size_t N   = C->size2;
+  const size_t MA  = (transA == CblasNoTrans) ? A->size1 : A->size2;
+  const size_t NA  = (transA == CblasNoTrans) ? A->size2 : A->size1;
+  const size_t MBx = (transB == CblasNoTrans) ? B->size1 : B->size2;
+  const size_t NB  = (transB == CblasNoTrans) ? B->size2 : B->size1;
 
-  if (M == MA && N == NB && NA == MB) {  /* [MxN] = [MAxNA][MBxNB] */
+  if (M == MA && N == NB && NA == MBx) {  /* [MxN] = [MAxNA][MBxNB] */
 
     cblas_dgemm (CblasRowMajor, transA, transB, M, N,NA,
                  alpha, A->data, A->tda, B->data, B->tda, beta,
