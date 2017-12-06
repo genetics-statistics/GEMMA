@@ -129,6 +129,7 @@ void fast_cblas_dgemm(const enum CBLAS_ORDER Order,
   enforce(N>0);
   enforce(K>0);
 
+  // cout << sizeof(blasint) << endl;
   blasint mi = M;
   blasint ni = N;
   blasint ki = K;

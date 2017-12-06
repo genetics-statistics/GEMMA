@@ -49,7 +49,7 @@
 #include "gsl/gsl_eigen.h"
 
 #include "debug.h"
-#include "eigenlib.h"
+// #include "eigenlib.h"
 #include "fastblas.h"
 #include "lapack.h"
 #include "mathfunc.h"
@@ -285,11 +285,27 @@ gsl_vector *getEigenValues(const gsl_matrix *G) {
 // by default 1E-5.
 // Returns success, eigen min, eigen min-but-1, eigen max
 
+tuple<double, double, double> minmax(const gsl_vector *v) {
+  auto min  = v->data[0];
+  auto min1 = min;
+  auto max  = min;
+  for (size_t i=1; i<v->size; i++) {
+    auto value = std::abs(v->data[i]);
+    if (value < min) {
+      min1 = min;
+      min = value;
+    }
+    if (value > max)
+      max = value;
+  }
+  return std::make_tuple(min, min1, max);
+}
+
 tuple<double, double, double> abs_minmax(const gsl_vector *v) {
   auto min  = std::abs(v->data[0]);
-  auto min1 = std::abs(v->data[0]);
-  auto max  = std::abs(v->data[0]);
-  for (size_t i=0; i<v->size; i++) {
+  auto min1 = min;
+  auto max  = min;
+  for (size_t i=1; i<v->size; i++) {
     auto value = std::abs(v->data[i]);
     if (value < min) {
       min1 = min;
@@ -315,11 +331,12 @@ bool has_negative_values_but_one(const gsl_vector *v) {
   return false;
 }
 
-uint count_small_values(const gsl_vector *v, double min) {
+uint count_abs_small_values(const gsl_vector *v, double min) {
   uint count = 0;
   for (size_t i=0; i<v->size; i++) {
-    if (v->data[i] < min)
+    if (std::abs(v->data[i]) < min) {
       count += 1;
+    }
   }
   return count;
 }
@@ -327,19 +344,23 @@ uint count_small_values(const gsl_vector *v, double min) {
 // Check for matrix being ill conditioned by taking the eigen values
 // and the ratio of max and min but one (min is expected to be zero).
 bool isMatrixIllConditioned(const gsl_vector *eigenvalues, double max_ratio) {
-  bool ret_valid = true;
-
   auto t = abs_minmax(eigenvalues);
   auto absmin = get<0>(t);
   auto absmin1 = get<1>(t);
   auto absmax = get<2>(t);
   if (absmax/absmin1 > max_ratio) {
     #if !NDEBUG
-    cerr << "**** DEBUG: Eigenvalues [Min " << absmin << ", " << absmin1 << " ... " << absmax << " Max] Ratio " << absmax/absmin1 << endl;
+    cerr << "**** DEBUG: Ratio suggests matrix is ill conditioned" << endl;
+    auto t = minmax(eigenvalues);
+    auto min = get<0>(t);
+    auto min1 = get<1>(t);
+    auto max = get<2>(t);
+    cerr << "**** DEBUG: Abs eigenvalues [Min " << absmin << ", " << absmin1 << " ... " << absmax << " Max] Ratio (" << absmax << "/" << absmin1 << ") = " << absmax/absmin1 << endl;
+    cerr << "**** DEBUG: Eigenvalues [Min " << min << ", " << min1 << " ... " << max << " Max]" << endl;
     #endif
-    ret_valid = false;
+    return true;
   }
-  return ret_valid;
+  return false;
 }
 
 double sum(const double *m, size_t rows, size_t cols) {

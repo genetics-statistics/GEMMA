@@ -39,7 +39,7 @@
 #include "gsl/gsl_min.h"
 #include "gsl/gsl_roots.h"
 
-#include "eigenlib.h"
+// #include "eigenlib.h"
 #include "gzstream.h"
 #include "lapack.h"
 #include "lm.h"

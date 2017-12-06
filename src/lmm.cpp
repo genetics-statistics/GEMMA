@@ -38,7 +38,7 @@
 #include "gsl/gsl_roots.h"
 #include "gsl/gsl_vector.h"
 
-#include "eigenlib.h"
+// #include "eigenlib.h"
 
 #include "gzstream.h"
 #include "io.h"

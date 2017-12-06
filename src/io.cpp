@@ -40,7 +40,7 @@
 #include "gsl/gsl_vector.h"
 
 #include "debug.h"
-#include "eigenlib.h"
+// #include "eigenlib.h"
 #include "fastblas.h"
 #include "gzstream.h"
 #include "io.h"

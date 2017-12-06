@@ -134,14 +134,14 @@ void do_validate_K(const gsl_matrix *K, const char *__pretty_function, const cha
   if (is_check_mode()) {
     // debug_msg("Validating K");
     auto eigenvalues = getEigenValues(K);
-    const uint count_small = count_small_values(eigenvalues,EIGEN_MINVALUE);
+    const uint count_small = count_abs_small_values(eigenvalues,EIGEN_MINVALUE);
     if (count_small>1) {
       std::string msg = "K has ";
       msg += std::to_string(count_small);
       msg += " eigenvalues close to zero";
       warning_at_msg(__file,__line,msg);
     }
-    if (!isMatrixIllConditioned(eigenvalues))
+    if (isMatrixIllConditioned(eigenvalues))
       warning_at_msg(__file,__line,"K is ill conditioned!");
     if (!isMatrixSymmetric(K))
       warnfail_at_msg(is_strict_mode(),__pretty_function,__file,__line,"K is not symmetric!" );

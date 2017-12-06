@@ -29,16 +29,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "gsl/gsl_blas.h"
 #include "gsl/gsl_cdf.h"
-#include "gsl/gsl_integration.h"
 #include "gsl/gsl_linalg.h"
 #include "gsl/gsl_matrix.h"
 #include "gsl/gsl_min.h"
 #include "gsl/gsl_roots.h"
 #include "gsl/gsl_vector.h"
 
-#include "eigenlib.h"
 #include "fastblas.h"
 #include "gzstream.h"
 #include "io.h"

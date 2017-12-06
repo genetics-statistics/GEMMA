@@ -45,7 +45,7 @@ void CenterMatrix(gsl_matrix *G, const gsl_matrix *W);
 void StandardizeMatrix(gsl_matrix *G);
 double ScaleMatrix(gsl_matrix *G);
 bool has_negative_values_but_one(const gsl_vector *v);
-uint count_small_values(const gsl_vector *v, double min);
+uint count_abs_small_values(const gsl_vector *v, double min);
 bool isMatrixPositiveDefinite(const gsl_matrix *G);
 bool isMatrixIllConditioned(const gsl_vector *eigenvalues, double max_ratio=CONDITIONED_MAXRATIO);
 bool isMatrixSymmetric(const gsl_matrix *G);

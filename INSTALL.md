@@ -119,20 +119,23 @@ To link a new version, compile OpenBlas as per
 
     make -j 4
 
-or play with the switches
+and/or play with the switches
 
-    make USE_THREAD=1 NUM_THREADS=16 -j 4
+    make BINARY=64 NO_WARMUP=0 GEMM_MULTITHREAD_THRESHOLD=4 USE_THREAD=1 NO_AFFINITY=1 NUM_THREADS=64 INTERFACE64=1 -j 4
 
-rendering for example:
+and you should see something like
 
-        OpenBLAS build complete. (BLAS CBLAS)
-        OS               ... Linux
-        Architecture     ... x86_64
-        BINARY           ... 64bit
-        C compiler       ... GCC  (command line : gcc)
-        Library Name     ... libopenblas_haswellp-r0.3.0.dev.a (Multi threaded; Max num-threads is 16)
+    OpenBLAS build complete. (BLAS CBLAS)
 
-        To install the library, you can run "make PREFIX=/path/to/your/installation install".
+    OS               ... Linux
+    Architecture     ... x86_64
+    BINARY           ... 64bit
+    Use 64 bits int    (equivalent to "-i8" in Fortran)
+    C compiler       ... GCC  (command line : gcc)
+    Library Name     ... libopenblas_haswellp-r0.3.0.dev.a (Multi threaded; Max num-threads is 32)
+
+Note that OpenBlas by default uses 32-bit integers which can overflow
+with large matrix sizes. Using INTERFACE=1 will fix that.
 
 This generates a static library which you can link using the full path
 with using the GEMMA Makefile:
@@ -142,3 +145,7 @@ with using the GEMMA Makefile:
     make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 LIBS="~/tmp/OpenBLAS/libopenblas_haswellp-r0.3.0.dev.a -lgsl -lgslcblas -pthread -lz  -llapack" WITH_OPENBLAS=1 -j 4 unittests
 
 NOTE: we should make this easier.
+
+Latest (INT64, no gslcblas):
+
+    time env OPENBLAS_NUM_THREADS=4 make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 LIBS="~/opt/gsl2/lib/libgsl.a ~/tmp/OpenBLAS/libopenblas_haswellp-r0.3.0.dev.a -pthread -lz  -llapack" WITH_OPENBLAS=1 OPENBLAS_INCLUDE_PATH=~/tmp/OpenBLAS/ -j 4 fast-check
