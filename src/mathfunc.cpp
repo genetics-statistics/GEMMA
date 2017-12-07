@@ -264,8 +264,12 @@ bool isMatrixPositiveDefinite(const gsl_matrix *G) {
   auto s = gsl_linalg_cholesky_decomp(G2);
 #endif
   gsl_set_error_handler(handler);
-  gsl_matrix_safe_free(G2);
-  return (s == GSL_SUCCESS);
+  if (s == GSL_SUCCESS) {
+    gsl_matrix_safe_free(G2);
+    return true;
+  }
+  gsl_matrix_free(G2);
+  return (false);
 }
 
 gsl_vector *getEigenValues(const gsl_matrix *G) {

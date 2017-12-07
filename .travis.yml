@@ -41,7 +41,7 @@ script:
   - eval "${MATRIX_EVAL}"
   - $CXX --version
   # build and test debug version
-  - make CXX=$CXX EIGEN_INCLUDE_PATH=$EIGEN_INCLUDE_PATH WITH_OPENBLAS=1 OPENBLAS_LEGACY=1 -j 4
+  - make CXX=$CXX EIGEN_INCLUDE_PATH=$EIGEN_INCLUDE_PATH WITH_OPENBLAS=1 OPENBLAS_LEGACY=1 -j 4 -k
   - time make CXX=$CXX WITH_OPENBLAS=1 EIGEN_INCLUDE_PATH=$EIGEN_INCLUDE_PATH WITH_OPENBLAS=1 OPENBLAS_LEGACY=1  check
   # - make clean
   # build and test release version (integration test mostly)
