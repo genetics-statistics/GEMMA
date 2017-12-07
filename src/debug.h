@@ -87,8 +87,8 @@ inline void fail_msg(std::string msg) {
 
 #else // DEBUG
 
-  #define warning_msg(msg) cerr << "**** WARNING: " << msg << " in " << __FILE__ << " at line " << __LINE__ << " in " << __FUNCTION__ << endl;
-  #define debug_msg(msg) (is_debug_mode() && cerr << "**** DEBUG: " << msg << " in " << __FILE__ << " at line " << __LINE__ << " in " << __FUNCTION__ << endl);
+  #define warning_msg(msg) cerr << "**** WARNING: " << msg << " in " << __FILE__ << " at line " << __LINE__ << " in " << __PRETTY_FUNCTION__ << endl;
+  #define debug_msg(msg) (is_debug_mode() && cerr << "**** DEBUG: " << msg << " in " << __FILE__ << " at line " << __LINE__ << " in " << __PRETTY_FUNCTION__ << endl);
   #define assert_issue(is_issue, expr) \
     ((is_issue) ? enforce_msg(expr,"FAIL: ISSUE assert") : __ASSERT_VOID_CAST(0))
 
@@ -102,7 +102,7 @@ inline void __enforce_fail(const char *__assertion, const char *__file,
                     unsigned int __line,
                     const char *__function)
 {
-  std::cout << "ERROR: Enforce failed for " << __assertion << " in " << __file << " at line " << __line << " in " << __PRETTY_FUNCTION__ << std::endl;
+  std::cout << "ERROR: Enforce failed for " << __assertion << " in " << __file << " at line " << __line << " in " << __function << std::endl;
   exit(1);
 }
 
