@@ -350,7 +350,7 @@ bool isMatrixIllConditioned(const gsl_vector *eigenvalues, double max_ratio) {
   auto absmax = get<2>(t);
   if (absmax/absmin1 > max_ratio) {
     #if !NDEBUG
-    cerr << "**** DEBUG: Ratio suggests matrix is ill conditioned" << endl;
+    cerr << "**** DEBUG: Ratio |eigenmax|/|eigenmin| suggests matrix is ill conditioned for double precision" << endl;
     auto t = minmax(eigenvalues);
     auto min = get<0>(t);
     auto min1 = get<1>(t);

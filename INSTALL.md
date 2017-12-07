@@ -118,6 +118,46 @@ To link a new version, compile OpenBlas as per
 [instructions](http://www.openblas.net/).  You can start with the
 default:
 
+    make
+
+and/or play with the switches (listed in OpenBlas Makefile.rule)
+
+    make BINARY=64 NO_WARMUP=0 GEMM_MULTITHREAD_THRESHOLD=4 USE_THREAD=1 NO_AFFINITY=0 NO_LAPACK=1 NUM_THREADS=64 NO_SHARED=1
+
+and you should see something like
+
+    OpenBLAS build complete. (BLAS CBLAS)
+
+      OS               ... Linux
+      Architecture     ... x86_64
+      BINARY           ... 64bit
+      C compiler       ... GCC  (command line : gcc)
+      Fortran compiler ... GFORTRAN  (command line : gfortran)
+      Library Name     ... libopenblas_haswellp-r0.3.0.dev.a (Multi threaded; Max num-threads is 64)
+
+Note that OpenBlas by default uses a 32-bit integer API which can
+overflow with large matrix sizes. We don't include LAPACK - the
+OpenBlas version gives problems around eigenvalues for some reason.
+
+We now have a static library which you can link using the full path
+with using the GEMMA Makefile:
+
+    time env OPENBLAS_NUM_THREADS=4 make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 LIBS="~/tmp/OpenBLAS/libopenblas_haswellp-r0.3.0.dev.a -lgsl -lgslcblas -pthread -lz  -llapack" WITH_OPENBLAS=1 -j 4 unittests
+
+Latest (INT64, no gslcblas):
+
+    time env OPENBLAS_NUM_THREADS=4 make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 LIBS="~/opt/gsl2/lib/libgsl.a ~/tmp/OpenBLAS/libopenblas_haswellp-r0.3.0.dev.a -pthread -lz  -llapack" WITH_OPENBLAS=1 OPENBLAS_INCLUDE_PATH=~/tmp/OpenBLAS/ -j 4 fast-check
+
+
+### OpenBlas 64-bit API
+
+<i>Warning: This is work in progress (WIP)</i>
+
+OpenBlas supports a 64-bit API which allows for large matrices. Unfortunately
+GEMMA does not support it yet, see https://github.com/genetics-statistics/GEMMA/issues/120
+
+For testing we can build
+
     make BINARY=64 INTERFACE64=1 NO_WARMUP=1 USE_THREAD=0 NO_LAPACK=0 NO_SHARED=1 -j 4
 
 This builds a 64-bit binary and API and no external LAPACK. This is a very conservative
@@ -125,33 +165,6 @@ setting for testing the 64-bit API.
 
 Note, for performance we want a 64-bit binary with threading.
 
-and/or play with the switches (listed in OpenBlas Makefile.rule)
+    make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 LIBS="~/opt/gsl2/lib/libgsl.a ~/tmp/OpenBLAS/libopenblas_haswell-r0.3.0.dev.a ~/.guix-profile/lib/libgfortran.a ~/.guix-profile/lib/libquadmath.a -pthread -lz" WITH_OPENBLAS=1 OPENBLAS_INCLUDE_PATH=~/tmp/OpenBLAS/ -j 4 fast-check
 
-    make BINARY=64 NO_WARMUP=0 GEMM_MULTITHREAD_THRESHOLD=4 USE_THREAD=1 NO_AFFINITY=0 NO_LAPACK=0 NUM_THREADS=64 INTERFACE64=1 ONLY_CBLAS=1 NO_SHARED=1 -j 4
-
-and you should see something like
-
-    OpenBLAS build complete. (BLAS CBLAS)
-
-    OS               ... Linux
-    Architecture     ... x86_64
-    BINARY           ... 64bit
-    Use 64 bits int    (equivalent to "-i8" in Fortran)
-    C compiler       ... GCC  (command line : gcc)
-    Library Name     ... libopenblas_haswellp-r0.3.0.dev.a (Multi threaded; Max num-threads is 32)
-
-Note that OpenBlas by default uses 32-bit integers which can overflow
-with large matrix sizes. Using INTERFACE=1 will fix that.
-
-This generates a static library which you can link using the full path
-with using the GEMMA Makefile:
-
-    time env OPENBLAS_NUM_THREADS=4 make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 LIBS="~/tmp/OpenBLAS/libopenblas_haswellp-r0.3.0.dev.a -lgsl -lgslcblas -pthread -lz  -llapack" WITH_OPENBLAS=1 -j 4 fast-check
-
-    make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 LIBS="~/tmp/OpenBLAS/libopenblas_haswellp-r0.3.0.dev.a -lgsl -lgslcblas -pthread -lz  -llapack" WITH_OPENBLAS=1 -j 4 unittests
-
-NOTE: we should make this easier.
-
-Latest (INT64, no gslcblas):
-
-    time env OPENBLAS_NUM_THREADS=4 make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 LIBS="~/opt/gsl2/lib/libgsl.a ~/tmp/OpenBLAS/libopenblas_haswellp-r0.3.0.dev.a -pthread -lz  -llapack" WITH_OPENBLAS=1 OPENBLAS_INCLUDE_PATH=~/tmp/OpenBLAS/ -j 4 fast-check
+Note we don't include standard lapack, because it is 32-bits.

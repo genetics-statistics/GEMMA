@@ -306,27 +306,6 @@ double LULndet(const gsl_matrix *LU) {
   return gsl_linalg_LU_lndet((gsl_matrix *)LU);
 }
 
-/*
-double LULndet(gsl_matrix_float *LU) {
-  gsl_matrix *LU_double = gsl_matrix_alloc(LU->size1, LU->size2);
-  double d;
-
-  // Copy float matrix to double.
-  for (size_t i = 0; i < LU->size1; i++) {
-    for (size_t j = 0; j < LU->size2; j++) {
-      gsl_matrix_set(LU_double, i, j, gsl_matrix_float_get(LU, i, j));
-    }
-  }
-
-  // LU decomposition.
-  d = gsl_linalg_LU_lndet(LU_double);
-
-  // Free matrix
-  gsl_matrix_free(LU_double);
-  return d;
-}
-*/
-
 // LU solve.
 void LUSolve(const gsl_matrix *LU, const gsl_permutation *p,
              const gsl_vector *b, gsl_vector *x) {
