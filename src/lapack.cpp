@@ -128,6 +128,10 @@ void lapack_dgemm(char *TransA, char *TransB, double alpha, const gsl_matrix *A,
   gsl_matrix *C_t = gsl_matrix_alloc(C->size2, C->size1);
   gsl_matrix_transpose_memcpy(C_t, C);
 
+  check_int_mult_overflow(M,K1);
+  check_int_mult_overflow(N,K1);
+  check_int_mult_overflow(M,N);
+
   dgemm_(TransA, TransB, &M, &N, &K1, &alpha, A_t->data, &LDA, B_t->data, &LDB,
          &beta, C_t->data, &LDC);
 

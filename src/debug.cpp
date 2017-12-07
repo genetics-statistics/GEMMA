@@ -40,6 +40,7 @@ bool is_quiet_mode() { return debug_quiet; };
 bool is_issue(uint issue) { return issue == debug_issue; };
 bool is_legacy_mode() { return debug_legacy; };
 
+
 /*
   Helper function to make sure gsl allocations do their job because
   gsl_matrix_alloc does not initiatize values (behaviour that changed

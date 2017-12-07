@@ -115,13 +115,19 @@ file of GEMMA after a run, it will tell you how the linked-in OpenBlas
 was compiled.
 
 To link a new version, compile OpenBlas as per
-[instructions](http://www.openblas.net/).  You can start with the default:
+[instructions](http://www.openblas.net/).  You can start with the
+default:
 
-    make -j 4
+    make BINARY=64 INTERFACE64=1 NO_WARMUP=1 USE_THREAD=0 NO_LAPACK=0 NO_SHARED=1 -j 4
 
-and/or play with the switches
+This builds a 64-bit binary and API and no external LAPACK. This is a very conservative
+setting for testing the 64-bit API.
 
-    make BINARY=64 NO_WARMUP=0 GEMM_MULTITHREAD_THRESHOLD=4 USE_THREAD=1 NO_AFFINITY=1 NUM_THREADS=64 INTERFACE64=1 -j 4
+Note, for performance we want a 64-bit binary with threading.
+
+and/or play with the switches (listed in OpenBlas Makefile.rule)
+
+    make BINARY=64 NO_WARMUP=0 GEMM_MULTITHREAD_THRESHOLD=4 USE_THREAD=1 NO_AFFINITY=0 NO_LAPACK=0 NUM_THREADS=64 INTERFACE64=1 ONLY_CBLAS=1 NO_SHARED=1 -j 4
 
 and you should see something like
 
