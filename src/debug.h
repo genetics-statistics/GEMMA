@@ -40,13 +40,13 @@ void gsl_vector_safe_free (gsl_vector *v);
 void do_gsl_vector_safe_free (gsl_vector *v, const char *__pretty_function, const char *__file, int __line);
 
 char *do_strtok_safe(char *tokenize, const char *delimiters, const char *__pretty_function, const char *__file, int __line);
-#define strtok_safe(string,delimiters) do_strtok_safe(string,delimiters,__PRETTY_FUNCTION__,__FILE__,__LINE__)
+#define strtok_safe(string,delimiters) do_strtok_safe(string,delimiters,__SHOW_FUNC,__FILE__,__LINE__)
 
 // Validation routines
 void do_validate_K(const gsl_matrix *K, const char*__pretty_func, const char *__file, int __line);
 
 #define ROUND(f) round(f * 10000.)/10000
-#define validate_K(K) do_validate_K(K,__PRETTY_FUNCTION__,__FILE__,__LINE__)
+#define validate_K(K) do_validate_K(K,__SHOW_FUNC,__FILE__,__LINE__)
 
 #define warning_at_msg(__file,__line,msg) cerr << "**** WARNING: " << msg << " in " << __file << " at line " << __line << endl;
 
@@ -80,6 +80,7 @@ inline void fail_msg(std::string msg) {
 }
 
 #if defined NDEBUG
+  #define __SHOW_FUNC __func__
 
   #define warning_msg(msg) cerr << "**** WARNING: " << msg << endl;
   #define debug_msg(msg)
@@ -87,8 +88,10 @@ inline void fail_msg(std::string msg) {
 
 #else // DEBUG
 
-  #define warning_msg(msg) cerr << "**** WARNING: " << msg << " in " << __FILE__ << " at line " << __LINE__ << " in " << __PRETTY_FUNCTION__ << endl;
-  #define debug_msg(msg) (is_debug_mode() && cerr << "**** DEBUG: " << msg << " in " << __FILE__ << " at line " << __LINE__ << " in " << __PRETTY_FUNCTION__ << endl);
+  #define __SHOW_FUNC __func__
+
+  #define warning_msg(msg) cerr << "**** WARNING: " << msg << " in " << __FILE__ << " at line " << __LINE__ << " in " << __func__ << endl;
+  #define debug_msg(msg) (is_debug_mode() && cerr << "**** DEBUG: " << msg << " in " << __FILE__ << " at line " << __LINE__ << " in " << __func__ << endl);
   #define assert_issue(is_issue, expr) \
     ((is_issue) ? enforce_msg(expr,"FAIL: ISSUE assert") : __ASSERT_VOID_CAST(0))
 
@@ -106,21 +109,19 @@ inline void __enforce_fail(const char *__assertion, const char *__file,
   exit(1);
 }
 
-#define __ASSERT_FUNCTION __PRETTY_FUNCTION__
-
 #define enforce(expr)                                                          \
   ((expr)                                                                      \
        ? __ASSERT_VOID_CAST(0)                                                 \
-       : __enforce_fail(__STRING(expr), __FILE__, __LINE__, __ASSERT_FUNCTION))
+       : __enforce_fail(__STRING(expr), __FILE__, __LINE__, __SHOW_FUNC))
 
 #define enforce_msg(expr, msg)                                                 \
   ((expr) ? __ASSERT_VOID_CAST(0)                                              \
-          : __enforce_fail(msg, __FILE__, __LINE__, __ASSERT_FUNCTION))
+          : __enforce_fail(msg, __FILE__, __LINE__, __SHOW_FUNC))
 
 #define enforce_str(expr, msg)                                                 \
   ((expr)                                                                      \
        ? __ASSERT_VOID_CAST(0)                                                 \
-       : __enforce_fail((msg).c_str(), __FILE__, __LINE__, __ASSERT_FUNCTION))
+       : __enforce_fail((msg).c_str(), __FILE__, __LINE__, __SHOW_FUNC))
 
 // Helpers to create a unique varname per MACRO
 #define COMBINE1(X, Y) X##Y
@@ -131,7 +132,7 @@ inline void __enforce_fail(const char *__assertion, const char *__file,
   (COMBINE(res, __LINE__) == 0                                                 \
        ? __ASSERT_VOID_CAST(0)                                                 \
        : __enforce_fail(gsl_strerror(COMBINE(res, __LINE__)), __FILE__,         \
-                        __LINE__, __ASSERT_FUNCTION))
+                        __LINE__, __SHOW_FUNC))
 
 #define enforce_fexists(fn, msg)                                               \
   if (!fn.empty())                                                             \
@@ -139,8 +140,8 @@ inline void __enforce_fail(const char *__assertion, const char *__file,
                 ((std::string(__STRING(fn)) + " " + fn + ": " + msg).c_str()));
 
 #define gsl_matrix_safe_free(m) \
-  do_gsl_matrix_safe_free(m,__ASSERT_FUNCTION,__FILE__,__LINE__);
+  do_gsl_matrix_safe_free(m,__SHOW_FUNC,__FILE__,__LINE__);
 #define gsl_vector_safe_free(v) \
-  do_gsl_vector_safe_free(v,__ASSERT_FUNCTION,__FILE__,__LINE__);
+  do_gsl_vector_safe_free(v,__SHOW_FUNC,__FILE__,__LINE__);
 
 #endif
