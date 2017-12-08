@@ -208,25 +208,21 @@ static void fast_cblas_dgemm(const char *TransA, const char *TransB, const doubl
 
 
 /*
-   Use the fasted/supported way to call BLAS dgemm
+   Use the fast/supported way to call BLAS dgemm
 */
 
 void fast_dgemm(const char *TransA, const char *TransB, const double alpha,
                 const gsl_matrix *A, const gsl_matrix *B, const double beta,
                 gsl_matrix *C) {
-  if (is_legacy_mode()) {
-    eigenlib_dgemm(TransA,TransB,alpha,A,B,beta,C);
-  } else {
-    fast_cblas_dgemm(TransA,TransB,alpha,A,B,beta,C);
+  fast_cblas_dgemm(TransA,TransB,alpha,A,B,beta,C);
 
-    #ifdef DISABLE
-    if (is_check_mode()) {
-      // ---- validate with original implementation
-      gsl_matrix *C1 = gsl_matrix_alloc(C->size1,C->size2);
-      eigenlib_dgemm(TransA,TransB,alpha,A,B,beta,C1);
-      enforce_msg(gsl_matrix_equal(C,C1),"dgemm outcomes are not equal for fast & eigenlib");
-      gsl_matrix_free(C1);
-    }
-    #endif
+#ifdef DISABLE
+  if (is_check_mode()) {
+    // ---- validate with original implementation
+    gsl_matrix *C1 = gsl_matrix_alloc(C->size1,C->size2);
+    eigenlib_dgemm(TransA,TransB,alpha,A,B,beta,C1);
+    enforce_msg(gsl_matrix_equal(C,C1),"dgemm outcomes are not equal for fast & eigenlib");
+    gsl_matrix_free(C1);
   }
+#endif
 }
