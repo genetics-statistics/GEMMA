@@ -33,19 +33,23 @@ int main(int argc, char *argv[]) {
 
   if (argc <= 1) {
     cGemma.PrintHeader();
+    cGemma.PrintHelp(0);
     return EXIT_SUCCESS;
   }
   if (argc == 2 && argv[1][0] == '-' && argv[1][1] == 'h') {
+    cGemma.PrintHeader();
     cGemma.PrintHelp(0);
     return EXIT_SUCCESS;
   }
   if (argc == 3 && argv[1][0] == '-' && argv[1][1] == 'h') {
     string str;
     str.assign(argv[2]);
+    cGemma.PrintHeader();
     cGemma.PrintHelp(atoi(str.c_str()));
     return EXIT_SUCCESS;
   }
   if (argc == 2 && argv[1][0] == '-' && argv[1][1] == 'l') {
+    cGemma.PrintHeader();
     cGemma.PrintLicense();
     return EXIT_SUCCESS;
   }
@@ -56,6 +60,9 @@ int main(int argc, char *argv[]) {
   if (!check_dir) {
     mkdir((cPar.path_out).c_str(), S_IRWXU | S_IRGRP | S_IROTH);
   }
+
+  if (!is_quiet_mode())
+    cGemma.PrintHeader();
 
   if (cPar.error == true) {
     return EXIT_FAILURE;

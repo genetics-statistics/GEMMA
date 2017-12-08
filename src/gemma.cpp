@@ -71,20 +71,16 @@ void gemma_gsl_error_handler (const char * reason,
   exit(22);
 }
 
-void GEMMA::PrintHeader(void) {
-  cout << endl;
-  cout << "*********************************************************" << endl;
-  cout << "  Genome-wide Efficient Mixed Model Association (GEMMA)  " << endl;
-  cout << "  Version " << version << ", " << date
-       << "                              " << endl;
-  cout << "  Visit http://www.xzlab.org/software.html For Updates   " << endl;
-  cout << "  (C) " << year << " Xiang Zhou                                   "
-       << endl;
-  cout << "  GNU General Public License                             " << endl;
-  cout << "  For Help, Type ./gemma -h                              " << endl;
-  cout << "*********************************************************" << endl;
-  cout << endl;
+#if defined(OPENBLAS) && !defined(OPENBLAS_LEGACY)
+#include <openblas_config.h>
+#endif
 
+void GEMMA::PrintHeader(void) {
+
+  cout <<
+    "GEMMA " << version << " (" << date << ") by Xiang Zhou et al. (C) 2012-" << year << endl;
+  cout <<
+    "   http://www.xzlab.org/software.html, https://github.com/genetics-statistics" << endl;
   return;
 }
 
@@ -154,9 +150,6 @@ void GEMMA::PrintLicense(void) {
 
 void GEMMA::PrintHelp(size_t option) {
   if (option == 0) {
-    cout << endl;
-    cout << " GEMMA version " << version << ", released on " << date << endl;
-    cout << " implemented by Xiang Zhou" << endl;
     cout << endl;
     cout << " type ./gemma -h [num] for detailed helps" << endl;
     cout << " options: " << endl;
@@ -767,7 +760,7 @@ void GEMMA::Assign(int argc, char **argv, PARAM &cPar) {
       str.clear();
       str.assign(argv[i]);
       cPar.file_mbfile = str;
-    } else if (strcmp(argv[i], "-silence") == 0) {
+    } else if (strcmp(argv[i], "-silence") == 0 || strcmp(argv[i], "--quiet") == 0) {
       debug_set_quiet_mode(true);
     } else if (strcmp(argv[i], "-g") == 0) {
       if (argv[i + 1] == NULL || argv[i + 1][0] == '-') {
@@ -3089,9 +3082,6 @@ void GEMMA::BatchRun(PARAM &cPar) {
 }
 
 #include "Eigen/Dense"
-#if defined(OPENBLAS) && !defined(OPENBLAS_LEGACY)
-#include <openblas_config.h>
-#endif
 
 void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
   string file_str;
