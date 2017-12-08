@@ -1601,6 +1601,7 @@ void GEMMA::Assign(int argc, char **argv, PARAM &cPar) {
       debug_set_strict_mode(true);
     } else if (strcmp(argv[i], "-legacy") == 0) {
       debug_set_legacy_mode(true);
+      warning_msg("you are running in legacy mode - support may drop in future versions of gemma");
     } else {
       cout << "error! unrecognized option: " << argv[i] << endl;
       cPar.error = true;
