@@ -102,10 +102,10 @@ warranty**; without even the implied warranty of **merchantability or
 fitness for a particular purpose**. See file [LICENSE](LICENSE) for
 the full text of the license.
 
-The source code for the
-[shUnit2](https://github.com/genenetwork/shunit2) unit testing
-framework, included in this repository [here](contrib/shunit2-2.0.3), is
-distributed under the
+Both the source code for the
+[gzstream zlib wrapper](http://www.cs.unc.edu/Research/compgeom/gzstream/)
+and [shUnit2](https://github.com/genenetwork/shunit2) unit testing
+framework included in GEMMA are distributed under the
 [GNU Lesser General Public License](contrib/shunit2-2.0.3/doc/LGPL-2.1),
 either version 2.1 of the License, or (at your option) any later
 revision.
