@@ -1,6 +1,8 @@
 /*
     Genome-wide Efficient Mixed Model Association (GEMMA)
-    Copyright (C) 2011-2017, Xiang Zhou
+    Copyright © 2011-2017, Xiang Zhou
+    Copyright © 2017, Peter Carbonetto
+    Copyright © 2017, Pjotr Prins
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -78,9 +80,7 @@ void gemma_gsl_error_handler (const char * reason,
 void GEMMA::PrintHeader(void) {
 
   cout <<
-    "GEMMA " << version << " (" << date << ") by Xiang Zhou et al. (C) 2012-" << year << endl;
-  cout <<
-    "   http://www.xzlab.org/software.html, https://github.com/genetics-statistics" << endl;
+    "GEMMA " << version << " (" << date << ") by Xiang Zhou and team (C) 2012-" << year << endl;
   return;
 }
 
@@ -149,19 +149,20 @@ void GEMMA::PrintLicense(void) {
 }
 
 void GEMMA::PrintHelp(size_t option) {
+
   if (option == 0) {
     cout << endl;
-    cout << " type ./gemma -h [num] for detailed helps" << endl;
+    cout << " type ./gemma -h [num] for detailed help" << endl;
     cout << " options: " << endl;
-    cout << " 1: quick guide" << endl;
-    cout << " 2: file I/O related" << endl;
-    cout << " 3: SNP QC" << endl;
-    cout << " 4: calculate relatedness matrix" << endl;
-    cout << " 5: perform eigen decomposition" << endl;
-    cout << " 6: perform variance component estimation" << endl;
-    cout << " 7: fit a linear model" << endl;
-    cout << " 8: fit a linear mixed model" << endl;
-    cout << " 9: fit a multivariate linear mixed model" << endl;
+    cout << "  1: quick guide" << endl;
+    cout << "  2: file I/O related" << endl;
+    cout << "  3: SNP QC" << endl;
+    cout << "  4: calculate relatedness matrix" << endl;
+    cout << "  5: perform eigen decomposition" << endl;
+    cout << "  6: perform variance component estimation" << endl;
+    cout << "  7: fit a linear model" << endl;
+    cout << "  8: fit a linear mixed model" << endl;
+    cout << "  9: fit a multivariate linear mixed model" << endl;
     cout << " 10: fit a Bayesian sparse linear mixed model" << endl;
     cout << " 11: obtain predicted values" << endl;
     cout << " 12: calculate snp variance covariance" << endl;
@@ -719,6 +720,10 @@ void GEMMA::PrintHelp(size_t option) {
     cout << endl;
   }
 
+  cout << "The GEMMA software is distributed under the GNU General Public v3" << endl;
+  cout << "   -license    show license information" << endl;
+  cout <<
+    "   see also http://www.xzlab.org/software.html, https://github.com/genetics-statistics" << endl;
   return;
 }
 
