@@ -1396,7 +1396,12 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
       uint token_num = 0;
       for (auto x = tokens; x != rend; x++)
         token_num++;
-      enforce_str(token_num == ni_total + 3, line + " count fields");
+      if (token_num != ni_total) {
+        cerr << line << endl;
+        cerr << token_num << " != " << ni_total << endl;
+        warning_msg("Columns in geno file do not match # individuals");
+      }
+      enforce_msg(token_num < ni_total + 3,"not enough genotype fields");
     }
 
     auto snp = *tokens; // first field
