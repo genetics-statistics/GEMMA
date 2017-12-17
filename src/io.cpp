@@ -1396,12 +1396,12 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
       uint token_num = 0;
       for (auto x = tokens; x != rend; x++)
         token_num++;
-      if (token_num != ni_total) {
+      if (token_num != ni_total+3) {
         cerr << line << endl;
         cerr << token_num << " != " << ni_total << endl;
         warning_msg("Columns in geno file do not match # individuals");
       }
-      enforce_msg(token_num < ni_total + 3,"not enough genotype fields");
+      enforce_msg(token_num <= ni_total + 3,"not enough genotype fields");
     }
 
     auto snp = *tokens; // first field
@@ -1460,12 +1460,12 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
 
     // compute kinship matrix and return in matrix_kin a SNP at a time
     if (ns_test % msize == 0) {
-      fast_dgemm("N", "T", 1.0, Xlarge, Xlarge, 1.0, matrix_kin);
+      fast_eigen_dgemm("N", "T", 1.0, Xlarge, Xlarge, 1.0, matrix_kin);
       gsl_matrix_set_zero(Xlarge);
     }
   }
   if (ns_test % msize != 0) {
-    fast_dgemm("N", "T", 1.0, Xlarge, Xlarge, 1.0, matrix_kin);
+    fast_eigen_dgemm("N", "T", 1.0, Xlarge, Xlarge, 1.0, matrix_kin);
   }
   cout << endl;
 
@@ -1606,13 +1606,13 @@ bool PlinkKin(const string &file_bed, vector<int> &indicator_snp,
     ns_test++;
 
     if (ns_test % msize == 0) {
-      fast_dgemm("N", "T", 1.0, Xlarge, Xlarge, 1.0, matrix_kin);
+      fast_eigen_dgemm("N", "T", 1.0, Xlarge, Xlarge, 1.0, matrix_kin);
       gsl_matrix_set_zero(Xlarge);
     }
   }
 
   if (ns_test % msize != 0) {
-    fast_dgemm("N", "T", 1.0, Xlarge, Xlarge, 1.0, matrix_kin);
+    fast_eigen_dgemm("N", "T", 1.0, Xlarge, Xlarge, 1.0, matrix_kin);
   }
 
   cout << endl;
@@ -2768,7 +2768,7 @@ bool BimbamKinUncentered(const string &file_geno, const set<string> ksnps,
         ns_vec[0]++;
 
         if (ns_vec[0] % msize == 0) {
-          fast_dgemm("N", "T", 1.0, Xlarge, Xlarge, 1.0, matrix_kin);
+          fast_eigen_dgemm("N", "T", 1.0, Xlarge, Xlarge, 1.0, matrix_kin);
           gsl_matrix_set_zero(Xlarge);
         }
       } else if (mapRS2cat.count(rs) != 0) {
@@ -2785,7 +2785,7 @@ bool BimbamKinUncentered(const string &file_geno, const set<string> ksnps,
               gsl_matrix_submatrix(Xlarge, 0, msize * i_vc, ni_test, msize);
           gsl_matrix_view kin_sub = gsl_matrix_submatrix(
               matrix_kin, 0, ni_test * i_vc, ni_test, ni_test);
-          fast_dgemm("N", "T", 1.0, &X_sub.matrix, &X_sub.matrix, 1.0,
+          fast_eigen_dgemm("N", "T", 1.0, &X_sub.matrix, &X_sub.matrix, 1.0,
                          &kin_sub.matrix);
 
           gsl_matrix_set_zero(&X_sub.matrix);
@@ -2801,7 +2801,7 @@ bool BimbamKinUncentered(const string &file_geno, const set<string> ksnps,
           gsl_matrix_submatrix(Xlarge, 0, msize * i_vc, ni_test, msize);
       gsl_matrix_view kin_sub =
           gsl_matrix_submatrix(matrix_kin, 0, ni_test * i_vc, ni_test, ni_test);
-      fast_dgemm("N", "T", 1.0, &X_sub.matrix, &X_sub.matrix, 1.0,
+      fast_eigen_dgemm("N", "T", 1.0, &X_sub.matrix, &X_sub.matrix, 1.0,
                      &kin_sub.matrix);
     }
   }
@@ -2994,7 +2994,7 @@ bool PlinkKin(const string &file_bed, const int display_pace,
         ns_vec[0]++;
 
         if (ns_vec[0] % msize == 0) {
-          fast_dgemm("N", "T", 1.0, Xlarge, Xlarge, 1.0, matrix_kin);
+          fast_eigen_dgemm("N", "T", 1.0, Xlarge, Xlarge, 1.0, matrix_kin);
           gsl_matrix_set_zero(Xlarge);
         }
       } else if (mapRS2cat.count(rs) != 0) {
@@ -3011,7 +3011,7 @@ bool PlinkKin(const string &file_bed, const int display_pace,
               gsl_matrix_submatrix(Xlarge, 0, msize * i_vc, ni_test, msize);
           gsl_matrix_view kin_sub = gsl_matrix_submatrix(
               matrix_kin, 0, ni_test * i_vc, ni_test, ni_test);
-          fast_dgemm("N", "T", 1.0, &X_sub.matrix, &X_sub.matrix, 1.0,
+          fast_eigen_dgemm("N", "T", 1.0, &X_sub.matrix, &X_sub.matrix, 1.0,
                          &kin_sub.matrix);
 
           gsl_matrix_set_zero(&X_sub.matrix);
@@ -3027,7 +3027,7 @@ bool PlinkKin(const string &file_bed, const int display_pace,
           gsl_matrix_submatrix(Xlarge, 0, msize * i_vc, ni_test, msize);
       gsl_matrix_view kin_sub =
           gsl_matrix_submatrix(matrix_kin, 0, ni_test * i_vc, ni_test, ni_test);
-      fast_dgemm("N", "T", 1.0, &X_sub.matrix, &X_sub.matrix, 1.0,
+      fast_eigen_dgemm("N", "T", 1.0, &X_sub.matrix, &X_sub.matrix, 1.0,
                      &kin_sub.matrix);
     }
   }
