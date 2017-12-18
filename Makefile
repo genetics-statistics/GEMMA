@@ -10,13 +10,13 @@
 #
 # Examples:
 #
-#    Make GEMMA on Linux with OPENBLAS support:
+#    Make GEMMA on Linux without OPENBLAS support:
 #
-#      make WITH_OPENBLAS=1
+#      make WITH_OPENBLAS=
 #
 #    Disable debug info and checks (slightly faster release mode)
 #
-#      make WITH_OPENBLAS=1 DEBUG=
+#      make DEBUG=
 #
 #    Force static compilation
 #
@@ -47,7 +47,7 @@ DIST_NAME              = gemma-$(GEMMA_VERSION)
 DEBUG                  = 1                # DEBUG mode, set DEBUG=0 for a release
 SHOW_COMPILER_WARNINGS =
 WITH_LAPACK            = 1
-WITH_OPENBLAS          =                  # Defaults to LAPACK - OPENBLAS may be faster
+WITH_OPENBLAS          = 1                # Without OpenBlas uses LAPACK
 OPENBLAS_LEGACY        =                  # Using older OpenBlas
 FORCE_STATIC           =                  # Static linking of libraries
 GCC_FLAGS              = -Wall -O3 -std=gnu++11 # extra flags -Wl,--allow-multiple-definition

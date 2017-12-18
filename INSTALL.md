@@ -65,12 +65,12 @@ if you get an Eigen error you may need to override the include
 path. E.g. to build GEMMA on GNU Guix with shared libs the following
 may work
 
-    make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 WITH_OPENBLAS=1
+    make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3
 
 another example overriding optimization and LIB flags (so as to link
 against gslv1) would be
 
-    make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 WITH_OPENBLAS=1 GCC_FLAGS="-Wall -isystem/$HOME/opt/gsl1/include" LIBS="$HOME/opt/gsl1/lib/libgsl.a $HOME/opt/gsl1/lib/libgslcblas.a -L$HOME/.guix-profile/lib -pthread -llapack -lblas -lz"
+    make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 GCC_FLAGS="-Wall -isystem/$HOME/opt/gsl1/include" LIBS="$HOME/opt/gsl1/lib/libgsl.a $HOME/opt/gsl1/lib/libgslcblas.a -L$HOME/.guix-profile/lib -pthread -llapack -lblas -lz"
 
 to run GEMMA tests
 
@@ -86,7 +86,7 @@ You can run gemma in the debugger with, for example
 Note that if you get <optimized out> warnings on inspecting variables you
 should compile with GCC_FLAGS="" to disable optimizations (-O3). E.g.
 
-    make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 WITH_OPENBLAS=1 GCC_FLAGS=
+    make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 GCC_FLAGS=
 
 If you get older OpenBlas errors you may need to add
 OPENBLAS_LEGACY=1.
@@ -142,11 +142,11 @@ OpenBlas version gives problems around eigenvalues for some reason.
 We now have a static library which you can link using the full path
 with using the GEMMA Makefile:
 
-    time env OPENBLAS_NUM_THREADS=4 make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 LIBS="~/tmp/OpenBLAS/libopenblas_haswellp-r0.3.0.dev.a -lgsl -lgslcblas -pthread -lz  -llapack" WITH_OPENBLAS=1 -j 4 unittests
+    time env OPENBLAS_NUM_THREADS=4 make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 LIBS="~/tmp/OpenBLAS/libopenblas_haswellp-r0.3.0.dev.a -lgsl -lgslcblas -pthread -lz  -llapack" -j 4 unittests
 
 Latest (INT64, no gslcblas):
 
-    time env OPENBLAS_NUM_THREADS=4 make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 LIBS="~/opt/gsl2/lib/libgsl.a ~/tmp/OpenBLAS/libopenblas_haswellp-r0.3.0.dev.a -pthread -lz  -llapack" WITH_OPENBLAS=1 OPENBLAS_INCLUDE_PATH=~/tmp/OpenBLAS/ -j 4 fast-check
+    time env OPENBLAS_NUM_THREADS=4 make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 LIBS="~/opt/gsl2/lib/libgsl.a ~/tmp/OpenBLAS/libopenblas_haswellp-r0.3.0.dev.a -pthread -lz  -llapack" OPENBLAS_INCLUDE_PATH=~/tmp/OpenBLAS/ -j 4 fast-check
 
 
 ### OpenBlas 64-bit API
@@ -165,6 +165,6 @@ setting for testing the 64-bit API.
 
 Note, for performance we want a 64-bit binary with threading.
 
-    make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 LIBS="~/opt/gsl2/lib/libgsl.a ~/tmp/OpenBLAS/libopenblas_haswell-r0.3.0.dev.a ~/.guix-profile/lib/libgfortran.a ~/.guix-profile/lib/libquadmath.a -pthread -lz" WITH_OPENBLAS=1 OPENBLAS_INCLUDE_PATH=~/tmp/OpenBLAS/ -j 4 fast-check
+    make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 LIBS="~/opt/gsl2/lib/libgsl.a ~/tmp/OpenBLAS/libopenblas_haswell-r0.3.0.dev.a ~/.guix-profile/lib/libgfortran.a ~/.guix-profile/lib/libquadmath.a -pthread -lz" OPENBLAS_INCLUDE_PATH=~/tmp/OpenBLAS/ -j 4 fast-check
 
 Note we don't include standard lapack, because it is 32-bits.
