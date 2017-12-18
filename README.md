@@ -51,13 +51,46 @@ algorithm can be used to estimate variance components when
 individual-level data are available. For summary data, GEMMA uses the
 MQS algorithm to estimate variance components.
 
+## Installation
+
+To install GEMMA you can
+
+1. Download the precompiled binaries (64-bit Linux and Mac only)
+
+2. Use existing package managers, see [INSTALL.md](INSTALL.md).
+
+3. Compile GEMMA from source, see [INSTALL.md](INSTALL.md).
+
+Compiling from source takes more work, but can potentially boost
+performance of GEMMA when using specialized C++ compilers and
+numerical libraries.
+
+### Precompiled binaries
+
+1. Fetch the [latest stable release][latest_release] and download the
+   file appropriate for your platform.
+
+2. For .tar.bz2 files unpack the tar ball
+
+        tar xvjf gemma-$version-installer.tar.bz2
+
+    run the installer
+
+        ./install.sh ~/gemma
+
+    and run gemma
+
+        ~/gemma/bin/gemma
+
+3. For .gz files run `gunzip gemma.linux.gz` or `gunzip
+gemma.linux.gz` to unpack the file.
+
+
 ## Quick start
 
-1. Download and install the software. See [INSTALL.md](INSTALL.md).
+1. Work through the demo. *Give more details here.*
 
-2. Work through the demo. *Give more details here.*
-
-3. Read the manual and run `gemma -h`. *Give more details here.*
+2. Read the manual and run `gemma -h`. *Give more details here.*
 
 ## Citing GEMMA
 
@@ -91,7 +124,7 @@ studies.](https://doi.org/10.1101/042846) *Annals of Applied Statistics*, in pre
 
 ## License
 
-Copyright (C) 2012–2017, Xiang Zhou.
+Copyright (C) 2012–2017, Xiang Zhou and team.
 
 The *GEMMA* source code repository is free software: you can
 redistribute it under the terms of the
@@ -113,55 +146,6 @@ revision.
 The source code for the included [Catch](http://catch-lib.net) unit
 testing framework is distributed under the
 [Boost Software Licence version 1](https://github.com/philsquared/Catch/blob/master/LICENSE.txt).
-
-## What's included
-
-This is the current structure of the GEMMA source repository:
-
-```
-├── LICENSE
-├── Makefile
-├── NEWS.md
-├── README.md
-├── bin
-├── doc
-├── example
-└── src
-```
-
-*Write a paragraph here briefly explaining what is in each of the
-subfolders; see Wilson et al "Good Enough Practices" paper for example
-of this.*
-
-## Setup
-
-To install GEMMA you can
-
-1. Download the precompiled binaries (64-bit Linux and Mac only), see
-   [latest stable release][latest_release].
-
-2. Use existing package managers, see [INSTALL.md](INSTALL.md).
-
-3. Compile GEMMA from source, see [INSTALL.md](INSTALL.md).
-
-Compiling from source takes more work, but can boost performance of
-GEMMA when using specialized C++ compilers and numerical libraries.
-
-Source code and [latest stable release][latest_release] are available
-from the Github repository.
-
-### Precompiled binaries
-
-1. Fetch the [latest stable release][latest_release] and download the
-file appropriate for your platform: `gemma.linux.gz` for Linux, or
-`gemma.macosx.gz` for Mac OS X.
-
-2. Run `gunzip gemma.linux.gz` or `gunzip gemma.linux.gz` to
-unpack the file.
-
-3. Downloadable binaries are linked to static versions of the GSL,
-LAPACK and BLAS libraries. There is no need to install these
-libraries.
 
 ### Optimizing performance
 
