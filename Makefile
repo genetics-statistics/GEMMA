@@ -46,7 +46,7 @@ SYS                    = LNX # LNX|MAC (Linux is the default)
 DIST_NAME              = gemma-$(GEMMA_VERSION)
 DEBUG                  = 1                # DEBUG mode, set DEBUG=0 for a release
 SHOW_COMPILER_WARNINGS =
-WITH_LAPACK            = 1
+WITH_LAPACK            =                  # Force linking LAPACK
 WITH_OPENBLAS          = 1                # Without OpenBlas uses LAPACK
 OPENBLAS_LEGACY        =                  # Using older OpenBlas
 FORCE_STATIC           =                  # Static linking of libraries
@@ -110,7 +110,9 @@ OUTPUT = $(BIN_DIR)/gemma
 
 # Detailed libary paths, D for dynamic and S for static
 
-# LIBS_LNX_D_LAPACK = -llapack
+ifdef WITH_LAPACK
+  LIBS_LNX_D_LAPACK = -llapack
+endif
 # LIBS_LNX_D_BLAS = -lblas
 LIBS_LNX_D_OPENBLAS = -lopenblas
 LIBS_MAC_D_LAPACK = -framework Accelerate

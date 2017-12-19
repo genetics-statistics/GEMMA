@@ -232,5 +232,8 @@ void fast_dgemm(const char *TransA, const char *TransB, const double alpha,
 void fast_eigen_dgemm(const char *TransA, const char *TransB, const double alpha,
                       const gsl_matrix *A, const gsl_matrix *B, const double beta,
                       gsl_matrix *C) {
-  eigenlib_dgemm(TransA,TransB,alpha,A,B,beta,C);
+  if (is_legacy_mode())
+    eigenlib_dgemm(TransA,TransB,alpha,A,B,beta,C);
+  else
+    fast_cblas_dgemm(TransA,TransB,alpha,A,B,beta,C);
 }
