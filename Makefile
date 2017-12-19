@@ -97,7 +97,7 @@ ifdef SHOW_COMPILER_WARNINGS
 endif
 
 ifndef FORCE_STATIC
-  LIBS = -lgsl -lgslcblas -pthread -lz
+  LIBS = -lopenblas -lgsl -lgslcblas -pthread -lz
 else
   ifndef TRAVIS_CI # Travis static compile we cheat a little
     CPPFLAGS += -static
