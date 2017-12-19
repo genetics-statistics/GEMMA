@@ -543,9 +543,13 @@ void GEMMA::PrintHelp(size_t option) {
     cout << " -lmax     [num]          "
          << " specify maximum value for lambda (default 1e+5)" << endl;
     cout
-        << " -region   [num]          "
+        << " -region    [num]          "
         << " specify the number of regions used to evaluate lambda (default 10)"
         << endl;
+    cout << " -loco     [chr]          "
+         << " leave one chromosome out (LOCO) by name (requires -a annotation "
+            "file)"
+         << endl;
     cout << endl;
   }
 

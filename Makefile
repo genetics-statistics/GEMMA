@@ -98,9 +98,11 @@ ifdef SHOW_COMPILER_WARNINGS
 endif
 
 ifndef FORCE_STATIC
-  LIBS = -lgsl -lopenblas -pthread -lz -lgfortran -lquadmath
+  LIBS = -lgsl -lopenblas -pthread -lz
   ifdef WITH_GSLCBLAS
     LIBS += -lgslcblas
+  else
+    LIBS += -lgfortran -lquadmath
   endif
 else
   ifndef TRAVIS_CI # Travis static compile we cheat a little
