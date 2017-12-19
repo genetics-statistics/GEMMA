@@ -11,9 +11,11 @@ models (LMMs) and related models to genome-wide association studies
 
 Check out [NEWS.md](NEWS.md) to see what's new in each GEMMA release.
 
-Please post comments, feature requests or suspected bugs to
-[Github issues](https://github.com/genetics-statistics/GEMMA/issues). We also
-encourage contributions, for example, by forking the repository,
+Please post feature requests or suspected bugs to
+[Github issues](https://github.com/genetics-statistics/GEMMA/issues). For
+questions or other discussion, please post to the
+[GEMMA Google Group](https://groups.google.com/group/gemma-discussion). We
+also encourage contributions, for example, by forking the repository,
 making your changes to the code, and issuing a pull request.
 
 Currently, GEMMA is supported for 64-bit Mac OS X and Linux
