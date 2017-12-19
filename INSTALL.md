@@ -130,14 +130,14 @@ and/or play with the switches (listed in OpenBlas Makefile.rule)
 
 and you should see something like
 
-    OpenBLAS build complete. (BLAS CBLAS)
+    OpenBLAS build complete. (BLAS CBLAS LAPACK LAPACKE)
 
-      OS               ... Linux
-      Architecture     ... x86_64
-      BINARY           ... 64bit
-      C compiler       ... GCC  (command line : gcc)
-      Fortran compiler ... GFORTRAN  (command line : gfortran)
-      Library Name     ... libopenblas_haswellp-r0.3.0.dev.a (Multi threaded; Max num-threads is 64)
+    OS               ... Linux
+    Architecture     ... x86_64
+    BINARY           ... 64bit
+    C compiler       ... GCC  (command line : gcc)
+    Fortran compiler ... GFORTRAN  (command line : gfortran)
+    Library Name     ... libopenblas_haswellp-r0.3.0.dev.a (Multi threaded; Max num-threads is 64)
 
 Note that OpenBlas by default uses a 32-bit integer API which can
 overflow with large matrix sizes. We don't include LAPACK - the
@@ -146,7 +146,7 @@ OpenBlas version gives problems around eigenvalues for some reason.
 We now have a static library which you can link using the full path
 with using the GEMMA Makefile:
 
-    time env OPENBLAS_NUM_THREADS=4 make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 LIBS="~/tmp/OpenBLAS/libopenblas_haswellp-r0.3.0.dev.a -lgsl -lgslcblas -pthread -lz  -llapack" -j 4 unittests
+    time env OPENBLAS_NUM_THREADS=4 make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 LIBS="~/tmp/OpenBLAS/libopenblas_haswellp-r0.3.0.dev.a -lgsl -pthread -lz" -j 4 unittests
 
 Latest (INT64, no gslcblas):
 

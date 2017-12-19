@@ -98,7 +98,7 @@ ifdef SHOW_COMPILER_WARNINGS
 endif
 
 ifndef FORCE_STATIC
-  LIBS = -lopenblas -lgsl -pthread -lz
+  LIBS = -lgsl -lopenblas -pthread -lz -lgfortran -lquadmath
   ifdef WITH_GSLCBLAS
     LIBS += -lgslcblas
   endif
