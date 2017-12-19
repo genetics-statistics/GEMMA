@@ -46,8 +46,9 @@ SYS                    = LNX # LNX|MAC (Linux is the default)
 DIST_NAME              = gemma-$(GEMMA_VERSION)
 DEBUG                  = 1                # DEBUG mode, set DEBUG=0 for a release
 SHOW_COMPILER_WARNINGS =
-WITH_LAPACK            =                  # Force linking LAPACK
 WITH_OPENBLAS          = 1                # Without OpenBlas uses LAPACK
+WITH_LAPACK            =                  # Force linking LAPACK (if OpenBlas lacks it)
+WITH_GSLCBLAS          =                  # Force linking gslcblas (if OpenBlas lacks it)
 OPENBLAS_LEGACY        =                  # Using older OpenBlas
 FORCE_STATIC           =                  # Static linking of libraries
 GCC_FLAGS              = -Wall -O3 -std=gnu++11 # extra flags -Wl,--allow-multiple-definition
@@ -97,7 +98,10 @@ ifdef SHOW_COMPILER_WARNINGS
 endif
 
 ifndef FORCE_STATIC
-  LIBS = -lopenblas -lgsl -lgslcblas -pthread -lz
+  LIBS = -lopenblas -lgsl -pthread -lz
+  ifdef WITH_GSLCBLAS
+    LIBS += -lgslcblas
+  endif
 else
   ifndef TRAVIS_CI # Travis static compile we cheat a little
     CPPFLAGS += -static

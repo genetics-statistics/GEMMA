@@ -114,6 +114,10 @@ workstation it easily doubles speed). When you check the output .log
 file of GEMMA after a run, it will tell you how the linked-in OpenBlas
 was compiled.
 
+It is worth checking that you use OpenBlas's lapack and cblas
+interfaces instead of linking against default lapack and gslcblas
+libs.
+
 To link a new version, compile OpenBlas as per
 [instructions](http://www.openblas.net/).  You can start with the
 default:
