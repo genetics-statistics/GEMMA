@@ -113,8 +113,6 @@ OUTPUT = $(BIN_DIR)/gemma
 ifdef WITH_LAPACK
   LIBS_LNX_D_LAPACK = -llapack
 endif
-# LIBS_LNX_D_BLAS = -lblas
-LIBS_LNX_D_OPENBLAS = -lopenblas
 LIBS_MAC_D_LAPACK = -framework Accelerate
 # LIBS_LNX_S_LAPACK = /usr/lib/libgsl.a  /usr/lib/libgslcblas.a /usr/lib/lapack/liblapack.a -lz
 # LIBS_LNX_S_LAPACK = /usr/lib/lapack/liblapack.a -lgfortran  /usr/lib/atlas-base/libatlas.a /usr/lib/libblas/libblas.a -Wl,--allow-multiple-definition
@@ -125,7 +123,7 @@ ifdef WITH_LAPACK
   else
     ifndef FORCE_STATIC
       ifdef WITH_OPENBLAS
-        LIBS += $(LIBS_LNX_D_OPENBLAS)
+        LIBS += -lopenblas
       else
         LIBS += $(LIBS_LNX_D_BLAS)
       endif
@@ -151,9 +149,6 @@ $(OUTPUT): $(OBJS)
 	$(CPP) $(CPPFLAGS) $(OBJS) $(LIBS) -o $(OUTPUT)
 
 $(OBJS): $(HDR)
-
-# .cpp.o:
-# 	$(CPP) $(CPPFLAGS) -c $*.cpp -o $*.o
 
 .SUFFIXES : .cpp .c .o $(SUFFIXES)
 
