@@ -8,8 +8,8 @@ and
 
 ### Speedup of GEMMA by using optimized OpenBlas
 
-* Providing a binary release with OpenBlas optimization for Intel Haswell
-* Dropped using standar lapack and gslcblas libs
+* Binary release with OpenBlas optimization for generic x86_64 and for Intel Haswell
+* Dropped using standard lapack and gslcblas libs
 * Fixed NaN bug with GSL2 and made recent libraries the default
 * Minimized use of Eigenlib libraries (single threaded and slow compilation)
 * -legacy switch provides v0.96 behaviour (incl. eigenlib)
