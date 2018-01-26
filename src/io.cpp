@@ -707,6 +707,7 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
       if (indicator_idv[i] == 0)
         continue;
 
+      enforce_msg(ch_ptr,"Problem reading geno file");
       if (strcmp(ch_ptr, "NA") == 0) {
         gsl_vector_set(genotype_miss, c_idv, 1);
         n_miss++;

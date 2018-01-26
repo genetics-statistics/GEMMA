@@ -143,7 +143,7 @@ gsl_vector *gsl_vector_safe_alloc(size_t n) {
 
 char *do_strtok_safe(char *tokenize, const char *delimiters, const char *__pretty_function, const char *__file, int __line) {
   auto token = strtok(tokenize,delimiters);
-  if (token == NULL && (is_debug_mode() || is_strict_mode()))
+  if (token == NULL && is_check_mode())
     fail_at_msg(__file,__line,string("strtok failed in ") + __pretty_function);
   return token;
 }

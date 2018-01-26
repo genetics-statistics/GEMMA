@@ -172,3 +172,17 @@ Note, for performance we want a 64-bit binary with threading.
     make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 LIBS="~/opt/gsl2/lib/libgsl.a ~/tmp/OpenBLAS/libopenblas_haswell-r0.3.0.dev.a ~/.guix-profile/lib/libgfortran.a ~/.guix-profile/lib/libquadmath.a -pthread -lz" OPENBLAS_INCLUDE_PATH=~/tmp/OpenBLAS/ -j 4 fast-check
 
 Note we don't include standard lapack, because it is 32-bits.
+
+## Trouble shooting
+
+### undefined reference to `dpotrf_'
+
+If you get errors like
+
+    gemma/src/lapack.cpp:58: undefined reference to `dpotrf_'
+    gemma/src/lapack.cpp:80: undefined reference to `dpotrs_'
+    gemma/src/lapack.cpp:162: undefined reference to `dsyev_'
+
+it means you need to link against LAPACK. E.g.
+
+    make WITH_LAPACK=1
