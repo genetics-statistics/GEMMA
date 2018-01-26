@@ -26,7 +26,6 @@
 #include <string>
 #include <sys/stat.h>
 #ifdef OPENBLAS
-#pragma message "Compiling with OPENBLAS"
 extern "C" {
   // these functions are defined in cblas.h - but if we include that we
   // conflicts with other BLAS includes
@@ -35,6 +34,8 @@ extern "C" {
   char* openblas_get_config(void);
   char* openblas_get_corename(void);
 }
+#else
+#pragma message "Not compiling with OPENBLAS"
 #endif
 
 #include "gsl/gsl_blas.h"
