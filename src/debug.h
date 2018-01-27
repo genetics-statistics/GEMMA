@@ -59,7 +59,8 @@ int gsl_vector_safe_memcpy (gsl_vector *dest, const gsl_vector *src);
 void gsl_vector_safe_free (gsl_vector *v);
 void do_gsl_vector_safe_free (gsl_vector *v, const char *__pretty_function, const char *__file, int __line);
 
-char *do_strtok_safe(char *tokenize, const char *delimiters, const char *__pretty_function, const char *__file, int __line);
+char *do_strtok_safe(char *tokenize, const char *delimiters, const char *__pretty_function, const char *__file, int __line, const char *infile = NULL);
+#define strtok_safe2(string,delimiters,infile) do_strtok_safe(string,delimiters,__SHOW_FUNC,__FILE__,__LINE__,infile)
 #define strtok_safe(string,delimiters) do_strtok_safe(string,delimiters,__SHOW_FUNC,__FILE__,__LINE__)
 
 // Validation routines

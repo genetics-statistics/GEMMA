@@ -141,10 +141,15 @@ gsl_vector *gsl_vector_safe_alloc(size_t n) {
   return v;
 }
 
-char *do_strtok_safe(char *tokenize, const char *delimiters, const char *__pretty_function, const char *__file, int __line) {
+char *do_strtok_safe(char *tokenize, const char *delimiters, const char *__pretty_function, const char *__file, int __line,
+                     const char *infile) {
   auto token = strtok(tokenize,delimiters);
-  if (token == NULL && is_check_mode())
-    fail_at_msg(__file,__line,string("strtok failed in ") + __pretty_function);
+  if (token == NULL) {
+    if (infile)
+      fail_at_msg(__file,__line,string("Parsing input file '") + infile + "' failed in function " + __pretty_function);
+    else
+      fail_at_msg(__file,__line,string("Parsing input file failed in function ") + __pretty_function);
+  }
   return token;
 }
 

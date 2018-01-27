@@ -1209,12 +1209,12 @@ void LMM::AnalyzeGene(const gsl_matrix *U, const gsl_vector *eval,
     if (t % d_pace == 0 || t == ng_total - 1) {
       ProgressBar("Performing Analysis", t, ng_total - 1);
     }
-    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe2((char *)line.c_str(), " , \t",file_gene.c_str());
     rs = ch_ptr;
 
     c_phen = 0;
     for (size_t i = 0; i < indicator_idv.size(); ++i) {
-      ch_ptr = strtok_safe(NULL, " , \t");
+      ch_ptr = strtok_safe2(NULL, " , \t",file_gene.c_str());
       if (indicator_idv[i] == 0) {
         continue;
       }
@@ -1465,8 +1465,9 @@ void LMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
                         const gsl_matrix *W, const gsl_vector *y,
                         const set<string> gwasnps) {
   debug_msg(file_geno);
+  auto infilen = file_geno.c_str();
 
-  igzstream infile(file_geno.c_str(), igzstream::in);
+  igzstream infile(infilen, igzstream::in);
   enforce_msg(infile, "error reading genotype file");
   size_t prev_line = 0;
 
@@ -1481,18 +1482,17 @@ void LMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
       safeGetline(infile, line);
       prev_line++;
     }
-    char *ch_ptr = strtok((char *)line.c_str(), " , \t");
-    enforce_msg(ch_ptr, "Parsing BIMBAM genofile"); // ch_ptr should not be NULL
+    char *ch_ptr = strtok_safe2((char *)line.c_str(), " , \t",infilen);
+    // enforce_msg(ch_ptr, "Parsing BIMBAM genofile"); // ch_ptr should not be NULL
 
     auto snp = string(ch_ptr);
-    ch_ptr = strtok_safe(NULL, " , \t"); // skip column
-    ch_ptr = strtok_safe(NULL, " , \t"); // skip column
+    ch_ptr = strtok_safe2(NULL, " , \t",infilen); // skip column
+    ch_ptr = strtok_safe2(NULL, " , \t",infilen); // skip column
 
     gs.assign (ni_total,nan("")); // wipe values
 
     for (size_t i = 0; i < ni_total; ++i) {
-      ch_ptr = strtok(NULL, " , \t");
-      enforce_msg(ch_ptr,line.c_str());
+      ch_ptr = strtok_safe2(NULL, " , \t",infilen);
       if (strcmp(ch_ptr, "NA") != 0)
         gs[i] = atof(ch_ptr);
     }
@@ -1913,7 +1913,8 @@ void LMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval,
                            const gsl_matrix *W, const gsl_vector *y,
                            const gsl_vector *env) {
   debug_msg("entering");
-  igzstream infile(file_geno.c_str(), igzstream::in);
+  auto infilen = file_gene.c_str();
+  igzstream infile(infilen, igzstream::in);
   if (!infile) {
     cout << "error reading genotype file:" << file_geno << endl;
     return;
@@ -1957,16 +1958,16 @@ void LMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval,
       continue;
     }
 
-    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
-    ch_ptr = strtok_safe(NULL, " , \t");
-    ch_ptr = strtok_safe(NULL, " , \t");
+    ch_ptr = strtok_safe2((char *)line.c_str(), " , \t",infilen);
+    ch_ptr = strtok_safe2(NULL, " , \t",infilen);
+    ch_ptr = strtok_safe2(NULL, " , \t",infilen);
 
     x_mean = 0.0;
     c_phen = 0;
     n_miss = 0;
     gsl_vector_set_zero(x_miss);
     for (size_t i = 0; i < ni_total; ++i) {
-      ch_ptr = strtok_safe(NULL, " , \t");
+      ch_ptr = strtok_safe2(NULL, " , \t",infilen);
       if (indicator_idv[i] == 0) {
         continue;
       }

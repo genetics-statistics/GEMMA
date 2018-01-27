@@ -216,8 +216,9 @@ bool ReadFile_log(const string &file_log, double &pheno_mean) {
   char *ch_ptr;
   size_t flag = 0;
 
+  auto infilen = file_log.c_str();
   while (getline(infile, line)) {
-    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe2((char *)line.c_str(), " , \t",infilen);
     ch_ptr = strtok(NULL, " , \t");
 
     if (ch_ptr != NULL && strcmp(ch_ptr, "estimated") == 0) {
@@ -225,7 +226,7 @@ bool ReadFile_log(const string &file_log, double &pheno_mean) {
       if (ch_ptr != NULL && strcmp(ch_ptr, "mean") == 0) {
         ch_ptr = strtok(NULL, " , \t");
         if (ch_ptr != NULL && strcmp(ch_ptr, "=") == 0) {
-          ch_ptr = strtok_safe(NULL, " , \t");
+          ch_ptr = strtok_safe2(NULL, " , \t",infilen);
           pheno_mean = atof(ch_ptr);
           flag = 1;
         }
@@ -322,8 +323,9 @@ bool ReadFile_column(const string &file_pheno, vector<int> &indicator_idv,
 
   string id;
   double p;
+  auto infilen = file_pheno.c_str();
   while (!safeGetline(infile, line).eof()) {
-    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe2((char *)line.c_str(), " , \t",infilen);
     for (int i = 0; i < (p_column - 1); ++i) {
       ch_ptr = strtok(NULL, " , \t");
     }
@@ -494,18 +496,19 @@ bool ReadFile_bim(const string &file_bim, vector<SNPINFO> &snpInfo) {
   string major;
   string minor;
 
+  auto infilen = file_bim.c_str();
   while (getline(infile, line)) {
-    ch_ptr = strtok_safe((char *)line.c_str(), " \t");
+    ch_ptr = strtok_safe2((char *)line.c_str(), " \t",infilen);
     chr = ch_ptr;
-    ch_ptr = strtok_safe(NULL, " \t");
+    ch_ptr = strtok_safe2(NULL, " \t",infilen);
     rs = ch_ptr;
-    ch_ptr = strtok_safe(NULL, " \t");
+    ch_ptr = strtok_safe2(NULL, " \t",infilen);
     cM = atof(ch_ptr);
-    ch_ptr = strtok_safe(NULL, " \t");
+    ch_ptr = strtok_safe2(NULL, " \t",infilen);
     b_pos = atol(ch_ptr);
-    ch_ptr = strtok_safe(NULL, " \t");
+    ch_ptr = strtok_safe2(NULL, " \t",infilen);
     minor = ch_ptr;
-    ch_ptr = strtok_safe(NULL, " \t");
+    ch_ptr = strtok_safe2(NULL, " \t",infilen);
     major = ch_ptr;
 
     SNPINFO sInfo = {chr, rs, cM, b_pos, minor, major, 0, -9, -9, 0, 0, 0};
@@ -550,14 +553,15 @@ bool ReadFile_fam(const string &file_fam, vector<vector<int>> &indicator_pheno,
     ind_pheno_row.push_back(0);
   }
 
+  auto infilen = file_fam.c_str();
   while (!safeGetline(infile, line).eof()) {
-    ch_ptr = strtok_safe((char *)line.c_str(), " \t");
-    ch_ptr = strtok_safe(NULL, " \t");
+    ch_ptr = strtok_safe2((char *)line.c_str(), " \t",infilen);
+    ch_ptr = strtok_safe2(NULL, " \t",infilen);
     id = ch_ptr;
-    ch_ptr = strtok_safe(NULL, " \t");
-    ch_ptr = strtok_safe(NULL, " \t");
-    ch_ptr = strtok_safe(NULL, " \t");
-    ch_ptr = strtok(NULL, " \t");
+    ch_ptr = strtok_safe2(NULL, " \t",infilen);
+    ch_ptr = strtok_safe2(NULL, " \t",infilen);
+    ch_ptr = strtok_safe2(NULL, " \t",infilen);
+    ch_ptr = strtok_safe2(NULL, " \t",infilen);
 
     size_t i = 0;
     while (i < p_max) {
@@ -657,12 +661,13 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
 
   file_pos = 0;
   auto count_warnings = 0;
+  auto infilen = file_geno.c_str();
   while (!safeGetline(infile, line).eof()) {
-    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe2((char *)line.c_str(), " , \t",infilen);
     rs = ch_ptr;
-    ch_ptr = strtok_safe(NULL, " , \t");
+    ch_ptr = strtok_safe2(NULL, " , \t",infilen);
     minor = ch_ptr;
-    ch_ptr = strtok_safe(NULL, " , \t");
+    ch_ptr = strtok_safe2(NULL, " , \t",infilen);
     major = ch_ptr;
 
     if (setSnps.size() != 0 && setSnps.count(rs) == 0) {
@@ -702,8 +707,9 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
     n_2 = 0;
     c_idv = 0;
     gsl_vector_set_zero(genotype_miss);
+    auto infilen = file_geno.c_str();
     for (int i = 0; i < ni_total; ++i) {
-      ch_ptr = strtok_safe(NULL, " , \t");
+      ch_ptr = strtok_safe2(NULL, " , \t",infilen);
       if (indicator_idv[i] == 0)
         continue;
 
@@ -1193,12 +1199,13 @@ void ReadFile_kin(const string &file_kin, vector<int> &indicator_idv,
     double Cov_d;
     size_t n_id1, n_id2;
 
+    auto infilen=file_kin.c_str();
     while (getline(infile, line)) {
-      ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
+      ch_ptr = strtok_safe2((char *)line.c_str(), " , \t",infilen);
       id1 = ch_ptr;
-      ch_ptr = strtok_safe(NULL, " , \t");
+      ch_ptr = strtok_safe2(NULL, " , \t",infilen);
       id2 = ch_ptr;
-      ch_ptr = strtok_safe(NULL, " , \t");
+      ch_ptr = strtok_safe2(NULL, " , \t",infilen);
       d = atof(ch_ptr);
       if (mapID2num.count(id1) == 0 || mapID2num.count(id2) == 0) {
         continue;
@@ -1330,7 +1337,7 @@ void ReadFile_eigenD(const string &file_kd, bool &error, gsl_vector *eval) {
       error = true;
     }
 
-    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe2((char *)line.c_str(), " , \t",file_kd.c_str());
     d = atof(ch_ptr);
 
     ch_ptr = strtok(NULL, " , \t");
@@ -1667,22 +1674,23 @@ bool ReadFile_geno(const string file_geno, vector<int> &indicator_idv,
 
   int c_idv = 0, c_snp = 0;
 
+  auto infilen = file_geno.c_str();
   for (int i = 0; i < ns_total; ++i) {
     safeGetline(infile, line).eof();
     if (indicator_snp[i] == 0) {
       continue;
     }
 
-    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
-    ch_ptr = strtok_safe(NULL, " , \t");
-    ch_ptr = strtok_safe(NULL, " , \t");
+    ch_ptr = strtok_safe2((char *)line.c_str(), " , \t",infilen);
+    ch_ptr = strtok_safe2(NULL, " , \t",infilen);
+    ch_ptr = strtok_safe2(NULL, " , \t",infilen);
 
     c_idv = 0;
     geno_mean = 0;
     n_miss = 0;
     gsl_vector_set_zero(genotype_miss);
     for (int j = 0; j < ni_total; ++j) {
-      ch_ptr = strtok_safe(NULL, " , \t");
+      ch_ptr = strtok_safe2(NULL, " , \t",infilen);
       if (indicator_idv[j] == 0) {
         continue;
       }
@@ -1776,22 +1784,23 @@ bool ReadFile_geno(const string &file_geno, vector<int> &indicator_idv,
 
   size_t c_idv = 0, c_snp = 0;
 
+  auto infilen = file_geno.c_str();
   for (size_t i = 0; i < ns_total; ++i) {
     safeGetline(infile, line).eof();
     if (indicator_snp[i] == 0) {
       continue;
     }
 
-    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
-    ch_ptr = strtok_safe(NULL, " , \t");
-    ch_ptr = strtok_safe(NULL, " , \t");
+    ch_ptr = strtok_safe2((char *)line.c_str(), " , \t",infilen);
+    ch_ptr = strtok_safe2(NULL, " , \t",infilen);
+    ch_ptr = strtok_safe2(NULL, " , \t",infilen);
 
     c_idv = 0;
     geno_mean = 0;
     n_miss = 0;
     gsl_vector_set_zero(genotype_miss);
     for (uint j = 0; j < ni_total; ++j) {
-      ch_ptr = strtok_safe(NULL, " , \t");
+      ch_ptr = strtok_safe2(NULL, " , \t",infilen);
       if (indicator_idv[j] == 0) {
         continue;
       }
@@ -2140,8 +2149,9 @@ bool ReadFile_est(const string &file_est, const vector<size_t> &est_column,
 
   size_t n = *max_element(est_column.begin(), est_column.end());
 
+  auto infilen = file_est.c_str();
   while (getline(infile, line)) {
-    ch_ptr = strtok_safe((char *)line.c_str(), " \t");
+    ch_ptr = strtok_safe2((char *)line.c_str(), " \t",infilen);
 
     alpha = 0.0;
     beta = 0.0;
@@ -2222,7 +2232,7 @@ bool ReadFile_gene(const string &file_gene, vector<double> &vec_read,
   getline(infile, line);
 
   while (getline(infile, line)) {
-    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe2((char *)line.c_str(), " , \t",file_gene.c_str());
     rs = ch_ptr;
 
     ch_ptr = strtok(NULL, " , \t");
@@ -2572,7 +2582,7 @@ bool ReadFile_cat(const string &file_cat, map<string, size_t> &mapRS2cat,
 
   // Read the following lines to record mapRS2cat.
   while (!safeGetline(infile, line).eof()) {
-    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe2((char *)line.c_str(), " , \t",file_cat.c_str());
 
     i_cat = 0;
     for (size_t i = 0; i < header.coln; i++) {
@@ -2704,9 +2714,10 @@ bool BimbamKinUncentered(const string &file_geno, const set<string> ksnps,
     if (indicator_snp[t] == 0)
       continue;
 
-    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
-    ch_ptr = strtok_safe(NULL, " , \t");
-    ch_ptr = strtok_safe(NULL, " , \t");
+    auto infilen = file_geno.c_str();
+    ch_ptr = strtok_safe2((char *)line.c_str(), " , \t",infilen);
+    ch_ptr = strtok_safe2(NULL, " , \t",infilen);
+    ch_ptr = strtok_safe2(NULL, " , \t",infilen);
 
     rs = snpInfo[t].rs_number; // This line is new.
 
@@ -2720,7 +2731,7 @@ bool BimbamKinUncentered(const string &file_geno, const set<string> ksnps,
       if (indicator_idv[i] == 0) {
         continue;
       }
-      ch_ptr = strtok_safe(NULL, " , \t");
+      ch_ptr = strtok_safe2(NULL, " , \t",infilen);
       if (strcmp(ch_ptr, "NA") == 0) {
         gsl_vector_set(geno_miss, i, 0);
         n_miss++;
@@ -3161,10 +3172,11 @@ bool ReadFile_wsnp(const string &file_wsnp, map<string, double> &mapRS2weight) {
   string line, rs;
   double weight;
 
+  auto infilen = file_wsnp.c_str();
   while (!safeGetline(infile, line).eof()) {
-    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe2((char *)line.c_str(), " , \t",infilen);
     rs = ch_ptr;
-    ch_ptr = strtok_safe(NULL, " , \t");
+    ch_ptr = strtok_safe2(NULL, " , \t",infilen);
     weight = atof(ch_ptr);
     mapRS2weight[rs] = weight;
   }
@@ -3200,7 +3212,7 @@ bool ReadFile_wsnp(const string &file_wcat, const size_t n_vc,
     if (isBlankLine(line)) {
       continue;
     }
-    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe2((char *)line.c_str(), " , \t",file_wcat.c_str());
 
     size_t t = 0;
     for (size_t i = 0; i < header.coln; i++) {
@@ -3307,7 +3319,7 @@ void ReadFile_beta(const string &file_beta,
     if (isBlankLine(line)) {
       continue;
     }
-    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe2((char *)line.c_str(), " , \t",file_beta.c_str());
 
     z = 0;
     beta = 0;
@@ -3489,7 +3501,7 @@ void ReadFile_beta(const string &file_beta, const map<string, double> &mapRS2wA,
     if (isBlankLine(line)) {
       continue;
     }
-    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe2((char *)line.c_str(), " , \t",file_beta.c_str());
 
     z = 0;
     beta = 0;
@@ -3777,7 +3789,7 @@ void ReadFile_vector(const string &file_vec, gsl_vector *vec) {
 
   for (size_t i = 0; i < vec->size; i++) {
     safeGetline(infile, line).eof();
-    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe2((char *)line.c_str(), " , \t",file_vec.c_str());
     gsl_vector_set(vec, i, atof(ch_ptr));
   }
 
@@ -3800,7 +3812,7 @@ void ReadFile_matrix(const string &file_mat, gsl_matrix *mat) {
 
   for (size_t i = 0; i < mat->size1; i++) {
     safeGetline(infile, line).eof();
-    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe2((char *)line.c_str(), " , \t",file_mat.c_str());
     for (size_t j = 0; j < mat->size2; j++) {
       enforce(ch_ptr);
       gsl_matrix_set(mat, i, j, atof(ch_ptr));
@@ -3828,7 +3840,7 @@ void ReadFile_matrix(const string &file_mat, gsl_matrix *mat1,
 
   for (size_t i = 0; i < mat1->size1; i++) {
     safeGetline(infile, line).eof();
-    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe2((char *)line.c_str(), " , \t",file_mat.c_str());
     for (size_t j = 0; j < mat1->size2; j++) {
       enforce(ch_ptr);
       gsl_matrix_set(mat1, i, j, atof(ch_ptr));
@@ -3838,7 +3850,7 @@ void ReadFile_matrix(const string &file_mat, gsl_matrix *mat1,
 
   for (size_t i = 0; i < mat2->size1; i++) {
     safeGetline(infile, line).eof();
-    ch_ptr = strtok_safe((char *)line.c_str(), " , \t");
+    ch_ptr = strtok_safe2((char *)line.c_str(), " , \t",file_mat.c_str());
     for (size_t j = 0; j < mat2->size2; j++) {
       enforce(ch_ptr);
       gsl_matrix_set(mat2, i, j, atof(ch_ptr));
