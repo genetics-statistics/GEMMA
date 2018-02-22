@@ -148,7 +148,7 @@ OBJS = $(SOURCES:.cpp=.o)
 
 all: $(OUTPUT)
 
-./src/version.h:
+./src/version.h: ./VERSION
 	./scripts/gen_version_info.sh > src/version.h
 
 $(OUTPUT): $(OBJS)
@@ -184,7 +184,6 @@ check: fast-check slow-check
 check-all: check lengthy-check
 
 clean:
-	rm $(SRC_DIR)/version.h
 	rm -vf $(SRC_DIR)/*.o
 	rm -vf $(SRC_DIR)/*~
 	rm -vf $(TEST_SRC_DIR)/*.o

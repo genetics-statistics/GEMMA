@@ -1,7 +1,6 @@
 *.o
 *.tar.gz
 src/Eigen
-src/version.h
 example/output
 test/output
 ./output
