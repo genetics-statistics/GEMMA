@@ -1439,12 +1439,25 @@ category and the number of individuals in the study.
 
 \section{Questions and Answers}
 
-\begin{enumerate}
+\subsection{How do I use a unique output directory?}
 
-\item Q: I want to perform a cross validation with my data, and want
-  to fit BSLMM in the training data set and obtain predicted values
-  for individuals in the test data set. How should I prepare the
-  phenotype file? \\
+You can use -outdir with gemma as a bash script
+
+\begin{verbatim}
+  -outdir $(mktemp -d -p $HOME)
+\end{verbatim}
+
+makes a unique temp directory where the output is stored, here
+relative to $HOME, but you can take any path.
+
+
+\subsection{How do I prepare the phenotype file for BSLMM?}
+
+Q: I want to perform a cross validation with my data, and want to fit
+BSLMM in the training data set and obtain predicted values for
+individuals in the test data set. How should I prepare the phenotype
+file?
+
 A: One should always use the same phenotype and genotype files for
 both fitting BSLMM and obtaining predicted values. Therefore, one
 should combine individuals in the training set and test set into a
