@@ -68,9 +68,9 @@ TRAVIS_CI              =                  # used by TRAVIS for testing
 
 GSL_INCLUDE_PATH =
 ifeq ($(SYS), WIN)
-  GSL_INCLUDE_PATH = -Ic:/GnuWin32/include
-  EIGEN_INCLUDE_PATH = -I../eigen-git-mirror
-  OPENBLAS_INCLUDE_PATH = -I../OpenBLAS-v0.2.19-Win64-int32/include
+  GSL_INCLUDE_PATH = -isystemc:/MinGW/include -LC:/MinGW/lib
+  EIGEN_INCLUDE_PATH = -isystem../eigen-git-mirror
+  OPENBLAS_INCLUDE_PATH = -isystem../OpenBLAS-v0.2.19-Win64-int32/include -L../OpenBLAS-v0.2.19-Win64-int32/lib
 else
   OPENBLAS_INCLUDE_PATH = -isystem//usr/local/opt/openblas/include
   ifeq ($(SYS), MAC)
@@ -118,7 +118,7 @@ else
 endif
 
 ifeq ($(SYS), WIN)
-  CPPFLAGS += -Duint="unsigned int" -D__CRT__NO_INLINE -D__STRING="__STRINGIFY"
+  CPPFLAGS += -Duint="unsigned int" -D__CRT__NO_INLINE -D__STRING="__STRINGIFY" -DWINDOWS -DWITH_GSLCBLAS=1
 endif
 
 ifdef SHOW_COMPILER_WARNINGS
