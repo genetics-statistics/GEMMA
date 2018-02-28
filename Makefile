@@ -41,7 +41,19 @@
 GEMMA_VERSION = $(shell cat ./VERSION)
 
 # Set this variable to either LNX or MAC
-SYS                    = LNX # LNX|MAC (Linux is the default)
+ifeq ($(OS),Windows_NT)
+  SYS = WIN
+  VGEN = scripts/gen_version_info.cmd
+else
+  UNAME_S := $(shell uname -s)
+  ifeq ($(UNAME_S),Darwin)
+    SYS = MAC
+  else
+    SYS = LNX # default to linux
+  endif
+  VGEN = scripts/gen_version_info.sh
+endif
+
 # Leave blank after "=" to disable; put "= 1" to enable
 DIST_NAME              = gemma-$(GEMMA_VERSION)
 DEBUG                  = 1                # DEBUG mode, set DEBUG=0 for a release
@@ -149,7 +161,7 @@ OBJS = $(SOURCES:.cpp=.o)
 all: $(OUTPUT)
 
 ./src/version.h:
-	./scripts/gen_version_info.sh > src/version.h
+	$(VGEN) > src/version.h
 
 $(OUTPUT): $(OBJS)
 	$(CPP) $(CPPFLAGS) $(OBJS) $(LIBS) -o $(OUTPUT)
