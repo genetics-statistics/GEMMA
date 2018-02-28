@@ -39,7 +39,7 @@
 #include "gsl/gsl_vector.h"
 
 #include "bslmmdap.h"
-#include "io.h"
+#include "gemma_io.h"
 #include "lapack.h"
 #include "lm.h"
 #include "lmm.h"

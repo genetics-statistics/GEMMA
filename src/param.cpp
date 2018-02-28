@@ -35,7 +35,7 @@
 #include "gsl/gsl_vector.h"
 
 #include "eigenlib.h"
-#include "io.h"
+#include "gemma_io.h"
 #include "mathfunc.h"
 #include "param.h"
 
