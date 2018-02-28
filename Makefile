@@ -65,8 +65,20 @@ OPENBLAS_LEGACY        =                  # Using older OpenBlas
 FORCE_STATIC           =                  # Static linking of libraries
 GCC_FLAGS              = -Wall -O3 -std=gnu++11 # extra flags -Wl,--allow-multiple-definition
 TRAVIS_CI              =                  # used by TRAVIS for testing
-EIGEN_INCLUDE_PATH     = /usr/include/eigen3
-OPENBLAS_INCLUDE_PATH  = /usr/local/opt/openblas/include
+
+GSL_INCLUDE_PATH =
+ifeq ($(SYS), WIN)
+  GSL_INCLUDE_PATH = -Ic:/GnuWin32/include
+  EIGEN_INCLUDE_PATH = -I../eigen-git-mirror
+  OPENBLAS_INCLUDE_PATH = -I../OpenBLAS-v0.2.19-Win64-int32/include
+else
+  OPENBLAS_INCLUDE_PATH = -isystem//usr/local/opt/openblas/include
+  ifeq ($(SYS), MAC)
+  EIGEN_INCLUDE_PATH = -isystem//usr/local/include/eigen3
+  else
+  EIGEN_INCLUDE_PATH = -isystem//usr/include/eigen3
+  endif
+endif
 
 # --------------------------------------------------------------------
 # Edit below this line with caution
@@ -85,13 +97,13 @@ endif
 
 ifeq ($(CPP), clang++)
   # macOS Homebrew settings (as used on Travis-CI)
-  GCC_FLAGS=-O3 -std=c++11 -stdlib=libc++ -isystem/$(OPENBLAS_INCLUDE_PATH) -isystem//usr/local/include/eigen3 -Wl,-L/usr/local/opt/openblas/lib
+  GCC_FLAGS=-O3 -std=c++11 -stdlib=libc++ $(OPENBLAS_INCLUDE_PATH) $(EIGEN_INCLUDE_PATH) -Wl,-L/usr/local/opt/openblas/lib
 endif
 
 ifdef WITH_OPENBLAS
   OPENBLAS=1
   # WITH_LAPACK =  # OPENBLAS usually includes LAPACK
-  CPPFLAGS += -DOPENBLAS -isystem/$(OPENBLAS_INCLUDE_PATH)
+  CPPFLAGS += -DOPENBLAS $(OPENBLAS_INCLUDE_PATH)
   ifdef OPENBLAS_LEGACY
     # Legacy version (mostly for Travis-CI)
     CPPFLAGS += -DOPENBLAS_LEGACY
@@ -99,10 +111,14 @@ ifdef WITH_OPENBLAS
 endif
 
 ifdef DEBUG
-  CPPFLAGS += -g $(GCC_FLAGS) -isystem/$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
+  CPPFLAGS += -g $(GCC_FLAGS) $(GSL_INCLUDE_PATH) $(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
 else
   # release mode
-  CPPFLAGS += -DNDEBUG $(GCC_FLAGS) -isystem/$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
+  CPPFLAGS += -DNDEBUG $(GCC_FLAGS) $(GSL_INCLUDE_PATH) $(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
+endif
+
+ifeq ($(SYS), WIN)
+  CPPFLAGS += -Duint="unsigned int" -D__CRT__NO_INLINE -D__STRING="__STRINGIFY"
 endif
 
 ifdef SHOW_COMPILER_WARNINGS
