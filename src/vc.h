@@ -21,7 +21,7 @@
 
 #include "gsl/gsl_matrix.h"
 #include "gsl/gsl_vector.h"
-#include "io.h"
+#include "gemma_io.h"
 #include "param.h"
 
 using namespace std;
