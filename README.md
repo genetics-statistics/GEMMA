@@ -159,6 +159,16 @@ hardware. See [INSTALL.md](INSTALL.md) for speeding up tips.
 More information on source code, dependencies and installation can be
 found in [INSTALL.md](INSTALL.md).
 
+## Input data formats
+
+Currently GEMMA takes two types of input formats
+
+1. BIMBAM format (preferred)
+2. PLINK format
+
+See this [example](./doc/example/data-munging.org) where we convert some
+spreadsheets for use in GEMMA.
+
 ## Reporting a GEMMA bug or issue
 
 For bugs GEMMA has an
@@ -170,10 +180,11 @@ Before posting an issue search the issue tracker and mailing list
 first. It is likely someone may have encountered something
 similiar. Also try running the latest version of GEMMA to make sure it
 has not been fixed already. Support/installation questions should be
-aimed at the mailing list. The issue tracker is for development issues
-around the software itself. When reporting an issue include the output
-of the program and the contents of the .log.txt file in the output
-directory.
+aimed at the mailing list - it is the best resource to get answers.
+
+The issue tracker is specifically meant for development issues around
+the software itself. When reporting an issue include the output of the
+program and the contents of the .log.txt file in the output directory.
 
 ### Check list:
 

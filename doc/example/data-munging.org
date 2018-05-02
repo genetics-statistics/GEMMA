@@ -1,0 +1,306 @@
+* Preparing Data for GEMMA
+
+GEMMA requires data to be presented in a certain way to run
+successfully. In this document we describe how you can prepare
+genotype and phenotype data so it passes through GEMMA correctly.
+
+Note that GEMMA uses spaces, tabs and comma's as valid field
+separators. Here we use tabs.
+
+** Genotypes
+
+In this example we have a genotype spreadsheet containing something like this
+
+```
+@type:riset
+@mat:B
+@pat:D
+@het:H
+@unk:U
+Chr     Locus   cM      Mb      BXD1    BXD2    BXD5    BXD6    BXD8    BXD9    BXD11   ...
+1       rs31443144      1.50    3.010274        B       B       D       D       D       ...
+1       rs6269442       1.50    3.492195        B       B       D       D       D       ...
+(...)
+```
+
+GEMMA, instead, requires a BIMBAM 'mean genotyped' formatted file
+which looks like
+
+```
+rs31443144, X, Y, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, ...
+rs6269442, X, Y, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, ...
+(...)
+```
+
+where the first three positions refer to SNP id, minor allele, major
+allele (both unused) and the mean genotypes where B has the value 1, D
+has the value 0, H has the value 0.5 and U is marked as NA. Note there
+is no header line.
+
+At this point you may decide to use a spreadsheet or editor to modify
+these by hand. The problem is that such a procedure is error prone and
+hard to reproduce. Always choose a programming method if you can! For
+further information check out these
+[suggestions](http://kbroman.org/steps2rr/pages/scripts.html).
+
+For most people using R or Python would be the best way to convert the
+data using a small script. We will add those instructions later, but
+here I am going to use a few Unix tools and the
+[bio-table](https://github.com/pjotrp/bioruby-table) tool to manage
+this conversion from the command line. First, make sure Ruby is
+available
+
+```sh
+ruby -v
+ruby 2.4.0p0 (2016-12-24 revision 57164) [x86_64-linux]
+```
+
+and install bioruby-table
+
+```sh
+gem install bio-table
+```
+
+On success you should be able to run
+
+```
+bio-table
+```
+
+In the first step we need to strip the header lines. This can be done with --skip, e.g.
+
+```sh
+bio-table --skip 20 BXD.geno > BXD_noheader.geno
+```
+
+We'll keep the header line for some column processing.  Next we drop
+the first column and keep the rest with --columns. For this exercise
+we are only interested in a subset of BXDs, so
+
+```sh
+bio-table --columns Locus,BXD100,BXD101,BXD102,BXD24,BXD32,BXD34,BXD40,BXD43,BXD44,BXD45,BXD48,BXD48a,BXD49,BXD50,BXD51,BXD55,BXD60,BXD61,BXD62,BXD63,BXD65,BXD65b,BXD66,BXD68,BXD69,BXD70,BXD71,BXD73,BXD73a,BXD73b,BXD75,BXD77,BXD78,BXD79,BXD83,BXD86,BXD87,BXD90,BXD98,C57BL/6J,DBA/2J BXD_noheader.geno > BXD_cols.geno
+```
+
+selects those columns by name. If a name is a mis-match bio-table will
+balk. In this case the parents C57BL/6J,DBA/2J are missing and had to
+be taken out.
+
+It is also possible to use regex's to select the columns (with
+--column-filter). Note that bio-table takes tab delimited files by
+default, to use a different delimiter use something like --in-format
+split --split-on ',' or a regex. Next we inject columns 1 and 2 by
+
+```sh
+bio-table --rewrite 'field[0] = "X\tY\t" + field[0]' BXD_cols.geno > BXD_cols2.geno
+```
+
+Next rewrite the field contents with something like
+
+```sh
+bio-table BXD_cols2.geno --rewrite 'fields = fields.map { |f| h={"X"=>"X", "Y"=>"Y", "D"=> 0, "B"=>1, "H"=>0.5} ; h[f] }' > BXD_mine.geno
+```
+
+And the resulting BIMBAM format looks like
+
+```
+rs31443144      X       Y       B       B       B       B       B       B       B       B       D       B       B       B       D       D
+       B       B       B       D       D       D       D       D       B       D       B       B       B       D       D       D       D       D       D       D       B       D       B       B       B
+rs6269442       X       Y       1       1       1       1       1       1       1       1       0       1       1       1       0       0
+       1       1       1       0       0       0       0       0       1       0       1       1       1       0       0       0       0       0       0       0       1       0       1       1       1
+```
+
+[bio-table](https://github.com/pjotrp/bioruby-table) has an extensive
+README and many other options, check it out.
+
+** Annotation
+
+To run gemma an annotation file is optional. This file again has no
+header and looks like
+
+```
+rs31443144      3010274 1
+rs6269442       3492195 1
+rs32285189      3511204 1
+```
+
+where columns refer to the SNP name (same as in the genotype file),
+the position and the chromosome number.  If you don't supply this
+information and run gemma with the -debug switch it will complain
+
+```
+**** DEBUG: Can't figure out position for rs31443144 in src/io.cpp at line 683 in ReadFile_geno
+**** DEBUG: Can't figure out position for rs6269442 in src/io.cpp at line 683 in ReadFile_geno
+```
+
+This is harmless until you want to run LOCO.
+
+** Phenotypes
+
+The phenotypes are simply a matrix. Again, without headers. Missing
+values are marked as NA. Save the file so it looks like
+[this](https://github.com/genetics-statistics/GEMMA/blob/master/example/mouse_hs1940.pheno.txt).
+When running GEMMA the column number gets passed in.
+
+** Running Gemma
+
+*** Relatedness/kinship matrix
+
+The first step is to compute a kinship matrix K. With our files we try
+
+```
+gemma -g BXD_mine.geno -p BXD_pheno.csv -gk
+GEMMA 0.97 (2017/12/19) by Xiang Zhou and team (C) 2012-2017
+Reading Files ...
+Segmentation fault
+```
+
+Unfortunately there is an immediate problem. Try running with -debug
+
+```
+gemma -g BXD_mine.geno -p BXD_pheno.csv -gk -debug
+GEMMA 0.97 (2017/12/19) by Xiang Zhou and team (C) 2012-2017
+Reading Files ...
+**** DEBUG: entered in src/io.cpp at line 353 in ReadFile_pheno
+**** DEBUG: entered in src/io.cpp at line 608 in ReadFile_geno
+**** DEBUG: Can't figure out position for rs31443144 in src/io.cpp at line 683 in ReadFile_geno
+strtok failed in ReadFile_geno in src/io.cpp at line 706
+```
+
+and we get a slightly more informative error. There is a parsing
+problem. GEMMA is not very good at data format checking so we need to
+do some checks. First see if the number of individuals matches in the
+phenotype file and genotype file. In this case the phenotype file was
+too large. In still included a header line and the parent phenotypes.
+
+After removing those it was fine.
+
+Gemma contains helpful information, particularly
+
+```sh
+gemma -h 2
+```
+
+where we can select the column in the phenotype file with -n. This is important
+because (at this point) K accounts for missing values:
+
+```sh
+gemma -g BXD_mine.geno -p BXD_pheno.csv -gk -n 2
+```
+
+by default it writes K to output/result.cXX.txt.
+
+Gemma also has a leave one chromosoe out (LOCO) option, but it is best
+to use
+[gemma-wrapper](https://github.com/genetics-statistics/gemma-wrapper)
+for that because gemma-wrapper iterates through all chromosomes. More
+on that below.
+
+Now we have K, let's run an LMM:
+
+** LMM
+
+Running an LMM on the phenotype in column 2 (they are numbered 1,2,...)
+
+```
+gemma -g BXD_mine.geno \
+    -p BXD_pheno.csv \
+    -a example/BXD_snps.txt \
+    -k output/result.cXX.txt \
+    -lmm 1 -maf 0.1 -n 2 \
+    -o n2_assoc.txt
+```
+
+gets a result file in output/result.assoc.txt
+
+** LOCO
+
+For LOCO we use gemma-wrapper because it facilitates running through
+the chromosomes. Essentially the command is the same (after -- gets
+passed to gemma):
+
+```
+gemma-wrapper --json \
+    --loco 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,X -- \
+    -g BXD_mine.geno \
+    -p BXD_pheno.csv \
+    -a example/BXD_snps.txt \
+    -gk \
+    -n 2 \
+    -debug > K.json
+```
+
+Note that the annotation file now is *required* to find the chromosomes. Gemma-wrapper computes
+the K's for every chromosome and the filenames are passed into K.json. A file which can be fed
+to the LMM:
+
+```
+gemma-wrapper --loco --input K.json -- \
+    -g BXD_mine.geno \
+    -p BXD_pheno.csv \
+    -a example/BXD_snps.txt \
+    -lmm 1 -maf 0.1 -n 2 \
+    -debug > GWA.json
+```
+
+Inside the resulting GWA.json file there is a list of results. Check
+out the paths and compile the result into one file with, for example,
+
+```
+bio-table /tmp/aa2a1c1a67fe2289d6a23afcc025818402f97521.*.assoc.txt.assoc.txt > LOCO_n2_assoc.txt
+```
+
+** Permutations
+
+To get an idea of what is a significant hit we can also use run gemma
+1000x after shuffling the phenotypes. gemma-wrapper also has an option
+for that. First create K
+
+```
+gemma-wrapper --json -- \
+    -g BXD_mine.geno \
+    -p BXD_pheno.csv \
+    -a example/BXD_snps.txt \
+    -gk \
+    -n 2 \
+    -debug > K.json
+```
+
+Now run once with
+
+```
+gemma-wrapper --json --input K.json -- \
+    -g BXD_mine.geno \
+    -p BXD_pheno.csv \
+    -a example/BXD_snps.txt \
+    -lmm 2 -maf 0.1 -n 2 \
+    -debug > GWA.json
+```
+
+GWA.json should point to the result set.
+
+To run the permutations add one option and move the -p option to
+--phenotypes *before* the double dash
+
+```
+gemma-wrapper --permutate 1000 --phenotypes BXD_pheno.csv --input K.json -- \
+    -g BXD_mine.geno \
+    -a example/BXD_snps.txt \
+    -lmm 1 -maf 0.1 -n 2 \
+    -debug > GWA.json
+```
+
+gemma-wrapper prints out the 95 and 67 percentiles where the first may
+be considered the 'significant' threshold and the latter is the
+'suggestive' threshold. For example
+
+```
+["95 percentile (significant) ", 3.382905e-05, 4.5]
+["67 percentile (suggestive)  ", 0.0003651852, 3.4]
+```
+
+where 4.5 is the LOD, i.e., -log10(3.382905e-05)
+
+** Annotate
+
+Once there is a list of associations out of GEMMA you may use the gemma-annotate
+tool as described [here](https://github.com/pjotrp/gemma-annotate).
