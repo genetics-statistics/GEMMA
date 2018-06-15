@@ -1373,6 +1373,10 @@ format. In addition, to fit MQS-LDW, you will need to add "-wcat
 specifies the LD score file, which can be provided in a gzip
 compressed format.
 
+A feature of MQS based variance component estimation is that one only need to use a subset of samples to estimate certain quantities. Using a subset of samples dramatically improves computation speed while maintaining variance component estimation accuracy. To take this strategy, one can use ``-sample [num]" to use a fixed number of random samples to perform estimation.
+
+Instead of using the genotype data from the study, one can also use genotype data from a reference panel. For example, one can use the genotype data from the 1000 genomes project as the reference. However, any population stratification in the reference panel should be dealt with first. For example, the individuals with European ancestry in the 1000 genomes project come from five subpopulations: CEU, FIN, GBR, IBS, and TSI. MQS computes SNP correlations across all SNP pairs as it should be under the LMM assumption. Therefore, any population stratification in the reference panel would increase the overall SNP correlation estimate, leading to down-ward bias in the final heritability estimate. To address the population stratification in the reference panel, one can include a few dummy variables in the model fitting step as covariates. These covariates represent, for example, the five subpopulations, and are used to effectively center the genotype mean in each subpopulation separately. To do this, one can create a covariate file containing five columns (no header): the first column is all 1 representing the intercept; the second column is 1 for CEU and 0 for others; the third column is 1 for FIN and 0 for others; ...; while the fifth column is 1 for IBS and 0 for others. Afterwards, one can add "-c [filename]" to include this covariate file in the command line.
+
 \subsubsection{Detailed Information}
 
 MQS-LDW uses an iterative procedure to update the variance
