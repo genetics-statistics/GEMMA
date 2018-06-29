@@ -98,7 +98,9 @@ chr	rs	ps	n_miss	allele1	allele0	af	beta_1	beta_2	Vbeta_1_1	Vbeta_1_2	Vbeta_2_2	
 ## To fit BSLMM in the training set:
 
 ## To fit a quantitative trait
-../bin/gemma -g mouse_hs1940.geno.txt.gz -p mouse_hs1940.pheno.txt -n 2 -a mouse_hs1940.anno.txt -bslmm -o mouse_hs1940_CD8_bslmm -w 1000 -s 10000 -seed 1
+../bin/gemma -g mouse_hs1940.geno.txt.gz -p mouse_hs1940.pheno.txt -n 2 \
+  -a mouse_hs1940.anno.txt -bslmm -o mouse_hs1940_CD8_bslmm \
+  -w 1000 -s 10000 -seed 1
 
 # the following three files may be of most importance:
 # the *.hyp.txt contains a column for pve and pge

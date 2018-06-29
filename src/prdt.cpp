@@ -32,8 +32,7 @@
 #include <vector>
 
 #include "gzstream.h"
-#include "io.h"
-#include "io.h"
+#include "gemma_io.h"
 #include "lapack.h"
 #include "mathfunc.h"
 #include "prdt.h"

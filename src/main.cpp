@@ -58,7 +58,11 @@ int main(int argc, char *argv[]) {
 
   ifstream check_dir((cPar.path_out).c_str());
   if (!check_dir) {
-    mkdir((cPar.path_out).c_str(), S_IRWXU | S_IRGRP | S_IROTH);
+    #ifdef WINDOWS
+      mkdir((cPar.path_out).c_str());
+    #else
+      mkdir((cPar.path_out).c_str(), S_IRWXU | S_IRGRP | S_IROTH);
+    #endif
   }
 
   if (!is_quiet_mode())

@@ -45,7 +45,7 @@
 // #include "eigenlib.h"
 #include "fastblas.h"
 #include "gzstream.h"
-#include "io.h"
+#include "gemma_io.h"
 #include "lapack.h"
 #include "mathfunc.h"
 
