@@ -35,7 +35,7 @@
 #include "gsl/gsl_vector.h"
 
 #include "eigenlib.h"
-#include "io.h"
+#include "gemma_io.h"
 #include "mathfunc.h"
 #include "param.h"
 
@@ -521,7 +521,7 @@ void PARAM::CheckParam(void) {
       a_mode != 71) {
     cout << "error! unknown analysis mode: " << a_mode
          << ". make sure -gk or -eigen or -lmm or -bslmm -predict or "
-         << "-calccov is sepcified correctly." << endl;
+         << "-calccov is specified correctly." << endl;
     error = true;
   }
   if (miss_level > 1) {

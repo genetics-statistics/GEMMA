@@ -1,0 +1,48 @@
+// install R 3.4.3
+https://cran.r-project.org/bin/windows/base/
+
+// install Rtools 3.4
+https://cran.r-project.org/bin/windows/Rtools/
+
+// Download openblas (v0.2.19-Win64-int32)
+https://sourceforge.net/projects/openblas/files/v0.2.19/
+
+// Make a place to store the files
+mkdir Github
+cd Github/
+
+// Clone the required dependancies
+git clone https://github.com/eigenteam/eigen-git-mirror.git
+git clone https://github.com/genetics-statistics/GEMMA.git
+
+// Download and install gsl2.4, unzip/tar into Github
+http://gnu.askapache.com/gsl/
+
+// Download and install msys from http://downloads.sourceforge.net/mingw/MSYS-1.0.11.exe
+cd c:/msys/1.0
+// Run mysys
+msys.bat
+
+// Under msys, Compile GSL-2.4 inside the msys
+cd /c/
+cd Github/gsl-2.4
+./configure --prefix=C:/MinGW
+make -j 4
+make install
+
+// Building Gemma on the R tool chain under windows using CMD compile gemma
+cd gemma
+make -j 2
+
+// Get all the DLLs from:
+- MinGW DLLs: https://sourceforge.net/projects/openblas/files/v0.2.12/mingw64_dll.zip/download
+- DLLs from the compiled gsl-2.4
+- DLLs from openBLAS
+
+// Required DLLs:
++ libgcc_s_seh-1.dll
++ libgfortran-3.dll
++ libgsl-23.dll
++ libgslcblas-0.dll
++ libopenblas.dll
++ libquadmath-0.dll

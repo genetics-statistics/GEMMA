@@ -88,11 +88,14 @@ numerical libraries.
 gemma.linux.gz` to unpack the file.
 
 
-## Quick start
+## Help materials
 
-1. Work through the demo. *Give more details here.*
++ [The GEMMA manual](doc/manual.pdf).
 
-2. Read the manual and run `gemma -h`. *Give more details here.*
++ [Detailed example with HS mouse data](example/demo.txt).
+
++ [Tutorial on GEMMA for genome-wide association
+analysis](https://github.com/rcc-uchicago/genetic-data-analysis-2).
 
 ## Citing GEMMA
 
