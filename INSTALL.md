@@ -53,6 +53,39 @@ To build GEMMA from source you can opt to install the build tools with GNU Guix
 
     guix package -i make gcc linux-libre-headers gsl eigen openblas lapack glibc ld-wrapper
 
+#### GNU Guix reproducible build system
+
+One of the challenges of developing software is dealing with
+dependencies. GNU Guix provides a way of using reproducible build
+systems. This is done by providing the exact same build 'graph'. This
+has the advantage that we easily can go back in time when users report
+issues (i.e., for the purpose of debugging).
+
+Note that this is an advanced configuration option at this stage. GNU
+Guix will make it easier in the future to deal with shared
+graphs. Contact Pjotr Prins if you are really interested.
+
+The following two links provide the reproducible build system that we for working on GEMMA:
+
+    https://gitlab.com/genenetwork/guix-bioinformatics/tree/f7a4bbf655bb255df46228f04cc191c1f08f198b
+    https://gitlab.com/genenetwork/guix/tree/686f5b9a8cdb66e81140b03a42644579e7eb1f9a
+
+Check the tree out, build Guix from source and run something like
+
+    env GUIX_PACKAGE_PATH=../guix-bioinformatics/ ./pre-inst-env guix package -i gemma-dev-env  --no-grafts --substitute-urls="https://berlin.guixsd.org http://guix.genenetwork.org https://mirror.hydra.gnu.org" -p ~/opt/gemma-dev-env
+
+Now by setting the environment you should be set to compile everything
+
+    . ~/opt/gemma-dev-env/etc/profile
+    make  EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 WITH_LAPACK=1
+    make  EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 WITH_LAPACK=1 check
+
+The following generates the graph
+
+![Current Guix dependency graph](.guix.dag.svg)
+
+    env GUIX_PACKAGE_PATH=../guix-bioinformatics/ ./pre-inst-env guix graph gemma-dev-env  |dot -Gsize="10,10" -Gratio=0.7 -Tsvg -Nfontsize=48 > dag.svg
+
 ### Install from source
 
 Install listed dependencies and run
