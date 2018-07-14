@@ -88,15 +88,27 @@ and build by setting GUIX to profile
     make GUIX=~/opt/gemma-dev-env
     make GUIX=~/opt/gemma-dev-env check
 
-The following generates the graph
+The following generates the graph for the full *build* system of GEMMA
 
     env GUIX_PACKAGE_PATH=../guix-bioinformatics/ ./pre-inst-env guix graph gemma-dev-env  |dot -Gsize="10,10" -Gratio=0.7 -Tsvg -Nfontsize=48 > dag.svg
 
 ![Current Guix dependency graph](.guix.dag.svg)
 
-Another way to view the graph is to use
+Another way to view the runtime graph is to use
 
     ldd gemma
+
+        libgsl.so.23 => /home/wrk/opt/gemma-dev-env/lib/libgsl.so.23 (0x00007efec0826000)
+        libopenblas.so.0 => /home/wrk/opt/gemma-dev-env/lib/libopenblas.so.0 (0x00007efebe288000)
+        libz.so.1 => /home/wrk/opt/gemma-dev-env/lib/libz.so.1 (0x00007efebe06d000)
+        libgfortran.so.3 => /home/wrk/opt/gemma-dev-env/lib/libgfortran.so.3 (0x00007efebdd4c000)
+        libquadmath.so.0 => /home/wrk/opt/gemma-dev-env/lib/libquadmath.so.0 (0x00007efebdb0b000)
+        libstdc++.so.6 => /home/wrk/opt/gemma-dev-env/lib/libstdc++.so.6 (0x00007efebd790000)
+        libm.so.6 => /home/wrk/opt/gemma-dev-env/lib/libm.so.6 (0x00007efebd444000)
+        libgcc_s.so.1 => /home/wrk/opt/gemma-dev-env/lib/libgcc_s.so.1 (0x00007efebd22d000)
+        libpthread.so.0 => /home/wrk/opt/gemma-dev-env/lib/libpthread.so.0 (0x00007efebd00f000)
+        libc.so.6 => /home/wrk/opt/gemma-dev-env/lib/libc.so.6 (0x00007efebcc5d000)
+        /gnu/store/n6acaivs0jwiwpidjr551dhdni5kgpcr-glibc-2.26.105-g0890d5379c/lib/ld-linux-x86-64.so.2
 
 and follow the paths.
 

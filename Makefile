@@ -121,7 +121,7 @@ ifdef DEBUG
   CPPFLAGS += -g $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc $(RPATH)
 else
   # release mode
-  CPPFLAGS += -DNDEBUG $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
+  CPPFLAGS += -DNDEBUG $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc $(RPATH)
 endif
 
 ifeq ($(SYS), WIN)
