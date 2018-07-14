@@ -65,10 +65,11 @@ Note that this is an advanced configuration option at this stage. GNU
 Guix will make it easier in the future to deal with shared
 graphs. Contact Pjotr Prins if you are really interested.
 
-The following two links provide the reproducible build system that we for working on GEMMA:
+The following two links capture and provide the reproducible build
+system that we use for development of GEMMA:
 
-    https://gitlab.com/genenetwork/guix-bioinformatics/tree/f7a4bbf655bb255df46228f04cc191c1f08f198b
-    https://gitlab.com/genenetwork/guix/tree/686f5b9a8cdb66e81140b03a42644579e7eb1f9a
+1. https://gitlab.com/genenetwork/guix-bioinformatics/tree/99718d253ec9ed8ed836f0a348381a7cd83d4b9f
+2. https://gitlab.com/genenetwork/guix/tree/686f5b9a8cdb66e81140b03a42644579e7eb1f9a
 
 Check the tree out, build Guix from source and run something like
 
@@ -88,11 +89,13 @@ and build by setting GUIX to profile
     make GUIX=~/opt/gemma-dev-env
     make GUIX=~/opt/gemma-dev-env check
 
-The following generates the graph for the full *build* system of GEMMA
+The following generates the graph for the full current *build* system of GEMMA
 
     env GUIX_PACKAGE_PATH=../guix-bioinformatics/ ./pre-inst-env guix graph gemma-dev-env  |dot -Gsize="10,10" -Gratio=0.7 -Tsvg -Nfontsize=48 > dag.svg
 
 ![Current Guix dependency graph](.guix.dag.svg)
+
+To zoom in download the SVG file and display it in your browser.
 
 Another way to view the runtime graph is to use
 

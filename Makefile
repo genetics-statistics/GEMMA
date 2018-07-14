@@ -84,6 +84,7 @@ else
     OPENBLAS_INCLUDE_PATH = .
     EIGEN_INCLUDE_PATH = $(GUIX)/include/eigen3
     RPATH = -Xlinker --rpath=$(GUIX)/lib
+    PROFILE =$(realpath $(GUIX))
   endif
 endif
 
@@ -184,7 +185,7 @@ OBJS = $(SOURCES:.cpp=.o)
 all: $(OUTPUT)
 
 ./src/version.h: ./VERSION
-	$(VGEN) > src/version.h
+	$(VGEN) $(PROFILE) > src/version.h
 
 $(OUTPUT): $(OBJS)
 	$(CPP) $(CPPFLAGS) $(OBJS) $(LIBS) -o $(OUTPUT)
