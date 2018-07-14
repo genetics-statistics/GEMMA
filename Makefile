@@ -4,6 +4,7 @@
 #
 #       Unix / Linux               	LNX (default)
 #       Mac                        	MAC
+#       GNU Guix                        GUIX (set to profile)
 #
 # Compilation options
 #       static compilation    		FORCE_STATIC
@@ -78,6 +79,12 @@ else
   else
   EIGEN_INCLUDE_PATH = /usr/include/eigen3
   endif
+  ifdef GUIX
+    # Effectively disable paths for GNU Guix
+    OPENBLAS_INCLUDE_PATH = .
+    EIGEN_INCLUDE_PATH = $(GUIX)/include/eigen3
+    RPATH = -Xlinker --rpath=$(GUIX)/lib
+  endif
 endif
 
 # --------------------------------------------------------------------
@@ -111,7 +118,7 @@ ifdef WITH_OPENBLAS
 endif
 
 ifdef DEBUG
-  CPPFLAGS += -g $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
+  CPPFLAGS += -g $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc $(RPATH)
 else
   # release mode
   CPPFLAGS += -DNDEBUG $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc

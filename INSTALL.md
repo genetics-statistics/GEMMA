@@ -74,17 +74,31 @@ Check the tree out, build Guix from source and run something like
 
     env GUIX_PACKAGE_PATH=../guix-bioinformatics/ ./pre-inst-env guix package -i gemma-dev-env  --no-grafts --substitute-urls="https://berlin.guixsd.org http://guix.genenetwork.org https://mirror.hydra.gnu.org" -p ~/opt/gemma-dev-env
 
-Now by setting the environment you should be set to compile everything
+Now by setting the environment you should be set to compile everything, see ~/opt/gemma-dev-env/etc/profile
 
-    . ~/opt/gemma-dev-env/etc/profile
-    make  EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 WITH_LAPACK=1
-    make  EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 WITH_LAPACK=1 check
+    export LIBRARY_PATH=~/opt/gemma-dev-env/lib
+    export C_INCLUDE_PATH=~/opt/gemma-dev-env/include
+    export CPLUS_INCLUDE_PATH=~/opt/gemma-dev-env/include
+    export CPATH=~/opt/gemma-dev-env/include
+    export PATH=~/opt/gemma-dev-env/bin:/usr/bin:/bin
+
+and build by setting GUIX to profile
+
+    make clean
+    make GUIX=~/opt/gemma-dev-env
+    make GUIX=~/opt/gemma-dev-env check
 
 The following generates the graph
 
+    env GUIX_PACKAGE_PATH=../guix-bioinformatics/ ./pre-inst-env guix graph gemma-dev-env  |dot -Gsize="10,10" -Gratio=0.7 -Tsvg -Nfontsize=48 > dag.svg
+
 ![Current Guix dependency graph](.guix.dag.svg)
 
-    env GUIX_PACKAGE_PATH=../guix-bioinformatics/ ./pre-inst-env guix graph gemma-dev-env  |dot -Gsize="10,10" -Gratio=0.7 -Tsvg -Nfontsize=48 > dag.svg
+Another way to view the graph is to use
+
+    ldd gemma
+
+and follow the paths.
 
 ### Install from source
 
