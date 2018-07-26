@@ -1,5 +1,6 @@
 #include <catch.hpp>
 #include <iostream>
+#include <fenv.h>
 #include "gsl/gsl_matrix.h"
 #include <cblas.h>
 
@@ -166,3 +167,33 @@ TEST_CASE("fast_dgemm", "[math]") {
    REQUIRE(trunc(C[2003]) == -10627000400.0 );
 
 }
+
+// The following code is normally disabled as it stops the unit tests!
+
+#ifdef TEST_SIGFPE
+
+#include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <signal.h>
+
+void sighandler(int signum)
+{
+    printf("Process %d got signal %d\n", getpid(), signum);
+    signal(signum, SIG_DFL);
+    kill(getpid(), signum);
+}
+
+TEST_CASE("NaN handlers", "[math]") {
+
+  signal(SIGFPE, sighandler);
+  feenableexcept(FE_INVALID   |
+                 FE_DIVBYZERO |
+                 FE_OVERFLOW  |
+                 FE_UNDERFLOW);
+  double dirty = 0.0;
+  double nanval= 0.0/dirty;
+  printf("Succeeded! dirty=%lf, nanval=%lf\n",dirty,nanval);
+}
+
+#endif // TEST_SIGFPE

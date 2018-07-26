@@ -66,7 +66,7 @@ Guix will make it easier in the future to deal with shared
 graphs. Contact Pjotr Prins if you are really interested.
 
 The following two links capture and provide the reproducible build
-system that we use for development of GEMMA:
+system that we use for development of GEMMA to generate /gnu/store/9ahrb1swr06kjm2gr2zg0fsyvps3xqgz-profile
 
 1. https://gitlab.com/genenetwork/guix-bioinformatics/tree/99718d253ec9ed8ed836f0a348381a7cd83d4b9f
 2. https://gitlab.com/genenetwork/guix/tree/686f5b9a8cdb66e81140b03a42644579e7eb1f9a
