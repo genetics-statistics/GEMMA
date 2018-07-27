@@ -14,6 +14,7 @@ testBXDStandardRelatednessMatrixKSingularError() {
            -c ../example/BXD_covariates.txt \
            -a ../example/BXD_snps.txt \
            -gk \
+           -no-check \
            -o $outn
     assertEquals 22 $? # should show singular error
 }
@@ -56,7 +57,7 @@ testBXDLMMLikelihoodRatio() {
            -c ../example/BXD_covariates2.txt \
            -a ../example/BXD_snps.txt \
            -k ./output/BXD.cXX.txt \
-           -lmm 2 -maf 0.1 \
+           -lmm 2 -no-check -maf 0.1 \
            -o $outn
     assertEquals 0 $?
 
@@ -89,7 +90,7 @@ testUnivariateLinearMixedModelLOCO1() {
            -a ../example/mouse_hs1940.anno.txt \
            -k ./output/mouse_hs1940_LOCO1.cXX.txt \
 	   -snps ../example/mouse_hs1940_snps.txt -lmm \
-	   -nind 400 \
+	   -nind 400 -no-check \
            -o $outn
     assertEquals 0 $?
     grep "total computation time" < output/$outn.log.txt

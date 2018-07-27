@@ -1624,6 +1624,8 @@ void GEMMA::BatchRun(PARAM &cPar) {
   clock_t time_begin, time_start;
   time_begin = clock();
 
+  if (is_check_mode()) enable_segfpe(); // fast NaN checking
+
   // Read Files.
   cout << "Reading Files ... " << endl;
   cPar.ReadFiles();
@@ -1882,6 +1884,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
     enforce_msg(G, "allocate G"); // just to be sure
 
     time_start = clock();
+
     cPar.CalcKin(G);
 
     cPar.time_G = (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
@@ -1908,6 +1911,8 @@ void GEMMA::BatchRun(PARAM &cPar) {
 
     VARCOV cVarcov;
     cVarcov.CopyFromParam(cPar);
+
+    if (is_check_mode()) disable_segfpe(); // fast NaN checking
 
     if (!cPar.file_bfile.empty()) {
       cVarcov.AnalyzePlink();
@@ -2022,6 +2027,8 @@ void GEMMA::BatchRun(PARAM &cPar) {
     VARCOV cVarcov;
     cVarcov.CopyFromParam(cPar);
 
+    if (is_check_mode()) disable_segfpe(); // fast NaN checking
+
     if (!cPar.file_bfile.empty()) {
       cVarcov.AnalyzePlink();
     } else {
@@ -2047,6 +2054,8 @@ void GEMMA::BatchRun(PARAM &cPar) {
       cLm.CopyFromParam(cPar);
 
       gsl_vector_view Y_col = gsl_matrix_column(Y, 0);
+
+      if (is_check_mode()) disable_segfpe(); // fast NaN checking
 
       if (!cPar.file_gene.empty()) {
         cLm.AnalyzeGene(W,
@@ -2754,6 +2763,8 @@ void GEMMA::BatchRun(PARAM &cPar) {
           LMM cLmm;
           cLmm.CopyFromParam(cPar);
 
+          if (is_check_mode()) disable_segfpe(); // fast NaN checking
+
           gsl_vector_view Y_col = gsl_matrix_column(Y, 0);
           gsl_vector_view UtY_col = gsl_matrix_column(UtY, 0);
 
@@ -2770,6 +2781,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
           }
           else {
             // BIMBAM analysis
+
             if (cPar.file_gxe.empty()) {
               cLmm.AnalyzeBimbam(U, eval, UtW, &UtY_col.vector, W,
                                  &Y_col.vector, cPar.setGWASnps);
@@ -2784,6 +2796,8 @@ void GEMMA::BatchRun(PARAM &cPar) {
         } else {
           MVLMM cMvlmm;
           cMvlmm.CopyFromParam(cPar);
+
+          if (is_check_mode()) disable_segfpe(); // fast NaN checking
 
           if (!cPar.file_bfile.empty()) {
             if (cPar.file_gxe.empty()) {
@@ -3107,6 +3121,9 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
   outfile << "##" << endl;
   outfile << "## GEMMA Version    = " << version << " (" << date << ")" << endl;
   outfile << "## Build profile    = " << GEMMA_PROFILE << endl ;
+  #ifdef __GNUC__
+  outfile << "## GCC version      = " << __GNUC__ << "." << __GNUC_MINOR__ << "." << __GNUC_PATCHLEVEL__ << endl;
+  #endif
   outfile << "## GSL Version      = " << GSL_VERSION << endl;
   outfile << "## Eigen Version    = " << EIGEN_WORLD_VERSION << "." << EIGEN_MAJOR_VERSION << "." << EIGEN_MINOR_VERSION << endl;
 #ifdef OPENBLAS

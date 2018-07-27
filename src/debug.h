@@ -45,6 +45,9 @@ bool is_quiet_mode();
 bool is_issue(uint issue);
 bool is_legacy_mode();
 
+void enable_segfpe();
+void disable_segfpe();
+
 #define check_int_mult_overflow(m,n) \
   { auto x = m * n;                                      \
     enforce_msg(x / m == n, "multiply integer overflow"); }

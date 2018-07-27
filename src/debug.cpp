@@ -26,6 +26,7 @@
 #include <string>
 #include <sys/stat.h>
 #include <vector>
+#include <fenv.h>
 
 #include "gsl/gsl_blas.h"
 #include "gsl/gsl_cdf.h"
@@ -59,6 +60,40 @@ bool is_quiet_mode() { return debug_quiet; };
 bool is_issue(uint issue) { return issue == debug_issue; };
 bool is_legacy_mode() { return debug_legacy; };
 
+#include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <signal.h>
+
+void sighandler(int signum)
+{
+  cout << R"(
+FATAL ERROR: GEMMA caused a floating point error which suggests machine boundaries were reached.
+
+You can disable floating point tests with the -no-check switch (use at your own risk!)
+)" << endl;
+  signal(signum, SIG_DFL);
+  kill(getpid(), signum); // should force a core dump
+}
+
+/*
+   Force the floating point processor to throw an exception when the result of
+   a double/float computation is overflow, underflow, NaN or inf. In principle
+   this is an Intel hardware feature that does not slow down computations.
+*/
+
+void enable_segfpe() {
+  #ifdef __GNUC__
+  signal(SIGFPE, sighandler);
+  feenableexcept(FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW | FE_UNDERFLOW);
+  #endif
+}
+
+void disable_segfpe() {
+  #ifdef __GNUC__
+  fedisableexcept(FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW | FE_UNDERFLOW);
+  #endif
+}
 
 /*
   Helper function to make sure gsl allocations do their job because
