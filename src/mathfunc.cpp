@@ -26,6 +26,7 @@
 #include <iostream>
 #include <limits.h>
 #include <map>
+#include <regex>
 #include <set>
 #include <sstream>
 #include <stdio.h>
@@ -92,6 +93,14 @@ bool has_inf(const gsl_matrix *m) {
       if (gsl_isinf(value) != 0) return true;
     }
   return false;
+}
+
+bool is_integer(const std::string & s){
+    return std::regex_match(s, std::regex("^[0-9]+$"));
+}
+
+bool is_float(const std::string & s){
+    return std::regex_match(s, std::regex("^[+-]?([0-9]*[.])?[0-9]+$"));
 }
 
 // calculate variance of a vector

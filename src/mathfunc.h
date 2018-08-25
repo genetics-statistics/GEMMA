@@ -40,6 +40,8 @@ bool has_inf(const gsl_vector *v);
 bool has_nan(const gsl_matrix *m);
 bool has_inf(const gsl_matrix *m);
 
+bool is_integer(const std::string & s);
+
 double VectorVar(const gsl_vector *v);
 void CenterMatrix(gsl_matrix *G);
 void CenterMatrix(gsl_matrix *G, const gsl_vector *w);

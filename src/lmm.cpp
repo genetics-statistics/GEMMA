@@ -28,6 +28,7 @@
 #include <cstring>
 #include <iomanip>
 #include <iostream>
+#include <regex>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -1498,8 +1499,11 @@ void LMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
 
     for (size_t i = 0; i < ni_total; ++i) {
       ch_ptr = strtok_safe2(NULL, " , \t",infilen);
-      if (strcmp(ch_ptr, "NA") != 0)
+      if (strcmp(ch_ptr, "NA") != 0) {
         gs[i] = atof(ch_ptr);
+        if (is_strict_mode() && gs[i] == 0.0)
+          enforce_is_float(std::string(__STRING(ch_ptr))); // only allow for NA and valid numbers
+      }
     }
     return std::make_tuple(snp,gs);
   };
@@ -1873,7 +1877,7 @@ void CalcLmmVgVeBeta(const gsl_vector *eval, const gsl_matrix *UtW,
     gsl_vector_view HiW_col = gsl_matrix_column(HiW, i);
     gsl_vector_mul(&HiW_col.vector, Hi_eval);
   }
-  gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, HiW, UtW, 0.0, WHiW);
+  fast_dgemm("T", "N", 1.0, HiW, UtW, 0.0, WHiW);
   gsl_blas_dgemv(CblasTrans, 1.0, HiW, Uty, 0.0, WHiy);
 
   int sig;

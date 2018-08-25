@@ -147,6 +147,12 @@ inline void __enforce_fail(const char *__assertion, const char *__file,
        ? __ASSERT_VOID_CAST(0)                                                 \
        : __enforce_fail((msg).c_str(), __FILE__, __LINE__, __SHOW_FUNC))
 
+#define enforce_is_int(s) \
+  enforce_str(std::regex_match(s, std::regex("^[-+]?[0-9]+$")),s + " not an integer")
+
+#define enforce_is_float(s)                                             \
+  enforce_str(std::regex_match(s, std::regex("^[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?$")),s + " not a float")
+
 // Helpers to create a unique varname per MACRO
 #define COMBINE1(X, Y) X##Y
 #define COMBINE(X, Y) COMBINE1(X, Y)

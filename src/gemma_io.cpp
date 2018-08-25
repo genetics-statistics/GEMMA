@@ -1368,7 +1368,7 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
   enforce_msg(infile, "error reading genotype file");
 
   size_t n_miss;
-  double d, geno_mean, geno_var;
+  double geno_mean, geno_var;
 
   // setKSnp and/or LOCO support
   bool process_ksnps = ksnps.size();
@@ -1433,10 +1433,9 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
         gsl_vector_set(geno_miss, i, 0);
         n_miss++;
       } else {
-        d = stod(field);
-        // make sure genotype field contains a number
-        if (field != "0" && field != "0.0")
-          enforce_str(d != 0.0f, field);
+        double d = stod(field);
+        if (is_strict_mode() && d == 0.0)
+          enforce_is_float(field);  // rule out non NA and non-float fields
         gsl_vector_set(geno, i, d);
         gsl_vector_set(geno_miss, i, 1);
         geno_mean += d;
@@ -1486,7 +1485,7 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
   debug_msg("begin transpose");
   for (size_t i = 0; i < ni_total; ++i) {
     for (size_t j = 0; j < i; ++j) {
-      d = gsl_matrix_get(matrix_kin, j, i);
+      double d = gsl_matrix_get(matrix_kin, j, i);
       gsl_matrix_set(matrix_kin, i, j, d);
     }
   }
