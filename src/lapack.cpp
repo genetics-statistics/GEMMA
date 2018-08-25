@@ -193,7 +193,9 @@ void lapack_eigen_symmv(gsl_matrix *A, gsl_vector *eval, gsl_matrix *evec,
     double WORK_temp[1];
     int IWORK_temp[1];
 
-    if (is_check_mode()) disable_segfpe(); // disable fast NaN checking for now
+    // disable fast NaN checking for now - dsyevr throws NaN errors,
+    // but fixes them (apparently)
+    if (is_check_mode()) disable_segfpe();
 
     // DSYEVR - computes selected eigenvalues and, optionally,
     // eigenvectors of a real symmetric matrix
@@ -208,8 +210,8 @@ void lapack_eigen_symmv(gsl_matrix *A, gsl_vector *eval, gsl_matrix *evec,
 
     if (INFO != 0) cerr << "ERROR: value of INFO is " << INFO;
     enforce_msg(INFO == 0, "lapack_eigen_symmv failed");
-    LWORK = (int)WORK_temp[0];
-    LIWORK = (int)IWORK_temp[0];
+    LWORK = (int)WORK_temp[0];    // The dimension of the array work.
+    LIWORK = (int)IWORK_temp[0];  // The dimension of the array iwork, lwork≥ max(1, 10n).
 
     double *WORK = new double[LWORK];
     int *IWORK = new int[LIWORK];

@@ -2763,7 +2763,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
           LMM cLmm;
           cLmm.CopyFromParam(cPar);
 
-          if (is_check_mode()) disable_segfpe(); // disable fast NaN checking for now
+          // if (is_check_mode()) disable_segfpe(); // disable fast NaN checking for now
 
           gsl_vector_view Y_col = gsl_matrix_column(Y, 0);
           gsl_vector_view UtY_col = gsl_matrix_column(UtY, 0);
@@ -2796,7 +2796,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
           MVLMM cMvlmm;
           cMvlmm.CopyFromParam(cPar);
 
-          if (is_check_mode()) disable_segfpe(); // disable fast NaN checking
+          // if (is_check_mode()) disable_segfpe(); // disable fast NaN checking
 
           if (!cPar.file_bfile.empty()) {
             if (cPar.file_gxe.empty()) {
