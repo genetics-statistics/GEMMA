@@ -4,6 +4,21 @@ gemma=../bin/gemma
 # gemmaopts="-debug -strict"
 gemmaopts="-debug"
 
+testLinearModel() {
+    $gemma $gemmaopts -g ../example/mouse_hs1940.geno.txt.gz \
+           -p ../example/mouse_hs1940.pheno.txt \
+           -n 1 \
+           -a ../example/mouse_hs1940.anno.txt \
+           -lm \
+           -o mouse_hs1940_CD8_lm
+    assertEquals 0 $?
+    grep "total computation time" < output/mouse_hs1940_CD8_lm.log.txt
+    assertEquals 0 $?
+    outfn=output/mouse_hs1940_CD8_lm.assoc.txt
+    assertEquals "118459" `wc -w < $outfn`
+    assertEquals "4053667109.69" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+}
+
 # Related to https://github.com/genetics-statistics/GEMMA/issues/78
 testBXDStandardRelatednessMatrixKSingularError() {
     outn=BXDerr
