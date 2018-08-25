@@ -147,7 +147,7 @@ void lapack_dgemm(char *TransA, char *TransB, double alpha, const gsl_matrix *A,
 // 'eval'. Also returns matrix 'evec' (U).
 void lapack_eigen_symmv(gsl_matrix *A, gsl_vector *eval, gsl_matrix *evec,
                         const size_t flag_largematrix) {
-  if (flag_largematrix == 1) {
+  if (flag_largematrix == 1) { // not sure this flag is used!
     int N = A->size1, LDA = A->size1, INFO, LWORK = -1;
     char JOBZ = 'V', UPLO = 'L';
 
@@ -172,6 +172,7 @@ void lapack_eigen_symmv(gsl_matrix *A, gsl_vector *eval, gsl_matrix *evec,
 
     delete[] WORK;
   } else {
+    // entering here
     int N = A->size1, LDA = A->size1, LDZ = A->size1, INFO;
     int LWORK = -1, LIWORK = -1;
     char JOBZ = 'V', UPLO = 'L', RANGE = 'A';
@@ -192,14 +193,14 @@ void lapack_eigen_symmv(gsl_matrix *A, gsl_vector *eval, gsl_matrix *evec,
     double WORK_temp[1];
     int IWORK_temp[1];
 
+    // DSYEVR - computes selected eigenvalues and, optionally,
+    // eigenvectors of a real symmetric matrix
+    // Here compute both (JOBZ is V), all eigenvalues (RANGE is A)
+    // Lower triangle is stored (UPLO is L)
     dsyevr_(&JOBZ, &RANGE, &UPLO, &N, A->data, &LDA, &VL, &VU, &IL, &IU,
             &ABSTOL, &M, eval->data, evec->data, &LDZ, ISUPPZ, WORK_temp,
             &LWORK, IWORK_temp, &LIWORK, &INFO);
-    if (INFO != 0) {
-      cout << "Work space estimate unsuccessful in "
-           << "lapack_eigen_symmv." << endl;
-      return;
-    }
+    enforce_msg(INFO != 0, "lapack_eigen_symmv failed");
     LWORK = (int)WORK_temp[0];
     LIWORK = (int)IWORK_temp[0];
 
@@ -209,11 +210,7 @@ void lapack_eigen_symmv(gsl_matrix *A, gsl_vector *eval, gsl_matrix *evec,
     dsyevr_(&JOBZ, &RANGE, &UPLO, &N, A->data, &LDA, &VL, &VU, &IL, &IU,
             &ABSTOL, &M, eval->data, evec->data, &LDZ, ISUPPZ, WORK, &LWORK,
             IWORK, &LIWORK, &INFO);
-    if (INFO != 0) {
-      cout << "Eigen decomposition unsuccessful in "
-           << "lapack_eigen_symmv." << endl;
-      return;
-    }
+    enforce_msg(INFO != 0, "lapack_eigen_symmv failed");
 
     gsl_matrix_transpose(evec);
 
