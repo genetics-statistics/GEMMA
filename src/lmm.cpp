@@ -97,8 +97,9 @@ void LMM::CopyToParam(PARAM &cPar) {
 }
 
 void LMM::WriteFiles() {
-
   string file_str;
+  debug_msg("LMM::WriteFiles");
+
   file_str = path_out + "/" + file_out;
   file_str += ".assoc.txt";
 
@@ -1319,6 +1320,7 @@ void LMM::Analyze(std::function< SnpNameValues(size_t) >& fetch_snp,
 
   auto batch_compute = [&](size_t l) { // using a C++ closure
     // Compute SNPs in batch, note the computations are independent per SNP
+    debug_msg("enter batch_compute");
     gsl_matrix_view Xlarge_sub = gsl_matrix_submatrix(Xlarge, 0, 0, inds, l);
     gsl_matrix_view UtXlarge_sub =
         gsl_matrix_submatrix(UtXlarge, 0, 0, inds, l);
@@ -1366,6 +1368,7 @@ void LMM::Analyze(std::function< SnpNameValues(size_t) >& fetch_snp,
                       p_wald, p_lrt, p_score, logl_H1};
       sumStat.push_back(SNPs);
     }
+    debug_msg("exit batch_compute");
   };
 
   const auto num_snps = indicator_snp.size();
@@ -1441,9 +1444,11 @@ void LMM::Analyze(std::function< SnpNameValues(size_t) >& fetch_snp,
     gsl_vector_safe_memcpy(&Xlarge_col.vector, x);
     c++; // count SNPs going in
 
-    if (c % msize == 0)
+    if (c % msize == 0) {
       batch_compute(msize);
+    }
   }
+
   batch_compute(c % msize);
   ProgressBar("Reading SNPs", num_snps - 1, num_snps - 1);
   // cout << "Counted SNPs " << c << " sumStat " << sumStat.size() << endl;

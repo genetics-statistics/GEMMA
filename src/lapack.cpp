@@ -193,6 +193,8 @@ void lapack_eigen_symmv(gsl_matrix *A, gsl_vector *eval, gsl_matrix *evec,
     double WORK_temp[1];
     int IWORK_temp[1];
 
+    if (is_check_mode()) disable_segfpe(); // disable fast NaN checking for now
+
     // DSYEVR - computes selected eigenvalues and, optionally,
     // eigenvectors of a real symmetric matrix
     // Here compute both (JOBZ is V), all eigenvalues (RANGE is A)
@@ -200,7 +202,12 @@ void lapack_eigen_symmv(gsl_matrix *A, gsl_vector *eval, gsl_matrix *evec,
     dsyevr_(&JOBZ, &RANGE, &UPLO, &N, A->data, &LDA, &VL, &VU, &IL, &IU,
             &ABSTOL, &M, eval->data, evec->data, &LDZ, ISUPPZ, WORK_temp,
             &LWORK, IWORK_temp, &LIWORK, &INFO);
-    enforce_msg(INFO != 0, "lapack_eigen_symmv failed");
+    // If info = 0, the execution is successful.
+    // If info = -i, the i-th parameter had an illegal value.
+    // If info = i, an internal error has occurred.
+
+    if (INFO != 0) cerr << "ERROR: value of INFO is " << INFO;
+    enforce_msg(INFO == 0, "lapack_eigen_symmv failed");
     LWORK = (int)WORK_temp[0];
     LIWORK = (int)IWORK_temp[0];
 
@@ -210,7 +217,10 @@ void lapack_eigen_symmv(gsl_matrix *A, gsl_vector *eval, gsl_matrix *evec,
     dsyevr_(&JOBZ, &RANGE, &UPLO, &N, A->data, &LDA, &VL, &VU, &IL, &IU,
             &ABSTOL, &M, eval->data, evec->data, &LDZ, ISUPPZ, WORK, &LWORK,
             IWORK, &LIWORK, &INFO);
-    enforce_msg(INFO != 0, "lapack_eigen_symmv failed");
+    if (INFO != 0) cerr << "ERROR: value of INFO is " << INFO;
+    enforce_msg(INFO == 0, "lapack_eigen_symmv failed");
+
+    if (is_check_mode()) disable_segfpe(); // reinstate fast NaN checking
 
     gsl_matrix_transpose(evec);
 

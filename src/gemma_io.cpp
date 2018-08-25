@@ -1483,12 +1483,14 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
   // and transpose
   // FIXME: the following is very slow
 
+  debug_msg("begin transpose");
   for (size_t i = 0; i < ni_total; ++i) {
     for (size_t j = 0; j < i; ++j) {
       d = gsl_matrix_get(matrix_kin, j, i);
       gsl_matrix_set(matrix_kin, i, j, d);
     }
   }
+  debug_msg("end transpose");
   // GSL is faster - and there are even faster methods
   // enforce_gsl(gsl_matrix_transpose(matrix_kin));
 

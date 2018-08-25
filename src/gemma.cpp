@@ -1624,7 +1624,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
   clock_t time_begin, time_start;
   time_begin = clock();
 
-  if (is_check_mode()) enable_segfpe(); // fast NaN checking
+  if (is_check_mode()) enable_segfpe(); // fast NaN checking by default
 
   // Read Files.
   cout << "Reading Files ... " << endl;
@@ -1912,7 +1912,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
     VARCOV cVarcov;
     cVarcov.CopyFromParam(cPar);
 
-    if (is_check_mode()) disable_segfpe(); // fast NaN checking
+    if (is_check_mode()) disable_segfpe(); // disable fast NaN checking for now
 
     if (!cPar.file_bfile.empty()) {
       cVarcov.AnalyzePlink();
@@ -2027,7 +2027,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
     VARCOV cVarcov;
     cVarcov.CopyFromParam(cPar);
 
-    if (is_check_mode()) disable_segfpe(); // fast NaN checking
+    if (is_check_mode()) disable_segfpe(); // fast NaN checking for now
 
     if (!cPar.file_bfile.empty()) {
       cVarcov.AnalyzePlink();
@@ -2055,7 +2055,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
 
       gsl_vector_view Y_col = gsl_matrix_column(Y, 0);
 
-      if (is_check_mode()) disable_segfpe(); // fast NaN checking
+      // if (is_check_mode()) disable_segfpe(); // disable fast NaN checking for now
 
       if (!cPar.file_gene.empty()) {
         cLm.AnalyzeGene(W,
@@ -2763,7 +2763,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
           LMM cLmm;
           cLmm.CopyFromParam(cPar);
 
-          if (is_check_mode()) disable_segfpe(); // fast NaN checking
+          if (is_check_mode()) disable_segfpe(); // disable fast NaN checking for now
 
           gsl_vector_view Y_col = gsl_matrix_column(Y, 0);
           gsl_vector_view UtY_col = gsl_matrix_column(UtY, 0);
@@ -2790,14 +2790,13 @@ void GEMMA::BatchRun(PARAM &cPar) {
                                     &Y_col.vector, env);
             }
           }
-
           cLmm.WriteFiles();
           cLmm.CopyToParam(cPar);
         } else {
           MVLMM cMvlmm;
           cMvlmm.CopyFromParam(cPar);
 
-          if (is_check_mode()) disable_segfpe(); // fast NaN checking
+          if (is_check_mode()) disable_segfpe(); // disable fast NaN checking
 
           if (!cPar.file_bfile.empty()) {
             if (cPar.file_gxe.empty()) {
