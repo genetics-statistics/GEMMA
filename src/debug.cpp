@@ -142,6 +142,7 @@ void disable_segfpe() {
   if (is_legacy_mode()) return;
   #ifdef __GNUC__
     #if defined(__x86_64__)
+      debug_msg("disable segfpe");
       fedisableexcept(FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW | FE_UNDERFLOW);
     #endif
   #endif
@@ -227,6 +228,24 @@ gsl_vector *gsl_vector_safe_alloc(size_t n) {
   }
   return v;
 }
+
+double do_gsl_matrix_safe_get(const gsl_matrix * m, const size_t i, const size_t j,
+                              const char *__pretty_function, const char *__file, int __line) {
+  enforce(m);
+  if (!is_legacy_mode() && (is_debug_mode() || is_check_mode() || is_strict_mode())) {
+    auto rows = m->size1;
+    auto cols = m->size2;
+    if (i >= cols || j >= rows) {
+      std::string msg = "Matrix out of bounds (" + std::to_string(cols) + "," + std::to_string(rows) + ") ";
+      msg += std::to_string(i);
+      msg += ",";
+      msg += std::to_string(j);
+      fail_at_msg(__file,__line,msg.c_str());
+    }
+  }
+  return gsl_matrix_get(m,i,j);
+}
+
 
 char *do_strtok_safe(char *tokenize, const char *delimiters, const char *__pretty_function, const char *__file, int __line,
                      const char *infile) {

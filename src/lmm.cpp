@@ -41,8 +41,6 @@
 #include "gsl/gsl_roots.h"
 #include "gsl/gsl_vector.h"
 
-// #include "eigenlib.h"
-
 #include "gzstream.h"
 #include "gemma_io.h"
 #include "fastblas.h"
@@ -226,9 +224,9 @@ void CalcPab(const size_t n_cvt, const size_t e_mode, const gsl_vector *Hi_eval,
   double p_ab;
   double ps_ab, ps_aw, ps_bw, ps_ww;
 
-  for (size_t p = 0; p <= n_cvt + 1; ++p) {
-    for (size_t a = p + 1; a <= n_cvt + 2; ++a) {
-      for (size_t b = a; b <= n_cvt + 2; ++b) {
+  for (size_t p = 0; p <= n_cvt + 1; ++p) {        // p walks phenotypes + covariates
+    for (size_t a = p + 1; a <= n_cvt + 2; ++a) {  // a in p+1..rest
+      for (size_t b = a; b <= n_cvt + 2; ++b) {    // b in a..rest
         index_ab = GetabIndex(a, b, n_cvt);
         if (p == 0) {
           gsl_vector_const_view Uab_col =
@@ -244,11 +242,12 @@ void CalcPab(const size_t n_cvt, const size_t e_mode, const gsl_vector *Hi_eval,
           index_bw = GetabIndex(b, p, n_cvt);
           index_ww = GetabIndex(p, p, n_cvt);
 
-          ps_ab = gsl_matrix_get(Pab, p - 1, index_ab);
-          ps_aw = gsl_matrix_get(Pab, p - 1, index_aw);
-          ps_bw = gsl_matrix_get(Pab, p - 1, index_bw);
-          ps_ww = gsl_matrix_get(Pab, p - 1, index_ww);
+          ps_ab = gsl_matrix_safe_get(Pab, p - 1, index_ab);
+          ps_aw = gsl_matrix_safe_get(Pab, p - 1, index_aw);
+          ps_bw = gsl_matrix_safe_get(Pab, p - 1, index_bw);
+          ps_ww = gsl_matrix_safe_get(Pab, p - 1, index_ww);
 
+          assert(ps_ww != 0.0);
           p_ab = ps_ab - ps_aw * ps_bw / ps_ww;
           gsl_matrix_set(Pab, p, index_ab, p_ab);
         }
@@ -291,6 +290,7 @@ void CalcPPab(const size_t n_cvt, const size_t e_mode,
           ps2_bw = gsl_matrix_get(PPab, p - 1, index_bw);
           ps2_ww = gsl_matrix_get(PPab, p - 1, index_ww);
 
+          assert(ps_ww != 0.0);
           p2_ab = ps2_ab + ps_aw * ps_bw * ps2_ww / (ps_ww * ps_ww);
           p2_ab -= (ps_aw * ps2_bw + ps_bw * ps2_aw) / ps_ww;
           gsl_matrix_set(PPab, p, index_ab, p2_ab);
@@ -340,6 +340,7 @@ void CalcPPPab(const size_t n_cvt, const size_t e_mode,
           ps3_bw = gsl_matrix_get(PPPab, p - 1, index_bw);
           ps3_ww = gsl_matrix_get(PPPab, p - 1, index_ww);
 
+          assert(ps_ww != 0.0);
           p3_ab = ps3_ab -
                   ps_aw * ps_bw * ps2_ww * ps2_ww / (ps_ww * ps_ww * ps_ww);
           p3_ab -= (ps_aw * ps3_bw + ps_bw * ps3_aw + ps2_aw * ps2_bw) / ps_ww;

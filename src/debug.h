@@ -57,6 +57,9 @@ int gsl_matrix_safe_memcpy (gsl_matrix *dest, const gsl_matrix *src);
 void gsl_matrix_safe_free (gsl_matrix *v);
 void do_gsl_matrix_safe_free (gsl_matrix *m, const char *__pretty_function, const char *__file, int __line);
 
+double do_gsl_matrix_safe_get (const gsl_matrix * m, const size_t i, const size_t j, const char *__pretty_function, const char *__file, int __line);
+#define gsl_matrix_safe_get(m,i,j) do_gsl_matrix_safe_get(m, i, j,__SHOW_FUNC,__FILE__,__LINE__);
+
 gsl_vector *gsl_vector_safe_alloc(size_t n);
 int gsl_vector_safe_memcpy (gsl_vector *dest, const gsl_vector *src);
 void gsl_vector_safe_free (gsl_vector *v);
@@ -85,7 +88,7 @@ inline void warnfail_at_msg(bool strict, const char *__function, const char *__f
 }
 
 inline void fail_at_msg(const char *__file, int __line, std::string msg) {
-  std::cerr << msg << " in " << __file << " at line " << __line << std::endl;
+  std::cerr << "**** FAILED: " << msg << " in " << __file << " at line " << __line << std::endl;
   exit(1);
 }
 

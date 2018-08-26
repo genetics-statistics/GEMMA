@@ -1341,6 +1341,8 @@ void compAKtoS(const gsl_matrix *A, const gsl_matrix *K, const size_t n_cvt,
       if (tr_A == 0 || tr_K == 0) {
         d = 0;
       } else {
+        assert((tr_A * tr_K) - 1 != 0);
+        assert(ni_test - n_cvt != 0);
         d = d / (tr_A * tr_K) - 1 / (double)(ni_test - n_cvt);
       }
 
@@ -1369,9 +1371,12 @@ size_t GetabIndex(const size_t a, const size_t b, const size_t n_cvt) {
   }
 
   size_t n = n_cvt + 2;
-  index = (2 * n - l + 2) * (l - 1) / 2 + h - l;
 
+  assert(2+h-1 != 0);
+  index = (2 * n - l + 2) * (l - 1) / 2 + h - l;
   return index;
+
+  // return ( b < a ?  ((2 * n - b + 2) * (b - 1) / 2 + a - b ): ((2 * n - a + 2) * (a - 1) / 2 + b - a) );
 }
 
 // From an existing n by nd (centered) G matrix, compute the d+1 by
@@ -1386,6 +1391,7 @@ void compKtoV(const gsl_matrix *G, gsl_matrix *V) {
   gsl_vector *trKiKj = gsl_vector_alloc(n_vc * (n_vc + 1) / 2);
   gsl_vector *trKi = gsl_vector_alloc(n_vc);
 
+  assert(ni_test != 1);
   double d, tr, r = (double)ni_test / (double)(ni_test - 1);
   size_t t, t_il, t_jm, t_lm, t_im, t_jl, t_ij;
 
@@ -1541,6 +1547,7 @@ void compKtoV(const gsl_matrix *G, gsl_matrix *V) {
     }
   }
 
+  assert(ni_test != 0);
   gsl_matrix_scale(V, 1.0 / pow((double)ni_test, 2));
 
   gsl_matrix_free(KiKj);
@@ -1603,6 +1610,7 @@ void JackknifeAKtoS(const gsl_matrix *W, const gsl_matrix *A,
     }
 
     for (size_t t = 0; t < ni_test; t++) {
+      assert(ni_test != 1);
       sumA[i][t] /= (double)(ni_test - 1);
       sumK[i][t] /= (double)(ni_test - 1);
     }
@@ -1636,6 +1644,7 @@ void JackknifeAKtoS(const gsl_matrix *W, const gsl_matrix *A,
       }
 
       for (size_t t = 0; t < ni_test; t++) {
+        assert(ni_test != 1);
         sumAK[i][j][t] /= (double)(ni_test - 1);
       }
 
