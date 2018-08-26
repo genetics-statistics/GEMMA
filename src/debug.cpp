@@ -128,6 +128,7 @@ inline int fedisableexcept(unsigned int excepts)
 #endif
 
 void enable_segfpe() {
+  if (is_legacy_mode()) return;
   #ifdef __GNUC__
     #if defined(__x86_64__)
        debug_msg("enable segfpe hardware floating point error detection");
@@ -138,6 +139,7 @@ void enable_segfpe() {
 }
 
 void disable_segfpe() {
+  if (is_legacy_mode()) return;
   #ifdef __GNUC__
     #if defined(__x86_64__)
       fedisableexcept(FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW | FE_UNDERFLOW);
