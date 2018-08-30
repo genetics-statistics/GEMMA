@@ -218,42 +218,119 @@ void LMM::WriteFiles() {
   return;
 }
 
+/*
+   As explained in
+   https://github.com/genetics-statistics/GEMMA/issues/94 CalcPab
+   returns the Pab matrix. As described For pab, it stores all
+   variables in the form of v_a P_p v_b. (Similarly, ppab stores all
+   v_a P_p P_p v_b, while pppab stores all v_a P_p P_p P_p v_b. These
+   quantities are defined according to the page 6 of this
+   supplementary information
+   http://xzlab.org/papers/2012_Zhou&Stephens_NG_SI.pdf).
+
+   In the code, p, a, b are indexes: when p=n_cvt+1, P_p is P_x as in
+   that supplementary information; when a=n_cvt+1, v_a=x; and when
+   a=n_cvt+2, v_a=y.
+
+   e_mode determines which model the algorithm is fitting: when
+   e_mode==1, it computes all the above quantities for the alternative
+   model (with the random effects term); when e_mode==0, it compute
+   these quantities for the null model (without the random effects
+   term).  Note that e==0 is only used here.
+
+   These quantities were computed based on the initial GEMMA paper,
+   and the goal is to finally compute y P_x y, y P_x P_xy,
+   y P_x P_x P_x y and the few trace forms (section 3.1.4 on page 5 of
+   the supplementary information). Sometimes I was wondering if we
+   should compute all these final quantities directly, instead of
+   through these complicated recursions. Direct computation may only
+   make computation a little slower, but will make the code much
+   easier to follow and easier to modify
+
+   a typical call sends n_cvt a vector
+   Hi_eval, a vector ab and a matrix Uab.
+
+  CalcPab(n_cvt, p->e_mode, Hi_eval, p->Uab, p->ab, Pab);
+
+(gdb) p Uab->size1
+$1 = 247
+(gdb) p n_cvt
+$2 = 1
+(gdb) p e_mode
+$3 = 0
+(gdb) p Uab->size2
+$4 = 6
+(gdb) p Hi_eval->size
+$5 = 247
+(gdb) p ab->size
+$6 = 6
+(gdb) p Pab->size1
+$7 = 3
+(gdb) p Pab->size2
+$8 = 6
+
+  Hi_eval [0..ind] x Uab [ind, n_index] x ab [n_index]
+ */
+
 void CalcPab(const size_t n_cvt, const size_t e_mode, const gsl_vector *Hi_eval,
              const gsl_matrix *Uab, const gsl_vector *ab, gsl_matrix *Pab) {
-  size_t index_ab, index_aw, index_bw, index_ww;
-  double p_ab;
-  double ps_ab, ps_aw, ps_bw, ps_ww;
+
+
+  size_t n_index = (n_cvt + 2 + 1) * (n_cvt + 2) / 2; // result size
+  auto ni_test = Uab->size1; // inds
+  assert(Uab->size1 == Hi_eval->size);
+  assert(Uab->size2 == n_index);
+
+  assert(Pab->size1 == n_cvt+2);
+  assert(Pab->size2 == n_index);
+  assert(Hi_eval->size == ni_test);
+  assert(ab->size == n_index);
+
+  // compute Hi_eval (inds)  * Uab  (inds x n_index) * ab (n_index) and return in Pab (cvt x n_index).
+
+  double p_ab = 0.0;
+
+  write(Hi_eval,"Hi_eval");
+  write(Uab,"Uab");
+  write(ab,"ab");
 
   for (size_t p = 0; p <= n_cvt + 1; ++p) {        // p walks phenotypes + covariates
     for (size_t a = p + 1; a <= n_cvt + 2; ++a) {  // a in p+1..rest
       for (size_t b = a; b <= n_cvt + 2; ++b) {    // b in a..rest
-        index_ab = GetabIndex(a, b, n_cvt);
+        size_t index_ab = GetabIndex(a, b, n_cvt); // index in top half matrix, see above
         if (p == 0) {
           gsl_vector_const_view Uab_col =
               gsl_matrix_const_column(Uab, index_ab);
           gsl_blas_ddot(Hi_eval, &Uab_col.vector, &p_ab);
           if (e_mode != 0) {
-            assert(false);
+            if (! is_legacy_mode()) assert(false); // disabling to see when it is used
             p_ab = gsl_vector_get(ab, index_ab) - p_ab;
           }
           gsl_matrix_set(Pab, 0, index_ab, p_ab);
         } else {
-          index_aw = GetabIndex(a, p, n_cvt);
-          index_bw = GetabIndex(b, p, n_cvt);
-          index_ww = GetabIndex(p, p, n_cvt);
+          size_t index_aw = GetabIndex(a, p, n_cvt);
+          size_t index_bw = GetabIndex(b, p, n_cvt);
+          size_t index_ww = GetabIndex(p, p, n_cvt);
 
-          ps_ab = gsl_matrix_safe_get(Pab, p - 1, index_ab);
-          ps_aw = gsl_matrix_safe_get(Pab, p - 1, index_aw);
-          ps_bw = gsl_matrix_safe_get(Pab, p - 1, index_bw);
-          ps_ww = gsl_matrix_safe_get(Pab, p - 1, index_ww);
+          auto rows = Pab->size1; // n_cvt+2
+          double ps_ab = 0.0;
+          if (index_ab < rows) ps_ab = gsl_matrix_safe_get(Pab, p - 1, index_ab);
+          double ps_aw = 0.0;
+          if (index_aw < rows) ps_aw = gsl_matrix_safe_get(Pab, p - 1, index_aw);
+          double ps_bw = 0.0;
+          if (index_bw < rows) ps_bw = gsl_matrix_safe_get(Pab, p - 1, index_bw);
+          double ps_ww = 0.0;
+          if (index_ww < rows) ps_ww = gsl_matrix_safe_get(Pab, p - 1, index_ww);
 
-          assert(ps_ww != 0.0);
-          p_ab = ps_ab - ps_aw * ps_bw / ps_ww;
+          if (ps_ww != 0.0)
+            p_ab = ps_ab - ps_aw * ps_bw / ps_ww;
+
           gsl_matrix_set(Pab, p, index_ab, p_ab);
         }
       }
     }
   }
+  write(Pab,"Pab");
   return;
 }
 
@@ -290,7 +367,6 @@ void CalcPPab(const size_t n_cvt, const size_t e_mode,
           ps2_bw = gsl_matrix_get(PPab, p - 1, index_bw);
           ps2_ww = gsl_matrix_get(PPab, p - 1, index_ww);
 
-          assert(ps_ww != 0.0);
           p2_ab = ps2_ab + ps_aw * ps_bw * ps2_ww / (ps_ww * ps_ww);
           p2_ab -= (ps_aw * ps2_bw + ps_bw * ps2_aw) / ps_ww;
           gsl_matrix_set(PPab, p, index_ab, p2_ab);
@@ -340,7 +416,6 @@ void CalcPPPab(const size_t n_cvt, const size_t e_mode,
           ps3_bw = gsl_matrix_get(PPPab, p - 1, index_bw);
           ps3_ww = gsl_matrix_get(PPPab, p - 1, index_ww);
 
-          assert(ps_ww != 0.0);
           p3_ab = ps3_ab -
                   ps_aw * ps_bw * ps2_ww * ps2_ww / (ps_ww * ps_ww * ps_ww);
           p3_ab -= (ps_aw * ps3_bw + ps_bw * ps3_aw + ps2_aw * ps2_bw) / ps_ww;
@@ -399,9 +474,15 @@ double LogL_f(double l, void *params) {
   index_yy = GetabIndex(n_cvt + 2, n_cvt + 2, n_cvt);
   double P_yy = gsl_matrix_get(Pab, nc_total, index_yy);
 
-  assert(!is_nan(P_yy));
+  if (is_check_mode() || is_debug_mode()) {
+    cerr << "P_yy is" << P_yy << endl;
+    assert(!is_nan(P_yy));
+    assert(P_yy > 0);
+  }
   f = c - 0.5 * logdet_h - 0.5 * (double)ni_test * log(P_yy);
-  assert(!is_nan(f));
+  if (is_check_mode() || is_debug_mode()) {
+    assert(!is_nan(f));
+  }
   gsl_matrix_safe_free(Pab); // FIXME
   gsl_vector_safe_free(Hi_eval);
   gsl_vector_safe_free(v_temp);
@@ -412,7 +493,7 @@ double LogL_dev1(double l, void *params) {
   FUNC_PARAM *p = (FUNC_PARAM *)params;
   size_t n_cvt = p->n_cvt;
   size_t ni_test = p->ni_test;
-  size_t n_index = (n_cvt + 2 + 1) * (n_cvt + 2) / 2;
+  size_t n_index = (n_cvt + 2 + 1) * (n_cvt + 2) / 2; // represents top half of covariate matrix
 
   size_t nc_total;
   if (p->calc_null == true) {
@@ -449,6 +530,39 @@ double LogL_dev1(double l, void *params) {
   if (p->e_mode != 0) {
     trace_Hi = (double)ni_test - trace_Hi;
   }
+
+  /*
+(gdb) p Uab->size1
+$1 = 247
+(gdb) p n_cvt
+$2 = 1
+(gdb) p e_mode
+$3 = 0
+(gdb) p Uab->size2
+$4 = 6
+(gdb) p Hi_eval->size
+$5 = 247
+(gdb) p ab->size
+$6 = 6
+(gdb) p Pab->size1
+$7 = 3
+(gdb) p Pab->size2
+$8 = 6
+  */
+
+  auto Uab = p->Uab;
+  auto ab = p->ab;
+  assert(n_index == (n_cvt + 2 + 1) * (n_cvt + 2) / 2);
+  assert(Uab->size1 == ni_test);
+  assert(Uab->size2 == n_index); // n_cvt == 1 -> n_index == 6?
+
+  assert(Pab->size1 == n_cvt+2);
+  assert(Pab->size2 == n_index);
+
+  assert(ab->size == n_index);
+
+  assert(p->e_mode == 0);
+  assert(Hi_eval->size == ni_test);
 
   CalcPab(n_cvt, p->e_mode, Hi_eval, p->Uab, p->ab, Pab);
   CalcPPab(n_cvt, p->e_mode, HiHi_eval, p->Uab, p->ab, Pab, PPab);
@@ -1102,6 +1216,7 @@ void CalcUab(const gsl_matrix *UtW, const gsl_vector *Uty,
   return;
 }
 
+/*
 void Calcab(const gsl_matrix *W, const gsl_vector *y, gsl_vector *ab) {
   size_t index_ab;
   size_t n_cvt = W->size2;
@@ -1173,6 +1288,7 @@ void Calcab(const gsl_matrix *W, const gsl_vector *y, const gsl_vector *x,
   gsl_vector_safe_free(v_b);
   return;
 }
+*/
 
 void LMM::AnalyzeGene(const gsl_matrix *U, const gsl_vector *eval,
                       const gsl_matrix *UtW, const gsl_vector *Utx,

@@ -1353,27 +1353,37 @@ void compAKtoS(const gsl_matrix *A, const gsl_matrix *K, const size_t n_cvt,
   return;
 }
 
+/*
 // Copied from lmm.cpp; is used in the following function compKtoV
-// map a number 1-(n_cvt+2) to an index between 0 and [(n_c+2)^2+(n_c+2)]/2-1
+// map a number 1..(n_cvt+2) to an index between 0 and [(n_cvt+2)*2+(n_cvt+2)]/2-1
+// or 1..cols to 0..(cols*2+cols)/2-1.
+
+  For a 3x3 matrix the following index gets returned to CalcPab:
+
+  CalcPab
+  * 1,1:0
+  * 1,2:1
+  * 1,3:2
+  * 2,2:3
+  * 2,3:4
+  * 3,3:5
+
+which is really the iteration moving forward along the diagonal and
+items to the right of it.
+  */
+
+
 size_t GetabIndex(const size_t a, const size_t b, const size_t n_cvt) {
-  if (a > n_cvt + 2 || b > n_cvt + 2 || a <= 0 || b <= 0) {
-    cout << "error in GetabIndex." << endl;
-    return 0;
-  }
-  size_t index;
-  size_t l, h;
-  if (b > a) {
-    l = a;
-    h = b;
-  } else {
-    l = b;
-    h = a;
+  auto cols = n_cvt + 2;
+  enforce_msg(a<=cols && b<=cols,"GetabIndex problem");
+  size_t a1 = a, b1 = b;
+  if (b <= a) {
+    a1 = b;
+    b1 = a;
   }
 
-  size_t n = n_cvt + 2;
-
-  assert(2+h-1 != 0);
-  index = (2 * n - l + 2) * (l - 1) / 2 + h - l;
+  size_t index = (2 * cols - a1 + 2) * (a1 - 1) / 2 + b1 - a1;
+  // cerr << "* " << a1 << "," << b1 << "," << cols << ":" << index << endl;
   return index;
 
   // return ( b < a ?  ((2 * n - b + 2) * (b - 1) / 2 + a - b ): ((2 * n - a + 2) * (a - 1) / 2 + b - a) );

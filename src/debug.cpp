@@ -148,6 +148,31 @@ void disable_segfpe() {
   #endif
 }
 
+void write(const gsl_vector *v, const char *msg) {
+  if (msg) cout << "// " << msg << endl;
+  cout << "// vector size: " << v->size << endl;
+  cout << "double " << msg << "[] = {";
+  for (size_t i=0; i < v->size; i++) {
+    cout << gsl_vector_get(v,i) << ",";
+  }
+  cout << "}" << endl;
+}
+
+void write(const gsl_matrix *m, const char *msg) {
+  if (msg) cout << "// " << msg << endl;
+  cout << "// matrix size: " << m->size1 << " cols, " << m->size2 << " rows" << endl;
+  cout << "double " << msg << "[] = {";
+  for (size_t j=0; j < m->size2; j++) {
+    for (size_t i=0; i < m->size1; i++) {
+      // cout << "(" << i << "," << j << ")";
+      cout << gsl_matrix_safe_get(m,i,j);
+      cout << ",";
+    }
+    cout << "// row " << j << endl;
+  }
+  cout << "}" << endl;
+}
+
 /*
   Helper function to make sure gsl allocations do their job because
   gsl_matrix_alloc does not initiatize values (behaviour that changed

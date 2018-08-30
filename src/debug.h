@@ -52,6 +52,9 @@ void disable_segfpe();
   { auto x = m * n;                                      \
     enforce_msg(x / m == n, "multiply integer overflow"); }
 
+void write(const gsl_vector *v, const char *msg);
+void write(const gsl_matrix *m, const char *msg);
+
 gsl_matrix *gsl_matrix_safe_alloc(size_t rows,size_t cols);
 int gsl_matrix_safe_memcpy (gsl_matrix *dest, const gsl_matrix *src);
 void gsl_matrix_safe_free (gsl_matrix *v);
