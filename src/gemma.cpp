@@ -1759,6 +1759,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
     cout << "Start Eigen-Decomposition..." << endl;
     time_start = clock();
     cPar.trace_G = EigenDecomp_Zeroed(G, U, eval, 0);
+    write(eval,"eval zeroed");
     cPar.time_eigen = (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
 
     // calculate UtW and Uty
@@ -2603,6 +2604,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
       } else {
         cPar.trace_G = EigenDecomp_Zeroed(G, U, eval, 0);
       }
+      write(eval,"eval");
 
       if (!cPar.file_weight.empty()) {
         double wi;
@@ -2642,6 +2644,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
       }
       cPar.trace_G /= (double)eval->size;
     }
+    // write(eval,"eval2");
 
     if (cPar.a_mode == 31) {
       cPar.WriteMatrix(U, "eigenU");
@@ -2700,6 +2703,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
         assert(!std::isnan(cPar.beta_mle_null.front()));
         assert(!std::isnan(cPar.se_beta_mle_null.front()));
 
+        // the following functions do not modify eval
         CalcLambda('R', eval, UtW, &UtY_col.vector, cPar.l_min, cPar.l_max,
                    cPar.n_region, cPar.l_remle_null, cPar.logl_remle_H0);
         CalcLmmVgVeBeta(eval, UtW, &UtY_col.vector, cPar.l_remle_null,
@@ -2797,6 +2801,8 @@ void GEMMA::BatchRun(PARAM &cPar) {
           cMvlmm.CopyFromParam(cPar);
 
           // if (is_check_mode()) disable_segfpe(); // disable fast NaN checking
+
+          // write(eval,"eval3");
 
           if (!cPar.file_bfile.empty()) {
             if (cPar.file_gxe.empty()) {

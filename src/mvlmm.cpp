@@ -2754,6 +2754,7 @@ void MphInitial(const size_t em_iter, const double em_prec,
                 const size_t n_region, gsl_matrix *V_g, gsl_matrix *V_e,
                 gsl_matrix *B) {
 
+  debug_msg("MphInitial");
   gsl_matrix_set_zero(V_g);
   gsl_matrix_set_zero(V_e);
   gsl_matrix_set_zero(B);
@@ -2815,6 +2816,8 @@ void MphInitial(const size_t em_iter, const double em_prec,
     gsl_matrix *Vg_sub = gsl_matrix_alloc(2, 2);
     gsl_matrix *Ve_sub = gsl_matrix_alloc(2, 2);
     gsl_matrix *B_sub = gsl_matrix_alloc(2, c_size);
+
+    write(eval,"eval5");
 
     for (size_t i = 0; i < d_size; i++) {
       gsl_vector_view Y_sub1 = gsl_matrix_row(Y_sub, 0);
@@ -3476,6 +3479,8 @@ void MVLMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
 
   MphInitial(em_iter, em_prec, nr_iter, nr_prec, eval, &X_sub.matrix, Y, l_min,
              l_max, n_region, V_g, V_e, &B_sub.matrix);
+
+  write(eval,"eval4");
 
   logl_H0 = MphEM('R', em_iter, em_prec, eval, &X_sub.matrix, Y, U_hat, E_hat,
                   OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE, V_g,

@@ -239,6 +239,8 @@ void lapack_eigen_symmv(gsl_matrix *A, gsl_vector *eval, gsl_matrix *evec,
 double EigenDecomp(gsl_matrix *G, gsl_matrix *U, gsl_vector *eval,
                    const size_t flag_largematrix) {
   lapack_eigen_symmv(G, eval, U, flag_largematrix);
+  assert(!has_nan(eval));
+  // write(eval,"eval");
 
   // Calculate track_G=mean(diag(G)).
   double d = 0.0;

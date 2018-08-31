@@ -198,7 +198,7 @@ $(OBJS): $(HDR)
 ./bin/unittests-gemma: contrib/catch-1.9.7/catch.hpp $(TEST_SRC_DIR)/unittests-main.o $(TEST_SRC_DIR)/unittests-math.o $(OBJS)
 	$(CPP) $(CPPFLAGS) $(TEST_SRC_DIR)/unittests-main.o  $(TEST_SRC_DIR)/unittests-math.o $(filter-out src/main.o, $(OBJS)) $(LIBS) -o ./bin/unittests-gemma
 
-unittests: ./bin/unittests-gemma
+unittests: all ./bin/unittests-gemma
 	./bin/unittests-gemma
 
 fast-check: all unittests

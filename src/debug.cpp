@@ -160,15 +160,22 @@ void write(const gsl_vector *v, const char *msg) {
 
 void write(const gsl_matrix *m, const char *msg) {
   if (msg) cout << "// " << msg << endl;
-  cout << "// matrix size: " << m->size1 << " cols, " << m->size2 << " rows" << endl;
+  // Matrices are stored in row-major order, meaning that each row of
+  // elements forms a contiguous block in memory. This is the standard
+  // “C-language ordering” of two-dimensional arrays. The number of
+  // rows is size1.
+  auto rows = m->size1; // see https://www.gnu.org/software/gsl/manual/html_node/Matrices.html#Matrices
+  auto cols = m->size2;
+
+  cout << "// matrix size: " << cols << " cols, " << rows << " rows" << endl;
   cout << "double " << msg << "[] = {";
-  for (size_t j=0; j < m->size2; j++) {
-    for (size_t i=0; i < m->size1; i++) {
+  for (size_t row=0; row < rows; row++) {
+    for (size_t col=0; col < cols; col++) {
       // cout << "(" << i << "," << j << ")";
-      cout << gsl_matrix_safe_get(m,i,j);
+      cout << gsl_matrix_safe_get(m,row,col);
       cout << ",";
     }
-    cout << "// row " << j << endl;
+    cout << "// row " << row << endl;
   }
   cout << "}" << endl;
 }
@@ -254,21 +261,21 @@ gsl_vector *gsl_vector_safe_alloc(size_t n) {
   return v;
 }
 
-double do_gsl_matrix_safe_get(const gsl_matrix * m, const size_t i, const size_t j,
+double do_gsl_matrix_safe_get(const gsl_matrix * m, const size_t row, const size_t col,
                               const char *__pretty_function, const char *__file, int __line) {
   enforce(m);
   if (!is_legacy_mode() && (is_debug_mode() || is_check_mode() || is_strict_mode())) {
-    auto rows = m->size1;
+    auto rows = m->size1; // see above write function
     auto cols = m->size2;
-    if (i >= cols || j >= rows) {
-      std::string msg = "Matrix out of bounds (" + std::to_string(cols) + "," + std::to_string(rows) + ") ";
-      msg += std::to_string(i);
-      msg += ",";
-      msg += std::to_string(j);
+    if (col >= cols || row >= rows) {
+      std::string msg = "Matrix out of bounds (" + std::to_string(rows) + "," + std::to_string(cols) + ") ";
+      msg += std::to_string(row);
+      msg += "r,";
+      msg += std::to_string(col);
       fail_at_msg(__file,__line,msg.c_str());
     }
   }
-  return gsl_matrix_get(m,i,j);
+  return gsl_matrix_get(m,row,col);
 }
 
 

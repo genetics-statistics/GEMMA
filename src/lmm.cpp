@@ -270,6 +270,8 @@ $7 = 3
 $8 = 6
 
   Hi_eval [0..ind] x Uab [ind, n_index] x ab [n_index]
+
+Iterating through a dataset Hi_eval differs and Uab (last row)
  */
 
 void CalcPab(const size_t n_cvt, const size_t e_mode, const gsl_vector *Hi_eval,
@@ -290,9 +292,13 @@ void CalcPab(const size_t n_cvt, const size_t e_mode, const gsl_vector *Hi_eval,
 
   double p_ab = 0.0;
 
+  debug_msg("CalcPab");
   write(Hi_eval,"Hi_eval");
   write(Uab,"Uab");
   write(ab,"ab");
+  assert(!has_nan(Hi_eval));
+  assert(!has_nan(Uab));
+  // assert(!has_nan(ab));
 
   for (size_t p = 0; p <= n_cvt + 1; ++p) {        // p walks phenotypes + covariates
     for (size_t a = p + 1; a <= n_cvt + 2; ++a) {  // a in p+1..rest
@@ -303,9 +309,10 @@ void CalcPab(const size_t n_cvt, const size_t e_mode, const gsl_vector *Hi_eval,
               gsl_matrix_const_column(Uab, index_ab);
           gsl_blas_ddot(Hi_eval, &Uab_col.vector, &p_ab);
           if (e_mode != 0) {
-            if (! is_legacy_mode()) assert(false); // disabling to see when it is used
+            if (! is_legacy_mode()) assert(false); // disabling to see when it is used; allow with legacy mode
             p_ab = gsl_vector_get(ab, index_ab) - p_ab;
           }
+          cout << p << "r," << index_ab << ":" << p_ab << endl;
           gsl_matrix_set(Pab, 0, index_ab, p_ab);
         } else {
           size_t index_aw = GetabIndex(a, p, n_cvt);
@@ -325,12 +332,15 @@ void CalcPab(const size_t n_cvt, const size_t e_mode, const gsl_vector *Hi_eval,
           if (ps_ww != 0.0)
             p_ab = ps_ab - ps_aw * ps_bw / ps_ww;
 
+          cout << p << "r," << index_ab << ":" << p_ab << endl;
           gsl_matrix_set(Pab, p, index_ab, p_ab);
         }
       }
     }
   }
   write(Pab,"Pab");
+  if (is_strict_mode() && (has_nan(Uab) || has_nan(Pab) || has_nan(Hi_eval) || has_nan(ab)))
+    exit(2);
   return;
 }
 
@@ -340,6 +350,11 @@ void CalcPPab(const size_t n_cvt, const size_t e_mode,
   size_t index_ab, index_aw, index_bw, index_ww;
   double p2_ab;
   double ps2_ab, ps_aw, ps_bw, ps_ww, ps2_aw, ps2_bw, ps2_ww;
+
+  debug_msg("CalcPPab");
+  write(HiHi_eval,"Hi_eval");
+  write(Uab,"Uab");
+  write(ab,"ab");
 
   for (size_t p = 0; p <= n_cvt + 1; ++p) {
     for (size_t a = p + 1; a <= n_cvt + 2; ++a) {
@@ -374,6 +389,10 @@ void CalcPPab(const size_t n_cvt, const size_t e_mode,
       }
     }
   }
+  write(Pab,"Pab");
+  write(PPab,"PPab");
+  if (is_strict_mode() && (has_nan(Uab) || has_nan(PPab) || has_nan(HiHi_eval) || has_nan(ab)))
+    exit(2);
   return;
 }
 
@@ -385,6 +404,10 @@ void CalcPPPab(const size_t n_cvt, const size_t e_mode,
   double p3_ab;
   double ps3_ab, ps_aw, ps_bw, ps_ww, ps2_aw, ps2_bw, ps2_ww, ps3_aw, ps3_bw,
       ps3_ww;
+  debug_msg("CalcPPPab");
+  write(HiHiHi_eval,"HiHiHi_eval");
+  write(Uab,"Uab");
+  write(ab,"ab");
 
   for (size_t p = 0; p <= n_cvt + 1; ++p) {
     for (size_t a = p + 1; a <= n_cvt + 2; ++a) {
@@ -428,6 +451,11 @@ void CalcPPPab(const size_t n_cvt, const size_t e_mode,
       }
     }
   }
+  write(Pab,"Pab");
+  write(PPab,"PPab");
+  write(PPPab,"PPPab");
+  if (is_strict_mode() && (has_nan(Uab) || has_nan(PPPab) || has_nan(HiHiHi_eval) || has_nan(ab)))
+    exit(2);
   return;
 }
 
@@ -832,7 +860,8 @@ double LogRL_dev1(double l, void *params) {
   gsl_vector *HiHi_eval = gsl_vector_safe_alloc((p->eval)->size);
   gsl_vector *v_temp = gsl_vector_safe_alloc((p->eval)->size);
 
-  gsl_vector_safe_memcpy(v_temp, p->eval);
+  // write(p->eval, "p->eval");
+  gsl_vector_safe_memcpy(v_temp, p->eval); // initialize with eval
   gsl_vector_scale(v_temp, l);
   if (p->e_mode == 0) {
     gsl_vector_set_all(Hi_eval, 1.0);
@@ -852,6 +881,8 @@ double LogRL_dev1(double l, void *params) {
     trace_Hi = (double)ni_test - trace_Hi;
   }
 
+  write(p->eval, "p->eval2");
+  write(p->ab, "p->ab");
   CalcPab(n_cvt, p->e_mode, Hi_eval, p->Uab, p->ab, Pab);
   CalcPPab(n_cvt, p->e_mode, HiHi_eval, p->Uab, p->ab, Pab, PPab);
 
@@ -1216,12 +1247,9 @@ void CalcUab(const gsl_matrix *UtW, const gsl_vector *Uty,
   return;
 }
 
-/*
 void Calcab(const gsl_matrix *W, const gsl_vector *y, gsl_vector *ab) {
-  size_t index_ab;
   size_t n_cvt = W->size2;
 
-  double d;
   gsl_vector *v_a = gsl_vector_safe_alloc(y->size);
   gsl_vector *v_b = gsl_vector_safe_alloc(y->size);
 
@@ -1242,7 +1270,7 @@ void Calcab(const gsl_matrix *W, const gsl_vector *y, gsl_vector *ab) {
         continue;
       }
 
-      index_ab = GetabIndex(a, b, n_cvt);
+      auto index_ab = GetabIndex(a, b, n_cvt);
 
       if (b == n_cvt + 2) {
         gsl_vector_safe_memcpy(v_b, y);
@@ -1251,6 +1279,7 @@ void Calcab(const gsl_matrix *W, const gsl_vector *y, gsl_vector *ab) {
         gsl_vector_safe_memcpy(v_b, &W_col.vector);
       }
 
+      double d;
       gsl_blas_ddot(v_a, v_b, &d);
       gsl_vector_set(ab, index_ab, d);
     }
@@ -1288,7 +1317,6 @@ void Calcab(const gsl_matrix *W, const gsl_vector *y, const gsl_vector *x,
   gsl_vector_safe_free(v_b);
   return;
 }
-*/
 
 void LMM::AnalyzeGene(const gsl_matrix *U, const gsl_vector *eval,
                       const gsl_matrix *UtW, const gsl_vector *Utx,
@@ -1766,7 +1794,7 @@ void CalcLambda(const char func_name, FUNC_PARAM &params, const double l_min,
     lambda_l = l_min * exp(lambda_interval * i);
     lambda_h = l_min * exp(lambda_interval * (i + 1.0));
 
-    if (func_name == 'R' || func_name == 'r') {
+    if (func_name == 'R' || func_name == 'r') { // log-restricted likelihood
       dev1_l = LogRL_dev1(lambda_l, &params);
       dev1_h = LogRL_dev1(lambda_h, &params);
     } else {
@@ -1909,6 +1937,9 @@ void CalcLambda(const char func_name, const gsl_vector *eval,
                 const gsl_matrix *UtW, const gsl_vector *Uty,
                 const double l_min, const double l_max, const size_t n_region,
                 double &lambda, double &logl_H0) {
+
+  write(eval,"eval6");
+
   if (func_name != 'R' && func_name != 'L' && func_name != 'r' &&
       func_name != 'l') {
     cout << "func_name only takes 'R' or 'L': 'R' for "
@@ -1924,6 +1955,7 @@ void CalcLambda(const char func_name, const gsl_vector *eval,
 
   gsl_matrix_set_zero(Uab);
   CalcUab(UtW, Uty, Uab);
+  Calcab(UtW, Uty, ab);
 
   FUNC_PARAM param0 = {true, ni_test, n_cvt, eval, Uab, ab, 0};
 
