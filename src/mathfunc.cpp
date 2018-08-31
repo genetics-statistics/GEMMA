@@ -449,7 +449,7 @@ void StandardizeVector(gsl_vector *y) {
   return;
 }
 
-// Calculate UtX.
+// Calculate UtX (U gets transposed)
 void CalcUtX(const gsl_matrix *U, gsl_matrix *UtX) {
   gsl_matrix *X = gsl_matrix_safe_alloc(UtX->size1, UtX->size2);
   gsl_matrix_safe_memcpy(X, UtX);

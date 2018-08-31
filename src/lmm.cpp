@@ -1955,7 +1955,7 @@ void CalcLambda(const char func_name, const gsl_vector *eval,
 
   gsl_matrix_set_zero(Uab);
   CalcUab(UtW, Uty, Uab);
-  Calcab(UtW, Uty, ab);
+  // Calcab(W, y, ab);
 
   FUNC_PARAM param0 = {true, ni_test, n_cvt, eval, Uab, ab, 0};
 

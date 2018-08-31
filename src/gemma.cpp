@@ -64,6 +64,23 @@ extern "C" {
 
 using namespace std;
 
+// OPTIONS
+// -------
+// gk:      21-22
+// gs:      25-26
+// gq:      27-28
+// eigen:   31-32
+// lmm:     1-5
+// bslmm:   11-15
+// predict: 41-43
+// lm:      51
+// vc:      61
+// ci:      66-67
+// calccor: 71
+// gw:      72
+
+enum M_MODE { M_LMM1=1, M_LMM2=2, M_LMM3=3, M_LMM4=4, M_LMM5=5, M_KIN=21, M_KIN2=22, M_EIGEN=31 };
+
 GEMMA::GEMMA(void) : version(GEMMA_VERSION), date(GEMMA_DATE), year(GEMMA_YEAR) {}
 
 void gemma_gsl_error_handler (const char * reason,
@@ -1126,7 +1143,7 @@ void GEMMA::Assign(int argc, char **argv, PARAM &cPar) {
         break;
       }
       if (argv[i + 1] == NULL || argv[i + 1][0] == '-') {
-        cPar.a_mode = 21;
+        cPar.a_mode = M_KIN;
         continue;
       }
       ++i;
@@ -1878,7 +1895,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
   }
 
   // Generate Kinship matrix (optionally using LOCO)
-  if (cPar.a_mode == 21 || cPar.a_mode == 22) {
+  if (cPar.a_mode == M_KIN || cPar.a_mode == M_KIN2) {
     cout << "Calculating Relatedness Matrix ... " << endl;
 
     gsl_matrix *G = gsl_matrix_safe_alloc(cPar.ni_total, cPar.ni_total);
@@ -1897,7 +1914,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
     // Now we have the Kinship matrix test it
     validate_K(G);
 
-    if (cPar.a_mode == 21) {
+    if (cPar.a_mode == M_KIN) {
       cPar.WriteMatrix(G, "cXX");
     } else {
       cPar.WriteMatrix(G, "sXX");
@@ -2535,9 +2552,9 @@ void GEMMA::BatchRun(PARAM &cPar) {
   }
 
   // LMM or mvLMM or Eigen-Decomposition
-  if (cPar.a_mode == 1 || cPar.a_mode == 2 || cPar.a_mode == 3 ||
-      cPar.a_mode == 4 || cPar.a_mode == 5 ||
-      cPar.a_mode == 31) { // Fit LMM or mvLMM or eigen
+  if (cPar.a_mode == M_LMM1 || cPar.a_mode == M_LMM2 || cPar.a_mode == M_LMM3 ||
+      cPar.a_mode == M_LMM4 || cPar.a_mode == M_LMM5 ||
+      cPar.a_mode == M_EIGEN) { // Fit LMM or mvLMM or eigen
     gsl_matrix *Y = gsl_matrix_safe_alloc(cPar.ni_test, cPar.n_ph);
     enforce_msg(Y, "allocate Y"); // just to be sure
     gsl_matrix *W = gsl_matrix_safe_alloc(Y->size1, cPar.n_cvt);
@@ -2599,7 +2616,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
       cout << "Start Eigen-Decomposition..." << endl;
       time_start = clock();
 
-      if (cPar.a_mode == 31) {
+      if (cPar.a_mode == M_EIGEN) {
         cPar.trace_G = EigenDecomp_Zeroed(G, U, eval, 1);
       } else {
         cPar.trace_G = EigenDecomp_Zeroed(G, U, eval, 0);
@@ -2646,7 +2663,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
     }
     // write(eval,"eval2");
 
-    if (cPar.a_mode == 31) {
+    if (cPar.a_mode == M_EIGEN) {
       cPar.WriteMatrix(U, "eigenU");
       cPar.WriteVector(eval, "eigenD");
     } else if (!cPar.file_gene.empty()) {
@@ -2725,7 +2742,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
         cPar.PrintSummary();
 
         // calculate and output residuals
-        if (cPar.a_mode == 5) {
+        if (cPar.a_mode == M_LMM5) {
           gsl_vector *Utu_hat = gsl_vector_safe_alloc(Y->size1);
           gsl_vector *Ute_hat = gsl_vector_safe_alloc(Y->size1);
           gsl_vector *u_hat = gsl_vector_safe_alloc(Y->size1);
@@ -3514,17 +3531,17 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
   outfile << "## total computation time = " << cPar.time_total << " min "
           << endl;
   outfile << "## computation time break down: " << endl;
-  if (cPar.a_mode == 21 || cPar.a_mode == 22 || cPar.a_mode == 11 ||
+  if (cPar.a_mode == M_KIN || cPar.a_mode == M_KIN2 || cPar.a_mode == 11 ||
       cPar.a_mode == 13 || cPar.a_mode == 14 || cPar.a_mode == 16) {
     outfile << "##      time on calculating relatedness matrix = "
             << cPar.time_G << " min " << endl;
   }
-  if (cPar.a_mode == 31) {
+  if (cPar.a_mode == M_EIGEN) {
     outfile << "##      time on eigen-decomposition = " << cPar.time_eigen
             << " min " << endl;
   }
-  if (cPar.a_mode == 1 || cPar.a_mode == 2 || cPar.a_mode == 3 ||
-      cPar.a_mode == 4 || cPar.a_mode == 5 || cPar.a_mode == 11 ||
+  if (cPar.a_mode == M_LMM1 || cPar.a_mode == M_LMM2 || cPar.a_mode == M_LMM3 ||
+      cPar.a_mode == M_LMM4 || cPar.a_mode == M_LMM5 || cPar.a_mode == 11 ||
       cPar.a_mode == 12 || cPar.a_mode == 13 || cPar.a_mode == 14 ||
       cPar.a_mode == 16) {
     outfile << "##      time on eigen-decomposition = " << cPar.time_eigen

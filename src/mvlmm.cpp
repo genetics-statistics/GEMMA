@@ -2817,8 +2817,6 @@ void MphInitial(const size_t em_iter, const double em_prec,
     gsl_matrix *Ve_sub = gsl_matrix_alloc(2, 2);
     gsl_matrix *B_sub = gsl_matrix_alloc(2, c_size);
 
-    write(eval,"eval5");
-
     for (size_t i = 0; i < d_size; i++) {
       gsl_vector_view Y_sub1 = gsl_matrix_row(Y_sub, 0);
       gsl_vector_const_view Y_1 = gsl_matrix_const_row(Y, i);
