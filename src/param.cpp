@@ -1383,7 +1383,7 @@ size_t GetabIndex(const size_t a, const size_t b, const size_t n_cvt) {
   }
 
   size_t index = (2 * cols - a1 + 2) * (a1 - 1) / 2 + b1 - a1;
-  // cerr << "* " << a1 << "," << b1 << "," << cols << ":" << index << endl;
+  cout << "* GetabIndx " << a1 << "," << b1 << "," << cols << ":" << index << endl;
   return index;
 
   // return ( b < a ?  ((2 * n - b + 2) * (b - 1) / 2 + a - b ): ((2 * n - a + 2) * (a - 1) / 2 + b - a) );

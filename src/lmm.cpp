@@ -275,7 +275,7 @@ Iterating through a dataset Hi_eval differs and Uab (last row)
  */
 
 void CalcPab(const size_t n_cvt, const size_t e_mode, const gsl_vector *Hi_eval,
-             const gsl_matrix *Uab, const gsl_vector *ab, gsl_matrix *Pab) {
+             const gsl_matrix *Uab, const gsl_vector *unused, gsl_matrix *Pab) {
 
 
   size_t n_index = (n_cvt + 2 + 1) * (n_cvt + 2) / 2; // result size
@@ -286,7 +286,7 @@ void CalcPab(const size_t n_cvt, const size_t e_mode, const gsl_vector *Hi_eval,
   assert(Pab->size1 == n_cvt+2);
   assert(Pab->size2 == n_index);
   assert(Hi_eval->size == ni_test);
-  assert(ab->size == n_index);
+  // assert(ab->size == n_index);
 
   // compute Hi_eval (inds)  * Uab  (inds x n_index) * ab (n_index) and return in Pab (cvt x n_index).
 
@@ -295,7 +295,7 @@ void CalcPab(const size_t n_cvt, const size_t e_mode, const gsl_vector *Hi_eval,
   debug_msg("CalcPab");
   write(Hi_eval,"Hi_eval");
   write(Uab,"Uab");
-  write(ab,"ab");
+  // write(ab,"ab");
   assert(!has_nan(Hi_eval));
   assert(!has_nan(Uab));
   // assert(!has_nan(ab));
@@ -310,27 +310,26 @@ void CalcPab(const size_t n_cvt, const size_t e_mode, const gsl_vector *Hi_eval,
           gsl_blas_ddot(Hi_eval, &Uab_col.vector, &p_ab);
           if (e_mode != 0) {
             if (! is_legacy_mode()) assert(false); // disabling to see when it is used; allow with legacy mode
-            p_ab = gsl_vector_get(ab, index_ab) - p_ab;
+            p_ab = gsl_vector_get(unused, index_ab) - p_ab; // was ab
           }
           cout << p << "r," << index_ab << ":" << p_ab << endl;
           gsl_matrix_set(Pab, 0, index_ab, p_ab);
         } else {
+          cout << "a" << a << "b" << b << "p" << p << "n_cvt" << n_cvt << endl;
+          write(Pab,"Pab int");
           size_t index_aw = GetabIndex(a, p, n_cvt);
           size_t index_bw = GetabIndex(b, p, n_cvt);
           size_t index_ww = GetabIndex(p, p, n_cvt);
 
-          auto rows = Pab->size1; // n_cvt+2
-          double ps_ab = 0.0;
-          if (index_ab < rows) ps_ab = gsl_matrix_safe_get(Pab, p - 1, index_ab);
-          double ps_aw = 0.0;
-          if (index_aw < rows) ps_aw = gsl_matrix_safe_get(Pab, p - 1, index_aw);
-          double ps_bw = 0.0;
-          if (index_bw < rows) ps_bw = gsl_matrix_safe_get(Pab, p - 1, index_bw);
-          double ps_ww = 0.0;
-          if (index_ww < rows) ps_ww = gsl_matrix_safe_get(Pab, p - 1, index_ww);
+          // auto rows = Pab->size1; // n_cvt+2
+          double ps_ab = gsl_matrix_safe_get(Pab, p - 1, index_ab);
+          double ps_aw = gsl_matrix_safe_get(Pab, p - 1, index_aw);
+          double ps_bw = gsl_matrix_safe_get(Pab, p - 1, index_bw);
+          double ps_ww = gsl_matrix_safe_get(Pab, p - 1, index_ww);
 
-          if (ps_ww != 0.0)
-            p_ab = ps_ab - ps_aw * ps_bw / ps_ww;
+          cout << "unsafe " << p-1 << "," << index_ww << ":" << gsl_matrix_get(Pab,p-1,index_ww) << endl;
+          assert(ps_ww != 0.0);
+          p_ab = ps_ab - ps_aw * ps_bw / ps_ww;
 
           cout << p << "r," << index_ab << ":" << p_ab << endl;
           gsl_matrix_set(Pab, p, index_ab, p_ab);
@@ -339,14 +338,14 @@ void CalcPab(const size_t n_cvt, const size_t e_mode, const gsl_vector *Hi_eval,
     }
   }
   write(Pab,"Pab");
-  if (is_strict_mode() && (has_nan(Uab) || has_nan(Pab) || has_nan(Hi_eval) || has_nan(ab)))
+  if (is_strict_mode() && (has_nan(Uab) || has_nan(Pab) || has_nan(Hi_eval)))
     exit(2);
   return;
 }
 
 void CalcPPab(const size_t n_cvt, const size_t e_mode,
               const gsl_vector *HiHi_eval, const gsl_matrix *Uab,
-              const gsl_vector *ab, const gsl_matrix *Pab, gsl_matrix *PPab) {
+              const gsl_vector *unused_ab, const gsl_matrix *Pab, gsl_matrix *PPab) {
   size_t index_ab, index_aw, index_bw, index_ww;
   double p2_ab;
   double ps2_ab, ps_aw, ps_bw, ps_ww, ps2_aw, ps2_bw, ps2_ww;
@@ -354,7 +353,7 @@ void CalcPPab(const size_t n_cvt, const size_t e_mode,
   debug_msg("CalcPPab");
   write(HiHi_eval,"Hi_eval");
   write(Uab,"Uab");
-  write(ab,"ab");
+  // write(ab,"ab");
 
   for (size_t p = 0; p <= n_cvt + 1; ++p) {
     for (size_t a = p + 1; a <= n_cvt + 2; ++a) {
@@ -365,8 +364,9 @@ void CalcPPab(const size_t n_cvt, const size_t e_mode,
               gsl_matrix_const_column(Uab, index_ab);
           gsl_blas_ddot(HiHi_eval, &Uab_col.vector, &p2_ab);
           if (e_mode != 0) {
-            p2_ab = p2_ab - gsl_vector_get(ab, index_ab) +
-                    2.0 * gsl_matrix_get(Pab, 0, index_ab);
+            assert(false);
+            p2_ab = p2_ab - gsl_vector_get(unused_ab, index_ab) +
+                    2.0 * gsl_matrix_safe_get(Pab, 0, index_ab);
           }
           gsl_matrix_set(PPab, 0, index_ab, p2_ab);
         } else {
@@ -374,14 +374,15 @@ void CalcPPab(const size_t n_cvt, const size_t e_mode,
           index_bw = GetabIndex(b, p, n_cvt);
           index_ww = GetabIndex(p, p, n_cvt);
 
-          ps2_ab = gsl_matrix_get(PPab, p - 1, index_ab);
-          ps_aw = gsl_matrix_get(Pab, p - 1, index_aw);
-          ps_bw = gsl_matrix_get(Pab, p - 1, index_bw);
-          ps_ww = gsl_matrix_get(Pab, p - 1, index_ww);
-          ps2_aw = gsl_matrix_get(PPab, p - 1, index_aw);
-          ps2_bw = gsl_matrix_get(PPab, p - 1, index_bw);
-          ps2_ww = gsl_matrix_get(PPab, p - 1, index_ww);
+          ps2_ab = gsl_matrix_safe_get(PPab, p - 1, index_ab);
+          ps_aw = gsl_matrix_safe_get(Pab, p - 1, index_aw);
+          ps_bw = gsl_matrix_safe_get(Pab, p - 1, index_bw);
+          ps_ww = gsl_matrix_safe_get(Pab, p - 1, index_ww);
+          ps2_aw = gsl_matrix_safe_get(PPab, p - 1, index_aw);
+          ps2_bw = gsl_matrix_safe_get(PPab, p - 1, index_bw);
+          ps2_ww = gsl_matrix_safe_get(PPab, p - 1, index_ww);
 
+          assert(ps_ww != 0.0);
           p2_ab = ps2_ab + ps_aw * ps_bw * ps2_ww / (ps_ww * ps_ww);
           p2_ab -= (ps_aw * ps2_bw + ps_bw * ps2_aw) / ps_ww;
           gsl_matrix_set(PPab, p, index_ab, p2_ab);
@@ -389,16 +390,15 @@ void CalcPPab(const size_t n_cvt, const size_t e_mode,
       }
     }
   }
-  write(Pab,"Pab");
   write(PPab,"PPab");
-  if (is_strict_mode() && (has_nan(Uab) || has_nan(PPab) || has_nan(HiHi_eval) || has_nan(ab)))
+  if (is_strict_mode() && (has_nan(Uab) || has_nan(PPab) || has_nan(HiHi_eval)))
     exit(2);
   return;
 }
 
 void CalcPPPab(const size_t n_cvt, const size_t e_mode,
                const gsl_vector *HiHiHi_eval, const gsl_matrix *Uab,
-               const gsl_vector *ab, const gsl_matrix *Pab,
+               const gsl_vector *unused_ab, const gsl_matrix *Pab,
                const gsl_matrix *PPab, gsl_matrix *PPPab) {
   size_t index_ab, index_aw, index_bw, index_ww;
   double p3_ab;
@@ -407,7 +407,6 @@ void CalcPPPab(const size_t n_cvt, const size_t e_mode,
   debug_msg("CalcPPPab");
   write(HiHiHi_eval,"HiHiHi_eval");
   write(Uab,"Uab");
-  write(ab,"ab");
 
   for (size_t p = 0; p <= n_cvt + 1; ++p) {
     for (size_t a = p + 1; a <= n_cvt + 2; ++a) {
@@ -418,7 +417,8 @@ void CalcPPPab(const size_t n_cvt, const size_t e_mode,
               gsl_matrix_const_column(Uab, index_ab);
           gsl_blas_ddot(HiHiHi_eval, &Uab_col.vector, &p3_ab);
           if (e_mode != 0) {
-            p3_ab = gsl_vector_get(ab, index_ab) - p3_ab +
+            assert(false);
+            p3_ab = gsl_vector_get(unused_ab, index_ab) - p3_ab +
                     3.0 * gsl_matrix_get(PPab, 0, index_ab) -
                     3.0 * gsl_matrix_get(Pab, 0, index_ab);
           }
@@ -428,17 +428,18 @@ void CalcPPPab(const size_t n_cvt, const size_t e_mode,
           index_bw = GetabIndex(b, p, n_cvt);
           index_ww = GetabIndex(p, p, n_cvt);
 
-          ps3_ab = gsl_matrix_get(PPPab, p - 1, index_ab);
-          ps_aw = gsl_matrix_get(Pab, p - 1, index_aw);
-          ps_bw = gsl_matrix_get(Pab, p - 1, index_bw);
-          ps_ww = gsl_matrix_get(Pab, p - 1, index_ww);
-          ps2_aw = gsl_matrix_get(PPab, p - 1, index_aw);
-          ps2_bw = gsl_matrix_get(PPab, p - 1, index_bw);
-          ps2_ww = gsl_matrix_get(PPab, p - 1, index_ww);
-          ps3_aw = gsl_matrix_get(PPPab, p - 1, index_aw);
-          ps3_bw = gsl_matrix_get(PPPab, p - 1, index_bw);
-          ps3_ww = gsl_matrix_get(PPPab, p - 1, index_ww);
+          ps3_ab = gsl_matrix_safe_get(PPPab, p - 1, index_ab);
+          ps_aw = gsl_matrix_safe_get(Pab, p - 1, index_aw);
+          ps_bw = gsl_matrix_safe_get(Pab, p - 1, index_bw);
+          ps_ww = gsl_matrix_safe_get(Pab, p - 1, index_ww);
+          ps2_aw = gsl_matrix_safe_get(PPab, p - 1, index_aw);
+          ps2_bw = gsl_matrix_safe_get(PPab, p - 1, index_bw);
+          ps2_ww = gsl_matrix_safe_get(PPab, p - 1, index_ww);
+          ps3_aw = gsl_matrix_safe_get(PPPab, p - 1, index_aw);
+          ps3_bw = gsl_matrix_safe_get(PPPab, p - 1, index_bw);
+          ps3_ww = gsl_matrix_safe_get(PPPab, p - 1, index_ww);
 
+          assert(ps_ww != 0.0);
           p3_ab = ps3_ab -
                   ps_aw * ps_bw * ps2_ww * ps2_ww / (ps_ww * ps_ww * ps_ww);
           p3_ab -= (ps_aw * ps3_bw + ps_bw * ps3_aw + ps2_aw * ps2_bw) / ps_ww;
@@ -451,10 +452,8 @@ void CalcPPPab(const size_t n_cvt, const size_t e_mode,
       }
     }
   }
-  write(Pab,"Pab");
-  write(PPab,"PPab");
   write(PPPab,"PPPab");
-  if (is_strict_mode() && (has_nan(Uab) || has_nan(PPPab) || has_nan(HiHiHi_eval) || has_nan(ab)))
+  if (is_strict_mode() && (has_nan(Uab) || has_nan(PPPab) || has_nan(HiHiHi_eval)))
     exit(2);
   return;
 }
@@ -500,7 +499,7 @@ double LogL_f(double l, void *params) {
       0.5 * (double)ni_test * (log((double)ni_test) - log(2 * M_PI) - 1.0);
 
   index_yy = GetabIndex(n_cvt + 2, n_cvt + 2, n_cvt);
-  double P_yy = gsl_matrix_get(Pab, nc_total, index_yy);
+  double P_yy = gsl_matrix_safe_get(Pab, nc_total, index_yy);
 
   if (is_check_mode() || is_debug_mode()) {
     cerr << "P_yy is" << P_yy << endl;
@@ -599,8 +598,8 @@ $8 = 6
 
   index_yy = GetabIndex(n_cvt + 2, n_cvt + 2, n_cvt);
 
-  double P_yy = gsl_matrix_get(Pab, nc_total, index_yy);
-  double PP_yy = gsl_matrix_get(PPab, nc_total, index_yy);
+  double P_yy = gsl_matrix_safe_get(Pab, nc_total, index_yy);
+  double PP_yy = gsl_matrix_safe_get(PPab, nc_total, index_yy);
   double yPKPy = (P_yy - PP_yy) / l;
   dev1 = -0.5 * trace_HiK + 0.5 * (double)ni_test * yPKPy / P_yy;
 
@@ -668,9 +667,9 @@ double LogL_dev2(double l, void *params) {
   double trace_HiKHiK = ((double)ni_test + trace_HiHi - 2 * trace_Hi) / (l * l);
 
   index_yy = GetabIndex(n_cvt + 2, n_cvt + 2, n_cvt);
-  double P_yy = gsl_matrix_get(Pab, nc_total, index_yy);
-  double PP_yy = gsl_matrix_get(PPab, nc_total, index_yy);
-  double PPP_yy = gsl_matrix_get(PPPab, nc_total, index_yy);
+  double P_yy = gsl_matrix_safe_get(Pab, nc_total, index_yy);
+  double PP_yy = gsl_matrix_safe_get(PPab, nc_total, index_yy);
+  double PPP_yy = gsl_matrix_safe_get(PPPab, nc_total, index_yy);
 
   double yPKPy = (P_yy - PP_yy) / l;
   double yPKPKPy = (P_yy + PPP_yy - 2.0 * PP_yy) / (l * l);
@@ -747,9 +746,9 @@ void LogL_dev12(double l, void *params, double *dev1, double *dev2) {
 
   index_yy = GetabIndex(n_cvt + 2, n_cvt + 2, n_cvt);
 
-  double P_yy = gsl_matrix_get(Pab, nc_total, index_yy);
-  double PP_yy = gsl_matrix_get(PPab, nc_total, index_yy);
-  double PPP_yy = gsl_matrix_get(PPPab, nc_total, index_yy);
+  double P_yy = gsl_matrix_safe_get(Pab, nc_total, index_yy);
+  double PP_yy = gsl_matrix_safe_get(PPab, nc_total, index_yy);
+  double PPP_yy = gsl_matrix_safe_get(PPPab, nc_total, index_yy);
 
   double yPKPy = (P_yy - PP_yy) / l;
   double yPKPKPy = (P_yy + PPP_yy - 2.0 * PP_yy) / (l * l);
@@ -817,13 +816,13 @@ double LogRL_f(double l, void *params) {
   logdet_hiw = 0.0;
   for (size_t i = 0; i < nc_total; ++i) {
     index_ww = GetabIndex(i + 1, i + 1, n_cvt);
-    d = gsl_matrix_get(Pab, i, index_ww);
+    d = gsl_matrix_safe_get(Pab, i, index_ww);
     logdet_hiw += log(d);
-    d = gsl_matrix_get(Iab, i, index_ww);
+    d = gsl_matrix_safe_get(Iab, i, index_ww);
     logdet_hiw -= log(d);
   }
   index_ww = GetabIndex(n_cvt + 2, n_cvt + 2, n_cvt);
-  double P_yy = gsl_matrix_get(Pab, nc_total, index_ww);
+  double P_yy = gsl_matrix_safe_get(Pab, nc_total, index_ww);
 
   double c = 0.5 * df * (log(df) - log(2 * M_PI) - 1.0);
   f = c - 0.5 * logdet_h - 0.5 * logdet_hiw - 0.5 * df * log(P_yy);
@@ -891,16 +890,16 @@ double LogRL_dev1(double l, void *params) {
   double ps_ww, ps2_ww;
   for (size_t i = 0; i < nc_total; ++i) {
     index_ww = GetabIndex(i + 1, i + 1, n_cvt);
-    ps_ww = gsl_matrix_get(Pab, i, index_ww);
-    ps2_ww = gsl_matrix_get(PPab, i, index_ww);
+    ps_ww = gsl_matrix_safe_get(Pab, i, index_ww);
+    ps2_ww = gsl_matrix_safe_get(PPab, i, index_ww);
     trace_P -= ps2_ww / ps_ww;
   }
   double trace_PK = (df - trace_P) / l;
 
   // Calculate yPKPy, yPKPKPy.
   index_ww = GetabIndex(n_cvt + 2, n_cvt + 2, n_cvt);
-  double P_yy = gsl_matrix_get(Pab, nc_total, index_ww);
-  double PP_yy = gsl_matrix_get(PPab, nc_total, index_ww);
+  double P_yy = gsl_matrix_safe_get(Pab, nc_total, index_ww);
+  double PP_yy = gsl_matrix_safe_get(PPab, nc_total, index_ww);
   double yPKPy = (P_yy - PP_yy) / l;
 
   dev1 = -0.5 * trace_PK + 0.5 * df * yPKPy / P_yy;
@@ -974,9 +973,9 @@ double LogRL_dev2(double l, void *params) {
   double ps_ww, ps2_ww, ps3_ww;
   for (size_t i = 0; i < nc_total; ++i) {
     index_ww = GetabIndex(i + 1, i + 1, n_cvt);
-    ps_ww = gsl_matrix_get(Pab, i, index_ww);
-    ps2_ww = gsl_matrix_get(PPab, i, index_ww);
-    ps3_ww = gsl_matrix_get(PPPab, i, index_ww);
+    ps_ww = gsl_matrix_safe_get(Pab, i, index_ww);
+    ps2_ww = gsl_matrix_safe_get(PPab, i, index_ww);
+    ps3_ww = gsl_matrix_safe_get(PPPab, i, index_ww);
     trace_P -= ps2_ww / ps_ww;
     trace_PP += ps2_ww * ps2_ww / (ps_ww * ps_ww) - 2.0 * ps3_ww / ps_ww;
   }
@@ -984,9 +983,9 @@ double LogRL_dev2(double l, void *params) {
 
   // Calculate yPKPy, yPKPKPy.
   index_ww = GetabIndex(n_cvt + 2, n_cvt + 2, n_cvt);
-  double P_yy = gsl_matrix_get(Pab, nc_total, index_ww);
-  double PP_yy = gsl_matrix_get(PPab, nc_total, index_ww);
-  double PPP_yy = gsl_matrix_get(PPPab, nc_total, index_ww);
+  double P_yy = gsl_matrix_safe_get(Pab, nc_total, index_ww);
+  double PP_yy = gsl_matrix_safe_get(PPab, nc_total, index_ww);
+  double PPP_yy = gsl_matrix_safe_get(PPPab, nc_total, index_ww);
   double yPKPy = (P_yy - PP_yy) / l;
   double yPKPKPy = (P_yy + PPP_yy - 2.0 * PP_yy) / (l * l);
 
@@ -1064,9 +1063,9 @@ void LogRL_dev12(double l, void *params, double *dev1, double *dev2) {
   double ps_ww, ps2_ww, ps3_ww;
   for (size_t i = 0; i < nc_total; ++i) {
     index_ww = GetabIndex(i + 1, i + 1, n_cvt);
-    ps_ww = gsl_matrix_get(Pab, i, index_ww);
-    ps2_ww = gsl_matrix_get(PPab, i, index_ww);
-    ps3_ww = gsl_matrix_get(PPPab, i, index_ww);
+    ps_ww = gsl_matrix_safe_get(Pab, i, index_ww);
+    ps2_ww = gsl_matrix_safe_get(PPab, i, index_ww);
+    ps3_ww = gsl_matrix_safe_get(PPPab, i, index_ww);
     trace_P -= ps2_ww / ps_ww;
     trace_PP += ps2_ww * ps2_ww / (ps_ww * ps_ww) - 2.0 * ps3_ww / ps_ww;
   }
@@ -1075,9 +1074,9 @@ void LogRL_dev12(double l, void *params, double *dev1, double *dev2) {
 
   // Calculate yPKPy, yPKPKPy.
   index_ww = GetabIndex(n_cvt + 2, n_cvt + 2, n_cvt);
-  double P_yy = gsl_matrix_get(Pab, nc_total, index_ww);
-  double PP_yy = gsl_matrix_get(PPab, nc_total, index_ww);
-  double PPP_yy = gsl_matrix_get(PPPab, nc_total, index_ww);
+  double P_yy = gsl_matrix_safe_get(Pab, nc_total, index_ww);
+  double PP_yy = gsl_matrix_safe_get(PPab, nc_total, index_ww);
+  double PPP_yy = gsl_matrix_safe_get(PPPab, nc_total, index_ww);
   double yPKPy = (P_yy - PP_yy) / l;
   double yPKPKPy = (P_yy + PPP_yy - 2.0 * PP_yy) / (l * l);
 
@@ -1122,10 +1121,10 @@ void LMM::CalcRLWald(const double &l, const FUNC_PARAM &params, double &beta,
   size_t index_yy = GetabIndex(n_cvt + 2, n_cvt + 2, n_cvt);
   size_t index_xx = GetabIndex(n_cvt + 1, n_cvt + 1, n_cvt);
   size_t index_xy = GetabIndex(n_cvt + 2, n_cvt + 1, n_cvt);
-  double P_yy = gsl_matrix_get(Pab, n_cvt, index_yy);
-  double P_xx = gsl_matrix_get(Pab, n_cvt, index_xx);
-  double P_xy = gsl_matrix_get(Pab, n_cvt, index_xy);
-  double Px_yy = gsl_matrix_get(Pab, n_cvt + 1, index_yy);
+  double P_yy = gsl_matrix_safe_get(Pab, n_cvt, index_yy);
+  double P_xx = gsl_matrix_safe_get(Pab, n_cvt, index_xx);
+  double P_xy = gsl_matrix_safe_get(Pab, n_cvt, index_xy);
+  double Px_yy = gsl_matrix_safe_get(Pab, n_cvt + 1, index_yy);
 
   beta = P_xy / P_xx;
   double tau = (double)df / Px_yy;
@@ -1164,10 +1163,10 @@ void LMM::CalcRLScore(const double &l, const FUNC_PARAM &params, double &beta,
   size_t index_yy = GetabIndex(n_cvt + 2, n_cvt + 2, n_cvt);
   size_t index_xx = GetabIndex(n_cvt + 1, n_cvt + 1, n_cvt);
   size_t index_xy = GetabIndex(n_cvt + 2, n_cvt + 1, n_cvt);
-  double P_yy = gsl_matrix_get(Pab, n_cvt, index_yy);
-  double P_xx = gsl_matrix_get(Pab, n_cvt, index_xx);
-  double P_xy = gsl_matrix_get(Pab, n_cvt, index_xy);
-  double Px_yy = gsl_matrix_get(Pab, n_cvt + 1, index_yy);
+  double P_yy = gsl_matrix_safe_get(Pab, n_cvt, index_yy);
+  double P_xx = gsl_matrix_safe_get(Pab, n_cvt, index_xx);
+  double P_xy = gsl_matrix_safe_get(Pab, n_cvt, index_xy);
+  double Px_yy = gsl_matrix_safe_get(Pab, n_cvt + 1, index_yy);
 
   beta = P_xy / P_xx;
   double tau = (double)df / Px_yy;
@@ -1248,10 +1247,17 @@ void CalcUab(const gsl_matrix *UtW, const gsl_vector *Uty,
 }
 
 void Calcab(const gsl_matrix *W, const gsl_vector *y, gsl_vector *ab) {
+  write(W,"W");
+  write(y,"y");
+
+  gsl_vector_set_zero(ab); // not sure, but emulates v95 behaviour
+
   size_t n_cvt = W->size2;
 
   gsl_vector *v_a = gsl_vector_safe_alloc(y->size);
   gsl_vector *v_b = gsl_vector_safe_alloc(y->size);
+
+  double d;
 
   for (size_t a = 1; a <= n_cvt + 2; ++a) {
     if (a == n_cvt + 1) {
@@ -1264,6 +1270,7 @@ void Calcab(const gsl_matrix *W, const gsl_vector *y, gsl_vector *ab) {
       gsl_vector_const_view W_col = gsl_matrix_const_column(W, a - 1);
       gsl_vector_safe_memcpy(v_a, &W_col.vector);
     }
+    write(v_a,"v_a");
 
     for (size_t b = a; b >= 1; --b) {
       if (b == n_cvt + 1) {
@@ -1279,11 +1286,13 @@ void Calcab(const gsl_matrix *W, const gsl_vector *y, gsl_vector *ab) {
         gsl_vector_safe_memcpy(v_b, &W_col.vector);
       }
 
-      double d;
+      write(v_b,"v_b");
       gsl_blas_ddot(v_a, v_b, &d);
       gsl_vector_set(ab, index_ab, d);
     }
   }
+
+  write(ab,"ab");
 
   gsl_vector_safe_free(v_a);
   gsl_vector_safe_free(v_b);
@@ -1294,6 +1303,8 @@ void Calcab(const gsl_matrix *W, const gsl_vector *y, const gsl_vector *x,
             gsl_vector *ab) {
   size_t index_ab;
   size_t n_cvt = W->size2;
+
+  gsl_vector_set_zero(ab); // not sure, but emulates v95 behaviour
 
   double d;
   gsl_vector *v_b = gsl_vector_safe_alloc(y->size);
@@ -1955,7 +1966,7 @@ void CalcLambda(const char func_name, const gsl_vector *eval,
 
   gsl_matrix_set_zero(Uab);
   CalcUab(UtW, Uty, Uab);
-  // Calcab(W, y, ab);
+  Calcab(UtW, Uty, ab);
 
   FUNC_PARAM param0 = {true, ni_test, n_cvt, eval, Uab, ab, 0};
 
@@ -2039,7 +2050,7 @@ void CalcLmmVgVeBeta(const gsl_vector *eval, const gsl_matrix *UtW,
   CalcPab(n_cvt, 0, Hi_eval, Uab, ab, Pab);
 
   size_t index_yy = GetabIndex(n_cvt + 2, n_cvt + 2, n_cvt);
-  double P_yy = gsl_matrix_get(Pab, n_cvt, index_yy);
+  double P_yy = gsl_matrix_safe_get(Pab, n_cvt, index_yy);
 
   ve = P_yy / (double)(ni_test - n_cvt);
   vg = ve * lambda;
