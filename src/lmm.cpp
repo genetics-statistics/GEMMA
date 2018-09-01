@@ -300,21 +300,23 @@ void CalcPab(const size_t n_cvt, const size_t e_mode, const gsl_vector *Hi_eval,
   assert(!has_nan(Uab));
   // assert(!has_nan(ab));
 
-  for (size_t p = 0; p <= n_cvt + 1; ++p) {        // p walks phenotypes + covariates
-    for (size_t a = p + 1; a <= n_cvt + 2; ++a) {  // a in p+1..rest
+  for (size_t p = 0; p <= n_cvt + 1; ++p) {        // p walks rows phenotypes + covariates
+    for (size_t a = p + 1; a <= n_cvt + 2; ++a) {  // a walks cols in p+1..rest
       for (size_t b = a; b <= n_cvt + 2; ++b) {    // b in a..rest
         size_t index_ab = GetabIndex(a, b, n_cvt); // index in top half matrix, see above
-        if (p == 0) {
-          gsl_vector_const_view Uab_col =
-              gsl_matrix_const_column(Uab, index_ab);
-          gsl_blas_ddot(Hi_eval, &Uab_col.vector, &p_ab);
-          if (e_mode != 0) {
+        if (p == 0) { // fills row 0 for each a,b using dot product of Hi_eval . Uab(a)
+          cout << "p is 0 " << index_ab; // walk row 0
+          gsl_vector_const_view Uab_col = gsl_matrix_const_column(Uab, index_ab); // get the column
+          gsl_blas_ddot(Hi_eval, &Uab_col.vector, &p_ab); // dot product with H_eval
+          if (e_mode != 0) { // if not null model (defunct right now)
             if (! is_legacy_mode()) assert(false); // disabling to see when it is used; allow with legacy mode
             p_ab = gsl_vector_get(unused, index_ab) - p_ab; // was ab
           }
           cout << p << "r," << index_ab << ":" << p_ab << endl;
           gsl_matrix_set(Pab, 0, index_ab, p_ab);
+          write(Pab,"Pab int");
         } else {
+          // walk the rest of the upper triangle of the matrix (row 1..n). Cols jump with 2 at a time
           cout << "a" << a << "b" << b << "p" << p << "n_cvt" << n_cvt << endl;
           write(Pab,"Pab int");
           size_t index_aw = GetabIndex(a, p, n_cvt);
