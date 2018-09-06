@@ -1144,7 +1144,7 @@ void LMM::CalcRLWald(const double &l, const FUNC_PARAM &params, double &beta,
 
   beta = P_xy / P_xx;
   double tau = (double)df / Px_yy;
-  se = sqrt(1.0 / (tau * P_xx));
+  se = safe_sqrt(1.0 / (tau * P_xx));
   p_wald = gsl_cdf_fdist_Q((P_yy - Px_yy) * tau, 1.0, df);
 
   gsl_matrix_free(Pab);
@@ -1186,7 +1186,7 @@ void LMM::CalcRLScore(const double &l, const FUNC_PARAM &params, double &beta,
 
   beta = P_xy / P_xx;
   double tau = (double)df / Px_yy;
-  se = sqrt(1.0 / (tau * P_xx));
+  se = safe_sqrt(1.0 / (tau * P_xx));
 
   p_score =
       gsl_cdf_fdist_Q((double)ni_test * P_xy * P_xy / (P_yy * P_xx), 1.0, df);
@@ -1201,7 +1201,7 @@ void CalcUab(const gsl_matrix *UtW, const gsl_vector *Uty, gsl_matrix *Uab) {
   size_t index_ab;
   size_t n_cvt = UtW->size2;
 
-  debug_msg("entering");
+  // debug_msg("entering");
 
   gsl_vector *u_a = gsl_vector_safe_alloc(Uty->size);
 
@@ -2018,7 +2018,7 @@ void CalcPve(const gsl_vector *eval, const gsl_matrix *UtW,
 
   FUNC_PARAM param0 = {true, ni_test, n_cvt, eval, Uab, ab, 0};
 
-  double se = sqrt(-1.0 / LogRL_dev2(lambda, &param0));
+  double se = safe_sqrt(-1.0 / LogRL_dev2(lambda, &param0));
 
   pve = trace_G * lambda / (trace_G * lambda + 1.0);
   pve_se = trace_G / ((trace_G * lambda + 1.0) * (trace_G * lambda + 1.0)) * se;
@@ -2085,7 +2085,7 @@ void CalcLmmVgVeBeta(const gsl_vector *eval, const gsl_matrix *UtW,
 
   // Obtain se_beta.
   for (size_t i = 0; i < Vbeta->size1; i++) {
-    gsl_vector_set(se_beta, i, sqrt(gsl_matrix_get(Vbeta, i, i)));
+    gsl_vector_set(se_beta, i, safe_sqrt(gsl_matrix_get(Vbeta, i, i)));
   }
 
   gsl_matrix_safe_free(Uab);

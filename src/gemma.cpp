@@ -2595,7 +2595,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
             if (wi <= 0 || wj <= 0) {
               d = 0;
             } else {
-              d /= sqrt(wi * wj);
+              d /= safe_sqrt(wi * wj);
             }
             gsl_matrix_set(G, i, j, d);
             if (j != i) {
@@ -2623,7 +2623,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
           if (wi <= 0) {
             wi = 0;
           } else {
-            wi = sqrt(wi);
+            wi = safe_sqrt(wi);
           }
           gsl_vector_view Urow = gsl_matrix_row(U, i);
           gsl_vector_scale(&Urow.vector, wi);
@@ -3418,7 +3418,7 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
         for (size_t j = 0; j <= i; j++) {
           c = (2 * cPar.n_ph - min(i, j) + 1) * min(i, j) / 2 + max(i, j) -
               min(i, j);
-          outfile << tab(j) << sqrt(cPar.VVg_remle_null[c]);
+          outfile << tab(j) << safe_sqrt(cPar.VVg_remle_null[c]);
         }
         outfile << endl;
       }
@@ -3436,7 +3436,7 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
         for (size_t j = 0; j <= i; j++) {
           c = (2 * cPar.n_ph - min(i, j) + 1) * min(i, j) / 2 + max(i, j) -
               min(i, j);
-          outfile << tab(j) << sqrt(cPar.VVe_remle_null[c]);
+          outfile << tab(j) << safe_sqrt(cPar.VVe_remle_null[c]);
         }
         outfile << endl;
       }
@@ -3455,7 +3455,7 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
         for (size_t j = 0; j <= i; j++) {
           c = (2 * cPar.n_ph - min(i, j) + 1) * min(i, j) / 2 + max(i, j) -
               min(i, j);
-          outfile << tab(j) << sqrt(cPar.VVg_mle_null[c]);
+          outfile << tab(j) << safe_sqrt(cPar.VVg_mle_null[c]);
         }
         outfile << endl;
       }
@@ -3473,7 +3473,7 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
         for (size_t j = 0; j <= i; j++) {
           c = (2 * cPar.n_ph - min(i, j) + 1) * min(i, j) / 2 + max(i, j) -
               min(i, j);
-          outfile << tab(j) << sqrt(cPar.VVe_mle_null[c]);
+          outfile << tab(j) << safe_sqrt(cPar.VVe_mle_null[c]);
         }
         outfile << endl;
       }

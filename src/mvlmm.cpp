@@ -237,7 +237,7 @@ double EigenProc(const gsl_matrix *V_g, const gsl_matrix *V_e, gsl_vector *D_l,
     logdet_Ve += safe_log(d);
 
     gsl_vector_view U_col = gsl_matrix_column(U_l, i);
-    d = sqrt(d);
+    d = safe_sqrt(d);
     gsl_blas_dsyr(CblasUpper, d, &U_col.vector, V_e_h);
     d = 1.0 / d;
     gsl_blas_dsyr(CblasUpper, d, &U_col.vector, V_e_hi);
@@ -326,7 +326,7 @@ double CalcQi(const gsl_vector *eval, const gsl_vector *D_l,
 void CalcXHiY(const gsl_vector *eval, const gsl_vector *D_l,
               const gsl_matrix *X, const gsl_matrix *UltVehiY,
               gsl_vector *xHiy) {
-  debug_msg("enter");
+  // debug_msg("enter");
   size_t n_size = eval->size, c_size = X->size1, d_size = D_l->size;
 
   // gsl_vector_set_zero(xHiy);
@@ -907,7 +907,7 @@ void MphCalcBeta(const gsl_vector *eval, const gsl_matrix *W,
   for (size_t j = 0; j < B->size2; j++) {
     for (size_t i = 0; i < B->size1; i++) {
       gsl_matrix_set(B, i, j, gsl_vector_get(beta, j * d_size + i));
-      gsl_matrix_set(se_B, i, j, sqrt(gsl_matrix_get(Vbeta, j * d_size + i,
+      gsl_matrix_set(se_B, i, j, safe_sqrt(gsl_matrix_get(Vbeta, j * d_size + i,
                                                      j * d_size + i)));
     }
   }
@@ -2948,7 +2948,7 @@ double PCRT(const size_t mode, const size_t d_size, const double p_value,
   if (mode == 1) {
     double a = crt_c / (2.0 * q * (q + 2.0));
     double b = 1.0 + (crt_a + crt_b) / (2.0 * q);
-    chisq_crt = (-1.0 * b + sqrt(b * b + 4.0 * a * chisq)) / (2.0 * a);
+    chisq_crt = (-1.0 * b + safe_sqrt(b * b + 4.0 * a * chisq)) / (2.0 * a);
   } else if (mode == 2) {
     chisq_crt = chisq / (1.0 + crt_a / (2.0 * q));
   } else {
@@ -3090,7 +3090,7 @@ void MVLMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
   for (size_t i = 0; i < d_size; i++) {
     for (size_t j = 0; j <= i; j++) {
       c = GetIndex(i, j, d_size);
-      cout << sqrt(gsl_matrix_get(Hessian, c, c)) << "\t";
+      cout << safe_sqrt(gsl_matrix_get(Hessian, c, c)) << "\t";
     }
     cout << endl;
   }
@@ -3105,7 +3105,7 @@ void MVLMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
   for (size_t i = 0; i < d_size; i++) {
     for (size_t j = 0; j <= i; j++) {
       c = GetIndex(i, j, d_size);
-      cout << sqrt(gsl_matrix_get(Hessian, c + v_size, c + v_size)) << "\t";
+      cout << safe_sqrt(gsl_matrix_get(Hessian, c + v_size, c + v_size)) << "\t";
     }
     cout << endl;
   }
@@ -3153,7 +3153,7 @@ void MVLMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
   for (size_t i = 0; i < d_size; i++) {
     for (size_t j = 0; j <= i; j++) {
       c = GetIndex(i, j, d_size);
-      cout << sqrt(gsl_matrix_get(Hessian, c, c)) << "\t";
+      cout << safe_sqrt(gsl_matrix_get(Hessian, c, c)) << "\t";
     }
     cout << endl;
   }
@@ -3168,7 +3168,7 @@ void MVLMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
   for (size_t i = 0; i < d_size; i++) {
     for (size_t j = 0; j <= i; j++) {
       c = GetIndex(i, j, d_size);
-      cout << sqrt(gsl_matrix_get(Hessian, c + v_size, c + v_size)) << "\t";
+      cout << safe_sqrt(gsl_matrix_get(Hessian, c + v_size, c + v_size)) << "\t";
     }
     cout << endl;
   }
@@ -3529,7 +3529,7 @@ void MVLMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
   for (size_t i = 0; i < d_size; i++) {
     for (size_t j = 0; j <= i; j++) {
       c = GetIndex(i, j, d_size);
-      cout << sqrt(gsl_matrix_get(Hessian, c, c)) << "\t";
+      cout << safe_sqrt(gsl_matrix_get(Hessian, c, c)) << "\t";
     }
     cout << endl;
   }
@@ -3544,7 +3544,11 @@ void MVLMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
   for (size_t i = 0; i < d_size; i++) {
     for (size_t j = 0; j <= i; j++) {
       c = GetIndex(i, j, d_size);
-      cout << sqrt(gsl_matrix_get(Hessian, c + v_size, c + v_size)) << "\t";
+      auto v = gsl_matrix_get(Hessian, c + v_size, c + v_size);
+      if (is_strict_mode())
+        enforce_msg(v >= 0,"se(Ve) is not valid");
+
+      cout << safe_sqrt(v) << "\t";
     }
     cout << endl;
   }
@@ -3592,7 +3596,7 @@ void MVLMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
   for (size_t i = 0; i < d_size; i++) {
     for (size_t j = 0; j <= i; j++) {
       c = GetIndex(i, j, d_size);
-      cout << sqrt(gsl_matrix_get(Hessian, c, c)) << "\t";
+      cout << safe_sqrt(gsl_matrix_get(Hessian, c, c)) << "\t";
     }
     cout << endl;
   }
@@ -3607,7 +3611,10 @@ void MVLMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
   for (size_t i = 0; i < d_size; i++) {
     for (size_t j = 0; j <= i; j++) {
       c = GetIndex(i, j, d_size);
-      cout << sqrt(gsl_matrix_get(Hessian, c + v_size, c + v_size)) << "\t";
+      auto v = gsl_matrix_get(Hessian, c + v_size, c + v_size);
+      if (is_strict_mode())
+        enforce_msg(v >= 0,"se(Ve) is not valid");
+      cout << safe_sqrt(v) << "\t";
     }
     cout << endl;
   }
@@ -4076,7 +4083,7 @@ void MVLMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval,
   for (size_t i = 0; i < d_size; i++) {
     for (size_t j = 0; j <= i; j++) {
       c = GetIndex(i, j, d_size);
-      cout << sqrt(gsl_matrix_get(Hessian, c, c)) << "\t";
+      cout << safe_sqrt(gsl_matrix_get(Hessian, c, c)) << "\t";
     }
     cout << endl;
   }
@@ -4091,7 +4098,7 @@ void MVLMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval,
   for (size_t i = 0; i < d_size; i++) {
     for (size_t j = 0; j <= i; j++) {
       c = GetIndex(i, j, d_size);
-      cout << sqrt(gsl_matrix_get(Hessian, c + v_size, c + v_size)) << "\t";
+      cout << safe_sqrt(gsl_matrix_get(Hessian, c + v_size, c + v_size)) << "\t";
     }
     cout << endl;
   }
@@ -4139,7 +4146,7 @@ void MVLMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval,
   for (size_t i = 0; i < d_size; i++) {
     for (size_t j = 0; j <= i; j++) {
       c = GetIndex(i, j, d_size);
-      cout << sqrt(gsl_matrix_get(Hessian, c, c)) << "\t";
+      cout << safe_sqrt(gsl_matrix_get(Hessian, c, c)) << "\t";
     }
     cout << endl;
   }
@@ -4154,7 +4161,7 @@ void MVLMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval,
   for (size_t i = 0; i < d_size; i++) {
     for (size_t j = 0; j <= i; j++) {
       c = GetIndex(i, j, d_size);
-      cout << sqrt(gsl_matrix_get(Hessian, c + v_size, c + v_size)) << "\t";
+      cout << safe_sqrt(gsl_matrix_get(Hessian, c + v_size, c + v_size)) << "\t";
     }
     cout << endl;
   }
@@ -4521,7 +4528,7 @@ void MVLMM::AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval,
   for (size_t i = 0; i < d_size; i++) {
     for (size_t j = 0; j <= i; j++) {
       c = GetIndex(i, j, d_size);
-      cout << sqrt(gsl_matrix_get(Hessian, c, c)) << "\t";
+      cout << safe_sqrt(gsl_matrix_get(Hessian, c, c)) << "\t";
     }
     cout << endl;
   }
@@ -4536,7 +4543,7 @@ void MVLMM::AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval,
   for (size_t i = 0; i < d_size; i++) {
     for (size_t j = 0; j <= i; j++) {
       c = GetIndex(i, j, d_size);
-      cout << sqrt(gsl_matrix_get(Hessian, c + v_size, c + v_size)) << "\t";
+      cout << safe_sqrt(gsl_matrix_get(Hessian, c + v_size, c + v_size)) << "\t";
     }
     cout << endl;
   }
@@ -4584,7 +4591,7 @@ void MVLMM::AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval,
   for (size_t i = 0; i < d_size; i++) {
     for (size_t j = 0; j <= i; j++) {
       c = GetIndex(i, j, d_size);
-      cout << sqrt(gsl_matrix_get(Hessian, c, c)) << "\t";
+      cout << safe_sqrt(gsl_matrix_get(Hessian, c, c)) << "\t";
     }
     cout << endl;
   }
@@ -4599,7 +4606,7 @@ void MVLMM::AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval,
   for (size_t i = 0; i < d_size; i++) {
     for (size_t j = 0; j <= i; j++) {
       c = GetIndex(i, j, d_size);
-      cout << sqrt(gsl_matrix_get(Hessian, c + v_size, c + v_size)) << "\t";
+      cout << safe_sqrt(gsl_matrix_get(Hessian, c + v_size, c + v_size)) << "\t";
     }
     cout << endl;
   }

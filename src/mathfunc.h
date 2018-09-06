@@ -46,6 +46,7 @@ bool has_inf(const gsl_matrix *m);
 bool is_integer(const std::string & s);
 
 double safe_log(const double d);
+double safe_sqrt(const double d);
 
 double VectorVar(const gsl_vector *v);
 void CenterMatrix(gsl_matrix *G);
