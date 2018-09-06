@@ -733,6 +733,7 @@ void GEMMA::PrintHelp(size_t option) {
   if (option == 14) {
     cout << " DEBUG OPTIONS" << endl;
     cout << " -no-check                disable checks" << endl;
+    cout << " -no-fpe-check            disable hardware floating point checking" << endl;
     cout << " -strict                  strict mode will stop when there is a problem" << endl;
     cout << " -silence                 silent terminal display" << endl;
     cout << " -debug                   debug output" << endl;
@@ -1616,6 +1617,9 @@ void GEMMA::Assign(int argc, char **argv, PARAM &cPar) {
     } else if (strcmp(argv[i], "-no-check") == 0) {
       // cPar.mode_check = false;
       debug_set_no_check_mode(true);
+    } else if (strcmp(argv[i], "-no-fpe-check") == 0) {
+      // cPar.mode_check = false;
+      debug_set_no_fpe_check_mode(true);
     } else if (strcmp(argv[i], "-strict") == 0) {
       // cPar.mode_strict = true;
       debug_set_strict_mode(true);

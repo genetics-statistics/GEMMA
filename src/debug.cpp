@@ -38,15 +38,17 @@
 #include "debug.h"
 #include "mathfunc.h"
 
-static bool debug_mode     = false;
-static bool debug_check    = true;  // check data/algorithms
-static bool debug_strict   = false; // fail on error, more rigorous checks
-static bool debug_quiet    = false;
-static uint debug_issue    = 0;     // track github issues
-static bool debug_legacy   = false; // legacy mode
+static bool debug_mode      = false;
+static bool debug_check     = true;  // check data/algorithms
+static bool debug_fpe_check = true;  // check floating point errors (intel hardware)
+static bool debug_strict    = false; // fail on error, more rigorous checks
+static bool debug_quiet     = false;
+static uint debug_issue     = 0;     // track github issues
+static bool debug_legacy    = false; // legacy mode
 
 void debug_set_debug_mode(bool setting) { debug_mode = setting; }
 void debug_set_no_check_mode(bool setting) {debug_check = !setting; }
+void debug_set_no_fpe_check_mode(bool setting) {debug_fpe_check = !setting; }
 void debug_set_strict_mode(bool setting) { debug_strict = setting; }
 void debug_set_quiet_mode(bool setting) { debug_quiet = setting; }
 void debug_set_issue(uint issue) { debug_issue = issue; }
@@ -55,6 +57,7 @@ void debug_set_legacy_mode(bool setting) { debug_legacy = setting; }
 bool is_debug_mode() { return debug_mode; };
 bool is_no_check_mode() { return !debug_check; };
 bool is_check_mode() { return debug_check; };
+bool is_fpe_check_mode() { return debug_fpe_check; };
 bool is_strict_mode() { return debug_strict; };
 bool is_quiet_mode() { return debug_quiet; };
 bool is_issue(uint issue) { return issue == debug_issue; };
@@ -128,7 +131,7 @@ inline int fedisableexcept(unsigned int excepts)
 #endif
 
 void enable_segfpe() {
-  if (is_legacy_mode()) return;
+  if (!is_fpe_check_mode() || is_legacy_mode()) return;
   #ifdef __GNUC__
     #if defined(__x86_64__)
        debug_msg("enable segfpe hardware floating point error detection");
@@ -139,7 +142,7 @@ void enable_segfpe() {
 }
 
 void disable_segfpe() {
-  if (is_legacy_mode()) return;
+  if (!is_fpe_check_mode() || is_legacy_mode()) return;
   #ifdef __GNUC__
     #if defined(__x86_64__)
       debug_msg("disable segfpe");

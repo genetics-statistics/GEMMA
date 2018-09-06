@@ -330,10 +330,11 @@ void CalcPab(const size_t n_cvt, const size_t e_mode, const gsl_vector *Hi_eval,
           double ps_ww = gsl_matrix_safe_get(Pab, p - 1, index_ww);
 
           cout << "unsafe " << p-1 << "," << index_ww << ":" << gsl_matrix_get(Pab,p-1,index_ww) << endl;
-          assert(ps_ww != 0.0);
-          p_ab = ps_ab - ps_aw * ps_bw / ps_ww;
+          // if (is_check_mode() || is_debug_mode()) assert(ps_ww != 0.0);
+          if (ps_ww != 0)
+            p_ab = ps_ab - ps_aw * ps_bw / ps_ww;
 
-          cout << p << "r," << index_ab << ":" << p_ab << endl;
+          cout << "set " << p << "r," << index_ab << "c: " << p_ab << endl;
           gsl_matrix_set(Pab, p, index_ab, p_ab);
         }
       }
@@ -384,10 +385,13 @@ void CalcPPab(const size_t n_cvt, const size_t e_mode,
           ps2_bw = gsl_matrix_safe_get(PPab, p - 1, index_bw);
           ps2_ww = gsl_matrix_safe_get(PPab, p - 1, index_ww);
 
-          assert(ps_ww != 0.0);
-          p2_ab = ps2_ab + ps_aw * ps_bw * ps2_ww / (ps_ww * ps_ww);
-          p2_ab -= (ps_aw * ps2_bw + ps_bw * ps2_aw) / ps_ww;
+          // if (is_check_mode() || is_debug_mode()) assert(ps_ww != 0.0);
+          if (ps_ww != 0) {
+            p2_ab = ps2_ab + ps_aw * ps_bw * ps2_ww / (ps_ww * ps_ww);
+            p2_ab -= (ps_aw * ps2_bw + ps_bw * ps2_aw) / ps_ww;
+          }
           gsl_matrix_set(PPab, p, index_ab, p2_ab);
+
         }
       }
     }
@@ -441,14 +445,15 @@ void CalcPPPab(const size_t n_cvt, const size_t e_mode,
           ps3_bw = gsl_matrix_safe_get(PPPab, p - 1, index_bw);
           ps3_ww = gsl_matrix_safe_get(PPPab, p - 1, index_ww);
 
-          assert(ps_ww != 0.0);
-          p3_ab = ps3_ab -
-                  ps_aw * ps_bw * ps2_ww * ps2_ww / (ps_ww * ps_ww * ps_ww);
-          p3_ab -= (ps_aw * ps3_bw + ps_bw * ps3_aw + ps2_aw * ps2_bw) / ps_ww;
-          p3_ab += (ps_aw * ps2_bw * ps2_ww + ps_bw * ps2_aw * ps2_ww +
-                    ps_aw * ps_bw * ps3_ww) /
-                   (ps_ww * ps_ww);
-
+          // if (is_check_mode() || is_debug_mode()) assert(ps_ww != 0.0);
+          if (ps_ww != 0) {
+            p3_ab = ps3_ab -
+              ps_aw * ps_bw * ps2_ww * ps2_ww / (ps_ww * ps_ww * ps_ww);
+            p3_ab -= (ps_aw * ps3_bw + ps_bw * ps3_aw + ps2_aw * ps2_bw) / ps_ww;
+            p3_ab += (ps_aw * ps2_bw * ps2_ww + ps_bw * ps2_aw * ps2_ww +
+                      ps_aw * ps_bw * ps3_ww) /
+              (ps_ww * ps_ww);
+          }
           gsl_matrix_set(PPPab, p, index_ab, p3_ab);
         }
       }
@@ -1187,21 +1192,23 @@ void CalcUab(const gsl_matrix *UtW, const gsl_vector *Uty, gsl_matrix *Uab) {
   size_t index_ab;
   size_t n_cvt = UtW->size2;
 
+  debug_msg("entering");
+
   gsl_vector *u_a = gsl_vector_safe_alloc(Uty->size);
 
-  for (size_t a = 1; a <= n_cvt + 2; ++a) {
+  for (size_t a = 1; a <= n_cvt + 2; ++a) { // walk columns of pheno+cvt
     if (a == n_cvt + 1) {
       continue;
     }
 
     if (a == n_cvt + 2) {
-      gsl_vector_safe_memcpy(u_a, Uty);
+      gsl_vector_safe_memcpy(u_a, Uty); // last column is phenotype
     } else {
       gsl_vector_const_view UtW_col = gsl_matrix_const_column(UtW, a - 1);
       gsl_vector_safe_memcpy(u_a, &UtW_col.vector);
     }
 
-    for (size_t b = a; b >= 1; --b) {
+    for (size_t b = a; b >= 1; --b) { // back fill other columns
       if (b == n_cvt + 1) {
         continue;
       }
@@ -1218,6 +1225,8 @@ void CalcUab(const gsl_matrix *UtW, const gsl_vector *Uty, gsl_matrix *Uab) {
 
       gsl_vector_mul(&Uab_col.vector, u_a);
     }
+    cout << "a" << a << endl;
+    write(Uab,"Uab iteration");
   }
 
   gsl_vector_safe_free(u_a);
@@ -1963,11 +1972,16 @@ void CalcLambda(const char func_name, const gsl_vector *eval,
   size_t n_cvt = UtW->size2, ni_test = UtW->size1;
   size_t n_index = (n_cvt + 2 + 1) * (n_cvt + 2) / 2;
 
+  cout << "n_cvt " << n_cvt << ", ni_test " << ni_test << ", n_index " << n_index << endl;
+
   gsl_matrix *Uab = gsl_matrix_safe_alloc(ni_test, n_index);
   gsl_vector *ab = gsl_vector_safe_alloc(n_index);
 
   gsl_matrix_set_zero(Uab);
+  write(UtW,"UtW");
+  write(UtW,"Uty");
   CalcUab(UtW, Uty, Uab);
+  write(Uab,"Uab");
   Calcab(UtW, Uty, ab);
 
   FUNC_PARAM param0 = {true, ni_test, n_cvt, eval, Uab, ab, 0};

@@ -32,6 +32,7 @@ void gemma_gsl_error_handler (const char * reason,
 
 void debug_set_debug_mode(bool setting);
 void debug_set_no_check_mode(bool setting);
+void debug_set_no_fpe_check_mode(bool setting);
 void debug_set_strict_mode(bool setting);
 void debug_set_quiet_mode(bool setting);
 void debug_set_issue(uint issue);
@@ -40,6 +41,7 @@ void debug_set_legacy_mode(bool setting);
 bool is_debug_mode();
 bool is_no_check_mode();
 bool is_check_mode();
+bool is_fpe_check_mode();
 bool is_strict_mode();
 bool is_quiet_mode();
 bool is_issue(uint issue);

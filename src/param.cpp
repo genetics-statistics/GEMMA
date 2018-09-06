@@ -1364,9 +1364,9 @@ void compAKtoS(const gsl_matrix *A, const gsl_matrix *K, const size_t n_cvt,
   * 1,1:0
   * 1,2:1
   * 1,3:2
-  * 2,2:3
-  * 2,3:4
-  * 3,3:5
+  * 2,2:5
+  * 2,3:6
+  * 3,3:9
 
 which is really the iteration moving forward along the diagonal and
 items to the right of it.
@@ -1385,8 +1385,8 @@ size_t GetabIndex(const size_t a, const size_t b, const size_t n_cvt) {
   size_t index = (2 * cols - a1 + 2) * (a1 - 1) / 2 + b1 - a1;
   cout << "* GetabIndx " << a1 << "," << b1 << "," << cols << ":" << index << endl;
   return index;
+  // return ( b < a ?  ((2 * cols - b + 2) * (b - 1) / 2 + a - b ): ((2 * cols - a + 2) * (a - 1) / 2 + b - a) );
 
-  // return ( b < a ?  ((2 * n - b + 2) * (b - 1) / 2 + a - b ): ((2 * n - a + 2) * (a - 1) / 2 + b - a) );
 }
 
 // From an existing n by nd (centered) G matrix, compute the d+1 by
