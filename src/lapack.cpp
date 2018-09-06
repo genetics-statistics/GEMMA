@@ -19,6 +19,7 @@
 #include "gsl/gsl_linalg.h"
 #include "gsl/gsl_matrix.h"
 #include "gsl/gsl_vector.h"
+#include "gsl/gsl_sys.h" // for gsl_isnan, gsl_isinf, gsl_isfinite
 #include <cmath>
 #include <iostream>
 #include <vector>
