@@ -321,12 +321,15 @@ double CalcQi(const gsl_vector *eval, const gsl_vector *D_l,
 }
 
 // xHiy=\sum_{k=1}^n x_k\otimes ((delta_k*Dl+I)^{-1}Ul^TVe^{-1/2}y.
+//
+// FIXME: mvlmm spends a massive amount of time here
 void CalcXHiY(const gsl_vector *eval, const gsl_vector *D_l,
               const gsl_matrix *X, const gsl_matrix *UltVehiY,
               gsl_vector *xHiy) {
+  debug_msg("enter");
   size_t n_size = eval->size, c_size = X->size1, d_size = D_l->size;
 
-  gsl_vector_set_zero(xHiy);
+  // gsl_vector_set_zero(xHiy);
 
   double x, delta, dl, y, d;
   for (size_t i = 0; i < d_size; i++) {
@@ -342,6 +345,7 @@ void CalcXHiY(const gsl_vector *eval, const gsl_vector *D_l,
       gsl_vector_set(xHiy, j * d_size + i, d);
     }
   }
+  // debug_msg("exit");
 
   return;
 }

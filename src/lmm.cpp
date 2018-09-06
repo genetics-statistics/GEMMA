@@ -296,7 +296,8 @@ void CalcPab(const size_t n_cvt, const size_t e_mode, const gsl_vector *Hi_eval,
   write(Hi_eval,"Hi_eval");
   write(Uab,"Uab");
   // write(ab,"ab");
-  assert(!has_nan(Hi_eval));
+  if (is_check_mode())
+    assert(!has_nan(Hi_eval));
   assert(!has_nan(Uab));
   // assert(!has_nan(ab));
 

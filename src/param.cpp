@@ -1942,8 +1942,7 @@ void PARAM::CheckCvt() {
     indicator_cvt.clear();
     n_cvt = 1;
   } else if (flag_ipt == 0) {
-    cout << "no intercept term is found in the cvt file. "
-         << "a column of 1s is added." << endl;
+    info_msg("no intercept term is found in the cvt file: a column of 1s is added");
     for (vector<int>::size_type i = 0; i < indicator_idv.size(); ++i) {
       if (indicator_idv[i] == 0 || indicator_cvt[i] == 0) {
         continue;

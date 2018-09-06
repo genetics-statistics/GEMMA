@@ -137,7 +137,7 @@ void enable_segfpe() {
   if (!is_fpe_check_mode() || is_legacy_mode()) return;
   #ifdef __GNUC__
     #if defined(__x86_64__)
-       debug_msg("enable segfpe hardware floating point error detection");
+  // debug_msg("enable segfpe hardware floating point error detection");
        signal(SIGFPE, sighandler);
        feenableexcept(FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW | FE_UNDERFLOW);
     #endif
@@ -148,7 +148,7 @@ void disable_segfpe() {
   if (!is_fpe_check_mode() || is_legacy_mode()) return;
   #ifdef __GNUC__
     #if defined(__x86_64__)
-      debug_msg("disable segfpe");
+  // debug_msg("disable segfpe");
       fedisableexcept(FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW | FE_UNDERFLOW);
     #endif
   #endif
