@@ -216,7 +216,7 @@ int gsl_matrix_safe_memcpy (gsl_matrix *dest, const gsl_matrix *src) {
   return gsl_matrix_memcpy(dest,src);
 }
 
-void do_gsl_matrix_safe_free (gsl_matrix *m, const char *__pretty_function, const char *__file, int __line) {
+void do_gsl_matrix_safe_free (gsl_matrix *m, const char *__pretty_function, const char *__file, int __line, bool warn_only) {
   enforce(m);
   if (is_strict_mode() && is_check_mode() && is_debug_mode()) {
     bool has_NaN = has_nan(m);
@@ -228,10 +228,18 @@ void do_gsl_matrix_safe_free (gsl_matrix *m, const char *__pretty_function, cons
       msg += "x";
       msg += std::to_string(m->size2);
       msg += ")";
-      if (has_Inf)
-        warnfail_at_msg(is_strict_mode(),__pretty_function,__file,__line,(msg+" contains Infinite on free!").c_str());
-      if (has_NaN)
-        warnfail_at_msg(is_strict_mode(),__pretty_function,__file,__line,(msg+" contains NaN on free!").c_str());
+      if (warn_only) {
+        if (has_Inf)
+          warning_at_msg(__file,__line,(msg+" contains Infinite on free!").c_str());
+        if (has_NaN)
+          warning_at_msg(__file,__line,(msg+" contains NaN on free!").c_str());
+      }
+      else {
+        if (has_Inf)
+          warnfail_at_msg(is_strict_mode(),__pretty_function,__file,__line,(msg+" contains Infinite on free!").c_str());
+        if (has_NaN)
+          warnfail_at_msg(is_strict_mode(),__pretty_function,__file,__line,(msg+" contains NaN on free!").c_str());
+      }
     }
   }
   return gsl_matrix_free(m);

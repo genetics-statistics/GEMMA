@@ -64,7 +64,8 @@ void write(const gsl_matrix *m, const char *msg = "");
 gsl_matrix *gsl_matrix_safe_alloc(size_t rows,size_t cols);
 int gsl_matrix_safe_memcpy (gsl_matrix *dest, const gsl_matrix *src);
 void gsl_matrix_safe_free (gsl_matrix *v);
-void do_gsl_matrix_safe_free (gsl_matrix *m, const char *__pretty_function, const char *__file, int __line);
+void gsl_matrix_warn_free (gsl_matrix *v);
+void do_gsl_matrix_safe_free (gsl_matrix *m, const char *__pretty_function, const char *__file, int __line, bool warn_only);
 
 double do_gsl_matrix_safe_get (const gsl_matrix * m, const size_t i, const size_t j, const char *__pretty_function, const char *__file, int __line);
 #define gsl_matrix_safe_get(m,i,j) do_gsl_matrix_safe_get(m, i, j,__SHOW_FUNC,__FILE__,__LINE__);
@@ -186,7 +187,9 @@ inline void __enforce_fail(const char *__assertion, const char *__file,
                 ((std::string(__STRING(fn)) + " " + fn + ": " + msg).c_str()));
 
 #define gsl_matrix_safe_free(m) \
-  do_gsl_matrix_safe_free(m,__SHOW_FUNC,__FILE__,__LINE__);
+  do_gsl_matrix_safe_free(m,__SHOW_FUNC,__FILE__,__LINE__,false);
+#define gsl_matrix_warn_free(m) \
+  do_gsl_matrix_safe_free(m,__SHOW_FUNC,__FILE__,__LINE__,true);
 #define gsl_vector_safe_free(v) \
   do_gsl_vector_safe_free(v,__SHOW_FUNC,__FILE__,__LINE__);
 

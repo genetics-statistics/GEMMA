@@ -2837,14 +2837,14 @@ void GEMMA::BatchRun(PARAM &cPar) {
     // release all matrices and vectors
     gsl_matrix_safe_free(Y);
     gsl_matrix_safe_free(W);
-    gsl_matrix_safe_free(B);
-    gsl_matrix_safe_free(se_B);
-    gsl_matrix_safe_free(G);
+    gsl_matrix_warn_free(B); // sometimes unused
+    gsl_matrix_warn_free(se_B);
+    gsl_matrix_warn_free(G);
     gsl_matrix_safe_free(U);
     gsl_matrix_safe_free(UtW);
     gsl_matrix_safe_free(UtY);
     gsl_vector_safe_free(eval);
-    gsl_vector_safe_free(env);
+    gsl_vector_free(env); // sometimes unused
   }
 
   // BSLMM
