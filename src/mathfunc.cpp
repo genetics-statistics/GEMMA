@@ -70,27 +70,27 @@ bool has_nan(const vector<double> v) {
 
 bool has_nan(const gsl_vector *v) {
   for (size_t i = 0; i < v->size; ++i)
-    if (gsl_isnan(gsl_vector_get(v,i))) return true;
+    if (is_nan(gsl_vector_get(v,i))) return true;
   return false;
 }
 bool has_inf(const gsl_vector *v) {
   for (size_t i = 0; i < v->size; ++i) {
     auto value = gsl_vector_get(v,i);
-    if (gsl_isinf(value) != 0) return true;
+    if (is_inf(value) != 0) return true;
   }
   return false;
 }
 bool has_nan(const gsl_matrix *m) {
   for (size_t i = 0; i < m->size1; ++i)
     for (size_t j = 0; j < m->size2; ++j)
-      if (gsl_isnan(gsl_matrix_get(m,i,j))) return true;
+      if (is_nan(gsl_matrix_get(m,i,j))) return true;
   return false;
 }
 bool has_inf(const gsl_matrix *m) {
   for (size_t i = 0; i < m->size1; ++i)
     for (size_t j = 0; j < m->size2; ++j) {
       auto value = gsl_matrix_get(m,i,j);
-      if (gsl_isinf(value) != 0) return true;
+      if (is_inf(value) != 0) return true;
     }
   return false;
 }
@@ -101,6 +101,12 @@ bool is_integer(const std::string & s){
 
 bool is_float(const std::string & s){
     return std::regex_match(s, std::regex("^[+-]?([0-9]*[.])?[0-9]+$"));
+}
+
+double safe_log(const double d) {
+  if (!is_legacy_mode())
+    enforce_msg(d > 0.0, (std::string("Trying to take the log of ") + std::to_string(d)).c_str());
+  return log(d);
 }
 
 // calculate variance of a vector

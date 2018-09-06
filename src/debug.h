@@ -23,6 +23,7 @@
 
 #include <assert.h>
 #include <iostream>
+#include <csignal>
 
 #include "gsl/gsl_matrix.h"
 
@@ -31,6 +32,7 @@ void gemma_gsl_error_handler (const char * reason,
                               int line, int gsl_errno);
 
 void debug_set_debug_mode(bool setting);
+void debug_set_debug_data_mode(bool setting);
 void debug_set_no_check_mode(bool setting);
 void debug_set_no_fpe_check_mode(bool setting);
 void debug_set_strict_mode(bool setting);
@@ -39,6 +41,7 @@ void debug_set_issue(uint issue);
 void debug_set_legacy_mode(bool setting);
 
 bool is_debug_mode();
+bool is_debug_data_mode();
 bool is_no_check_mode();
 bool is_check_mode();
 bool is_fpe_check_mode();
@@ -54,8 +57,9 @@ void disable_segfpe();
   { auto x = m * n;                                      \
     enforce_msg(x / m == n, "multiply integer overflow"); }
 
-void write(const gsl_vector *v, const char *msg);
-void write(const gsl_matrix *m, const char *msg);
+void write(const char *s, const char *msg = "");
+void write(const gsl_vector *v, const char *msg = "");
+void write(const gsl_matrix *m, const char *msg = "");
 
 gsl_matrix *gsl_matrix_safe_alloc(size_t rows,size_t cols);
 int gsl_matrix_safe_memcpy (gsl_matrix *dest, const gsl_matrix *src);
@@ -89,12 +93,12 @@ inline void warnfail_at_msg(bool strict, const char *__function, const char *__f
     std::cerr << "**** WARNING: ";
   std::cerr << msg << " in " << __file << " at line " << __line << " in " << __function << std::endl;
   if (strict)
-    exit(1);
+    std::raise(SIGINT); // keep stack trace for gdb
 }
 
 inline void fail_at_msg(const char *__file, int __line, std::string msg) {
   std::cerr << "**** FAILED: " << msg << " in " << __file << " at line " << __line << std::endl;
-  exit(1);
+  std::raise(SIGINT); // keep stack trace for gdb
 }
 
 # ifndef __ASSERT_VOID_CAST
@@ -103,12 +107,12 @@ inline void fail_at_msg(const char *__file, int __line, std::string msg) {
 
 inline void fail_msg(const char *msg) {
   std::cerr << "**** FAILED: " << msg << std::endl;
-  exit(5);
+  std::raise(SIGINT); // keep stack trace for gdb
 }
 
 inline void fail_msg(std::string msg) {
   std::cerr << "**** FAILED: " << msg << std::endl;
-  exit(5);
+  std::raise(SIGINT); // keep stack trace for gdb
 }
 
 #if defined NDEBUG
@@ -138,7 +142,8 @@ inline void __enforce_fail(const char *__assertion, const char *__file,
                     const char *__function)
 {
   std::cout << "ERROR: Enforce failed for " << __assertion << " in " << __file << " at line " << __line << " in " << __function << std::endl;
-  exit(1);
+  std::raise(SIGINT); // keep stack trace for gdb
+  // exit(1);
 }
 
 #define enforce(expr)                                                          \

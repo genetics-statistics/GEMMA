@@ -39,6 +39,7 @@
 #include "mathfunc.h"
 
 static bool debug_mode      = false;
+static bool debug_data_mode = false;
 static bool debug_check     = true;  // check data/algorithms
 static bool debug_fpe_check = true;  // check floating point errors (intel hardware)
 static bool debug_strict    = false; // fail on error, more rigorous checks
@@ -47,6 +48,7 @@ static uint debug_issue     = 0;     // track github issues
 static bool debug_legacy    = false; // legacy mode
 
 void debug_set_debug_mode(bool setting) { debug_mode = setting; }
+void debug_set_debug_data_mode(bool setting) { debug_data_mode = setting; }
 void debug_set_no_check_mode(bool setting) {debug_check = !setting; }
 void debug_set_no_fpe_check_mode(bool setting) {debug_fpe_check = !setting; }
 void debug_set_strict_mode(bool setting) { debug_strict = setting; }
@@ -55,6 +57,7 @@ void debug_set_issue(uint issue) { debug_issue = issue; }
 void debug_set_legacy_mode(bool setting) { debug_legacy = setting; }
 
 bool is_debug_mode() { return debug_mode; };
+bool is_debug_data_mode() { return debug_data_mode; };
 bool is_no_check_mode() { return !debug_check; };
 bool is_check_mode() { return debug_check; };
 bool is_fpe_check_mode() { return debug_fpe_check; };
@@ -151,7 +154,13 @@ void disable_segfpe() {
   #endif
 }
 
+void write(const char *s, const char *msg) {
+  if (!is_debug_data_mode()) return;
+  cout << s << ": " << msg << endl;
+}
+
 void write(const gsl_vector *v, const char *msg) {
+  if (!is_debug_data_mode()) return;
   if (msg) cout << "// " << msg << endl;
   cout << "// vector size: " << v->size << endl;
   cout << "double " << msg << "[] = {";
@@ -162,6 +171,7 @@ void write(const gsl_vector *v, const char *msg) {
 }
 
 void write(const gsl_matrix *m, const char *msg) {
+  if (!is_debug_data_mode()) return;
   if (msg) cout << "// " << msg << endl;
   // Matrices are stored in row-major order, meaning that each row of
   // elements forms a contiguous block in memory. This is the standard
@@ -169,8 +179,9 @@ void write(const gsl_matrix *m, const char *msg) {
   // rows is size1.
   auto rows = m->size1; // see https://www.gnu.org/software/gsl/manual/html_node/Matrices.html#Matrices
   auto cols = m->size2;
+  auto tda = m->tda;
 
-  cout << "// matrix size: " << cols << " cols, " << rows << " rows" << endl;
+  cout << "// matrix size: " << cols << " cols, " << rows << " rows," << tda << " tda" << endl;
   cout << "double " << msg << "[] = {";
   for (size_t row=0; row < rows; row++) {
     for (size_t col=0; col < cols; col++) {
@@ -211,6 +222,7 @@ void do_gsl_matrix_safe_free (gsl_matrix *m, const char *__pretty_function, cons
     bool has_NaN = has_nan(m);
     bool has_Inf = has_inf(m);
     if (has_NaN || has_Inf) {
+      write(m);
       std::string msg = "Matrix (size ";
       msg += std::to_string(m->size1);
       msg += "x";
@@ -236,6 +248,7 @@ void do_gsl_vector_safe_free (gsl_vector *v, const char *__pretty_function, cons
     bool has_NaN = has_nan(v);
     bool has_Inf = has_inf(v);
     if (has_NaN || has_Inf) {
+      write(v);
       std::string msg = "Vector (size ";
       msg += std::to_string(v->size);
       msg += ")";

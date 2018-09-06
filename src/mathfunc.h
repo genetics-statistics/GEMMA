@@ -34,6 +34,9 @@ inline bool is_nan(double f) {
   return (std::isnan(f));
 }
 
+#define is_inf(d) gsl_isinf(d)
+#define is_nan(d) gsl_isnan(d)
+
 bool has_nan(const vector<double> v);
 bool has_nan(const gsl_vector *v);
 bool has_inf(const gsl_vector *v);
@@ -41,6 +44,8 @@ bool has_nan(const gsl_matrix *m);
 bool has_inf(const gsl_matrix *m);
 
 bool is_integer(const std::string & s);
+
+double safe_log(const double d);
 
 double VectorVar(const gsl_vector *v);
 void CenterMatrix(gsl_matrix *G);

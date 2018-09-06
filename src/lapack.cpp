@@ -272,12 +272,14 @@ double EigenDecomp_Zeroed(gsl_matrix *G, gsl_matrix *U, gsl_vector *eval,
   }
   d /= (double)eval->size;
   if (count_zero_eigenvalues > 1) {
+    write(eval,"eigenvalues");
     std::string msg = "Matrix G has ";
     msg += std::to_string(count_zero_eigenvalues);
     msg += " eigenvalues close to zero";
     warning_msg(msg);
   }
   if (count_negative_eigenvalues > 0) {
+    write(eval,"eigenvalues");
     warning_msg("Matrix G has more than one negative eigenvalues!");
   }
 
@@ -299,13 +301,23 @@ double CholeskySolve(gsl_matrix *Omega, gsl_vector *Xty, gsl_vector *OiXty) {
 
 // LU decomposition.
 void LUDecomp(gsl_matrix *LU, gsl_permutation *p, int *signum) {
+  // debug_msg("entering");
   enforce_gsl(gsl_linalg_LU_decomp(LU, p, signum));
   return;
 }
 
 // LU invert. Returns inverse. Note that GSL does not recommend using
 // this function
+
+// These functions compute the inverse of a matrix A from its LU
+// decomposition (LU,p), storing the result in the matrix inverse. The
+// inverse is computed by solving the system A x = b for each column
+// of the identity matrix. It is preferable to avoid direct use of the
+// inverse whenever possible, as the linear solver functions can
+// obtain the same result more efficiently and reliably (consult any
+// introductory textbook on numerical linear algebra for details).
 void LUInvert(const gsl_matrix *LU, const gsl_permutation *p, gsl_matrix *ret_inverse) {
+  // debug_msg("entering");
   auto det = LULndet(LU);
   assert(det != 1.0);
 
@@ -313,13 +325,24 @@ void LUInvert(const gsl_matrix *LU, const gsl_permutation *p, gsl_matrix *ret_in
 }
 
 // LU lndet.
+
+// These functions compute the logarithm of the absolute value of the
+// determinant of a matrix A, \ln|\det(A)|, from its LU decomposition,
+// LU. This function may be useful if the direct computation of the
+// determinant would overflow or underflow.
+
 double LULndet(const gsl_matrix *LU) {
-  return gsl_linalg_LU_lndet((gsl_matrix *)LU);
+  // debug_msg("entering");
+
+  double res = gsl_linalg_LU_lndet((gsl_matrix *)LU);
+  enforce_msg(!is_inf(res), "LU determinant is zero -> LU is not invertable");
+  return res;
 }
 
 // LU solve.
 void LUSolve(const gsl_matrix *LU, const gsl_permutation *p,
              const gsl_vector *b, gsl_vector *x) {
+  // debug_msg("entering");
   enforce_gsl(gsl_linalg_LU_solve(LU, p, b, x));
   return;
 }

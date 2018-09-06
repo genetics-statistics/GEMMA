@@ -31,7 +31,7 @@ testBXDStandardRelatednessMatrixKSingularError() {
            -gk \
            -no-check \
            -o $outn
-    assertEquals 22 $? # should show singular error
+    assertEquals 130 $? # should show singular error
 }
 
 testBXDStandardRelatednessMatrixK() {

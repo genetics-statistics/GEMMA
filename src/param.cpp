@@ -35,6 +35,7 @@
 #include "gsl/gsl_vector.h"
 
 #include "eigenlib.h"
+#include "gemma.h"
 #include "gemma_io.h"
 #include "mathfunc.h"
 #include "param.h"
@@ -311,6 +312,7 @@ void PARAM::ReadFiles(void) {
                       maf_level, miss_level, hwe_level, r2_level, mapRS2chr,
                       mapRS2bp, mapRS2cM, snpInfo, ns_test) == false) {
       error = true;
+      return;
     }
     gsl_matrix_free(W2);
 
@@ -320,12 +322,7 @@ void PARAM::ReadFiles(void) {
   // Read genotype file for multiple PLINK files.
   if (!file_mbfile.empty()) {
     igzstream infile(file_mbfile.c_str(), igzstream::in);
-    if (!infile) {
-      cout << "error! fail to open mbfile file: " << file_mbfile << endl;
-      error = true;
-      return;
-    }
-
+    enforce_msg(infile,"fail to open mbfile file");
     string file_name;
     size_t t = 0, ns_test_tmp = 0;
     gsl_matrix *W3 = NULL;
@@ -477,11 +474,7 @@ void PARAM::ReadFiles(void) {
       ni_test += indicator_idv[i];
     }
 
-    if (ni_test == 0) {
-      cout << "error! number of analyzed individuals equals 0. " << endl;
-      error = true;
-      return;
-    }
+    enforce_msg(ni_test,"number of analyzed individuals equals 0.");
   }
 
   // For ridge prediction, read phenotype only.
@@ -1056,6 +1049,8 @@ void PARAM::CheckData(void) {
     }
   }
 
+  enforce_msg(ni_test,"number of analyzed individuals equals 0.");
+
   if (ni_test == 0 && file_cor.empty() && file_mstudy.empty() &&
       file_study.empty() && file_beta.empty() && file_bf.empty()) {
     error = true;
@@ -1383,7 +1378,8 @@ size_t GetabIndex(const size_t a, const size_t b, const size_t n_cvt) {
   }
 
   size_t index = (2 * cols - a1 + 2) * (a1 - 1) / 2 + b1 - a1;
-  cout << "* GetabIndx " << a1 << "," << b1 << "," << cols << ":" << index << endl;
+  // cout << "* GetabIndx " << a1 << "," << b1 << "," << cols << ":" << index << endl;
+  // FIXME: should add a contract for index range
   return index;
   // return ( b < a ?  ((2 * cols - b + 2) * (b - 1) / 2 + a - b ): ((2 * cols - a + 2) * (a - 1) / 2 + b - a) );
 
@@ -2062,10 +2058,11 @@ void PARAM::ProcessCvtPhen() {
   }
 
   // Check ni_test.
-  if (ni_test == 0 && a_mode != 15) {
+  if (a_mode != M_BSLMM5)
+    enforce_msg(ni_test,"number of analyzed individuals equals 0.");
+  if (ni_test == 0 && a_mode != M_BSLMM5) {
     error = true;
     cout << "error! number of analyzed individuals equals 0. " << endl;
-    return;
   }
 
   // Check covariates to see if they are correlated with each

@@ -41,6 +41,7 @@
 #include "gzstream.h"
 #include "gemma_io.h"
 #include "lapack.h"
+#include "mathfunc.h"
 #include "lmm.h"
 #include "mvlmm.h"
 
@@ -233,7 +234,7 @@ double EigenProc(const gsl_matrix *V_g, const gsl_matrix *V_e, gsl_vector *D_l,
     if (d <= 0) {
       continue;
     }
-    logdet_Ve += log(d);
+    logdet_Ve += safe_log(d);
 
     gsl_vector_view U_col = gsl_matrix_column(U_l, i);
     d = sqrt(d);
@@ -563,7 +564,7 @@ double MphCalcLogL(const gsl_vector *eval, const gsl_vector *xHiy,
       dl = gsl_vector_get(D_l, i);
       d = delta * dl + 1.0;
 
-      logl += y * y / d + log(d);
+      logl += y * y / d + safe_log(d);
     }
   }
 
@@ -629,10 +630,10 @@ double MphEM(const char func_name, const size_t max_iter, const double max_prec,
   // Calculate the constant for logl.
   if (func_name == 'R' || func_name == 'r') {
     logl_const =
-        -0.5 * (double)(n_size - c_size) * (double)d_size * log(2.0 * M_PI) +
+        -0.5 * (double)(n_size - c_size) * (double)d_size * safe_log(2.0 * M_PI) +
         0.5 * (double)d_size * LULndet(XXt);
   } else {
-    logl_const = -0.5 * (double)n_size * (double)d_size * log(2.0 * M_PI);
+    logl_const = -0.5 * (double)n_size * (double)d_size * safe_log(2.0 * M_PI);
   }
 
   // Start EM.
@@ -958,7 +959,7 @@ void CalcHiQi(const gsl_vector *eval, const gsl_matrix *X,
       gsl_vector_view mat_row = gsl_matrix_row(mat_dd, i);
       gsl_vector_scale(&mat_row.vector, 1.0 / d); // @@
 
-      logdet_H += log(d);
+      logdet_H += safe_log(d);
     }
 
     gsl_matrix_view Hi_k =
@@ -2639,10 +2640,10 @@ double MphNR(const char func_name, const size_t max_iter, const double max_prec,
   // Calculate the constant for logl.
   if (func_name == 'R' || func_name == 'r') {
     logl_const =
-        -0.5 * (double)(n_size - c_size) * (double)d_size * log(2.0 * M_PI) +
+        -0.5 * (double)(n_size - c_size) * (double)d_size * safe_log(2.0 * M_PI) +
         0.5 * (double)d_size * LULndet(XXt);
   } else {
-    logl_const = -0.5 * (double)n_size * (double)d_size * log(2.0 * M_PI);
+    logl_const = -0.5 * (double)n_size * (double)d_size * safe_log(2.0 * M_PI);
   }
 
   // Optimization iterations.

@@ -48,6 +48,7 @@ extern "C" {
 
 #include "bslmm.h"
 #include "bslmmdap.h"
+#include <csignal> // for gsl_error_handler
 #include "gemma.h"
 #include "gemma_io.h"
 #include "lapack.h"
@@ -64,23 +65,6 @@ extern "C" {
 
 using namespace std;
 
-// OPTIONS
-// -------
-// gk:      21-22
-// gs:      25-26
-// gq:      27-28
-// eigen:   31-32
-// lmm:     1-5
-// bslmm:   11-15
-// predict: 41-43
-// lm:      51
-// vc:      61
-// ci:      66-67
-// calccor: 71
-// gw:      72
-
-enum M_MODE { M_LMM1=1, M_LMM2=2, M_LMM3=3, M_LMM4=4, M_LMM5=5, M_KIN=21, M_KIN2=22, M_EIGEN=31 };
-
 GEMMA::GEMMA(void) : version(GEMMA_VERSION), date(GEMMA_DATE), year(GEMMA_YEAR) {}
 
 void gemma_gsl_error_handler (const char * reason,
@@ -88,7 +72,7 @@ void gemma_gsl_error_handler (const char * reason,
                               int line, int gsl_errno) {
   cerr << "GSL ERROR: " << reason << " in " << file
        << " at line " << line << " errno " << gsl_errno <<endl;
-  exit(22);
+  std::raise(SIGINT); // keep the stack trace for gdb
 }
 
 #if defined(OPENBLAS) && !defined(OPENBLAS_LEGACY)
@@ -737,6 +721,7 @@ void GEMMA::PrintHelp(size_t option) {
     cout << " -strict                  strict mode will stop when there is a problem" << endl;
     cout << " -silence                 silent terminal display" << endl;
     cout << " -debug                   debug output" << endl;
+    cout << " -debug-data              debug data output" << endl;
     cout << " -nind       [num]        read up to num individuals" << endl;
     cout << " -issue      [num]        enable tests relevant to issue tracker" << endl;
     cout << " -legacy                  run gemma in legacy mode" << endl;
@@ -1611,6 +1596,10 @@ void GEMMA::Assign(int argc, char **argv, PARAM &cPar) {
       str.clear();
       str.assign(argv[i]);
       cPar.window_ns = atoi(str.c_str());
+    } else if (strcmp(argv[i], "-debug-data") == 0) {
+      // cPar.mode_debug = true;
+      debug_set_debug_data_mode(true);
+      debug_set_debug_mode(true);
     } else if (strcmp(argv[i], "-debug") == 0) {
       // cPar.mode_debug = true;
       debug_set_debug_mode(true);
@@ -1780,7 +1769,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
     cout << "Start Eigen-Decomposition..." << endl;
     time_start = clock();
     cPar.trace_G = EigenDecomp_Zeroed(G, U, eval, 0);
-    write(eval,"eval zeroed");
+    // write(eval,"eval zeroed");
     cPar.time_eigen = (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
 
     // calculate UtW and Uty
@@ -2625,7 +2614,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
       } else {
         cPar.trace_G = EigenDecomp_Zeroed(G, U, eval, 0);
       }
-      write(eval,"eval");
+      // write(eval,"eval");
 
       if (!cPar.file_weight.empty()) {
         double wi;

@@ -292,7 +292,7 @@ void CalcPab(const size_t n_cvt, const size_t e_mode, const gsl_vector *Hi_eval,
 
   double p_ab = 0.0;
 
-  debug_msg("CalcPab");
+  write("CalcPab");
   write(Hi_eval,"Hi_eval");
   write(Uab,"Uab");
   // write(ab,"ab");
@@ -305,19 +305,19 @@ void CalcPab(const size_t n_cvt, const size_t e_mode, const gsl_vector *Hi_eval,
       for (size_t b = a; b <= n_cvt + 2; ++b) {    // b in a..rest
         size_t index_ab = GetabIndex(a, b, n_cvt); // index in top half matrix, see above
         if (p == 0) { // fills row 0 for each a,b using dot product of Hi_eval . Uab(a)
-          cout << "p is 0 " << index_ab; // walk row 0
+          // cout << "p is 0 " << index_ab; // walk row 0
           gsl_vector_const_view Uab_col = gsl_matrix_const_column(Uab, index_ab); // get the column
           gsl_blas_ddot(Hi_eval, &Uab_col.vector, &p_ab); // dot product with H_eval
           if (e_mode != 0) { // if not null model (defunct right now)
             if (! is_legacy_mode()) assert(false); // disabling to see when it is used; allow with legacy mode
             p_ab = gsl_vector_get(unused, index_ab) - p_ab; // was ab
           }
-          cout << p << "r," << index_ab << ":" << p_ab << endl;
+          // cout << p << "r, index_ab " << index_ab << ":" << p_ab << endl;
           gsl_matrix_set(Pab, 0, index_ab, p_ab);
           write(Pab,"Pab int");
         } else {
           // walk the rest of the upper triangle of the matrix (row 1..n). Cols jump with 2 at a time
-          cout << "a" << a << "b" << b << "p" << p << "n_cvt" << n_cvt << endl;
+          // cout << "a" << a << "b" << b << "p" << p << "n_cvt" << n_cvt << endl;
           write(Pab,"Pab int");
           size_t index_aw = GetabIndex(a, p, n_cvt);
           size_t index_bw = GetabIndex(b, p, n_cvt);
@@ -329,20 +329,22 @@ void CalcPab(const size_t n_cvt, const size_t e_mode, const gsl_vector *Hi_eval,
           double ps_bw = gsl_matrix_safe_get(Pab, p - 1, index_bw);
           double ps_ww = gsl_matrix_safe_get(Pab, p - 1, index_ww);
 
-          cout << "unsafe " << p-1 << "," << index_ww << ":" << gsl_matrix_get(Pab,p-1,index_ww) << endl;
+          // cout << "unsafe " << p-1 << "," << index_ww << ":" << gsl_matrix_get(Pab,p-1,index_ww) << endl;
           // if (is_check_mode() || is_debug_mode()) assert(ps_ww != 0.0);
           if (ps_ww != 0)
             p_ab = ps_ab - ps_aw * ps_bw / ps_ww;
+          else
+            p_ab = ps_ab;
 
-          cout << "set " << p << "r," << index_ab << "c: " << p_ab << endl;
+          // cout << "set " << p << "r, index_ab " << index_ab << "c: " << p_ab << endl;
           gsl_matrix_set(Pab, p, index_ab, p_ab);
         }
       }
     }
   }
   write(Pab,"Pab");
-  if (is_strict_mode() && (has_nan(Uab) || has_nan(Pab) || has_nan(Hi_eval)))
-    exit(2);
+  // if (is_strict_mode() && (has_nan(Uab) || has_nan(Pab) || has_nan(Hi_eval)))
+  //   exit(2);
   return;
 }
 
@@ -353,7 +355,7 @@ void CalcPPab(const size_t n_cvt, const size_t e_mode,
   double p2_ab;
   double ps2_ab, ps_aw, ps_bw, ps_ww, ps2_aw, ps2_bw, ps2_ww;
 
-  debug_msg("CalcPPab");
+  write("CalcPPab");
   write(HiHi_eval,"Hi_eval");
   write(Uab,"Uab");
   // write(ab,"ab");
@@ -390,6 +392,9 @@ void CalcPPab(const size_t n_cvt, const size_t e_mode,
             p2_ab = ps2_ab + ps_aw * ps_bw * ps2_ww / (ps_ww * ps_ww);
             p2_ab -= (ps_aw * ps2_bw + ps_bw * ps2_aw) / ps_ww;
           }
+          else {
+            p2_ab = ps2_ab;
+          }
           gsl_matrix_set(PPab, p, index_ab, p2_ab);
 
         }
@@ -397,8 +402,8 @@ void CalcPPab(const size_t n_cvt, const size_t e_mode,
     }
   }
   write(PPab,"PPab");
-  if (is_strict_mode() && (has_nan(Uab) || has_nan(PPab) || has_nan(HiHi_eval)))
-    exit(2);
+  // if (is_strict_mode() && (has_nan(Uab) || has_nan(PPab) || has_nan(HiHi_eval)))
+  //   exit(2);
   return;
 }
 
@@ -410,7 +415,7 @@ void CalcPPPab(const size_t n_cvt, const size_t e_mode,
   double p3_ab;
   double ps3_ab, ps_aw, ps_bw, ps_ww, ps2_aw, ps2_bw, ps2_ww, ps3_aw, ps3_bw,
       ps3_ww;
-  debug_msg("CalcPPPab");
+  write("CalcPPPab");
   write(HiHiHi_eval,"HiHiHi_eval");
   write(Uab,"Uab");
 
@@ -454,14 +459,17 @@ void CalcPPPab(const size_t n_cvt, const size_t e_mode,
                       ps_aw * ps_bw * ps3_ww) /
               (ps_ww * ps_ww);
           }
+          else {
+            p3_ab = ps3_ab;
+          }
           gsl_matrix_set(PPPab, p, index_ab, p3_ab);
         }
       }
     }
   }
   write(PPPab,"PPPab");
-  if (is_strict_mode() && (has_nan(Uab) || has_nan(PPPab) || has_nan(HiHiHi_eval)))
-    exit(2);
+  // if (is_strict_mode() && (has_nan(Uab) || has_nan(PPPab) || has_nan(HiHiHi_eval)))
+  //  exit(2);
   return;
 }
 
@@ -497,27 +505,27 @@ double LogL_f(double l, void *params) {
 
   for (size_t i = 0; i < (p->eval)->size; ++i) {
     d = gsl_vector_get(v_temp, i);
-    logdet_h += log(fabs(d));
+    logdet_h += safe_log(fabs(d));
   }
 
   CalcPab(n_cvt, p->e_mode, Hi_eval, p->Uab, p->ab, Pab);
 
   double c =
-      0.5 * (double)ni_test * (log((double)ni_test) - log(2 * M_PI) - 1.0);
+      0.5 * (double)ni_test * (safe_log((double)ni_test) - safe_log(2 * M_PI) - 1.0);
 
   index_yy = GetabIndex(n_cvt + 2, n_cvt + 2, n_cvt);
   double P_yy = gsl_matrix_safe_get(Pab, nc_total, index_yy);
 
   if (is_check_mode() || is_debug_mode()) {
-    cerr << "P_yy is" << P_yy << endl;
+    // cerr << "P_yy is" << P_yy << endl;
     assert(!is_nan(P_yy));
     assert(P_yy > 0);
   }
-  f = c - 0.5 * logdet_h - 0.5 * (double)ni_test * log(P_yy);
+  f = c - 0.5 * logdet_h - 0.5 * (double)ni_test * safe_log(P_yy);
   if (is_check_mode() || is_debug_mode()) {
     assert(!is_nan(f));
   }
-  gsl_matrix_safe_free(Pab); // FIXME
+  gsl_matrix_free(Pab); // FIXME
   gsl_vector_safe_free(Hi_eval);
   gsl_vector_safe_free(v_temp);
   return f;
@@ -610,8 +618,8 @@ $8 = 6
   double yPKPy = (P_yy - PP_yy) / l;
   dev1 = -0.5 * trace_HiK + 0.5 * (double)ni_test * yPKPy / P_yy;
 
-  gsl_matrix_safe_free(Pab);   // FIXME: may contain NaN
-  gsl_matrix_safe_free(PPab);  // FIXME: may contain NaN
+  gsl_matrix_free(Pab);   // FIXME: may contain NaN
+  gsl_matrix_free(PPab);  // FIXME: may contain NaN
   gsl_vector_safe_free(Hi_eval);
   gsl_vector_safe_free(HiHi_eval);
   gsl_vector_safe_free(v_temp);
@@ -685,9 +693,9 @@ double LogL_dev2(double l, void *params) {
          0.5 * (double)ni_test * (2.0 * yPKPKPy * P_yy - yPKPy * yPKPy) /
              (P_yy * P_yy);
 
-  gsl_matrix_safe_free(Pab);  // FIXME
-  gsl_matrix_safe_free(PPab);
-  gsl_matrix_safe_free(PPPab);
+  gsl_matrix_free(Pab);  // FIXME
+  gsl_matrix_free(PPab);
+  gsl_matrix_free(PPPab);
   gsl_vector_safe_free(Hi_eval);
   gsl_vector_safe_free(HiHi_eval);
   gsl_vector_safe_free(HiHiHi_eval);
@@ -765,9 +773,9 @@ void LogL_dev12(double l, void *params, double *dev1, double *dev2) {
           0.5 * (double)ni_test * (2.0 * yPKPKPy * P_yy - yPKPy * yPKPy) /
               (P_yy * P_yy);
 
-  gsl_matrix_safe_free(Pab);   // FIXME: may contain NaN
-  gsl_matrix_safe_free(PPab);  // FIXME: may contain NaN
-  gsl_matrix_safe_free(PPPab); // FIXME: may contain NaN
+  gsl_matrix_free(Pab);   // FIXME: may contain NaN
+  gsl_matrix_free(PPab);  // FIXME: may contain NaN
+  gsl_matrix_free(PPPab); // FIXME: may contain NaN
   gsl_vector_safe_free(Hi_eval);
   gsl_vector_safe_free(HiHi_eval);
   gsl_vector_safe_free(HiHiHi_eval);
@@ -812,7 +820,7 @@ double LogRL_f(double l, void *params) {
 
   for (size_t i = 0; i < (p->eval)->size; ++i) {
     d = gsl_vector_get(v_temp, i);
-    logdet_h += log(fabs(d));
+    logdet_h += safe_log(fabs(d));
   }
 
   CalcPab(n_cvt, p->e_mode, Hi_eval, p->Uab, p->ab, Pab);
@@ -824,18 +832,18 @@ double LogRL_f(double l, void *params) {
   for (size_t i = 0; i < nc_total; ++i) {
     index_ww = GetabIndex(i + 1, i + 1, n_cvt);
     d = gsl_matrix_safe_get(Pab, i, index_ww);
-    logdet_hiw += log(d);
+    logdet_hiw += safe_log(d);
     d = gsl_matrix_safe_get(Iab, i, index_ww);
-    logdet_hiw -= log(d);
+    logdet_hiw -= safe_log(d);
   }
   index_ww = GetabIndex(n_cvt + 2, n_cvt + 2, n_cvt);
   double P_yy = gsl_matrix_safe_get(Pab, nc_total, index_ww);
 
-  double c = 0.5 * df * (log(df) - log(2 * M_PI) - 1.0);
-  f = c - 0.5 * logdet_h - 0.5 * logdet_hiw - 0.5 * df * log(P_yy);
+  double c = 0.5 * df * (safe_log(df) - safe_log(2 * M_PI) - 1.0);
+  f = c - 0.5 * logdet_h - 0.5 * logdet_hiw - 0.5 * df * safe_log(P_yy);
 
-  gsl_matrix_safe_free(Pab);
-  gsl_matrix_safe_free(Iab);
+  gsl_matrix_free(Pab);
+  gsl_matrix_free(Iab); // contains NaN
   gsl_vector_safe_free(Hi_eval);
   gsl_vector_safe_free(v_temp);
   return f;
@@ -911,8 +919,8 @@ double LogRL_dev1(double l, void *params) {
 
   dev1 = -0.5 * trace_PK + 0.5 * df * yPKPy / P_yy;
 
-  gsl_matrix_safe_free(Pab);  // FIXME: may contain NaN
-  gsl_matrix_safe_free(PPab); // FIXME: may contain NaN
+  gsl_matrix_free(Pab);  // FIXME: may contain NaN
+  gsl_matrix_free(PPab); // FIXME: may contain NaN
   gsl_vector_safe_free(Hi_eval);
   gsl_vector_safe_free(HiHi_eval);
   gsl_vector_safe_free(v_temp);
@@ -999,9 +1007,9 @@ double LogRL_dev2(double l, void *params) {
   dev2 = 0.5 * trace_PKPK -
          0.5 * df * (2.0 * yPKPKPy * P_yy - yPKPy * yPKPy) / (P_yy * P_yy);
 
-  gsl_matrix_safe_free(Pab);  // FIXME
-  gsl_matrix_safe_free(PPab);
-  gsl_matrix_safe_free(PPPab);
+  gsl_matrix_free(Pab);  // FIXME
+  gsl_matrix_free(PPab);
+  gsl_matrix_free(PPPab);
   gsl_vector_safe_free(Hi_eval);
   gsl_vector_safe_free(HiHi_eval);
   gsl_vector_safe_free(HiHiHi_eval);
@@ -1091,9 +1099,9 @@ void LogRL_dev12(double l, void *params, double *dev1, double *dev2) {
   *dev2 = 0.5 * trace_PKPK -
           0.5 * df * (2.0 * yPKPKPy * P_yy - yPKPy * yPKPy) / (P_yy * P_yy);
 
-  gsl_matrix_safe_free(Pab);  // FIXME
-  gsl_matrix_safe_free(PPab);
-  gsl_matrix_safe_free(PPPab);
+  gsl_matrix_free(Pab);  // FIXME
+  gsl_matrix_free(PPab);
+  gsl_matrix_free(PPPab);
   gsl_vector_safe_free(Hi_eval);
   gsl_vector_safe_free(HiHi_eval);
   gsl_vector_safe_free(HiHiHi_eval);
@@ -1138,7 +1146,7 @@ void LMM::CalcRLWald(const double &l, const FUNC_PARAM &params, double &beta,
   se = sqrt(1.0 / (tau * P_xx));
   p_wald = gsl_cdf_fdist_Q((P_yy - Px_yy) * tau, 1.0, df);
 
-  gsl_matrix_safe_free(Pab);
+  gsl_matrix_free(Pab);
   gsl_vector_safe_free(Hi_eval);
   gsl_vector_safe_free(v_temp);
   return;
@@ -1182,7 +1190,7 @@ void LMM::CalcRLScore(const double &l, const FUNC_PARAM &params, double &beta,
   p_score =
       gsl_cdf_fdist_Q((double)ni_test * P_xy * P_xy / (P_yy * P_xx), 1.0, df);
 
-  gsl_matrix_safe_free(Pab);
+  gsl_matrix_free(Pab);
   gsl_vector_safe_free(Hi_eval);
   gsl_vector_safe_free(v_temp);
   return;
@@ -1225,7 +1233,7 @@ void CalcUab(const gsl_matrix *UtW, const gsl_vector *Uty, gsl_matrix *Uab) {
 
       gsl_vector_mul(&Uab_col.vector, u_a);
     }
-    cout << "a" << a << endl;
+    // cout << "a" << a << endl;
     write(Uab,"Uab iteration");
   }
 
@@ -1440,7 +1448,7 @@ void LMM::AnalyzeGene(const gsl_matrix *U, const gsl_vector *eval,
   gsl_vector_safe_free(y);
   gsl_vector_safe_free(Uty);
   gsl_matrix_safe_free(Uab);
-  gsl_vector_safe_free(ab);
+  gsl_vector_free(ab); // unused
 
   infile.close();
   infile.clear();
@@ -1626,7 +1634,7 @@ void LMM::Analyze(std::function< SnpNameValues(size_t) >& fetch_snp,
   gsl_vector_safe_free(x_miss);
   gsl_vector_safe_free(Utx);
   gsl_matrix_safe_free(Uab);
-  gsl_vector_safe_free(ab);
+  gsl_vector_free(ab); // unused
 
   gsl_matrix_safe_free(Xlarge);
   gsl_matrix_safe_free(UtXlarge);
@@ -1669,7 +1677,7 @@ void LMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
       if (strcmp(ch_ptr, "NA") != 0) {
         gs[i] = atof(ch_ptr);
         if (is_strict_mode() && gs[i] == 0.0)
-          enforce_is_float(std::string(__STRING(ch_ptr))); // only allow for NA and valid numbers
+          enforce_is_float(std::string(ch_ptr)); // only allow for NA and valid numbers
       }
     }
     return std::make_tuple(snp,gs);
@@ -1790,7 +1798,7 @@ void MatrixCalcLR(const gsl_matrix *U, const gsl_matrix *UtX,
   gsl_vector_safe_free(w);
   gsl_matrix_safe_free(Utw);
   gsl_matrix_safe_free(Uab);
-  gsl_vector_safe_free(ab);
+  gsl_vector_free(ab); // unused
 
   return;
 }
@@ -1809,7 +1817,7 @@ void CalcLambda(const char func_name, FUNC_PARAM &params, const double l_min,
 
   // Evaluate first-order derivates in different intervals.
   double lambda_l, lambda_h,
-      lambda_interval = log(l_max / l_min) / (double)n_region;
+      lambda_interval = safe_log(l_max / l_min) / (double)n_region;
   double dev1_l, dev1_h, logf_l, logf_h;
 
   for (size_t i = 0; i < n_region; ++i) {
@@ -1972,7 +1980,7 @@ void CalcLambda(const char func_name, const gsl_vector *eval,
   size_t n_cvt = UtW->size2, ni_test = UtW->size1;
   size_t n_index = (n_cvt + 2 + 1) * (n_cvt + 2) / 2;
 
-  cout << "n_cvt " << n_cvt << ", ni_test " << ni_test << ", n_index " << n_index << endl;
+  // cout << "n_cvt " << n_cvt << ", ni_test " << ni_test << ", n_index " << n_index << endl;
 
   gsl_matrix *Uab = gsl_matrix_safe_alloc(ni_test, n_index);
   gsl_vector *ab = gsl_vector_safe_alloc(n_index);
@@ -1989,7 +1997,7 @@ void CalcLambda(const char func_name, const gsl_vector *eval,
   CalcLambda(func_name, param0, l_min, l_max, n_region, lambda, logl_H0);
 
   gsl_matrix_safe_free(Uab);
-  gsl_vector_safe_free(ab);
+  gsl_vector_free(ab); // unused
 
   return;
 }
@@ -2015,7 +2023,7 @@ void CalcPve(const gsl_vector *eval, const gsl_matrix *UtW,
   pve_se = trace_G / ((trace_G * lambda + 1.0) * (trace_G * lambda + 1.0)) * se;
 
   gsl_matrix_safe_free(Uab);
-  gsl_vector_safe_free(ab);
+  gsl_vector_free(ab); // unused
   return;
 }
 
@@ -2080,8 +2088,8 @@ void CalcLmmVgVeBeta(const gsl_vector *eval, const gsl_matrix *UtW,
   }
 
   gsl_matrix_safe_free(Uab);
-  gsl_matrix_safe_free(Pab);
-  gsl_vector_safe_free(ab);
+  gsl_matrix_free(Pab);
+  gsl_vector_free(ab); // ab is unused
   gsl_vector_safe_free(Hi_eval);
   gsl_vector_safe_free(v_temp);
   gsl_matrix_safe_free(HiW);
@@ -2233,7 +2241,7 @@ void LMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval,
   gsl_vector_safe_free(x_miss);
   gsl_vector_safe_free(Utx);
   gsl_matrix_safe_free(Uab);
-  gsl_vector_safe_free(ab);
+  gsl_vector_free(ab); // unused
 
   gsl_matrix_safe_free(UtW_expand);
 
@@ -2410,7 +2418,7 @@ void LMM::AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval,
   gsl_vector_safe_free(x);
   gsl_vector_safe_free(Utx);
   gsl_matrix_safe_free(Uab);
-  gsl_vector_safe_free(ab);
+  gsl_vector_free(ab); // unused
 
   gsl_matrix_safe_free(UtW_expand);
 
