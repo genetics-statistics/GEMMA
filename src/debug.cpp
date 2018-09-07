@@ -332,11 +332,11 @@ void do_validate_K(const gsl_matrix *K, const char *__pretty_function, const cha
       warning_at_msg(__file,__line,"K is ill conditioned!");
     if (!isMatrixSymmetric(K))
       warnfail_at_msg(is_strict_mode(),__pretty_function,__file,__line,"K is not symmetric!" );
-    const bool negative_values = has_negative_values_but_one(eigenvalues);
-    if (negative_values) {
+    const bool negative_eigen_values = has_negative_values_but_one(eigenvalues);
+    if (negative_eigen_values) {
       warning_at_msg(__file,__line,"K has more than one negative eigenvalues!");
     }
-    if (count_small>1 && negative_values && !isMatrixPositiveDefinite(K))
+    if (count_small>1 && negative_eigen_values && !isMatrixPositiveDefinite(K))
       warnfail_at_msg(is_strict_mode(),__pretty_function,__file,__line,"K is not positive definite!");
     gsl_vector_free(eigenvalues);
   }

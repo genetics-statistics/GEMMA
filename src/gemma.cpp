@@ -1612,6 +1612,7 @@ void GEMMA::Assign(int argc, char **argv, PARAM &cPar) {
     } else if (strcmp(argv[i], "-strict") == 0) {
       // cPar.mode_strict = true;
       debug_set_strict_mode(true);
+      debug_set_debug_mode(true);
     } else if (strcmp(argv[i], "-legacy") == 0) {
       debug_set_legacy_mode(true);
       warning_msg("you are running in legacy mode - support may drop in future versions of gemma");
@@ -3567,5 +3568,7 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
 
   outfile.close();
   outfile.clear();
+
+  info_msg("Done");
   return;
 }

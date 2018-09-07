@@ -267,7 +267,7 @@ double EigenDecomp_Zeroed(gsl_matrix *G, gsl_matrix *U, gsl_vector *eval,
     // checks
     if (gsl_vector_get(eval,i) == 0.0)
       count_zero_eigenvalues += 1;
-    if (gsl_vector_get(eval,i) < 0.0) // count smaller than -EIGEN_MINVALUE
+    if (gsl_vector_get(eval,i) < -EIGEN_MINVALUE) // count smaller than -EIGEN_MINVALUE
       count_negative_eigenvalues += 1;
     d += gsl_vector_get(eval, i);
   }
@@ -279,11 +279,11 @@ double EigenDecomp_Zeroed(gsl_matrix *G, gsl_matrix *U, gsl_vector *eval,
     msg += " eigenvalues close to zero";
     warning_msg(msg);
   }
-  if (count_negative_eigenvalues > 0) {
+  const bool negative_eigen_values = has_negative_values_but_one(eval);
+  if (negative_eigen_values) {
     write(eval,"eigenvalues");
-    warning_msg("Matrix G has more than one negative eigenvalues!");
+    warning_msg("K has more than one negative eigenvalues!");
   }
-
   return d;
 }
 

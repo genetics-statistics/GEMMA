@@ -104,7 +104,7 @@ bool is_float(const std::string & s){
 }
 
 double safe_log(const double d) {
-  if (!is_legacy_mode() && !is_check_mode())
+  if (!is_legacy_mode() && (is_check_mode() || is_debug_mode()))
     enforce_msg(d > 0.0, (std::string("Trying to take the log of ") + std::to_string(d)).c_str());
   return log(d);
 }
@@ -113,7 +113,7 @@ double safe_sqrt(const double d) {
   double d1 = d;
   if (fabs(d < 0.001))
     d1 = fabs(d);
-  if (!is_legacy_mode() && !is_check_mode())
+  if (!is_legacy_mode() && (is_check_mode() || is_debug_mode()))
     enforce_msg(d1 >= 0.0, (std::string("Trying to take the sqrt of ") + std::to_string(d)).c_str());
   if (d1 < 0.0 )
     return nan("");
@@ -354,7 +354,7 @@ tuple<double, double, double> abs_minmax(const gsl_vector *v) {
 bool has_negative_values_but_one(const gsl_vector *v) {
   bool one_skipped = false;
   for (size_t i=0; i<v->size; i++) {
-    if (v->data[i] < 0.0) {
+    if (v->data[i] < -EIGEN_MINVALUE) {
       if (one_skipped)
         return true;
       one_skipped = true;

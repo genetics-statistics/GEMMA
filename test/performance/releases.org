@@ -10,6 +10,9 @@ core Eigenlib version and 0.97 went multi-core with
 openblas. Unfortunately I linked in lapack and an older BLAS which
 slowed things down. In 0.98 openblas is mostly used and is faster.
 
+Note also that the recent static versions are slower than the
+dynamically linked ones. Not sure why that is.
+
 * GEMMA 0.98-beta1
 
 #+BEGIN_SRC bash

@@ -65,7 +65,7 @@ WITH_GSLCBLAS          =                  # Force linking gslcblas (if OpenBlas 
 OPENBLAS_LEGACY        =                  # Using older OpenBlas
 FORCE_STATIC           =                  # Static linking of libraries
 # GCC_FLAGS              = -Wall -O3 -std=gnu++11 # extra flags -Wl,--allow-multiple-definition
-GCC_FLAGS              = -Wall -Og -std=gnu++11 # extra flags -Wl,--allow-multiple-definition
+GCC_FLAGS              = -pthread -Wall -std=gnu++11 # extra flags -Wl,--allow-multiple-definition
 TRAVIS_CI              =                  # used by TRAVIS for testing
 
 GSL_INCLUDE_PATH =
@@ -120,10 +120,10 @@ ifdef WITH_OPENBLAS
 endif
 
 ifdef DEBUG
-  CPPFLAGS += -g $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc $(RPATH)
+  CPPFLAGS += -g -Og $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc $(RPATH)
 else
   # release mode
-  CPPFLAGS += -DNDEBUG $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc $(RPATH)
+  CPPFLAGS += -DNDEBUG -O3 $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc $(RPATH)
 endif
 
 ifeq ($(SYS), WIN)
@@ -135,13 +135,14 @@ ifdef SHOW_COMPILER_WARNINGS
 endif
 
 ifndef FORCE_STATIC
-  LIBS = -lgsl -lopenblas -pthread -lz
+  LIBS = -lgsl -lopenblas -lz
   ifdef WITH_GSLCBLAS
     LIBS += -lgslcblas
   else
     LIBS += -lgfortran -lquadmath
   endif
 else
+  LIBS = -L$(GUIX)/lib -lopenblas -lgsl -lz -lgslcblas -lgfortran -lquadmath
   ifndef TRAVIS_CI # Travis static compile we cheat a little
     CPPFLAGS += -static
   endif
