@@ -2,12 +2,12 @@
 #
 # Supported platforms
 #
-#       Unix / Linux               	LNX (default)
-#       Mac                        	MAC
-#       GNU Guix                        GUIX (set to profile)
+#       Unix / Linux               LNX (default)
+#       Mac                        MAC
+#       GNU Guix                   GUIX (set to profile)
 #
 # Compilation options
-#       static compilation    		FORCE_STATIC
+#       static compilation         FORCE_STATIC
 #
 # Examples:
 #

@@ -30,6 +30,23 @@ Windows binaries) please post a note in the
 loci identified in CFW mice using GEMMA, from [Parker et al, Nature
 Genetics, 2016](https://doi.org/10.1038/ng.3609).)*
 
+      * [Key features](#key-features)
+      * [Installation](#installation)
+         * [Precompiled binaries](#precompiled-binaries)
+      * [Run GEMMA](#run-gemma)
+         * [Debugging and optimization](#debugging-and-optimization)
+      * [Help](#help)
+      * [Citing GEMMA](#citing-gemma)
+      * [License](#license)
+      * [Optimizing performance](#optimizing-performance)
+      * [Building from source](#building-from-source)
+      * [Input data formats](#input-data-formats)
+      * [Reporting a GEMMA bug or issue](#reporting-a-gemma-bug-or-issue)
+         * [Check list:](#check-list)
+      * [Code of conduct](#code-of-conduct)
+      * [Credits](#credits)
+
+
 ## Key features
 
 1. Fast assocation tests implemented using the univariate linear mixed
@@ -87,8 +104,54 @@ numerical libraries.
 3. For .gz files run `gunzip gemma.linux.gz` or `gunzip
 gemma.linux.gz` to unpack the file.
 
+## Run GEMMA
 
-## Help materials
+GEMMA is run from the command line. To run gemma
+
+```sh
+gemma -h
+```
+
+a typical example would be
+
+```sh
+# compute Kinship matrix
+gemma -g ../example/mouse_hs1940.geno.txt.gz -p ../example/mouse_hs1940.pheno.txt \
+    -gk -o mouse_hs1940
+# run univariate LMM
+gemma -g ../example/mouse_hs1940.geno.txt.gz \
+    -p ../example/mouse_hs1940.pheno.txt -n 1 -a ../example/mouse_hs1940.anno.txt \
+    -k ./output/mouse_hs1940.cXX.txt -lmm -o mouse_hs1940_CD8_lmm
+```
+
+Above example files can be downloaded from
+[github](https://github.com/genetics-statistics/GEMMA/tree/master/example).
+
+### Debugging and optimization
+
+GEMMA has a wide range of debugging options which can be viewed with
+
+```
+./bin/gemma -h 14
+
+ DEBUG OPTIONS
+ -no-check                disable checks
+ -no-fpe-check            disable hardware floating point checking
+ -strict                  strict mode will stop when there is a problem
+ -silence                 silent terminal display
+ -debug                   debug output
+ -debug-data              debug data output
+ -legacy                  run gemma in legacy mode
+```
+
+typically when running gemma you should use -debug which includes relevant
+checks.
+
+For performances you may want to use the -no-check option
+instead. Also check the build optimization notes in
+[INSTALL.md](INSTALL.md).
+
+## Help
 
 + [The GEMMA manual](doc/manual.pdf).
 
@@ -152,12 +215,12 @@ The source code for the included [Catch](http://catch-lib.net) unit
 testing framework is distributed under the
 [Boost Software Licence version 1](https://github.com/philsquared/Catch/blob/master/LICENSE.txt).
 
-### Optimizing performance
+## Optimizing performance
 
 Precompiled binaries and libraries may not be optimal for your particular
 hardware. See [INSTALL.md](INSTALL.md) for speeding up tips.
 
-### Building from source
+## Building from source
 
 More information on source code, dependencies and installation can be
 found in [INSTALL.md](INSTALL.md).
