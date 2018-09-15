@@ -1497,7 +1497,7 @@ void LMM::Analyze(std::function< SnpNameValues(size_t) >& fetch_snp,
 
   auto batch_compute = [&](size_t l) { // using a C++ closure
     // Compute SNPs in batch, note the computations are independent per SNP
-    debug_msg("enter batch_compute");
+    // debug_msg("enter batch_compute");
     gsl_matrix_view Xlarge_sub = gsl_matrix_submatrix(Xlarge, 0, 0, inds, l);
     gsl_matrix_view UtXlarge_sub =
         gsl_matrix_submatrix(UtXlarge, 0, 0, inds, l);
@@ -1545,7 +1545,7 @@ void LMM::Analyze(std::function< SnpNameValues(size_t) >& fetch_snp,
                       p_wald, p_lrt, p_score, logl_H1};
       sumStat.push_back(SNPs);
     }
-    debug_msg("exit batch_compute");
+    // debug_msg("exit batch_compute");
   };
 
   const auto num_snps = indicator_snp.size();
