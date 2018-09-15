@@ -604,18 +604,3 @@ double UcharToDouble02(const unsigned char c) { return (double)c * 0.01; }
 unsigned char Double02ToUchar(const double dosage) {
   return (int)(dosage * 100);
 }
-
-/*
-void uchar_matrix_get_row(const vector<vector<unsigned char>> &X,
-                          const size_t i_row, VectorXd &x_row) {
-  if (i_row < X.size()) {
-    for (size_t j = 0; j < x_row.size(); j++) {
-      x_row(j) = UcharToDouble02(X[i_row][j]);
-    }
-  } else {
-    std::cerr << "Error return genotype vector...\n";
-    exit(1);
-  }
-}
-
-*/

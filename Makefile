@@ -76,15 +76,15 @@ ifeq ($(SYS), WIN)
 else
   OPENBLAS_INCLUDE_PATH = /usr/local/opt/openblas/include
   ifeq ($(SYS), MAC)
-  EIGEN_INCLUDE_PATH = /usr/local/include/eigen3
+    EIGEN_INCLUDE_PATH = /usr/local/include/eigen3
   else
-  EIGEN_INCLUDE_PATH = /usr/include/eigen3
+    EIGEN_INCLUDE_PATH = /usr/include/eigen3
   endif
   ifdef GUIX
     # Effectively disable paths for GNU Guix
     OPENBLAS_INCLUDE_PATH = .
     EIGEN_INCLUDE_PATH = $(GUIX)/include/eigen3
-    RPATH = -Xlinker --rpath=$(GUIX)/lib
+    # RPATH = -Xlinker --rpath=$(GUIX)/lib
     PROFILE =$(realpath $(GUIX))
   endif
 endif
@@ -106,7 +106,8 @@ endif
 
 ifeq ($(CPP), clang++)
   # macOS Homebrew settings (as used on Travis-CI)
-  GCC_FLAGS=-O3 -std=c++11 -stdlib=libc++ -isystem$(OPENBLAS_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Wl,-L/usr/local/opt/openblas/lib
+  # GCC_FLAGS=-O3 -std=c++11 -stdlib=libc++ -isystem$(OPENBLAS_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Wl,-L/usr/local/opt/openblas/lib
+  GCC_FLAGS=-O3 -std=c++11 -isystem$(OPENBLAS_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Wl,-L/usr/local/opt/openblas/lib
 endif
 
 ifdef WITH_OPENBLAS
@@ -117,6 +118,11 @@ ifdef WITH_OPENBLAS
     # Legacy version (mostly for Travis-CI)
     CPPFLAGS += -DOPENBLAS_LEGACY
   endif
+endif
+
+ifeq ($(CXX), clang++)
+  # CPPFLAGS += -isystem$(GUIX)/include/c++ -isystem$(GUIX)/include/c++/x86_64-unknown-linux-gnu
+  CPPFLAGS += -I$(GUIX)/include/c++ -I$(GUIX)/include/c++/x86_64-unknown-linux-gnu -L$(GUIX)/lib
 endif
 
 ifdef DEBUG
