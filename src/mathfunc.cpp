@@ -2,7 +2,7 @@
     Genome-wide Efficient Mixed Model Association (GEMMA)
     Copyright © 2011-2017, Xiang Zhou
     Copyright © 2017, Peter Carbonetto
-    Copyright © 2017, Pjotr Prins
+    Copyright © 2017-2018, Pjotr Prins
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -61,6 +61,8 @@ using namespace std;
 // using namespace Eigen;
 
 bool has_nan(const vector<double> v) {
+  if (!is_check_mode()) return false;
+
   for (const auto& e: v) {
     if (is_nan(e))
       return true;
@@ -69,11 +71,15 @@ bool has_nan(const vector<double> v) {
 }
 
 bool has_nan(const gsl_vector *v) {
+  if (!is_check_mode()) return false;
+
   for (size_t i = 0; i < v->size; ++i)
     if (is_nan(gsl_vector_get(v,i))) return true;
   return false;
 }
 bool has_inf(const gsl_vector *v) {
+  if (!is_check_mode()) return false;
+
   for (size_t i = 0; i < v->size; ++i) {
     auto value = gsl_vector_get(v,i);
     if (is_inf(value) != 0) return true;
@@ -81,12 +87,16 @@ bool has_inf(const gsl_vector *v) {
   return false;
 }
 bool has_nan(const gsl_matrix *m) {
+  if (!is_check_mode()) return false;
+
   for (size_t i = 0; i < m->size1; ++i)
     for (size_t j = 0; j < m->size2; ++j)
       if (is_nan(gsl_matrix_get(m,i,j))) return true;
   return false;
 }
 bool has_inf(const gsl_matrix *m) {
+  if (!is_check_mode()) return false;
+
   for (size_t i = 0; i < m->size1; ++i)
     for (size_t j = 0; j < m->size2; ++j) {
       auto value = gsl_matrix_get(m,i,j);
