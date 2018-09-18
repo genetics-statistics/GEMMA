@@ -35,6 +35,10 @@
 #
 #      make check-all
 #
+#    To compile with CLANG
+#
+#      make CXX=clang++ check
+#
 #    See also the INSTALL.md document in the source tree at
 #
 #      https://github.com/genetics-statistics/GEMMA/blob/master/INSTALL.md
@@ -58,6 +62,7 @@ endif
 # Leave blank after "=" to disable; put "= 1" to enable
 DIST_NAME              = gemma-$(GEMMA_VERSION)
 DEBUG                  = 1                # DEBUG mode, set DEBUG=0 for a release
+PROFILING              =                  # Add profiling info
 SHOW_COMPILER_WARNINGS =
 WITH_OPENBLAS          = 1                # Without OpenBlas uses LAPACK
 WITH_LAPACK            =                  # Force linking LAPACK (if OpenBlas lacks it)
@@ -74,18 +79,23 @@ ifeq ($(SYS), WIN)
   EIGEN_INCLUDE_PATH = ../eigen-git-mirror
   OPENBLAS_INCLUDE_PATH = ../OpenBLAS-v0.2.19-Win64-int32/include -L../OpenBLAS-v0.2.19-Win64-int32/lib
 else
-  OPENBLAS_INCLUDE_PATH = /usr/local/opt/openblas/include
+  # OPENBLAS_INCLUDE_PATH = /usr/local/opt/openblas/include
   ifeq ($(SYS), MAC)
     EIGEN_INCLUDE_PATH = /usr/local/include/eigen3
   else
     EIGEN_INCLUDE_PATH = /usr/include/eigen3
+  endif
+  ifndef GUIX
+    ifdef GUIX_ENVIRONMENT
+      GUIX=$(GUIX_ENVIRONMENT)
+    endif
   endif
   ifdef GUIX
     # Effectively disable paths for GNU Guix
     OPENBLAS_INCLUDE_PATH = .
     EIGEN_INCLUDE_PATH = $(GUIX)/include/eigen3
     # RPATH = -Xlinker --rpath=$(GUIX)/lib
-    PROFILE =$(realpath $(GUIX))
+    GUIX_PROFILE =$(realpath $(GUIX))
   endif
 endif
 
@@ -107,7 +117,7 @@ endif
 ifeq ($(CPP), clang++)
   # macOS Homebrew settings (as used on Travis-CI)
   # GCC_FLAGS=-O3 -std=c++11 -stdlib=libc++ -isystem$(OPENBLAS_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Wl,-L/usr/local/opt/openblas/lib
-  GCC_FLAGS=-O3 -std=c++11 -isystem$(OPENBLAS_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Wl,-L/usr/local/opt/openblas/lib
+  GCC_FLAGS=-std=c++11 -isystem$(OPENBLAS_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH)
 endif
 
 ifdef WITH_OPENBLAS
@@ -122,7 +132,10 @@ endif
 
 ifeq ($(CXX), clang++)
   # CPPFLAGS += -isystem$(GUIX)/include/c++ -isystem$(GUIX)/include/c++/x86_64-unknown-linux-gnu
-  CPPFLAGS += -I$(GUIX)/include/c++ -I$(GUIX)/include/c++/x86_64-unknown-linux-gnu -L$(GUIX)/lib
+  ifdef GUIX
+    CPPFLAGS += -I$(GUIX)/include/c++ -I$(GUIX)/include/c++/x86_64-unknown-linux-gnu
+  endif
+  # -L$(GUIX)/lib
 endif
 
 ifdef DEBUG
@@ -130,6 +143,10 @@ ifdef DEBUG
 else
   # release mode
   CPPFLAGS += -DNDEBUG -O3 $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc $(RPATH)
+endif
+
+ifdef PROFILING
+  CPPFLAGS += -pg
 endif
 
 ifeq ($(SYS), WIN)
@@ -193,7 +210,7 @@ OBJS = $(SOURCES:.cpp=.o)
 all: $(OUTPUT)
 
 ./src/version.h: ./VERSION
-	$(VGEN) $(PROFILE) > src/version.h
+	$(VGEN) $(GUIX_PROFILE) > src/version.h
 
 $(OUTPUT): $(OBJS)
 	$(CPP) $(CPPFLAGS) $(OBJS) $(LIBS) -o $(OUTPUT)

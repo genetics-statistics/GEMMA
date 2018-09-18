@@ -181,6 +181,12 @@ or
 
 ## Optimizing performance
 
+### Profiling
+
+The gcc version has profiling support, run with
+
+    make PROFILING=1
+
 ### OpenBlas
 
 Linking against a built-from-source OpenBlas is a first optimization
