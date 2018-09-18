@@ -13,6 +13,63 @@ slowed things down. In 0.98 openblas is mostly used and is faster.
 Note also that the recent static versions are slower than the
 dynamically linked ones. Not sure why that is.
 
+The test commands are
+
+#+BEGIN_SRC
+# kinship
+time ./bin/gemma -g ./example/mouse_hs1940.geno.txt.gz -p ./example/mouse_hs1940.pheno.txt -a ./example/mouse_hs1940.anno.txt -gk -no-check
+# univariate LMM
+time ./bin/gemma -g ./example/mouse_hs1940.geno.txt.gz -p ./example/mouse_hs1940.pheno.txt -n 1 -a ./example/mouse_hs1940.anno.txt -k ./output/result.cXX.txt -lmm -no-check
+# multivariate LMM
+time ./bin/gemma -g ./example/mouse_hs1940.geno.txt.gz -p ./example/mouse_hs1940.pheno.txt -n 1 2 -a ./example/mouse_hs1940.anno.txt -k ./output/result.cXX.txt -lmm -no-check
+#+END_SRC
+
+Currently on my laptop there is no difference in running these tests
+using gcc or clang.
+
+#+BEGIN_SRC
+Clang:
+
+real    0m25.758s
+user    0m46.380s
+sys     0m0.852s
+
+real    0m22.173s
+user    0m29.420s
+sys     0m1.540s
+
+GNU C
+
+real    0m24.540s
+user    0m43.948s
+sys     0m1.276s
+
+real    0m22.504s
+user    0m29.768s
+sys     0m1.544s
+#+END_SRC
+
+Running the GNU profiler on the MVLMM one rendered
+
+#+BEGIN_SRC
+  %   cumulative   self              self     total
+ time   seconds   seconds    calls   s/call   s/call  name
+ 22.73      0.90     0.90    41121     0.00     0.00  CalcQi(gsl_vector const*, gsl_vector const*, gsl_matrix const*, gsl_matrix*)
+ 13.64      1.44     0.54    30313     0.00     0.00  CalcXHiY(gsl_vector const*, gsl_vector const*, gsl_matrix const*, gsl_matrix const*, gsl_v
+ector*)
+ 11.87      1.91     0.47    19536     0.00     0.00  CalcSigma(char, gsl_vector const*, gsl_vector const*, gsl_matrix const*, gsl_matrix const*
+, gsl_matrix const*, gsl_matrix const*, gsl_matrix const*, gsl_matrix*, gsl_matrix*)
+ 10.86      2.34     0.43    38621     0.00     0.00  safeGetline(std::istream&, std::__cxx11::basic_string<char, std::char_traits<char>, std::a
+llocator<char> >&)
+  8.33      2.67     0.33    10805     0.00     0.00  MphCalcP(gsl_vector const*, gsl_vector const*, gsl_matrix const*, gsl_matrix const*, gsl_m
+atrix const*, gsl_matrix const*, gsl_matrix*, gsl_vector*, gsl_matrix*)
+  6.06      2.91     0.24        1     0.24     0.43  ReadFile_geno
+  5.30      3.12     0.21    19536     0.00     0.00  UpdateV(gsl_vector const*, gsl_matrix const*, gsl_matrix const*, gsl_matrix const*, gsl_ma
+trix const*, gsl_matrix*, gsl_matrix*)
+  5.30      3.33     0.21        1     0.21     3.27  MVLMM::AnalyzeBimbam(gsl_matrix const*, gsl_vector const*, gsl_matrix const*, gsl_matrix c
+onst*)
+#+END_SRC
+
 * GEMMA 0.98-beta1
 
 #+BEGIN_SRC bash
@@ -30,6 +87,7 @@ dynamically linked ones. Not sure why that is.
 #+END_SRC
 
 #+BEGIN_SRC bash
+
 time ./bin/gemma -g ~/tmp/mouse_hs1940/mouse_hs1940.geno.txt.gz -p ~/tmp/mouse_hs1940/mouse_hs1940.pheno.txt -a ~/tmp/mouse_hs1940/mouse_hs1940.anno.txt -gk -no-check
 GEMMA 0.98-beta1 (2018-09-06) by Xiang Zhou and team (C) 2012-2018
 Reading Files ...
