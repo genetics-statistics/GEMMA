@@ -79,9 +79,7 @@ ifeq ($(SYS), WIN)
   EIGEN_INCLUDE_PATH = ../eigen-git-mirror
   OPENBLAS_INCLUDE_PATH = ../OpenBLAS-v0.2.19-Win64-int32/include -L../OpenBLAS-v0.2.19-Win64-int32/lib
 else
-  ifdef TRAVIS_CI
-    OPENBLAS_INCLUDE_PATH = /usr/local/opt/openblas/include
-  endif
+  OPENBLAS_INCLUDE_PATH = /usr/local/opt/openblas/include
   ifeq ($(SYS), MAC)
     EIGEN_INCLUDE_PATH = /usr/local/include/eigen3
   else
