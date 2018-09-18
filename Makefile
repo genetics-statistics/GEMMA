@@ -79,8 +79,9 @@ ifeq ($(SYS), WIN)
   EIGEN_INCLUDE_PATH = ../eigen-git-mirror
   OPENBLAS_INCLUDE_PATH = ../OpenBLAS-v0.2.19-Win64-int32/include -L../OpenBLAS-v0.2.19-Win64-int32/lib
 else
-  # used by Travis:
-  OPENBLAS_INCLUDE_PATH = /usr/local/opt/openblas/include
+  ifdef TRAVIS_CI
+    OPENBLAS_INCLUDE_PATH = /usr/local/opt/openblas/include
+  endif
   ifeq ($(SYS), MAC)
     EIGEN_INCLUDE_PATH = /usr/local/include/eigen3
   else
@@ -172,6 +173,7 @@ else
   endif
 endif
 
+
 .PHONY: all
 
 OUTPUT = $(BIN_DIR)/gemma
@@ -188,6 +190,9 @@ LIBS_MAC_D_LAPACK = -framework Accelerate
 ifdef WITH_LAPACK
   ifeq ($(SYS), MAC)
     LIBS += $(LIBS_MAC_D_LAPACK)
+    ifdef WITH_OPENBLAS
+      LIBS += -Wl,-L/usr/local/opt/openblas/lib
+    endif
   else
     ifndef FORCE_STATIC
       ifdef WITH_OPENBLAS
