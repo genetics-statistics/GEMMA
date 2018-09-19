@@ -1421,7 +1421,8 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
   for (size_t t = 0; t < indicator_snp.size(); ++t) {
     string line;
     safeGetline(infile, line).eof();
-    if (t % display_pace == 0 || t == (indicator_snp.size() - 1)) {
+    // if (t % display_pace == 0 || t == (indicator_snp.size() - 1)) {
+    if (t % display_pace == 0) {
       ProgressBar("Reading SNPs", t, indicator_snp.size() - 1);
     }
     if (indicator_snp[t] == 0)
@@ -1511,22 +1512,21 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
   if (ns_test % msize != 0) {
     fast_eigen_dgemm("N", "T", 1.0, Xlarge, Xlarge, 1.0, matrix_kin);
   }
+  ProgressBar("Reading SNPs", 100, 100);
   cout << endl;
 
   // scale the kinship matrix
   enforce_gsl(gsl_matrix_scale(matrix_kin, 1.0 / (double)ns_test));
 
   // and transpose
-  // FIXME: the following is very slow
+  // FIXME: the following is not so slow
 
-  debug_msg("begin transpose");
   for (size_t i = 0; i < ni_total; ++i) {
     for (size_t j = 0; j < i; ++j) {
       double d = gsl_matrix_get(matrix_kin, j, i);
       gsl_matrix_set(matrix_kin, i, j, d);
     }
   }
-  debug_msg("end transpose");
   // GSL is faster - and there are even faster methods
   // enforce_gsl(gsl_matrix_transpose(matrix_kin));
 

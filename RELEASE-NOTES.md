@@ -1,10 +1,22 @@
-## ChangeLog v0.97 (2017/12/19)
-
-This is a massive bug fix release with many improvements. For contributions
+For contributions
 see
 [contributors](https://github.com/genetics-statistics/GEMMA/graphs/contributors)
 and
 [commits](https://github.com/genetics-statistics/GEMMA/commits/master).
+
+## ChangeLog v0.98 (date)
+
+With the v0.98 release GEMMA has stabilized and contains extensive
+error checking. This release contains quite a few bug fixes,
+hardware-based floating point checking and speedups.
+
+Note: This is the last purely C/C++ compilable release because we are
+integrating faster-lmm-d code for new functionality in the next
+version. Also we are working on a Python and R interface.
+
+## ChangeLog v0.97 (2017/12/19)
+
+This is a massive bug fix release with many improvements.
 
 ### Speedup of GEMMA by using optimized OpenBlas
 

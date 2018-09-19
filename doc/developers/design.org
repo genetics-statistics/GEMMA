@@ -1,0 +1,52 @@
+* GEMMA Design Document
+
+** Introduction
+
+With the v0.98 release GEMMA has stabilized and contains extensive
+error checking. To move faster we are moving towards integrating the
+faster-lmm-d code base which is written in the D programming
+language. We are also add interfaces for Python and R (and other
+languages). We will try to keep a legacy C++ based GEMMA as long as
+possible, but for performance and features it is likely a D compiler
+is required. The good news is that most distributions contain D
+compilers today.
+
+** Faster-lmm-d integration
+
+Faster-lmm-d is mostly a rewrite of GEMMA univariate LMM and
+multivariate LMM resolvers. We compile faster-lmm-d as a library that
+can be linked against GEMMA. For computing K, for example, there are
+two modes: (1) that has all genotype data in RAM and (2) that loads
+the genotype data directly from a geno file.
+
+** Improved data formats
+
+The original data formats are somewhat lacking because they make error
+correction hard. In collaboration with the R/qtl2 project we aim for
+supporting newer formats.
+
+*** Kinship format
+
+As the kinship mastrix K is symmetric we only need to store half the
+data. Also we want to be able to filter and validate on the names of
+individuals/samples. Next we compress it. A comparison of formats is
+[[https://catchchallenger.first-world.info/wiki/Quick_Benchmark:_Gzip_vs_Bzip2_vs_LZMA_vs_XZ_vs_LZ4_vs_LZO][here]]. Decompression speed is most critical and [[https://github.com/lz4/lz4][lz4]] does a great job
+there (lz4 is used in CRAM and sambamba). According to [[https://www.dummeraugust.com/main/content/blog/posts.php?pid=173][this comparison]]
+text processing is fairly similar between gzip and lz4. lz4 files are
+a bit larger, so decompression gains may be offset by network speeds.
+
+To recognise the tab dilimited file we'll add a header with nind's:
+
+#+BEGIN_SRC
+# GRMv1.0
+# nind=900
+ind1 0.1436717816 0.006341902008 0.007596806816 ...
+ind2 0.007996662028 0.008741860935 0.008489758779 ...
+...
+ind900 0.002311556029
+#+END_SRC
+
+where each row is one value shorter describing the right top half of
+K. This setup allows one to use a K with for exaple ind1 missing -
+just remove that row and column. The data will be stored as
+name.cXX.txt.lz4 (later add the alternative name.cxx.txt.gz).
