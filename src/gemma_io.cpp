@@ -96,10 +96,24 @@ token_list tokenize_whitespace(const string line, uint num, const char *infilen)
   return v;
 }
 
+// Faster version of safeGetline because of less copying and char
+// iteration. Note behaviour differs somewhat when it comes to eol. I
+// think the version had to deal with files from differing platforms.
+// You can still run that with -legacy switch.
+inline istream &safe_get_line(istream &is, string &t) {
+  if (is_legacy_mode()) return safeGetline(is,t);
+
+  std::getline(is,t);
+  // if(!is.fail);
+  return is;
+}
 
 bool isBlankLine(std::string const &line) { return isBlankLine(line.c_str()); }
 
-// In case files are ended with "\r" or "\r\n".
+// In case files are ended with "\r" or "\r\n". safeGetline fetches
+// lines from a stream and returns them in t. It returns stream so it
+// can be tested for eof. This function is a bottleneck in legacy gemma
+// and can be replaced with safe_get_line.
 std::istream &safeGetline(std::istream &is, std::string &t) {
   t.clear();
 
@@ -679,7 +693,7 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
   file_pos = 0;
   auto count_warnings = 0;
   auto infilen = file_geno.c_str();
-  while (!safeGetline(infile, line).eof()) {
+  while (!safe_get_line(infile, line).eof()) {
     ch_ptr = strtok_safe2((char *)line.c_str(), " ,\t",infilen);
     rs = ch_ptr;
     ch_ptr = strtok_safe2(NULL, " ,\t",infilen);

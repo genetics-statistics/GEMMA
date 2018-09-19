@@ -57,9 +57,17 @@ user    0m37.788s
 sys     0m2.168s
 #+END_SRC
 
-there is still some scope for improvement by changing safeGetLine and
-do_strtok_safe methods as well as less string copying during
-tokenization. I may get to that at some point.
+Replacing safeGetLine also made some difference
+
+#+BEGIN_SRC
+real    0m15.659s
+user    0m34.896s
+sys     0m1.500s
+#+END_SRC
+
+there is still some scope for improvement by changing do_strtok_safe
+methods as well as less string copying during tokenization. I may get
+to that at some point.
 
 Running the GNU profiler on the MVLMM one rendered
 
