@@ -49,6 +49,7 @@ extern "C" {
 #include "bslmm.h"
 #include "bslmmdap.h"
 #include <csignal> // for gsl_error_handler
+#include "faster_lmm_d.h"
 #include "gemma.h"
 #include "gemma_io.h"
 #include "lapack.h"
@@ -83,6 +84,7 @@ void GEMMA::PrintHeader(void) {
 
   cout <<
     "GEMMA " << version << " (" << date << ") by Xiang Zhou and team (C) 2012-" << year << endl;
+  cout << faster_lmm_d_api_version() << endl;
   return;
 }
 

@@ -64,6 +64,7 @@ DIST_NAME              = gemma-$(GEMMA_VERSION)
 DEBUG                  = 1                # DEBUG mode, set DEBUG=0 for a release
 PROFILING              =                  # Add profiling info
 SHOW_COMPILER_WARNINGS =
+WITH_FASTER_LMM_D      = 1
 WITH_OPENBLAS          = 1                # Without OpenBlas uses LAPACK
 WITH_LAPACK            =                  # Force linking LAPACK (if OpenBlas lacks it)
 WITH_GSLCBLAS          =                  # Force linking gslcblas (if OpenBlas lacks it)
@@ -99,6 +100,9 @@ else
   endif
 endif
 
+ifdef WITH_FASTER_LMM_D
+  FASTER_LMM_D_PATH=$(WITH_FASTER_LMM_D)
+endif
 # --------------------------------------------------------------------
 # Edit below this line with caution
 # --------------------------------------------------------------------
@@ -171,6 +175,8 @@ else
   endif
 endif
 
+LIBS += $(FASTER_LMM_D_PATH)/libfaster-lmm-d.a -lphobos2-ldc-debug -ldruntime-ldc-debug -ldl
+
 
 .PHONY: all
 
@@ -211,7 +217,11 @@ SOURCES      = $(wildcard src/*.cpp)
 # all
 OBJS = $(SOURCES:.cpp=.o)
 
-all: $(OUTPUT)
+faster-lmm-d:
+	@echo "Compiling faster-lmm-d..."
+	cd $(FASTER_LMM_D_PATH) && make -f Makefile.gemma
+
+all: faster-lmm-d $(OUTPUT)
 
 ./src/version.h: ./VERSION
 	$(VGEN) $(GUIX_PROFILE) > src/version.h
