@@ -1131,13 +1131,13 @@ void GEMMA::Assign(int argc, char **argv, PARAM &cPar) {
         break;
       }
       if (argv[i + 1] == NULL || argv[i + 1][0] == '-') {
-        cPar.a_mode = M_KIN;
+        cPar.a_mode = M_KIN_CENTERED;
         continue;
       }
       ++i;
       str.clear();
       str.assign(argv[i]);
-      cPar.a_mode = 20 + atoi(str.c_str());
+      cPar.a_mode = 20 + atoi(str.c_str()); // M_KIN_CENTERED or M_KIN_STANDARD
     } else if (strcmp(argv[i], "-gs") == 0) {
       if (cPar.a_mode != 0) {
         cPar.error = true;
@@ -1891,7 +1891,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
   }
 
   // Generate Kinship matrix (optionally using LOCO)
-  if (cPar.a_mode == M_KIN || cPar.a_mode == M_KIN2) {
+  if (cPar.a_mode == M_KIN_STANDARD || cPar.a_mode == M_KIN_CENTERED) {
     cout << "Calculating Relatedness Matrix ... " << endl;
 
     gsl_matrix *G = gsl_matrix_safe_alloc(cPar.ni_total, cPar.ni_total);
@@ -1910,10 +1910,14 @@ void GEMMA::BatchRun(PARAM &cPar) {
     // Now we have the Kinship matrix test it
     validate_K(G);
 
-    if (cPar.a_mode == M_KIN) {
-      cPar.WriteMatrix(G, "cXX");
+    if (is_legacy_mode()) {
+      if (cPar.a_mode == M_KIN_CENTERED) {
+        cPar.WriteMatrix(G, "cXX");
+      } else {
+        cPar.WriteMatrix(G, "sXX");
+      }
     } else {
-      cPar.WriteMatrix(G, "sXX");
+      FasterLMM.writeK(inds,G,(cPar.a_mode == M_KIN_CENTERED ? ".cXX" : ".sXX"));
     }
 
     gsl_matrix_safe_free(G);
@@ -3527,7 +3531,7 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
   outfile << "## total computation time = " << cPar.time_total << " min "
           << endl;
   outfile << "## computation time break down: " << endl;
-  if (cPar.a_mode == M_KIN || cPar.a_mode == M_KIN2 || cPar.a_mode == 11 ||
+  if (cPar.a_mode == M_KIN_STANDARD || cPar.a_mode == M_KIN_CENTERED || cPar.a_mode == 11 ||
       cPar.a_mode == 13 || cPar.a_mode == 14 || cPar.a_mode == 16) {
     outfile << "##      time on calculating relatedness matrix = "
             << cPar.time_G << " min " << endl;

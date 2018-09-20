@@ -42,7 +42,7 @@ using namespace std;
 
 enum M_MODE { M_LMM1=1, M_LMM2=2, M_LMM3=3, M_LMM4=4, M_LMM5=5,
               M_BSLMM5=15,
-              M_KIN=21, M_KIN2=22, M_EIGEN=31 };
+              M_KIN_STANDARD=21, M_KIN_CENTERED=22, M_EIGEN=31 };
 
 class GEMMA {
 

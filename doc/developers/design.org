@@ -5,11 +5,11 @@
 With the v0.98 release GEMMA has stabilized and contains extensive
 error checking. To move faster we are moving towards integrating the
 faster-lmm-d code base which is written in the D programming
-language. We are also add interfaces for Python and R (and other
+language. We will also add interfaces for Python and R (and other
 languages). We will try to keep a legacy C++ based GEMMA as long as
 possible, but for performance and features it is likely a D compiler
 is required. The good news is that most distributions contain D
-compilers today.
+compilers today and the D language gdc compiler is now a GNU project.
 
 ** Faster-lmm-d integration
 
@@ -33,7 +33,8 @@ individuals/samples. Next we compress it. A comparison of formats is
 [[https://catchchallenger.first-world.info/wiki/Quick_Benchmark:_Gzip_vs_Bzip2_vs_LZMA_vs_XZ_vs_LZ4_vs_LZO][here]]. Decompression speed is most critical and [[https://github.com/lz4/lz4][lz4]] does a great job
 there (lz4 is used in CRAM and sambamba). According to [[https://www.dummeraugust.com/main/content/blog/posts.php?pid=173][this comparison]]
 text processing is fairly similar between gzip and lz4. lz4 files are
-a bit larger, so decompression gains may be offset by network speeds.
+a bit larger, so decompression gains may be offset by network speeds. There
+is an even faster [[https://github.com/UplinkCoder/lz4-ctfe][lz4 decompressor in D]].
 
 To recognise the tab dilimited file we'll add a header with nind's:
 
