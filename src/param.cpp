@@ -1853,7 +1853,7 @@ void PARAM::WriteVar(const string suffix) {
   return;
 }
 
-void PARAM::WriteMatrix(const gsl_matrix *matrix_U, const string suffix) {
+void PARAM::WriteMatrix(const gsl_matrix *matrix_U, const string suffix) const {
   string file_str;
   file_str = path_out + "/" + file_out;
   file_str += ".";

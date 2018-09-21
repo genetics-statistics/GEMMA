@@ -46,6 +46,7 @@ extern "C" {
 #include "gsl/gsl_vector.h"
 #include "gsl/gsl_version.h"
 
+#include "int_api.h"
 #include "bslmm.h"
 #include "bslmmdap.h"
 #include <csignal> // for gsl_error_handler
@@ -84,7 +85,9 @@ void GEMMA::PrintHeader(void) {
 
   cout <<
     "GEMMA " << version << " (" << date << ") by Xiang Zhou and team (C) 2012-" << year << endl;
-  cout << faster_lmm_d_api_version() << endl;
+  auto flmmd_version = api_faster_lmm_d_version();
+  if (flmmd_version)
+    cout << "   With faster-lmm-d v" << flmmd_version << " by Pjotr Prins and Prasun Anand (C) 2018" << endl;
   return;
 }
 
@@ -1910,15 +1913,8 @@ void GEMMA::BatchRun(PARAM &cPar) {
     // Now we have the Kinship matrix test it
     validate_K(G);
 
-    if (is_legacy_mode()) {
-      if (cPar.a_mode == M_KIN_CENTERED) {
-        cPar.WriteMatrix(G, "cXX");
-      } else {
-        cPar.WriteMatrix(G, "sXX");
-      }
-    } else {
-      FasterLMM.writeK(inds,G,(cPar.a_mode == M_KIN_CENTERED ? ".cXX" : ".sXX"));
-    }
+    bool is_centered = (cPar.a_mode == M_KIN_CENTERED);
+    int_api_write_K(&cPar,G,is_centered);
 
     gsl_matrix_safe_free(G);
   }
@@ -3141,13 +3137,16 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
   }
 
   outfile << "##" << endl;
-  outfile << "## GEMMA Version    = " << version << " (" << date << ")" << endl;
+  outfile << "## GEMMA            = " << version << " (" << date << ")" << endl;
+  auto flmmd_version = api_faster_lmm_d_version();
+  if (flmmd_version)
+    outfile << "## Faster-lmm-d     = " << flmmd_version << endl;
   outfile << "## Build profile    = " << GEMMA_PROFILE << endl ;
   #ifdef __GNUC__
-  outfile << "## GCC version      = " << __GNUC__ << "." << __GNUC_MINOR__ << "." << __GNUC_PATCHLEVEL__ << endl;
+  outfile << "## GCC              = " << __GNUC__ << "." << __GNUC_MINOR__ << "." << __GNUC_PATCHLEVEL__ << endl;
   #endif
-  outfile << "## GSL Version      = " << GSL_VERSION << endl;
-  outfile << "## Eigen Version    = " << EIGEN_WORLD_VERSION << "." << EIGEN_MAJOR_VERSION << "." << EIGEN_MINOR_VERSION << endl;
+  outfile << "## GSL              = " << GSL_VERSION << endl;
+  outfile << "## Eigen            = " << EIGEN_WORLD_VERSION << "." << EIGEN_MAJOR_VERSION << "." << EIGEN_MINOR_VERSION << endl;
 #ifdef OPENBLAS
 
   #ifndef OPENBLAS_LEGACY

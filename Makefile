@@ -221,7 +221,9 @@ faster-lmm-d:
 	@echo "Compiling faster-lmm-d..."
 	cd $(FASTER_LMM_D_PATH) && make -f Makefile.gemma
 
-all: faster-lmm-d $(OUTPUT)
+all: faster-lmm-d $(OBJS) $(OUTPUT)
+
+.PHONY: all unittests test check fast-check faster-lmm-d
 
 ./src/version.h: ./VERSION
 	$(VGEN) $(GUIX_PROFILE) > src/version.h
@@ -264,6 +266,7 @@ clean:
 	rm -vf $(TEST_SRC_DIR)/*.o
 	rm -vf $(OUTPUT)
 	rm -vf ./bin/unittests-gemma
+	cd $(FASTER_LMM_D_PATH) && make -f Makefile.gemma clean
 
 DIST_COMMON = *.md LICENSE VERSION Makefile
 DIST_SUBDIRS = src doc example bin

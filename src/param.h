@@ -351,7 +351,7 @@ public:
   void WriteVector(const gsl_vector *q, const gsl_vector *s,
                    const size_t n_total, const string suffix);
   void WriteVar(const string suffix);
-  void WriteMatrix(const gsl_matrix *matrix_U, const string suffix);
+  void WriteMatrix(const gsl_matrix *matrix_U, const string suffix) const;
   void WriteVector(const gsl_vector *vector_D, const string suffix);
   void CopyRead(gsl_vector *log_N);
   void ObtainWeight(const set<string> &setSnps_beta,

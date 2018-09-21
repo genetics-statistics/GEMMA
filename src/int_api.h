@@ -14,15 +14,10 @@
 
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
-
-    This is the faster-lmm-d interface for GEMMA. Do not call these
-    functions directly, but use api.h instead.
-
 */
 
-extern "C" {
+#include "api.h"
+#include "param.h"
 
-  // The following functions are bindings for faster-lmm-d.
-  char *flmmd_api_version(void);
-
-} // extern C
+// matching internal functions for GEMMA
+void int_api_write_K(const PARAM *cPar, const gsl_matrix *G, bool is_centered);

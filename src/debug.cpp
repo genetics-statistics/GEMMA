@@ -65,6 +65,7 @@ bool is_strict_mode() { return debug_strict; };
 bool is_quiet_mode() { return debug_quiet; };
 bool is_issue(uint issue) { return issue == debug_issue; };
 bool is_legacy_mode() { return debug_legacy; };
+bool use_faster_lmm_d() { return !debug_legacy; }
 
 #include <stdio.h>
 #include <sys/types.h>

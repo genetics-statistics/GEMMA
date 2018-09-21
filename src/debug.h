@@ -49,6 +49,7 @@ bool is_strict_mode();
 bool is_quiet_mode();
 bool is_issue(uint issue);
 bool is_legacy_mode();
+bool use_faster_lmm_d();
 
 void enable_segfpe();
 void disable_segfpe();

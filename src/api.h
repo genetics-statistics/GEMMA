@@ -14,15 +14,15 @@
 
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
-
-    This is the faster-lmm-d interface for GEMMA. Do not call these
-    functions directly, but use api.h instead.
-
 */
 
+#ifndef __GEMMA_API_H
+#define __GEMMA_API_H
+
+// Exposed C API
+
 extern "C" {
+  char *api_faster_lmm_d_version();
+}
 
-  // The following functions are bindings for faster-lmm-d.
-  char *flmmd_api_version(void);
-
-} // extern C
+#endif
