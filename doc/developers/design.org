@@ -11,13 +11,24 @@ possible, but for performance and features it is likely a D compiler
 is required. The good news is that most distributions contain D
 compilers today and the D language gdc compiler is now a GNU project.
 
+** A GEMMA API
+
+The files api.h and api.cpp contain the GEMMA API that is exported
+with a C calling interface and can be used from Python, R and others.
+
 ** Faster-lmm-d integration
 
 Faster-lmm-d is mostly a rewrite of GEMMA univariate LMM and
 multivariate LMM resolvers. We compile faster-lmm-d as a library that
 can be linked against GEMMA. For computing K, for example, there are
 two modes: (1) that has all genotype data in RAM and (2) that loads
-the genotype data directly from a geno file.
+the genotype data directly from a geno file. Faster-lmm-d functions
+are nomally not called directly from GEMMA but are called via api.h
+and api.cpp. The reason is that we want to avoid sprinkling ifdefs
+throughout the GEMMA code. In the API there may be a split between
+calling original GEMMA functions or newer faster-lmm-d
+functions. Doing it this way will allow building a pure-C GEMMA for
+the forseeable future (though it will miss on fancy new stuff).
 
 ** Improved data formats
 
@@ -41,6 +52,8 @@ To recognise the tab dilimited file we'll add a header with nind's:
 #+BEGIN_SRC
 # GRMv1.0
 # nind=900
+# precision=double
+# matrix=rt,symmetric,centered
 ind1 0.1436717816 0.006341902008 0.007596806816 ...
 ind2 0.007996662028 0.008741860935 0.008489758779 ...
 ...
@@ -48,6 +61,32 @@ ind900 0.002311556029
 #+END_SRC
 
 where each row is one value shorter describing the right top half of
-K. This setup allows one to use a K with for exaple ind1 missing -
-just remove that row and column. The data will be stored as
-name.cXX.txt.lz4 (later add the alternative name.cxx.txt.gz).
+(genotype relationship matrix) GRM or K. This setup allows one to use
+a K with for example ind1 missing - just remove that row and
+column.
+
+For leave one chromose out (LOCO) multiple K's can go in one file. In
+this case the header contains LOCO with the chromosome number and
+sections are added. E.g. for the header
+
+#+BEGIN_SRC
+# GRMv1.0
+# LOCO=true
+# nind=900
+# nchr=18
+# precision=double
+# matrix=rt,symmetric,centered
+#+END_SRC
+
+and for each chromosome section contains the chromose name as used in
+the marker/SNP data
+
+#+BEGIN_SRC
+# --- LOCO begin
+# name=chr1
+ind1 0.1436717816 0.006341902008 0.007596806816 ...
+ind2 0.007996662028 0.008741860935 0.008489758779 ...
+...
+ind900 0.002311556029
+# --- LOCO end
+#+END_SRC
