@@ -214,7 +214,7 @@ OBJS = $(SOURCES:.cpp=.o)
 all: $(OUTPUT)
 
 ./src/version.h: ./VERSION
-	$(VGEN) $(GUIX_PROFILE) > src/version.h
+	$(shell bash $(VGEN) $(GUIX_PROFILE) > src/version.h)
 
 $(OUTPUT): $(OBJS)
 	$(CPP) $(CPPFLAGS) $(OBJS) $(LIBS) -o $(OUTPUT)

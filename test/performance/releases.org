@@ -90,7 +90,7 @@ trix const*, gsl_matrix*, gsl_matrix*)
 onst*)
 #+END_SRC
 
-* GEMMA 0.98-beta1
+* GEMMA 0.98 (release)
 
 #+BEGIN_SRC bash
         linux-vdso.so.1 (0x00007ffe475d2000)
@@ -107,9 +107,8 @@ onst*)
 #+END_SRC
 
 #+BEGIN_SRC bash
-
-time ./bin/gemma -g ~/tmp/mouse_hs1940/mouse_hs1940.geno.txt.gz -p ~/tmp/mouse_hs1940/mouse_hs1940.pheno.txt -a ~/tmp/mouse_hs1940/mouse_hs1940.anno.txt -gk -no-check
-GEMMA 0.98-beta1 (2018-09-06) by Xiang Zhou and team (C) 2012-2018
+time ./bin/gemma -g ./example/mouse_hs1940.geno.txt.gz -p ./example/mouse_hs1940.pheno.txt -a ./example/mouse_hs1940.anno.txt -gk -no-check
+GEMMA 0.98 (2018-09-26) by Xiang Zhou and team (C) 2012-2018
 Reading Files ...
 ## number of total individuals = 1940
 ## number of analyzed individuals = 1410
@@ -119,15 +118,16 @@ Reading Files ...
 ## number of analyzed SNPs         =    10768
 Calculating Relatedness Matrix ...
 ================================================== 100%
+**** INFO: Done.
 
-real    0m16.875s
-user    0m25.180s
-sys     0m1.740s
+real    0m7.169s
+user    0m13.656s
+sys     0m1.584s
 #+END_SRC
 
 #+BEGIN_SRC bash
-lario:~/izip/git/opensource/genenetwork/gemma$ time bin/gemma -g ~/tmp/mouse_hs1940/mouse_hs1940.geno.txt.gz -p ~/tmp/mouse_hs1940/mouse_hs1940.pheno.txt -n 1 -a ~/tmp/mouse_hs1940/mouse_hs1940.anno.txt -k ./output/result.cXX.txt -lmm -no-check
-GEMMA 0.98-beta1 (2018-09-06) by Xiang Zhou and team (C) 2012-2018
+time ./bin/gemma -g ./example/mouse_hs1940.geno.txt.gz -p ./example/mouse_hs1940.pheno.txt -n 1 -a ./example/mouse_hs1940.anno.txt -k ./output/result.cXX.txt -lmm -no-check
+GEMMA 0.98 (2018-09-26) by Xiang Zhou and team (C) 2012-2018
 Reading Files ...
 ## number of total individuals = 1940
 ## number of analyzed individuals = 1410
@@ -139,10 +139,11 @@ Start Eigen-Decomposition...
 pve estimate =0.608801
 se(pve) =0.032774
 ================================================== 100%
+**** INFO: Done.
 
-real    0m13.255s
-user    0m18.272s
-sys     0m3.324s
+real    0m12.356s
+user    0m15.788s
+sys     0m3.036s
 #+END_SRC
 
 * GEMMA 0.98-pre
