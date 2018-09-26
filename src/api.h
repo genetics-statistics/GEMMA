@@ -22,7 +22,7 @@
 // Exposed C API
 
 extern "C" {
-  char *api_faster_lmm_d_version();
+  char *api_faster_lmm_d_version(char *buf);
 }
 
 #endif

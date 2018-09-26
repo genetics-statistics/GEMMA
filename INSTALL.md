@@ -65,6 +65,19 @@ and for the Clang edition
     make clean
     make GUIX=$GUIX_ENVIRONMENT CXX=clang++ check -j 4
 
+To use faster-lmm-d you need to mount a directory in the container and add ldc
+
+    guix environment -C guix --ad-hoc gcc gdb gfortran:lib gsl eigen openblas zlib bash ld-wrapper perl ldc \
+      --share=/home/wrk/izip/git/opensource/D/faster_lmm_d
+    make FASTER_LMM_D=/home/wrk/izip/git/opensource/D/faster_lmm_d clean
+    make FASTER_LMM_D=/home/wrk/izip/git/opensource/D/faster_lmm_d -j 4
+
+Finally, instead of pulling in the guix package you can be even more explicit with
+
+    guix environment -C --ad-hoc gcc gdb gfortran:lib gsl eigen openblas zlib bash ld-wrapper perl ldc \
+      make coreutils linux-libre-headers binutils glibc \
+      --share=/home/wrk/izip/git/opensource/D/faster_lmm_d
+
 #### GNU Guix reproducible build system
 
 One of the challenges of developing software is dealing with

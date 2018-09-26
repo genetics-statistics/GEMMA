@@ -64,7 +64,7 @@ DIST_NAME              = gemma-$(GEMMA_VERSION)
 DEBUG                  = 1                # DEBUG mode, set DEBUG=0 for a release
 PROFILING              =                  # Add profiling info
 SHOW_COMPILER_WARNINGS =
-WITH_FASTER_LMM_D      = 1
+FASTER_LMM_D           = faster_lmm_d
 WITH_OPENBLAS          = 1                # Without OpenBlas uses LAPACK
 WITH_LAPACK            =                  # Force linking LAPACK (if OpenBlas lacks it)
 WITH_GSLCBLAS          =                  # Force linking gslcblas (if OpenBlas lacks it)
@@ -100,9 +100,11 @@ else
   endif
 endif
 
-ifdef WITH_FASTER_LMM_D
-  FASTER_LMM_D_PATH=$(WITH_FASTER_LMM_D)
+ifdef FASTER_LMM_D
+  FASTER_LMM_D_PATH=$(FASTER_LMM_D)
+  FASTER_LMM_D_LIB=$(FASTER_LMM_D_PATH)/libfaster-lmm-d.a
 endif
+
 # --------------------------------------------------------------------
 # Edit below this line with caution
 # --------------------------------------------------------------------
@@ -175,7 +177,7 @@ else
   endif
 endif
 
-LIBS += $(FASTER_LMM_D_PATH)/libfaster-lmm-d.a -lphobos2-ldc-debug -ldruntime-ldc-debug -ldl
+LIBS += $(FASTER_LMM_D_LIB) -lphobos2-ldc-debug -ldruntime-ldc-debug -ldl
 
 
 .PHONY: all
@@ -217,18 +219,18 @@ SOURCES      = $(wildcard src/*.cpp)
 # all
 OBJS = $(SOURCES:.cpp=.o)
 
+all: $(OBJS) $(OUTPUT)
+
 faster-lmm-d:
 	@echo "Compiling faster-lmm-d..."
-	cd $(FASTER_LMM_D_PATH) && make -f Makefile.gemma
+	cd $(FASTER_LMM_D_PATH) && $(MAKE) -f Makefile.gemma
 
-all: faster-lmm-d $(OBJS) $(OUTPUT)
-
-.PHONY: all unittests test check fast-check faster-lmm-d
+.PHONY: all unittests test
 
 ./src/version.h: ./VERSION
 	$(VGEN) $(GUIX_PROFILE) > src/version.h
 
-$(OUTPUT): $(OBJS)
+$(OUTPUT): faster-lmm-d $(OBJS)
 	$(CPP) $(CPPFLAGS) $(OBJS) $(LIBS) -o $(OUTPUT)
 
 $(OBJS): $(HDR)
@@ -266,7 +268,7 @@ clean:
 	rm -vf $(TEST_SRC_DIR)/*.o
 	rm -vf $(OUTPUT)
 	rm -vf ./bin/unittests-gemma
-	cd $(FASTER_LMM_D_PATH) && make -f Makefile.gemma clean
+	cd $(FASTER_LMM_D_PATH) && $(MAKE) -f Makefile.gemma clean
 
 DIST_COMMON = *.md LICENSE VERSION Makefile
 DIST_SUBDIRS = src doc example bin

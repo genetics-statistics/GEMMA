@@ -26,9 +26,9 @@
 #include "debug.h"
 #include "faster_lmm_d.h"
 
-char *api_faster_lmm_d_version() {
+char *api_faster_lmm_d_version(char *buf) {
   if (use_faster_lmm_d())
-    return flmmd_api_version();
+    return flmmd_api_version(buf);
   return NULL;
 }
 

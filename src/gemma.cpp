@@ -85,7 +85,8 @@ void GEMMA::PrintHeader(void) {
 
   cout <<
     "GEMMA " << version << " (" << date << ") by Xiang Zhou and team (C) 2012-" << year << endl;
-  auto flmmd_version = api_faster_lmm_d_version();
+  char buf[64];
+  auto flmmd_version = api_faster_lmm_d_version(buf);
   if (flmmd_version)
     cout << "   With faster-lmm-d v" << flmmd_version << " by Pjotr Prins and Prasun Anand (C) 2018" << endl;
   return;
@@ -3138,7 +3139,8 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
 
   outfile << "##" << endl;
   outfile << "## GEMMA            = " << version << " (" << date << ")" << endl;
-  auto flmmd_version = api_faster_lmm_d_version();
+  char buf[64];
+  auto flmmd_version = api_faster_lmm_d_version(buf);
   if (flmmd_version)
     outfile << "## Faster-lmm-d     = " << flmmd_version << endl;
   outfile << "## Build profile    = " << GEMMA_PROFILE << endl ;

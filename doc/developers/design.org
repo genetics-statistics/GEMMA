@@ -90,3 +90,9 @@ ind2 0.007996662028 0.008741860935 0.008489758779 ...
 ind900 0.002311556029
 # --- LOCO end
 #+END_SRC
+
+** Glossary
+
+- Y is inds x phenotypes
+- W is indx x covariates
+- eval is vector inds

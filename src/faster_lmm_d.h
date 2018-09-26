@@ -23,6 +23,6 @@
 extern "C" {
 
   // The following functions are bindings for faster-lmm-d.
-  char *flmmd_api_version(void);
+  char *flmmd_api_version(char *buf);
 
 } // extern C
