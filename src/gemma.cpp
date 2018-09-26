@@ -88,7 +88,7 @@ void GEMMA::PrintHeader(void) {
   char buf[64];
   auto flmmd_version = api_faster_lmm_d_version(buf);
   if (flmmd_version)
-    cout << "   With faster-lmm-d v" << flmmd_version << " by Pjotr Prins and Prasun Anand (C) 2018" << endl;
+    cout << "   faster-lmm-d v" << flmmd_version << " by Pjotr Prins and Prasun Anand (C) 2018" << endl;
   return;
 }
 

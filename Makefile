@@ -228,9 +228,9 @@ faster-lmm-d:
 .PHONY: all unittests test
 
 ./src/version.h: ./VERSION
-	$(VGEN) $(GUIX_PROFILE) > src/version.h
+	$(shell bash $(VGEN) $(GUIX_PROFILE) > src/version.h)
 
-$(OUTPUT): faster-lmm-d $(OBJS)
+$(OUTPUT): faster-lmm-d ./src/version.h $(OBJS)
 	$(CPP) $(CPPFLAGS) $(OBJS) $(LIBS) -o $(OUTPUT)
 
 $(OBJS): $(HDR)

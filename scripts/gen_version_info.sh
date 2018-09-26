@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /usr/bin/env bash
 #
 # Script to generate the version info of GEMMA and its environment
 # in ./src/version.h
