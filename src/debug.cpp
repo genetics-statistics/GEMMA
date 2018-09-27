@@ -40,7 +40,7 @@
 
 static bool debug_mode      = false;
 static bool debug_data_mode = false;
-static bool debug_check     = true;  // check data/algorithms
+static bool debug_check     = false;  // check data/algorithms
 static bool debug_fpe_check = true;  // check floating point errors (intel hardware)
 static bool debug_strict    = false; // fail on error, more rigorous checks
 static bool debug_quiet     = false;
@@ -49,6 +49,7 @@ static bool debug_legacy    = false; // legacy mode
 
 void debug_set_debug_mode(bool setting) { debug_mode = setting; }
 void debug_set_debug_data_mode(bool setting) { debug_data_mode = setting; }
+void debug_set_check_mode(bool setting) {debug_check = setting; }
 void debug_set_no_check_mode(bool setting) {debug_check = !setting; }
 void debug_set_no_fpe_check_mode(bool setting) {debug_fpe_check = !setting; }
 void debug_set_strict_mode(bool setting) { debug_strict = setting; }
