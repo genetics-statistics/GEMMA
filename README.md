@@ -132,10 +132,10 @@ Above example files can be downloaded from
 GEMMA has a wide range of debugging options which can be viewed with
 
 ```
-./bin/gemma -h 14
+gemma -h 14
 
  DEBUG OPTIONS
- -no-check                disable checks
+ -check                   enable checks (slower)
  -no-fpe-check            disable hardware floating point checking
  -strict                  strict mode will stop when there is a problem
  -silence                 silent terminal display
