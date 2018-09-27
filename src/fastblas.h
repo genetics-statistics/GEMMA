@@ -27,6 +27,9 @@
 
 gsl_matrix *fast_copy(gsl_matrix *m, const double *mem);
 
+extern const char *FastblasTrans;
+extern const char *FastblasNoTrans;
+
 void fast_dgemm(const char *TransA, const char *TransB, const double alpha,
                 const gsl_matrix *A, const gsl_matrix *B, const double beta,
                 gsl_matrix *C);

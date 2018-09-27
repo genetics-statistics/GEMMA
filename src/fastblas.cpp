@@ -30,6 +30,9 @@
 #include <string.h>
 #include "eigenlib.h"
 
+const char *FastblasTrans = "T";
+const char *FastblasNoTrans = "N";
+
 using namespace std;
 
 /*

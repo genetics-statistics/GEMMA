@@ -319,8 +319,8 @@ void LUDecomp(gsl_matrix *LU, gsl_permutation *p, int *signum) {
 // introductory textbook on numerical linear algebra for details).
 void LUInvert(const gsl_matrix *LU, const gsl_permutation *p, gsl_matrix *ret_inverse) {
   // debug_msg("entering");
-  auto det = LULndet(LU);
-  enforce_msg(det != 1.0,"LU determinant is zero -> LU is not invertable");
+  if (is_check_mode())
+    LULndet(LU);
 
   enforce_gsl(gsl_linalg_LU_invert(LU, p, ret_inverse));
 }

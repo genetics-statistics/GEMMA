@@ -70,7 +70,7 @@ WITH_GSLCBLAS          =                  # Force linking gslcblas (if OpenBlas 
 OPENBLAS_LEGACY        =                  # Using older OpenBlas
 FORCE_STATIC           =                  # Static linking of libraries
 # GCC_FLAGS              = -Wall -O3 -std=gnu++11 # extra flags -Wl,--allow-multiple-definition
-GCC_FLAGS              = -pthread -Wall -std=gnu++11 # extra flags -Wl,--allow-multiple-definition
+GCC_FLAGS              = -DHAVE_INLINE -pthread -Wall -std=gnu++11 # extra flags -Wl,--allow-multiple-definition
 TRAVIS_CI              =                  # used by TRAVIS for testing
 
 GSL_INCLUDE_PATH =

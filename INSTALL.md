@@ -65,6 +65,10 @@ and for the Clang edition
     make clean
     make GUIX=$GUIX_ENVIRONMENT CXX=clang++ check -j 4
 
+To test with another dependency, e.g. GSLv1
+
+    env GUIX_PACKAGE_PATH=../guix-bioinformatics/ guix environment -C guix --ad-hoc gcc gdb gfortran:lib gsl1 eigen openblas zlib bash ld-wrapper perl
+
 #### GNU Guix reproducible build system
 
 One of the challenges of developing software is dealing with

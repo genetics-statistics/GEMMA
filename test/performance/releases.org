@@ -125,6 +125,8 @@ user    0m13.656s
 sys     0m1.584s
 #+END_SRC
 
+Multivariate analysis is still slow.
+
 #+BEGIN_SRC bash
 time ./bin/gemma -g ./example/mouse_hs1940.geno.txt.gz -p ./example/mouse_hs1940.pheno.txt -n 1 -a ./example/mouse_hs1940.anno.txt -k ./output/result.cXX.txt -lmm -no-check
 GEMMA 0.98 (2018-09-26) by Xiang Zhou and team (C) 2012-2018
@@ -145,6 +147,65 @@ real    0m12.356s
 user    0m15.788s
 sys     0m3.036s
 #+END_SRC
+
+Full multivariate analysis is still slow. Mostly because of CalcQi - see above profiling.
+
+#+BEGIN_SRC bash
+time ./bin/gemma -g ./example/mouse_hs1940.geno.txt.gz -p ./example/mouse_hs1940.pheno.txt -n 1 2 -a ./example/mouse_hs1940.anno.txt -k ./output/result.cXX.txt -lmm -no-check
+GEMMA 0.98 (2018-09-26) by Xiang Zhou and team (C) 2012-2018
+Reading Files ...
+## number of total individuals = 1940
+## number of analyzed individuals = 757
+## number of covariates = 1
+## number of phenotypes = 2
+## number of total SNPs/var        =    12226
+## number of analyzed SNPs         =    10775
+Start Eigen-Decomposition...
+REMLE estimate for Vg in the null model:
+1.3210
+1.3210  1.3210
+se(Vg):
+0.8217
+0.7152  0.7198
+REMLE estimate for Ve in the null model:
+0.3257
+0.3257  0.3257
+se(Ve):
+1.9191
+2.6491  1.9101
+REMLE likelihood = 0.0000
+MLE estimate for Vg in the null model:
+1.3215
+1.3215  1.3215
+se(Vg):
+0.8217
+0.7152  0.7198
+MLE estimate for Ve in the null model:
+0.3249
+0.3249  0.3249
+se(Ve):
+1.9191
+2.6491  1.9101
+MLE likelihood = 0.0000
+================================================== 100%
+**** INFO: Done.
+
+real    1m38.057s
+user    1m39.320s
+sys     0m2.116s
+#+END_SRC
+
+using GSL inline functions improved it a bit to
+
+#+BEGIN_SRC
+real    1m29.697s
+user    1m30.896s
+sys     0m2.148s
+#+END_SRC
+
+otherwise the obvious way to improve things is to rejig these CalcXHiY, CalcQi and
+CalcSigma functions.
+
 
 * GEMMA 0.98-pre
 
