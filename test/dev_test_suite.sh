@@ -2,7 +2,7 @@
 
 gemma=../bin/gemma
 # gemmaopts="-debug -strict"
-gemmaopts="-debug"
+gemmaopts="-debug -check"
 
 testLinearModel() {
     $gemma $gemmaopts -g ../example/mouse_hs1940.geno.txt.gz \
@@ -155,6 +155,20 @@ testPlinkUnivariateLinearMixedModelLOCO1() {
     assertEquals "68" `wc -l < $outfn`
     assertEquals "15465346.22" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
+
+
+testCorrelatedPhenotypesMvLLM() {
+    $gemma $gemmaopts -p data/correlated_phenotypes/Ysim_reg_gemma.txt \
+           -g data/correlated_phenotypes/Genotypes_gemma.csv \
+           -d data/correlated_phenotypes/Kinship_eigenval_gemma.txt \
+           -u data/correlated_phenotypes/Kinship_eigenvec_gemma.txt \
+           -lmm 2 -n 1 9 4 6 10 -o corrpheno
+    assertEquals 0 $?
+    # outfn=output/$outn.assoc.txt
+    # assertEquals "68" `wc -l < $outfn`
+    # assertEquals "15465346.22" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+}
+
 
 shunit2=`which shunit2`
 
