@@ -28,24 +28,23 @@ Windows binaries) please post a note in the
 
 *(The above image depicts physiological and behavioral trait
 loci identified in CFW mice using GEMMA, from [Parker et al, Nature
-Genetics, 2016](https://doi.org/10.1038/ng.3609).)*
+Genetics, 2016](https://doi.org/10.1038/ng.3609).)
 
-      * [Key features](#key-features)
-      * [Installation](#installation)
-         * [Precompiled binaries](#precompiled-binaries)
-      * [Run GEMMA](#run-gemma)
-         * [Debugging and optimization](#debugging-and-optimization)
-      * [Help](#help)
-      * [Citing GEMMA](#citing-gemma)
-      * [License](#license)
-      * [Optimizing performance](#optimizing-performance)
-      * [Building from source](#building-from-source)
-      * [Input data formats](#input-data-formats)
-      * [Reporting a GEMMA bug or issue](#reporting-a-gemma-bug-or-issue)
-         * [Check list:](#check-list)
-      * [Code of conduct](#code-of-conduct)
-      * [Credits](#credits)
-
+* [Key features](#key-features)
+* [Installation](#installation)
+  * [Precompiled binaries](#precompiled-binaries)
+* [Run GEMMA](#run-gemma)
+  * [Debugging and optimization](#debugging-and-optimization)
+* [Help](#help)
+* [Citing GEMMA](#citing-gemma)
+* [License](#license)
+* [Optimizing performance](#optimizing-performance)
+* [Building from source](#building-from-source)
+* [Input data formats](#input-data-formats)
+* [Reporting a GEMMA bug or issue](#reporting-a-gemma-bug-or-issue)
+  * [Check list:](#check-list)
+* [Code of conduct](#code-of-conduct)
+* [Credits](#credits)
 
 ## Key features
 
@@ -192,7 +191,7 @@ studies.](https://doi.org/10.1101/042846) *Annals of Applied Statistics*, in pre
 
 ## License
 
-Copyright (C) 2012–2017, Xiang Zhou and team.
+Copyright (C) 2012–2018, Xiang Zhou and team.
 
 The *GEMMA* source code repository is free software: you can
 redistribute it under the terms of the
@@ -286,10 +285,10 @@ The *GEMMA* software was developed by:
 [Xiang Zhou](http://www.xzlab.org)<br>
 Dept. of Biostatistics<br>
 University of Michigan<br>
-2012-2017
 
 Peter Carbonetto, Tim Flutre, Matthew Stephens,
-[Pjotr Prins](http://thebird.nl/) and others have also contributed to
-the development of this software.
+[Pjotr Prins](http://thebird.nl/) and
+[others](https://github.com/genetics-statistics/GEMMA/graphs/contributors)
+have also contributed to the development of this software.
 
 [latest_release]: https://github.com/genetics-statistics/GEMMA/releases "Most recent stable releases"
