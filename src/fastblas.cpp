@@ -23,9 +23,9 @@
 #include <cmath>
 #include <iomanip>
 #include <vector>
-#include <cblas.h>
 #include "debug.h"
 #include "fastblas.h"
+#include "fastopenblas.h"
 #include "mathfunc.h"
 #include <string.h>
 #include "eigenlib.h"

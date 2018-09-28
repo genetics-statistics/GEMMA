@@ -23,7 +23,10 @@
 
 #include <assert.h>
 #include <iostream>
-#include <cblas.h>   // For OpenBlas
+extern "C"
+{
+   #include <cblas.h>   // For OpenBlas / Atlas
+}
 #include "gsl/gsl_matrix.h"
 
 void fast_cblas_dgemm(const enum CBLAS_ORDER Order,

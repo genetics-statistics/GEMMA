@@ -128,6 +128,8 @@ ifdef WITH_OPENBLAS
     # Legacy version (mostly for Travis-CI)
     CPPFLAGS += -DOPENBLAS_LEGACY
   endif
+else
+  CPPFLAGS += -DUSE_BLAS=atlas
 endif
 
 ifeq ($(CXX), clang++)
@@ -158,7 +160,12 @@ ifdef SHOW_COMPILER_WARNINGS
 endif
 
 ifndef FORCE_STATIC
-  LIBS = -lgsl -lopenblas -lz
+  LIBS = -lgsl -lz
+  ifdef WITH_OPENBLAS
+    LIBS += -lopenblas
+  else
+    LIBS += -L$(GUIX_ENVIRONMENT) -latlas -lcblas -llapack -lblas
+  endif
   ifdef WITH_GSLCBLAS
     LIBS += -lgslcblas
   else
