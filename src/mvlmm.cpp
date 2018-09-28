@@ -256,7 +256,15 @@ double EigenProc(const gsl_matrix *V_g, const gsl_matrix *V_e, gsl_vector *D_l,
   gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, V_e_hi, VgVehi, 0.0, Lambda);
 
   // Eigen decomposition of Lambda.
-  EigenDecomp_Zeroed(Lambda, U_l, D_l, 0);
+  EigenDecomp(Lambda, U_l, D_l, 0);
+
+  for (size_t i = 0; i < d_size; i++) {
+    d = gsl_vector_get(D_l, i);
+    if (d < 0) {
+      gsl_vector_set(D_l, i, 0);
+    }
+  }
+
 
   // Calculate UltVeh and UltVehi.
   gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, U_l, V_e_h, 0.0, UltVeh);

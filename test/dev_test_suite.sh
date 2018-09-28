@@ -158,15 +158,17 @@ testPlinkUnivariateLinearMixedModelLOCO1() {
 
 
 testCorrelatedPhenotypesMvLLM() {
+    # https://github.com/genetics-statistics/GEMMA/issues/179
+    outn=corrpheno
     $gemma $gemmaopts -p data/correlated_phenotypes/Ysim_reg_gemma.txt \
            -g data/correlated_phenotypes/Genotypes_gemma.csv \
            -d data/correlated_phenotypes/Kinship_eigenval_gemma.txt \
            -u data/correlated_phenotypes/Kinship_eigenvec_gemma.txt \
-           -lmm 2 -n 1 9 4 6 10 -o corrpheno
+           -lmm 2 -n 1 9 4 6 10 -o $outn
     assertEquals 0 $?
-    # outfn=output/$outn.assoc.txt
+    outfn=output/$outn.assoc.txt
     # assertEquals "68" `wc -l < $outfn`
-    # assertEquals "15465346.22" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+    assertEquals "777.32" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
 

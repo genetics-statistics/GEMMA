@@ -253,8 +253,10 @@ double EigenDecomp(gsl_matrix *G, gsl_matrix *U, gsl_vector *eval,
   return d;
 }
 
-// Same as EigenDecomp but zeroes eigenvalues close to zero. When
-// negative eigenvalues remain a warning is issued.
+// Does NOT set eigenvalues to be positive. G gets destroyed. Returns
+// eigen trace and values in U and eval (eigenvalues).  Same as
+// EigenDecomp but zeroes eigenvalues close to zero. When negative
+// eigenvalues remain a warning is issued.
 double EigenDecomp_Zeroed(gsl_matrix *G, gsl_matrix *U, gsl_vector *eval,
                           const size_t flag_largematrix) {
   EigenDecomp(G,U,eval,flag_largematrix);
@@ -262,7 +264,8 @@ double EigenDecomp_Zeroed(gsl_matrix *G, gsl_matrix *U, gsl_vector *eval,
   int count_zero_eigenvalues = 0;
   int count_negative_eigenvalues = 0;
   for (size_t i = 0; i < eval->size; i++) {
-    if (std::abs(gsl_vector_get(eval, i)) < EIGEN_MINVALUE)
+    // if (std::abs(gsl_vector_get(eval, i)) < EIGEN_MINVALUE)
+    if (gsl_vector_get(eval, i) < 1e-10)
       gsl_vector_set(eval, i, 0.0);
     // checks
     if (gsl_vector_get(eval,i) == 0.0)
