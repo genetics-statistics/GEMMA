@@ -4,11 +4,29 @@ see
 and
 [commits](https://github.com/genetics-statistics/GEMMA/commits/master).
 
-## ChangeLog v0.98 (date)
+## ChangeLog v0.98 (2018/09/28)
 
-With the v0.98 release GEMMA has stabilized and contains extensive
-error checking. This release contains quite a few bug fixes,
-hardware-based floating point checking and speedups.
+With the v0.98 release GEMMA has stabilized, is faster than ever, and
+contains extensive error checking. This release contains quite a few
+bug fixes, hardware-based floating point checking and speedups.
+
+* GEMMA is faster than ever #136
+* Fixes log standing 'GSL ERROR: matrix is singular in lu.c at line
+  266' mvlmm regression with correlated phenotypes #179 with
+  https://github.com/genetics-statistics/GEMMA/commit/99527865c00b74a3a48daa2e1e5eb7c71bd861b5 -
+  (thank you @HannahVMeyer and @xiangzhou)
+* Adds x86 hardware based floating point error checking #161, see 70f419673d5d3e49a3eada70c70c2d284b502d7b
+* Provide a static release of GEMMA again for Linux #162
+* Fixes clang++ build on MacOS #160
+* Enforce failed for 0.00 in src/io.cpp at line 1431 in BimbamKin #149
+* -no-check is default now
+* Force SIGINT on error so debuggers can get a stack trace
+* Improved CalcPab functions to not break on division by zero
+  https://github.com/genenetwork/GEMMA/commit/8010061e8af476d66a0ca6fb6d509b36acdb9b9a
+  (thank you @xiangzhou)
+* Add Windows MingW compilation support (thanks @DannyArends)
+* Fully utilizing GNU Guix containers for a build system (see INSTALL.md)
+* Updated manual by @xiangzhou)
 
 Note: This is the last purely C/C++ compilable release because we are
 integrating faster-lmm-d code for new functionality in the next
