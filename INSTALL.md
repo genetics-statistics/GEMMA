@@ -53,7 +53,7 @@ To build GEMMA from source you can opt to install the build tools with GNU Guix
 
     guix package -i make gcc linux-libre-headers gsl eigen openblas lapack glibc ld-wrapper
 
-Even better you can create a container in the source tree and run
+Even better you can create a container in the source tree and run our development setup
 
     guix environment -C guix --ad-hoc gcc gdb gfortran:lib gsl eigen openblas zlib bash ld-wrapper perl
     make clean
