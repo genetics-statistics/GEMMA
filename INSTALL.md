@@ -69,6 +69,11 @@ To test with another dependency, e.g. GSLv1
 
     env GUIX_PACKAGE_PATH=../guix-bioinformatics/ guix environment -C guix --ad-hoc gcc gdb gfortran:lib gsl1 eigen openblas zlib bash ld-wrapper perl
 
+or replace openblas with atlas
+
+    env GUIX_PACKAGE_PATH=~/izip/git/opensource/genenetwork/guix-bioinformatics/ ~/.config/guix/current/bin/guix environment -C guix --ad-hoc gcc gdb gfortran:lib gsl1 eigen lapack atlas zlib bash ld-wrapper perl
+    make clean && make WITH_OPENBLAS= WITH_ATLAS=1
+
 #### GNU Guix reproducible build system
 
 One of the challenges of developing software is dealing with

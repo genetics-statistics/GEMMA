@@ -65,6 +65,7 @@ DEBUG                  = 1                # DEBUG mode, set DEBUG=0 for a releas
 PROFILING              =                  # Add profiling info
 SHOW_COMPILER_WARNINGS =
 WITH_OPENBLAS          = 1                # Without OpenBlas uses LAPACK
+WITH_ATLAS             =                  # In place of OpenBlas(?)
 WITH_LAPACK            =                  # Force linking LAPACK (if OpenBlas lacks it)
 WITH_GSLCBLAS          =                  # Force linking gslcblas (if OpenBlas lacks it)
 OPENBLAS_LEGACY        =                  # Using older OpenBlas
@@ -129,7 +130,9 @@ ifdef WITH_OPENBLAS
     CPPFLAGS += -DOPENBLAS_LEGACY
   endif
 else
-  CPPFLAGS += -DUSE_BLAS=atlas
+  ifdef WITH_ATLAS
+    CPPFLAGS += -DUSE_BLAS=atlas
+  endif
 endif
 
 ifeq ($(CXX), clang++)
