@@ -64,7 +64,7 @@ DIST_NAME              = gemma-$(GEMMA_VERSION)
 DEBUG                  = 1                # DEBUG mode, set DEBUG=0 for a release
 PROFILING              =                  # Add profiling info
 SHOW_COMPILER_WARNINGS =
-FASTER_LMM_D           = faster_lmm_d
+FASTER_LMM_D           = faster_lmm_d     # directory where to fast faster-lmm-d sources
 WITH_OPENBLAS          = 1                # Without OpenBlas uses LAPACK
 WITH_ATLAS             =                  # In place of OpenBlas(?)
 WITH_LAPACK            =                  # Force linking LAPACK (if OpenBlas lacks it)
