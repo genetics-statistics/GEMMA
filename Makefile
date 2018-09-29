@@ -162,25 +162,25 @@ ifdef SHOW_COMPILER_WARNINGS
   CPPFLAGS += -Wall
 endif
 
-ifndef FORCE_STATIC
-  LIBS = -lgsl -lz
-  ifdef WITH_OPENBLAS
-    LIBS += -lopenblas
-  else
-    LIBS += -L$(GUIX_ENVIRONMENT) -latlas -lcblas -llapack -lblas
-  endif
-  ifdef WITH_GSLCBLAS
-    LIBS += -lgslcblas
-  else
-    LIBS += -lgfortran -lquadmath
-  endif
-else
-  LIBS = -L$(GUIX)/lib -lopenblas -lgsl -lz -lgslcblas -lgfortran -lquadmath
+ifdef FORCE_STATIC
+  LIBS = -L$(GUIX)/lib -lgfortran -lquadmath
   ifndef TRAVIS_CI # Travis static compile we cheat a little
     CPPFLAGS += -static
   endif
 endif
 
+LIBS += -lgsl -lz
+ifdef WITH_OPENBLAS
+  LIBS += -lopenblas
+else
+  LIBS += -latlas -lcblas -llapack -lblas
+endif
+ifdef WITH_GSLCBLAS
+  LIBS += -lgslcblas
+endif
+ifdef FORCE_STATIC
+  LIBS += -lgfortran -lquadmath
+endif
 
 .PHONY: all
 
