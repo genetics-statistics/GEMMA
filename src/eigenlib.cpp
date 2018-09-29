@@ -23,7 +23,7 @@
 #include <cmath>
 #include <iostream>
 #include <vector>
-#include <cblas.h>
+// #include <cblas.h>
 
 using namespace std;
 using namespace Eigen;

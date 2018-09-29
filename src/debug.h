@@ -33,6 +33,7 @@ void gemma_gsl_error_handler (const char * reason,
 
 void debug_set_debug_mode(bool setting);
 void debug_set_debug_data_mode(bool setting);
+void debug_set_check_mode(bool setting);
 void debug_set_no_check_mode(bool setting);
 void debug_set_no_fpe_check_mode(bool setting);
 void debug_set_strict_mode(bool setting);

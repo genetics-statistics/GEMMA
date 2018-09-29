@@ -14,7 +14,7 @@ GEMMA runs on Linux and MAC OSX and the runtime has the following
 dependencies:
 
 * C++ tool chain >= 4.9
-* GNU Science library (GSL) 1.x (note that 2.x is not yet supported)
+* GNU Science library (GSL) 2.x is recommended
 * blas/openblas
 * lapack
 * [Eigen3 library](http://eigen.tuxfamily.org/dox/)
@@ -53,7 +53,7 @@ To build GEMMA from source you can opt to install the build tools with GNU Guix
 
     guix package -i make gcc linux-libre-headers gsl eigen openblas lapack glibc ld-wrapper
 
-Even better you can create a container in the source tree and run
+Even better you can create a container in the source tree and run our development setup
 
     guix environment -C guix --ad-hoc gcc gdb gfortran:lib gsl eigen openblas zlib bash ld-wrapper perl
     make clean
@@ -77,6 +77,15 @@ Finally, instead of pulling in the guix package you can be even more explicit wi
     guix environment -C --ad-hoc gcc gdb gfortran:lib gsl eigen openblas zlib bash ld-wrapper perl ldc \
       make coreutils linux-libre-headers binutils glibc \
       --share=/home/wrk/izip/git/opensource/D/faster_lmm_d
+
+To test with another dependency, e.g. GSLv1
+
+    env GUIX_PACKAGE_PATH=../guix-bioinformatics/ guix environment -C guix --ad-hoc gcc gdb gfortran:lib gsl1 eigen openblas zlib bash ld-wrapper perl
+
+or replace openblas with atlas
+
+    env GUIX_PACKAGE_PATH=~/izip/git/opensource/genenetwork/guix-bioinformatics/ ~/.config/guix/current/bin/guix environment -C guix --ad-hoc gcc gdb gfortran:lib gsl1 eigen lapack atlas zlib bash ld-wrapper perl
+    make clean && make WITH_OPENBLAS= WITH_ATLAS=1
 
 #### GNU Guix reproducible build system
 

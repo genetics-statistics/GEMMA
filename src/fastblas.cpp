@@ -23,12 +23,15 @@
 #include <cmath>
 #include <iomanip>
 #include <vector>
-#include <cblas.h>
 #include "debug.h"
 #include "fastblas.h"
+#include "fastopenblas.h"
 #include "mathfunc.h"
 #include <string.h>
 #include "eigenlib.h"
+
+const char *FastblasTrans = "T";
+const char *FastblasNoTrans = "N";
 
 using namespace std;
 

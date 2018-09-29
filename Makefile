@@ -66,12 +66,13 @@ PROFILING              =                  # Add profiling info
 SHOW_COMPILER_WARNINGS =
 FASTER_LMM_D           = faster_lmm_d
 WITH_OPENBLAS          = 1                # Without OpenBlas uses LAPACK
+WITH_ATLAS             =                  # In place of OpenBlas(?)
 WITH_LAPACK            =                  # Force linking LAPACK (if OpenBlas lacks it)
 WITH_GSLCBLAS          =                  # Force linking gslcblas (if OpenBlas lacks it)
 OPENBLAS_LEGACY        =                  # Using older OpenBlas
 FORCE_STATIC           =                  # Static linking of libraries
 # GCC_FLAGS              = -Wall -O3 -std=gnu++11 # extra flags -Wl,--allow-multiple-definition
-GCC_FLAGS              = -pthread -Wall -std=gnu++11 # extra flags -Wl,--allow-multiple-definition
+GCC_FLAGS              = -DHAVE_INLINE -pthread -Wall -std=gnu++11 # extra flags -Wl,--allow-multiple-definition
 TRAVIS_CI              =                  # used by TRAVIS for testing
 
 GSL_INCLUDE_PATH =
@@ -134,6 +135,10 @@ ifdef WITH_OPENBLAS
     # Legacy version (mostly for Travis-CI)
     CPPFLAGS += -DOPENBLAS_LEGACY
   endif
+else
+  ifdef WITH_ATLAS
+    CPPFLAGS += -DUSE_BLAS=atlas
+  endif
 endif
 
 ifeq ($(CXX), clang++)
@@ -163,15 +168,8 @@ ifdef SHOW_COMPILER_WARNINGS
   CPPFLAGS += -Wall
 endif
 
-ifndef FORCE_STATIC
-  LIBS = -lgsl -lopenblas -lz
-  ifdef WITH_GSLCBLAS
-    LIBS += -lgslcblas
-  else
-    LIBS += -lgfortran -lquadmath
-  endif
-else
-  LIBS = -L$(GUIX)/lib -lopenblas -lgsl -lz -lgslcblas -lgfortran -lquadmath
+ifdef FORCE_STATIC
+  LIBS = -L$(GUIX)/lib -lgfortran -lquadmath
   ifndef TRAVIS_CI # Travis static compile we cheat a little
     CPPFLAGS += -static
   endif
@@ -179,6 +177,18 @@ endif
 
 LIBS += $(FASTER_LMM_D_LIB) -lphobos2-ldc-debug -ldruntime-ldc-debug -ldl
 
+LIBS += -lgsl -lz
+ifdef WITH_OPENBLAS
+  LIBS += -lopenblas
+else
+  LIBS += -latlas -lcblas -llapack -lblas
+endif
+ifdef WITH_GSLCBLAS
+  LIBS += -lgslcblas
+endif
+ifdef FORCE_STATIC
+  LIBS += -lgfortran -lquadmath
+endif
 
 .PHONY: all
 
