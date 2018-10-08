@@ -3,7 +3,7 @@ Nat. Genet., 2016)](cfw.gif)
 
 # GEMMA: Genome-wide Efficient Mixed Model Association
 
-[![Build Status](https://travis-ci.org/genetics-statistics/GEMMA.svg?branch=master)](https://travis-ci.org/genetics-statistics/GEMMA)
+[![Build Status](https://travis-ci.org/genetics-statistics/GEMMA.svg?branch=master)](https://travis-ci.org/genetics-statistics/GEMMA) [![DebianBadge](https://badges.debian.net/badges/debian/testing/gemma/version.svg)](https://packages.debian.org/testing/gemma)
 
 GEMMA is a software toolkit for fast application of linear mixed
 models (LMMs) and related models to genome-wide association studies
