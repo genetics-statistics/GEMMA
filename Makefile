@@ -144,7 +144,11 @@ ifeq ($(CXX), clang++)
 endif
 
 ifdef DEBUG
-  CPPFLAGS += -g -Og $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc $(RPATH)
+  ifneq ($(CXX), clang++)
+    # Clang does not like this switch
+    CPPFLAGS += -Og
+  endif
+  CPPFLAGS += -g $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc $(RPATH)
 else
   # release mode
   CPPFLAGS += -DNDEBUG -O3 $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc $(RPATH)
