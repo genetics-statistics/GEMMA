@@ -67,13 +67,13 @@ Even better you can create a container in the source tree and run our developmen
 
     guix environment -C guix --ad-hoc gcc gdb gfortran:lib gsl eigen openblas zlib bash ld-wrapper perl
     make clean
-    make GUIX=$GUIX_ENVIRONMENT check -j 4
+    make check -j 4
 
 and for the Clang edition
 
     guix environment -C guix --ad-hoc clang gcc gdb gfortran:lib gsl eigen openblas zlib bash ld-wrapper perl
     make clean
-    make GUIX=$GUIX_ENVIRONMENT CXX=clang++ check -j 4
+    make CXX=clang++ check -j 4
 
 To test with another dependency, e.g. GSLv1
 
@@ -168,7 +168,7 @@ against gslv1) would be
 
 to run GEMMA tests
 
-	time make check
+	make check
 
 You can run gemma in the debugger with, for example
 
@@ -204,8 +204,7 @@ or
 
 The gcc version has profiling support, run with
 
-    make PROFILING=1
-
+    make profile
 
 ### OpenBlas
 
