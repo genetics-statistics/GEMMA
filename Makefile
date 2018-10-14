@@ -3,7 +3,7 @@
 # Supported platforms
 #
 #       Unix / Linux               LNX (default)
-#       Mac                        MAC
+#       Mac                        OSX
 #       GNU Guix                   GUIX (set to profile)
 #
 # Compilation options
@@ -15,13 +15,13 @@
 #
 #      make WITH_OPENBLAS=
 #
-#    Disable debug info and checks (slightly faster release mode)
+#    Disable debug info and checks (release mode is slightly faster)
 #
-#      make DEBUG=
+#      make debug
 #
 #    Force static compilation
 #
-#      make FORCE_STATIC=1
+#      make static
 #
 #    Run tests with
 #
@@ -37,7 +37,7 @@
 #
 #    To compile with CLANG
 #
-#      make CXX=clang++ check
+#      make CXX=clang++
 #
 #    See also the INSTALL.md document in the source tree at
 #
@@ -45,14 +45,14 @@
 
 GEMMA_VERSION = $(shell cat ./VERSION)
 
-# Set this variable to either LNX or MAC
+# Set this variable to either LNX or OSX
 ifeq ($(OS),Windows_NT)
   SYS = WIN
   VGEN = scripts/gen_version_info.cmd
 else
   UNAME_S := $(shell uname -s)
   ifeq ($(UNAME_S),Darwin)
-    SYS = MAC
+    SYS = OSX
   else
     SYS = LNX # default to linux
   endif
@@ -68,11 +68,10 @@ WITH_OPENBLAS          = 1                # Without OpenBlas uses LAPACK
 WITH_ATLAS             =                  # In place of OpenBlas(?)
 WITH_LAPACK            =                  # Force linking LAPACK (if OpenBlas lacks it)
 WITH_GSLCBLAS          =                  # Force linking gslcblas (if OpenBlas lacks it)
+WITH_GFORTRAN          =                  # Add -lgfortran (if OpenBlas does not pull it in)
 OPENBLAS_LEGACY        =                  # Using older OpenBlas
 FORCE_STATIC           =                  # Static linking of libraries
-# GCC_FLAGS              = -Wall -O3 -std=gnu++11 # extra flags -Wl,--allow-multiple-definition
 GCC_FLAGS              = -DHAVE_INLINE -pthread -Wall -std=gnu++11 # extra flags -Wl,--allow-multiple-definition
-TRAVIS_CI              =                  # used by TRAVIS for testing
 
 GSL_INCLUDE_PATH =
 ifeq ($(SYS), WIN)
@@ -81,7 +80,7 @@ ifeq ($(SYS), WIN)
   OPENBLAS_INCLUDE_PATH = ../OpenBLAS-v0.2.19-Win64-int32/include -L../OpenBLAS-v0.2.19-Win64-int32/lib
 else
   OPENBLAS_INCLUDE_PATH = /usr/local/opt/openblas/include
-  ifeq ($(SYS), MAC)
+  ifeq ($(SYS), OSX)
     EIGEN_INCLUDE_PATH = /usr/local/include/eigen3
   else
     EIGEN_INCLUDE_PATH = /usr/include/eigen3
@@ -96,6 +95,9 @@ else
     OPENBLAS_INCLUDE_PATH = .
     EIGEN_INCLUDE_PATH = $(GUIX)/include/eigen3
     # RPATH = -Xlinker --rpath=$(GUIX)/lib
+    ifdef FORCE_STATIC
+      LIBS = -L$(GUIX)/lib
+    endif
     GUIX_PROFILE =$(realpath $(GUIX))
   endif
 endif
@@ -116,9 +118,10 @@ else
 endif
 
 ifeq ($(CPP), clang++)
-  # macOS Homebrew settings (as used on Travis-CI)
-  # GCC_FLAGS=-O3 -std=c++11 -stdlib=libc++ -isystem$(OPENBLAS_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Wl,-L/usr/local/opt/openblas/lib
   GCC_FLAGS=-std=c++11 -isystem$(OPENBLAS_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH)
+  ifdef GUIX
+    CPPFLAGS += -I$(GUIX)/include/c++ -I$(GUIX)/include/c++/x86_64-unknown-linux-gnu
+  endif
 endif
 
 ifdef WITH_OPENBLAS
@@ -135,28 +138,17 @@ else
   endif
 endif
 
-ifeq ($(CXX), clang++)
-  # CPPFLAGS += -isystem$(GUIX)/include/c++ -isystem$(GUIX)/include/c++/x86_64-unknown-linux-gnu
-  ifdef GUIX
-    CPPFLAGS += -I$(GUIX)/include/c++ -I$(GUIX)/include/c++/x86_64-unknown-linux-gnu
-  endif
-  # -L$(GUIX)/lib
+ifneq ($(CXX), clang++)
+  # Clang does not like this switch
+  debug check fast-check: CPPFLAGS += -Og
 endif
 
-ifdef DEBUG
-  ifneq ($(CXX), clang++)
-    # Clang does not like this switch
-    CPPFLAGS += -Og
-  endif
-  CPPFLAGS += -g $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
-else
-  # release mode
-  CPPFLAGS += -DNDEBUG -O3 $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
-endif
+debug check fast-check: CPPFLAGS += -g $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
 
-ifdef PROFILING
-  CPPFLAGS += -pg
-endif
+profile: CPPFLAGS += -pg
+
+release: CPPFLAGS += -DNDEBUG -O3 $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
+
 
 ifeq ($(SYS), WIN)
   CPPFLAGS += -Duint="unsigned int" -D__CRT__NO_INLINE -D__STRING="__STRINGIFY" -DWINDOWS -DWITH_GSLCBLAS=1
@@ -166,12 +158,7 @@ ifdef SHOW_COMPILER_WARNINGS
   CPPFLAGS += -Wall
 endif
 
-ifdef FORCE_STATIC
-  LIBS = -L$(GUIX)/lib -lgfortran -lquadmath
-  ifndef TRAVIS_CI # Travis static compile we cheat a little
-    CPPFLAGS += -static
-  endif
-endif
+static: CPPFLAGS += -static
 
 LIBS += -lgsl -lz
 ifdef WITH_OPENBLAS
@@ -182,39 +169,26 @@ endif
 ifdef WITH_GSLCBLAS
   LIBS += -lgslcblas
 endif
-ifdef FORCE_STATIC
-  LIBS += -lgfortran -lquadmath
+ifdef WITH_GFORTRAN
+  LIBS += -lgfortran
 endif
 
-.PHONY: all
+.PHONY: all test
 
 OUTPUT = $(BIN_DIR)/gemma
 
 # Detailed libary paths, D for dynamic and S for static
 
 ifdef WITH_LAPACK
-  LIBS_LNX_D_LAPACK = -llapack
+  LIBS += -llapack
 endif
-LIBS_MAC_D_LAPACK = -framework Accelerate
-# LIBS_LNX_S_LAPACK = /usr/lib/libgsl.a  /usr/lib/libgslcblas.a /usr/lib/lapack/liblapack.a -lz
-# LIBS_LNX_S_LAPACK = /usr/lib/lapack/liblapack.a -lgfortran  /usr/lib/atlas-base/libatlas.a /usr/lib/libblas/libblas.a -Wl,--allow-multiple-definition
+LIBS_OSX_D_LAPACK = -framework Accelerate
 
 ifdef WITH_LAPACK
-  ifeq ($(SYS), MAC)
-    LIBS += $(LIBS_MAC_D_LAPACK)
+  ifeq ($(SYS), OSX)
+    LIBS += $(LIBS_OSX_D_LAPACK)
     ifdef WITH_OPENBLAS
       LIBS += -Wl,-L/usr/local/opt/openblas/lib
-    endif
-  else
-    ifndef FORCE_STATIC
-      ifdef WITH_OPENBLAS
-        LIBS += -lopenblas
-      else
-        LIBS += $(LIBS_LNX_D_BLAS)
-      endif
-      LIBS += $(LIBS_LNX_D_LAPACK)
-    else
-      LIBS += $(LIBS_LNX_S_LAPACK)
     endif
   endif
 endif
@@ -225,7 +199,11 @@ SOURCES      = $(wildcard src/*.cpp)
 # all
 OBJS = $(SOURCES:.cpp=.o)
 
-all: $(OUTPUT)
+all: release
+
+release: $(OUTPUT)
+
+debug: $(OUTPUT)
 
 ./src/version.h: ./VERSION
 	$(shell bash $(VGEN) $(GUIX_PROFILE) > src/version.h)
