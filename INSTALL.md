@@ -1,5 +1,7 @@
 # INSTALL GEMMA: Genome-wide Efficient Mixed Model Association
 
+[![Build Status](https://travis-ci.org/genetics-statistics/GEMMA.svg?branch=master)](https://travis-ci.org/genetics-statistics/GEMMA) [![Anaconda-Server Badge](https://anaconda.org/bioconda/gemma/badges/installer/conda.svg)](https://anaconda.org/bioconda/gemma) [![DL](https://anaconda.org/bioconda/gemma/badges/downloads.svg)](https://anaconda.org/bioconda/gemma) [![BrewBadge](https://img.shields.io/badge/%F0%9F%8D%BAbrew-gemma--0.98-brightgreen.svg)](https://github.com/brewsci/homebrew-bio) [![GuixBadge](https://img.shields.io/badge/gnuguix-gemma-brightgreen.svg)](https://www.gnu.org/software/guix/packages/G/) [![DebianBadge](https://badges.debian.net/badges/debian/testing/gemma/version.svg)](https://packages.debian.org/testing/gemma)
+
 ## Check version
 
 Simply run gemma once installed
@@ -26,6 +28,8 @@ See below for installation on Guix.
 
 ### Debian and Ubuntu
 
+[![DebianBadge](https://badges.debian.net/badges/debian/testing/gemma/version.svg)](https://packages.debian.org/testing/gemma)
+
 Travis-CI uses Ubuntu for testing. Check the test logs for version numbers.
 
 [![Build Status](https://travis-ci.org/genetics-statistics/GEMMA.svg?branch=master)](https://travis-ci.org/genetics-statistics/GEMMA)
@@ -34,7 +38,7 @@ Current settings can be found in [travis.yml](.travis.yml).
 
 ### Bioconda
 
-(Note Bioconda install is a work in [progress](https://github.com/genetics-statistics/GEMMA/issues/52)
+[![Anaconda-Server Badge](https://anaconda.org/bioconda/gemma/badges/installer/conda.svg)](https://anaconda.org/bioconda/gemma)
 
 Recent versions of GEMMA can be installed with
 [BioConda](http://ddocent.com/bioconda/) without root permissions using the following
@@ -42,7 +46,13 @@ command
 
     conda install gemma
 
+### Brew
+
+[![BrewBadge](https://img.shields.io/badge/%F0%9F%8D%BAbrew-gemma--0.98-brightgreen.svg)](https://github.com/brewsci/homebrew-bio)
+
 ### GNU Guix
+
+[![GuixBadge](https://img.shields.io/badge/gnuguix-gemma-brightgreen.svg)](https://www.gnu.org/software/guix/packages/G/)
 
 The GNU Guix package manager can install recent versions of [GEMMA](https://www.gnu.org/software/guix/packages/g.html)
 using the following command
