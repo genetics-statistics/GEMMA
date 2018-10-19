@@ -15,6 +15,8 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+    MODULE INFO
+
     This file includes the api functions that can be called from R,
     Python etc. Functions starting with 'internal_' are an internal
     complement that typically handle GEMMA state. These functions
@@ -22,7 +24,7 @@
     for general use.
 */
 
-#include "int_api.h" // for now - split out later
+#include "int_api.h"
 #include "debug.h"
 #include "faster_lmm_d.h"
 
@@ -31,6 +33,7 @@ char *api_faster_lmm_d_version(char *buf) {
     return flmmd_api_version(buf);
   return NULL;
 }
+
 
 void int_api_write_K(const PARAM *cPar, const gsl_matrix *G, bool is_centered);
 

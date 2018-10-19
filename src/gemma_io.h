@@ -87,11 +87,11 @@ void ReadFile_mk(const string &file_mk, vector<int> &indicator_idv,
 void ReadFile_eigenU(const string &file_u, bool &error, gsl_matrix *U);
 void ReadFile_eigenD(const string &file_d, bool &error, gsl_vector *eval);
 
-bool BimbamKin(const string file_geno, const set<string> ksnps,
+void BimbamKin(const string file_geno, const set<string> ksnps,
                vector<int> &indicator_snp, const int k_mode,
                const int display_pace, gsl_matrix *matrix_kin,
                const bool test_nind);
-bool PlinkKin(const string &file_bed, vector<int> &indicator_snp,
+void PlinkKin(const string &file_bed, vector<int> &indicator_snp,
               const int k_mode, const int display_pace, gsl_matrix *matrix_kin);
 
 bool ReadFile_geno(const string file_geno, vector<int> &indicator_idv,
@@ -137,7 +137,7 @@ bool BimbamKinUncentered(const string &file_geno, const set<string> ksnps,
                          const map<string, size_t> &mapRS2cat,
                          const vector<SNPINFO> &snpInfo, const gsl_matrix *W,
                          gsl_matrix *matrix_kin, gsl_vector *vector_ns);
-bool PlinkKin(const string &file_bed, const int display_pace,
+void PlinkKin(const string &file_bed, const int display_pace,
               const vector<int> &indicator_idv,
               const vector<int> &indicator_snp,
               const map<string, double> &mapRS2weight,

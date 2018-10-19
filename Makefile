@@ -162,6 +162,9 @@ endif
 ifdef SHOW_COMPILER_WARNINGS
   CPPFLAGS += -Wall
 endif
+ifdef FASTER_LMM_D
+  CPPFLAGS += -DFASTER_LMM_D
+endif
 
 static: CPPFLAGS += -static
 
@@ -229,20 +232,20 @@ $(OBJS): $(HDR)
 ./bin/unittests-gemma: contrib/catch-1.9.7/catch.hpp $(TEST_SRC_DIR)/unittests-main.o $(TEST_SRC_DIR)/unittests-math.o $(OBJS)
 	$(CPP) $(CPPFLAGS) $(TEST_SRC_DIR)/unittests-main.o  $(TEST_SRC_DIR)/unittests-math.o $(filter-out src/main.o, $(OBJS)) $(LIBS) -o ./bin/unittests-gemma
 
-unittests: all ./bin/unittests-gemma
+unittests: ./bin/unittests-gemma
 	./bin/unittests-gemma
 
-fast-check: all unittests
+fast-check: unittests
 	rm -vf test/output/*
 	cd test && ./dev_test_suite.sh | tee ../dev_test.log
 	grep -q 'success rate: 100%' dev_test.log
 
-slow-check: all
+slow-check: unittests
 	rm -vf test/output/*
 	cd test && ./test_suite.sh | tee ../test.log
 	grep -q 'success rate: 100%' test.log
 
-lengthy-check: all
+lengthy-check: unittests
 	rm -vf test/output/*
 	cd test && ./lengthy_test_suite.sh | tee ../lengthy_test.log
 	grep -q 'success rate: 100%' lengthy_test.log

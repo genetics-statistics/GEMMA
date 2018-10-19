@@ -37,6 +37,7 @@
 #include "eigenlib.h"
 #include "gemma.h"
 #include "gemma_io.h"
+#include "int_api.h"
 #include "mathfunc.h"
 #include "param.h"
 
@@ -1273,19 +1274,13 @@ void PARAM::CalcKin(gsl_matrix *matrix_kin) {
 
   gsl_matrix_set_zero(matrix_kin);
 
+  bool is_centered = (a_mode == M_KIN_CENTERED);
   if (!file_bfile.empty()) {
     file_str = file_bfile + ".bed";
-    // enforce_msg(loco.empty(), "FIXME: LOCO nyi");
-    if (PlinkKin(file_str, indicator_snp, a_mode - 20, d_pace, matrix_kin) ==
-        false) {
-      error = true;
-    }
+    PlinkKin(file_str, indicator_snp, is_centered, d_pace, matrix_kin);
   } else {
-    file_str = file_geno;
-    if (BimbamKin(file_str, setKSnps, indicator_snp, a_mode - 20, d_pace,
-                  matrix_kin, ni_max == 0) == false) {
-      error = true;
-    }
+      int_api_compute_bimbam_K(file_geno, setKSnps, indicator_snp, is_centered, d_pace, matrix_kin, ni_max ==0);
+      // BimbamKin(file_geno, setKSnps, indicator_snp, is_centered, d_pace, matrix_kin, ni_max == 0);
   }
 
   return;
@@ -1700,15 +1695,11 @@ void PARAM::CalcS(const map<string, double> &mapRS2wA,
   if (!file_bfile.empty()) {
     file_str = file_bfile + ".bed";
     if (mapRS2wA.size() == 0) {
-      if (PlinkKin(file_str, d_pace, indicator_idv, indicator_snp, mapRS2wK,
-                   mapRS2cat, snpInfo, W, K, ns) == false) {
-        error = true;
-      }
+      PlinkKin(file_str, d_pace, indicator_idv, indicator_snp, mapRS2wK,
+               mapRS2cat, snpInfo, W, K, ns);
     } else {
-      if (PlinkKin(file_str, d_pace, indicator_idv, indicator_snp, mapRS2wA,
-                   mapRS2cat, snpInfo, W, A, ns) == false) {
-        error = true;
-      }
+      PlinkKin(file_str, d_pace, indicator_idv, indicator_snp, mapRS2wA,
+               mapRS2cat, snpInfo, W, A, ns);
     }
   } else if (!file_geno.empty()) {
     file_str = file_geno;

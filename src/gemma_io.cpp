@@ -1390,7 +1390,7 @@ void ReadFile_eigenD(const string &file_kd, bool &error, gsl_vector *eval) {
 }
 
 // Read bimbam mean genotype file and calculate kinship matrix.
-bool BimbamKin(const string file_geno, const set<string> ksnps,
+void BimbamKin(const string file_geno, const set<string> ksnps,
                vector<int> &indicator_snp, const int k_mode,
                const int display_pace, gsl_matrix *matrix_kin,
                const bool test_nind) {
@@ -1536,19 +1536,14 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
 
   infile.close();
   infile.clear();
-
-  return true;
 }
 
-bool PlinkKin(const string &file_bed, vector<int> &indicator_snp,
+void PlinkKin(const string &file_bed, vector<int> &indicator_snp,
               const int k_mode, const int display_pace,
               gsl_matrix *matrix_kin) {
   debug_msg("entered");
   ifstream infile(file_bed.c_str(), ios::binary);
-  if (!infile) {
-    cout << "error reading bed file:" << file_bed << endl;
-    return false;
-  }
+  enforce_msg(infile,"error reading bed file");
 
   char ch[1];
   bitset<8> b;
@@ -1677,8 +1672,6 @@ bool PlinkKin(const string &file_bed, vector<int> &indicator_snp,
 
   infile.close();
   infile.clear();
-
-  return true;
 }
 
 // Read bimbam mean genotype file, the second time, recode "mean"
@@ -2888,7 +2881,7 @@ bool BimbamKinUncentered(const string &file_geno, const set<string> ksnps,
   return true;
 }
 
-bool PlinkKin(const string &file_bed, const int display_pace,
+void PlinkKin(const string &file_bed, const int display_pace,
               const vector<int> &indicator_idv,
               const vector<int> &indicator_snp,
               const map<string, double> &mapRS2weight,
@@ -2897,10 +2890,7 @@ bool PlinkKin(const string &file_bed, const int display_pace,
               gsl_matrix *matrix_kin, gsl_vector *vector_ns) {
   debug_msg("entered");
   ifstream infile(file_bed.c_str(), ios::binary);
-  if (!infile) {
-    cout << "error reading bed file:" << file_bed << endl;
-    return false;
-  }
+  enforce_msg(infile,"error reading bed file");
 
   char ch[1];
   bitset<8> b;
@@ -3109,8 +3099,6 @@ bool PlinkKin(const string &file_bed, const int display_pace,
 
   infile.close();
   infile.clear();
-
-  return true;
 }
 
 bool MFILEKin(const size_t mfile_mode, const string &file_mfile,
