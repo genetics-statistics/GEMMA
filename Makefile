@@ -64,7 +64,8 @@ DIST_NAME              = gemma-$(GEMMA_VERSION)
 DEBUG                  = 1                # DEBUG mode, set DEBUG=0 for a release
 PROFILING              =                  # Add profiling info
 SHOW_COMPILER_WARNINGS =
-FASTER_LMM_D           = faster_lmm_d     # directory where to fast faster-lmm-d sources
+FASTER_LMM_D_INCLUDE   = ./faster_lmm_d   # directory to faster-lmm-d sources
+BIOD_INCLUDE           = ./BioD           # directory to BioD sources (used by faster-lmm-d)
 WITH_OPENBLAS          = 1                # Without OpenBlas uses LAPACK
 WITH_ATLAS             =                  # In place of OpenBlas(?)
 WITH_LAPACK            =                  # Force linking LAPACK (if OpenBlas lacks it)
@@ -103,9 +104,8 @@ else
   endif
 endif
 
-ifdef FASTER_LMM_D
-  FASTER_LMM_D_PATH=$(FASTER_LMM_D)
-  FASTER_LMM_D_LIB=$(FASTER_LMM_D_PATH)/libfaster-lmm-d.a
+ifdef FASTER_LMM_D_INCLUDE
+  FASTER_LMM_D_LIB=$(FASTER_LMM_D_INCLUDE)/libfaster-lmm-d.a
 endif
 
 # --------------------------------------------------------------------
@@ -162,7 +162,7 @@ endif
 ifdef SHOW_COMPILER_WARNINGS
   CPPFLAGS += -Wall
 endif
-ifdef FASTER_LMM_D
+ifdef FASTER_LMM_D_INCLUDE
   CPPFLAGS += -DFASTER_LMM_D
 endif
 
@@ -217,7 +217,7 @@ debug: $(OUTPUT)
 
 faster-lmm-d:
 	@echo "Compiling faster-lmm-d..."
-	cd $(FASTER_LMM_D_PATH) && $(MAKE) -f Makefile.gemma
+	cd $(FASTER_LMM_D_INCLUDE) && $(MAKE) -f Makefile.gemma
 
 ./src/version.h: ./VERSION
 	$(shell bash $(VGEN) $(GUIX_PROFILE) > src/version.h)
@@ -260,7 +260,7 @@ clean:
 	rm -vf $(TEST_SRC_DIR)/*.o
 	rm -vf $(OUTPUT)
 	rm -vf ./bin/unittests-gemma
-	cd $(FASTER_LMM_D_PATH) && $(MAKE) -f Makefile.gemma clean
+	cd $(FASTER_LMM_D_INCLUDE) && $(MAKE) -f Makefile.gemma clean
 
 DIST_COMMON = *.md LICENSE VERSION Makefile
 DIST_SUBDIRS = src doc example bin

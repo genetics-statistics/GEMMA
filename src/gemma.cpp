@@ -81,6 +81,7 @@ void gemma_gsl_error_handler (const char * reason,
 #include <openblas_config.h>
 #endif
 
+
 void GEMMA::PrintHeader(void) {
 
   cout <<

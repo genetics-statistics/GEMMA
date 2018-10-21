@@ -1503,7 +1503,9 @@ void BimbamKin(const string file_geno, const set<string> ksnps,
 
     ns_test++;
 
-    // compute kinship matrix and return in matrix_kin a SNP at a time
+    // compute kinship matrix and return in matrix_kin a SNP at a time. Xlarge
+    // is expanded to the full K by multiplying its transpose. This can be done
+    // in steps of msize
     if (ns_test % msize == 0) {
       fast_eigen_dgemm("N", "T", 1.0, Xlarge, Xlarge, 1.0, matrix_kin);
       gsl_matrix_set_zero(Xlarge);

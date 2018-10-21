@@ -30,9 +30,14 @@
 #include "debug.h"
 #include "faster_lmm_d.h"
 
+
 void int_api_compute_bimbam_K(const string file_geno, const set<string> ksnps,
                               vector<int> &indicator_snp, const int is_centered,
                               const int display_pace, gsl_matrix *matrix_kin,
                               const bool test_nind) {
+#ifdef FASTER_LMM_D
+  flmmd_compute_bimbam_K();
+#else
   BimbamKin(file_geno, ksnps, indicator_snp, is_centered, display_pace, matrix_kin, test_nind);
+#endif
 }

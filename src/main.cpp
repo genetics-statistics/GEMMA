@@ -25,11 +25,21 @@
 
 using namespace std;
 
+#ifdef FASTER_LMM_D
+extern "C" int rt_init();
+extern "C" int rt_term();
+#endif
+
+
 int main(int argc, char *argv[]) {
   GEMMA cGemma;
   PARAM cPar;
 
   gsl_set_error_handler (&gemma_gsl_error_handler);
+
+#ifdef FASTER_LMM_D
+  rt_init();
+#endif
 
   if (argc <= 1) {
     cGemma.PrintHeader();
@@ -84,6 +94,10 @@ int main(int argc, char *argv[]) {
   }
 
   cGemma.BatchRun(cPar);
+
+#ifdef FASTER_LMM_D
+  rt_term();
+#endif
 
   if (cPar.error == true) {
     return EXIT_FAILURE;
