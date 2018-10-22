@@ -30,6 +30,11 @@ extern "C" int rt_init();
 extern "C" int rt_term();
 #endif
 
+void exit_handler() {
+#ifdef FASTER_LMM_D
+  rt_term(); // destroy D runtime
+#endif
+}
 
 int main(int argc, char *argv[]) {
   GEMMA cGemma;
@@ -38,7 +43,8 @@ int main(int argc, char *argv[]) {
   gsl_set_error_handler (&gemma_gsl_error_handler);
 
 #ifdef FASTER_LMM_D
-  rt_init();
+  rt_init(); // initialize D runtime
+  atexit(exit_handler);
 #endif
 
   if (argc <= 1) {
@@ -94,10 +100,6 @@ int main(int argc, char *argv[]) {
   }
 
   cGemma.BatchRun(cPar);
-
-#ifdef FASTER_LMM_D
-  rt_term();
-#endif
 
   if (cPar.error == true) {
     return EXIT_FAILURE;
