@@ -170,7 +170,9 @@ endif
 
 static: CPPFLAGS += -static
 
-LIBS += $(FASTER_LMM_D_LIB) -lphobos2-ldc-debug -ldruntime-ldc-debug -ldl
+ifdef FASTER_LMM_D_INCLUDE
+  LIBS += $(FASTER_LMM_D_LIB) -lphobos2-ldc-debug -ldruntime-ldc-debug -ldl
+endif
 
 LIBS += -lgsl -lz
 ifdef WITH_OPENBLAS
