@@ -1,4 +1,3 @@
-[![Build Status](https://travis-ci.org/genetics-statistics/GEMMA.svg?branch=master)](https://travis-ci.org/genetics-statistics/GEMMA) [![Anaconda-Server Badge](https://anaconda.org/bioconda/gemma/badges/installer/conda.svg)](https://anaconda.org/bioconda/gemma) [![DL](https://anaconda.org/bioconda/gemma/badges/downloads.svg)](https://anaconda.org/bioconda/gemma) [![BrewBadge](https://img.shields.io/badge/%F0%9F%8D%BAbrew-gemma--0.98-brightgreen.svg)](https://github.com/brewsci/homebrew-bio) [![GuixBadge](https://img.shields.io/badge/gnuguix-gemma-brightgreen.svg)](https://www.gnu.org/software/guix/packages/G/) [![DebianBadge](https://badges.debian.net/badges/debian/testing/gemma/version.svg)](https://packages.debian.org/testing/gemma)
 
 ![Genetic associations identified in CFW mice using GEMMA (Parker et al,
 Nat. Genet., 2016)](cfw.gif)
@@ -8,6 +7,8 @@ loci identified in CFW mice using GEMMA, from [Parker et al, Nature
 Genetics, 2016](https://doi.org/10.1038/ng.3609).)
 
 # GEMMA: Genome-wide Efficient Mixed Model Association
+
+[![Build Status](https://travis-ci.org/genetics-statistics/GEMMA.svg?branch=master)](https://travis-ci.org/genetics-statistics/GEMMA) [![Anaconda-Server Badge](https://anaconda.org/bioconda/gemma/badges/installer/conda.svg)](https://anaconda.org/bioconda/gemma) [![DL](https://anaconda.org/bioconda/gemma/badges/downloads.svg)](https://anaconda.org/bioconda/gemma) [![BrewBadge](https://img.shields.io/badge/%F0%9F%8D%BAbrew-gemma--0.98-brightgreen.svg)](https://github.com/brewsci/homebrew-bio) [![GuixBadge](https://img.shields.io/badge/gnuguix-gemma-brightgreen.svg)](https://www.gnu.org/software/guix/packages/G/) [![DebianBadge](https://badges.debian.net/badges/debian/testing/gemma/version.svg)](https://packages.debian.org/testing/gemma)
 
 GEMMA is a software toolkit for fast application of linear mixed
 models (LMMs) and related models to genome-wide association studies
@@ -60,13 +61,17 @@ algorithm can be used to estimate variance components when
 individual-level data are available. For summary data, GEMMA uses the
 MQS algorithm to estimate variance components.
 
-## Installation
+## Install
+
+[![Build Status](https://travis-ci.org/genetics-statistics/GEMMA.svg?branch=master)](https://travis-ci.org/genetics-statistics/GEMMA) [![Anaconda-Server Badge](https://anaconda.org/bioconda/gemma/badges/installer/conda.svg)](https://anaconda.org/bioconda/gemma) [![DL](https://anaconda.org/bioconda/gemma/badges/downloads.svg)](https://anaconda.org/bioconda/gemma) [![BrewBadge](https://img.shields.io/badge/%F0%9F%8D%BAbrew-gemma--0.98-brightgreen.svg)](https://github.com/brewsci/homebrew-bio) [![GuixBadge](https://img.shields.io/badge/gnuguix-gemma-brightgreen.svg)](https://www.gnu.org/software/guix/packages/G/) [![DebianBadge](https://badges.debian.net/badges/debian/testing/gemma/version.svg)](https://packages.debian.org/testing/gemma)
 
 To install GEMMA you can
 
-1. Download the precompiled binaries (Linux only)
+1. Download the precompiled binaries (Linux only). For Linux you can
+   fetch the
+   [latest_release](https://github.com/genetics-statistics/GEMMA/releases)
 
-2. Use existing package managers, see also [INSTALL.md](INSTALL.md).
+2. Use existing package managers, see next section on [precompiled binaries](#precompiled-binaries)
 
 3. Compile GEMMA from source, see also [INSTALL.md](INSTALL.md).
 
@@ -74,25 +79,36 @@ Compiling from source takes more work, but can potentially boost
 performance of GEMMA when using optimized C++ compilers and
 numerical libraries.
 
-### Precompiled binaries
+## Precompiled binaries
 
-1. Fetch the [latest stable release][latest_release] and download the
-   file appropriate for your platform.
+### Debian and Ubuntu
 
-2. For .tar.bz2 files unpack the tar ball
+[![DebianBadge](https://badges.debian.net/badges/debian/testing/gemma/version.svg)](https://packages.debian.org/testing/gemma)
 
-        tar xvjf gemma-$version-installer.tar.bz2
+Travis-CI uses Ubuntu for testing. Check the test logs for version numbers.
 
-    run the installer
+[![Build Status](https://travis-ci.org/genetics-statistics/GEMMA.svg?branch=master)](https://travis-ci.org/genetics-statistics/GEMMA)
 
-        ./install.sh ~/gemma
+Current settings can be found in [travis.yml](.travis.yml).
 
-    and run gemma
+### Bioconda
 
-        ~/gemma/bin/gemma
+[![Anaconda-Server Badge](https://anaconda.org/bioconda/gemma/badges/installer/conda.svg)](https://anaconda.org/bioconda/gemma)
 
-3. For .gz files run `gunzip gemma.linux.gz` or `gunzip
-gemma.linux.gz` to unpack the file.
+Recent versions of GEMMA can be installed with
+[BioConda](http://ddocent.com/bioconda/) without root permissions using the following
+command
+
+    conda install gemma
+
+### Brew
+
+[![BrewBadge](https://img.shields.io/badge/%F0%9F%8D%BAbrew-gemma--0.98-brightgreen.svg)](https://github.com/brewsci/homebrew-bio)
+
+### GNU Guix
+
+[![GuixBadge](https://img.shields.io/badge/gnuguix-gemma-brightgreen.svg)](https://www.gnu.org/software/guix/packages/G/)
+
 
 ## Run GEMMA
 
