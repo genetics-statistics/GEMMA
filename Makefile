@@ -224,8 +224,13 @@ faster-lmm-d:
 ./src/version.h: ./VERSION
 	$(shell bash $(VGEN) $(GUIX_PROFILE) > src/version.h)
 
+ifdef FASTER_LMM_D_INCLUDE
 $(OUTPUT): faster-lmm-d ./src/version.h $(OBJS)
 	$(CPP) $(CPPFLAGS) $(OBJS) $(LIBS) -o $(OUTPUT)
+else
+$(OUTPUT): ./src/version.h $(OBJS)
+	$(CPP) $(CPPFLAGS) $(OBJS) $(LIBS) -o $(OUTPUT)
+endif
 
 $(OBJS): $(HDR)
 
