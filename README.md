@@ -1,34 +1,25 @@
+[![Build Status](https://travis-ci.org/genetics-statistics/GEMMA.svg?branch=master)](https://travis-ci.org/genetics-statistics/GEMMA) [![Anaconda-Server Badge](https://anaconda.org/bioconda/gemma/badges/installer/conda.svg)](https://anaconda.org/bioconda/gemma) [![DL](https://anaconda.org/bioconda/gemma/badges/downloads.svg)](https://anaconda.org/bioconda/gemma) [![BrewBadge](https://img.shields.io/badge/%F0%9F%8D%BAbrew-gemma--0.98-brightgreen.svg)](https://github.com/brewsci/homebrew-bio) [![GuixBadge](https://img.shields.io/badge/gnuguix-gemma-brightgreen.svg)](https://www.gnu.org/software/guix/packages/G/) [![DebianBadge](https://badges.debian.net/badges/debian/testing/gemma/version.svg)](https://packages.debian.org/testing/gemma)
+
 ![Genetic associations identified in CFW mice using GEMMA (Parker et al,
 Nat. Genet., 2016)](cfw.gif)
 
-# GEMMA: Genome-wide Efficient Mixed Model Association
+*(The above image depicts physiological and behavioral trait
+loci identified in CFW mice using GEMMA, from [Parker et al, Nature
+Genetics, 2016](https://doi.org/10.1038/ng.3609).)
 
-[![Build Status](https://travis-ci.org/genetics-statistics/GEMMA.svg?branch=master)](https://travis-ci.org/genetics-statistics/GEMMA) [![Anaconda-Server Badge](https://anaconda.org/bioconda/gemma/badges/installer/conda.svg)](https://anaconda.org/bioconda/gemma) [![DL](https://anaconda.org/bioconda/gemma/badges/downloads.svg)](https://anaconda.org/bioconda/gemma) [![BrewBadge](https://img.shields.io/badge/%F0%9F%8D%BAbrew-gemma--0.98-brightgreen.svg)](https://github.com/brewsci/homebrew-bio) [![GuixBadge](https://img.shields.io/badge/gnuguix-gemma-brightgreen.svg)](https://www.gnu.org/software/guix/packages/G/) [![DebianBadge](https://badges.debian.net/badges/debian/testing/gemma/version.svg)](https://packages.debian.org/testing/gemma)
+# GEMMA: Genome-wide Efficient Mixed Model Association
 
 GEMMA is a software toolkit for fast application of linear mixed
 models (LMMs) and related models to genome-wide association studies
 (GWAS) and other large-scale data sets.
 
-Check out [NEWS.md](NEWS.md) to see what's new in each GEMMA release.
+Check out [RELEASE-NOTES.md](RELEASE-NOTES.md) to see what's new in each GEMMA release.
 
-Please post feature requests or suspected bugs to
-[Github issues](https://github.com/genetics-statistics/GEMMA/issues). For
-questions or other discussion, please post to the
-[GEMMA Google Group](https://groups.google.com/group/gemma-discussion). We
-also encourage contributions, for example, by forking the repository,
-making your changes to the code, and issuing a pull request.
+See [Reporting a GEMMA bug or issue](#reporting-a-gemma-bug-or-issue)
+when you have a question or face issues running GEMMA.
 
-Currently, GEMMA is supported for 64-bit Mac OS X and Linux
-platforms. *Windows is not currently supported.* though you can
-run GEMMA in a Linux VM or [container](https://docs.docker.com/docker-for-windows/). If you are interested
-in helping to make GEMMA available on Windows platforms (e.g., by
-providing installation instructions for Windows, or by contributing
-Windows binaries) please post a note in the
-[Github issues](https://github.com/genetics-statistics/GEMMA/issues).
-
-*(The above image depicts physiological and behavioral trait
-loci identified in CFW mice using GEMMA, from [Parker et al, Nature
-Genetics, 2016](https://doi.org/10.1038/ng.3609).)
+Currently, GEMMA binaries are available for Linux and MacOS. It is
+also possible to build GEMMA from source for Linux, MacOS and Windows.
 
 * [Key features](#key-features)
 * [Installation](#installation)
@@ -73,14 +64,14 @@ MQS algorithm to estimate variance components.
 
 To install GEMMA you can
 
-1. Download the precompiled binaries (64-bit Linux and Mac only)
+1. Download the precompiled binaries (Linux only)
 
-2. Use existing package managers, see [INSTALL.md](INSTALL.md).
+2. Use existing package managers, see also [INSTALL.md](INSTALL.md).
 
-3. Compile GEMMA from source, see [INSTALL.md](INSTALL.md).
+3. Compile GEMMA from source, see also [INSTALL.md](INSTALL.md).
 
 Compiling from source takes more work, but can potentially boost
-performance of GEMMA when using specialized C++ compilers and
+performance of GEMMA when using optimized C++ compilers and
 numerical libraries.
 
 ### Precompiled binaries
@@ -286,8 +277,8 @@ The *GEMMA* software was developed by:
 Dept. of Biostatistics<br>
 University of Michigan<br>
 
-Peter Carbonetto, Tim Flutre, Matthew Stephens,
-[Pjotr Prins](http://thebird.nl/) and
+[Pjotr Prins](http://thebird.nl/), Peter Carbonetto, Tim Flutre,
+Matthew Stephens, Prasun Anand and
 [others](https://github.com/genetics-statistics/GEMMA/graphs/contributors)
 have also contributed to the development of this software.
 

@@ -13,16 +13,20 @@ and it should give you the version.
 ## GEMMA dependencies
 
 GEMMA runs on Linux and MAC OSX and the runtime has the following
-dependencies:
+hard dependencies:
 
 * C++ tool chain >= 4.9
-* GNU Science library (GSL) 2.x is recommended
+* GNU Science library (GSL)
 * blas/openblas
-* lapack
 * [Eigen3 library](http://eigen.tuxfamily.org/dox/)
 * zlib
 
-See below for installation on Guix.
+Versions of GEMMA >0.98 can be compiled with faster-lmm-d which adds
+improved performance and new features. This requires
+
+* D compiler
+* faster-lmm-d
+* BioD
 
 ## Install GEMMA
 

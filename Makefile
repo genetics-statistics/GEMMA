@@ -1,5 +1,7 @@
 # Generic Makefile for GEMMA
 #
+# Please read ./INSTALL.md
+#
 # Supported platforms
 #
 #       Unix / Linux               LNX (default)
