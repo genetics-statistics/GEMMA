@@ -29,8 +29,10 @@
 #include "faster_lmm_d.h"
 
 char *api_faster_lmm_d_version(char *buf) {
+  #ifdef FASTER_LMM_D
   if (use_faster_lmm_d())
     return flmmd_api_version(buf);
+  #endif
   return NULL;
 }
 
