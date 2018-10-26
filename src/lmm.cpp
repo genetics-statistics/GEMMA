@@ -1626,7 +1626,8 @@ void LMM::Analyze(std::function< SnpNameValues(size_t) >& fetch_snp,
     }
   }
 
-  batch_compute(c % msize);
+  if (c % msize > 0)
+    batch_compute(c % msize);
   ProgressBar("Reading SNPs", num_snps - 1, num_snps - 1);
   // cout << "Counted SNPs " << c << " sumStat " << sumStat.size() << endl;
   cout << endl;

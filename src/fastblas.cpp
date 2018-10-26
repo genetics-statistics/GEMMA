@@ -192,7 +192,7 @@ static void fast_cblas_dgemm(const char *TransA, const char *TransB, const doubl
 
     auto K = NA;
 
-    // Check for (integer) overflows
+    // Check for valid size >0 and potential (integer) overflows
     enforce(M>0);
     enforce(N>0);
     enforce(K>0);
