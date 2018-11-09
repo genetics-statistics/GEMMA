@@ -973,8 +973,8 @@ void PARAM::CheckData(void) {
   if ((indicator_cvt).size() != 0 &&
       (indicator_cvt).size() != (indicator_idv).size()) {
     error = true;
-    cout << "error! number of rows in the covariates file do not "
-         << "match the number of individuals. " << indicator_cvt.size() << endl;
+    cout << "error! number of rows in the covariates file " << indicator_cvt.size() << " do not "
+         << "match the number of individuals. " << indicator_idv.size() << endl;
     return;
   }
   if ((indicator_gxe).size() != 0 &&
