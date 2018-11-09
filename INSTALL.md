@@ -87,6 +87,10 @@ To use faster-lmm-d you need to mount a directory in the container and add ldc
     make FASTER_LMM_D_INCLUDE=/home/wrk/izip/git/opensource/D/faster_lmm_d clean
     make FASTER_LMM_D_INCLUDE=/home/wrk/izip/git/opensource/D/faster_lmm_d BIOD_INCLUDE=/home/wrk/izip/git/opensource/D/BioD -j 4
 
+And to create a debug version
+
+    make FASTER_LMM_D_INCLUDE=/home/wrk/izip/git/opensource/D/faster_lmm_d BIOD_INCLUDE=/home/wrk/izip/git/opensource/D/BioD -j 4 debug
+
 Finally, instead of pulling in the guix package you can be even more explicit with
 
     guix environment -C --ad-hoc gcc gdb gfortran:lib gsl eigen openblas zlib bash ld-wrapper perl ldc \

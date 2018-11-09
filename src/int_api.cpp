@@ -36,8 +36,10 @@ void int_api_compute_bimbam_K(const string file_geno, const set<string> ksnps,
                               const int display_pace, gsl_matrix *matrix_kin,
                               const bool test_nind) {
 #ifdef FASTER_LMM_D
-  flmmd_compute_bimbam_K();
-#else
-  BimbamKin(file_geno, ksnps, indicator_snp, is_centered, display_pace, matrix_kin, test_nind);
+  if (use_faster_lmm_d()) {
+    flmmd_compute_bimbam_K();
+    return;
+  }
 #endif
+  BimbamKin(file_geno, ksnps, indicator_snp, is_centered, display_pace, matrix_kin, test_nind);
 }
