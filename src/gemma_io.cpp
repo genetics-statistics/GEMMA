@@ -1409,7 +1409,7 @@ void BimbamKin(const string file_geno, const set<string> ksnps,
   gsl_vector *geno = gsl_vector_safe_alloc(ni_total);
   gsl_vector *geno_miss = gsl_vector_safe_alloc(ni_total);
 
-  // Xlarge contains inds x markers
+  // Xlarge contains inds x markers (by msize batch)
   const size_t msize = K_BATCH_SIZE;
   gsl_matrix *Xlarge = gsl_matrix_safe_alloc(ni_total, msize);
   enforce_msg(Xlarge, "allocate Xlarge");
@@ -1428,10 +1428,6 @@ void BimbamKin(const string file_geno, const set<string> ksnps,
     if (indicator_snp[t] == 0)
       continue;
 
-    // std::regex_token_iterator<std::string::iterator> rend;
-    // regex split_on("[,[:blank:]]+");
-    // regex_token_iterator<string::iterator> tokens(line.begin(), line.end(),
-    //                                               split_on, -1);
     auto tokens = tokenize_whitespace(line,ni_total+3,infilen);
     if (test_nind) {
       // ascertain the number of genotype fields match
