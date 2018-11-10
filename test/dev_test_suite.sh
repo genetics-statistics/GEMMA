@@ -5,6 +5,7 @@ gemma=../bin/gemma
 gemmaopts="-debug -check"
 
 testLinearModel() {
+    return
     $gemma $gemmaopts -g ../example/mouse_hs1940.geno.txt.gz \
            -p ../example/mouse_hs1940.pheno.txt \
            -n 1 \
@@ -21,6 +22,7 @@ testLinearModel() {
 
 # Related to https://github.com/genetics-statistics/GEMMA/issues/78
 testBXDStandardRelatednessMatrixKSingularError() {
+    return
     outn=BXDerr
     rm -f output/$outn.*
     $gemma $gemmaopts \

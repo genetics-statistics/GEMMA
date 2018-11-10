@@ -24,6 +24,6 @@ extern "C" {
 
   // The following functions are bindings for faster-lmm-d.
   char *flmmd_api_version(char *buf);
-  void flmmd_compute_bimbam_K();
+  void flmmd_compute_bimbam_K(const char *geno_fn);
 
 } // extern C

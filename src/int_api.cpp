@@ -37,7 +37,7 @@ void int_api_compute_bimbam_K(const string file_geno, const set<string> ksnps,
                               const bool test_nind) {
 #ifdef FASTER_LMM_D
   if (use_faster_lmm_d()) {
-    flmmd_compute_bimbam_K();
+    flmmd_compute_bimbam_K(file_geno.c_str());
     return;
   }
 #endif
