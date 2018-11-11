@@ -1,3 +1,4 @@
+
 /*
     Genome-wide Efficient Mixed Model Association (GEMMA)
     Copyright © 2011-2017, Xiang Zhou
@@ -2557,6 +2558,10 @@ void GEMMA::BatchRun(PARAM &cPar) {
       cPar.a_mode == M_LMM4 || cPar.a_mode == M_LMM5 ||
       cPar.a_mode == M_EIGEN) { // Fit LMM or mvLMM or eigen
     gsl_matrix *Y = gsl_matrix_safe_alloc(cPar.ni_test, cPar.n_ph);
+    auto ni_test = cPar.ni_test;
+    auto n_ph = cPar.n_ph;
+    enforce(ni_test == Y->size1);
+    enforce(n_ph == Y->size2);
     enforce_msg(Y, "allocate Y"); // just to be sure
     gsl_matrix *W = gsl_matrix_safe_alloc(Y->size1, cPar.n_cvt);
     gsl_matrix *B = gsl_matrix_safe_alloc(Y->size2, W->size2); // B is a d by c

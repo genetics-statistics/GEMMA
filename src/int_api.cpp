@@ -18,7 +18,8 @@
     MODULE INFO
 
     Internal API mainly splits logic between calling GEMMA legacy and
-    faster-lmm-d code.
+    faster-lmm-d code. Do not add logic - just what is needed for
+    passing around data.
 
     Functions starting with 'internal_' are an internal complement
     that typically handle GEMMA state. These functions should not be
@@ -44,7 +45,8 @@ void int_api_compute_bimbam_K(const string file_geno, const set<string> ksnps,
     for (auto snp : indicator_snp) {
       // cout << snp << "\n";
     }
-    flmmd_compute_bimbam_K(file_geno.c_str(), indicator_snp.size(),indicator_snp.data());
+    flmmd_compute_bimbam_K(file_geno.c_str(), indicator_snp.size(), indicator_snp.data(),
+                           matrix_kin);
     return;
   }
 #endif

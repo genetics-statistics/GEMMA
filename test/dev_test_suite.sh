@@ -74,7 +74,7 @@ testBXDLMLikelihoodRatio() {
            -p ../example/BXD_pheno.txt \
            -c ../example/BXD_covariates2.txt \
            -a ../example/BXD_snps.txt \
-           -k ./output/BXD.cXX.txt \
+           -k ./output/BXD-legacy.cXX.txt \
            -lm 4 -maf 0.1 \
            -o $outn
     assertEquals 0 $?
@@ -91,7 +91,7 @@ testBXDLMMLikelihoodRatio() {
            -p ../example/BXD_pheno.txt \
            -c ../example/BXD_covariates2.txt \
            -a ../example/BXD_snps.txt \
-           -k ./output/BXD.cXX.txt \
+           -k ./output/BXD-legacy.cXX.txt \
            -lmm 2 -no-check -maf 0.1 \
            -o $outn
     assertEquals 0 $?
