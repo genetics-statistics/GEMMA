@@ -75,10 +75,13 @@ bool use_faster_lmm_d() { return !debug_legacy; }
 
 void sighandler(int signum)
 {
+  // using raw output R
   cout << R"(
-FATAL ERROR: GEMMA caused a floating point error which suggests machine boundaries were reached.
+FATAL ERROR: GEMMA caused a floating point error which suggests a software error or machine boundary was reached.
+When reporting this it is useful to add a stack trace or provide the original command and files. See
+https://github.com/genetics-statistics/GEMMA#reporting-a-gemma-bug-or-issue
 
-You can disable floating point tests with the -no-check switch (use at your own risk!)
+You can disable floating point tests with the -no-fpe-check switch (use at your own risk!)
 )" << endl;
   signal(signum, SIG_DFL);
   kill(getpid(), signum); // should force a core dump
