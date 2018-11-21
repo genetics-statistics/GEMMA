@@ -1592,16 +1592,15 @@ void LMM::Analyze(std::function< SnpNameValues(size_t) >& fetch_snp,
       pos++;
     }
     enforce(pos == ni_test);
-
-    const double x_mean = x_total/(double)(ni_test - n_miss);
-
-    // plug x_mean back into missing values
-    for (size_t i = 0; i < ni_test; ++i) {
-      if (gsl_vector_get(x_miss, i) == 1.0) {
-        gsl_vector_set(x, i, x_mean);
+    if (ni_test > n_miss) {
+      const double x_mean = x_total/(double)(ni_test - n_miss);
+      // plug x_mean back into missing values
+      for (size_t i = 0; i < ni_test; ++i) {
+        if (gsl_vector_get(x_miss, i) == 1.0) {
+          gsl_vector_set(x, i, x_mean);
+        }
       }
     }
-
     /* this is what below GxE does
     for (size_t i = 0; i < ni_test; ++i) {
       auto geno = gsl_vector_get(x, i);
@@ -1728,13 +1727,10 @@ void LMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
 
       // Minor allele homozygous: 2.0; major: 0.0.
       for (size_t j = 0; j < 4; ++j) {
-        if ((i == (n_bit - 1)) && ci_total == (int)ni_total) {
+        if ((i == (n_bit - 1)) && ci_total == (int)ni_total)
           break;
-        }
-        if (indicator_idv[ci_total] == 0) { // skip individual
-          ci_total++;
+        if (indicator_idv[ci_total++] == 0) // skip indv/genotype
           continue;
-        }
 
         if (bset8[2 * j] == 0) {
           if (bset8[2 * j + 1] == 0) {
@@ -1750,10 +1746,10 @@ void LMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
           }
         }
 
-        ci_total++;
         ci_test++;
       }
     }
+    // write(gs,"gs");
     string snp="unknown";
     return std::make_tuple(snp,gs);
   };
@@ -1774,6 +1770,8 @@ void MatrixCalcLR(const gsl_matrix *U, const gsl_matrix *UtX,
   gsl_matrix *Utw = gsl_matrix_safe_alloc(Uty->size, 1);
   gsl_matrix *Uab = gsl_matrix_safe_alloc(Uty->size, 6);
   gsl_vector *ab = gsl_vector_safe_alloc(6);
+
+  if (is_fpe_check_mode()) disable_segfpe();
 
   gsl_vector_set_zero(ab);
   gsl_vector_set_all(w, 1.0);
@@ -1796,6 +1794,8 @@ void MatrixCalcLR(const gsl_matrix *U, const gsl_matrix *UtX,
     pos_loglr.push_back(make_pair(i, log_lr));
   }
 
+  if (is_fpe_check_mode()) enable_segfpe();
+
   gsl_vector_safe_free(w);
   gsl_matrix_safe_free(Utw);
   gsl_matrix_safe_free(Uab);
@@ -1817,8 +1817,8 @@ void CalcLambda(const char func_name, FUNC_PARAM &params, const double l_min,
   vector<pair<double, double>> lambda_lh;
 
   // Evaluate first-order derivates in different intervals.
-  double lambda_l, lambda_h,
-      lambda_interval = safe_log(l_max / l_min) / (double)n_region;
+  double lambda_l, lambda_h;
+  const double lambda_interval = safe_log(l_max / l_min) / (double)n_region;
   double dev1_l, dev1_h, logf_l, logf_h;
 
   for (size_t i = 0; i < n_region; ++i) {

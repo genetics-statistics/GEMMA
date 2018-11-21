@@ -788,6 +788,7 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
     snpInfo.push_back(sInfo);
     file_pos++;
 
+    enforce(ni_test > 0);
     if ((double)n_miss / (double)ni_test > miss_level) {
       indicator_snp.push_back(0);
       continue;
@@ -824,6 +825,7 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
     gsl_blas_ddot(genotype, genotype, &v_x);
     gsl_blas_ddot(Wtx, WtWiWtx, &v_w);
 
+    enforce(v_x > 0);
     if (W->size2 != 1 && v_w / v_x >= r2_level) {
       indicator_snp.push_back(0);
       continue;
@@ -913,17 +915,17 @@ bool ReadFile_bed(const string &file_bed, const set<string> &setSnps,
 
     // n_bit, and 3 is the number of magic numbers.
     infile.seekg(t * n_bit + 3);
+    snpInfo[t].file_position = t;
 
     if (setSnps.size() != 0 && setSnps.count(snpInfo[t].rs_number) == 0) {
       snpInfo[t].n_miss = -9;
       snpInfo[t].missingness = -9;
       snpInfo[t].maf = -9;
-      snpInfo[t].file_position = t;
       indicator_snp.push_back(0);
       continue;
     }
 
-    // Read genotypes.
+    // Walk all genotypes
     c = 0;
     maf = 0.0;
     n_miss = 0;
@@ -938,14 +940,10 @@ bool ReadFile_bed(const string &file_bed, const set<string> &setSnps,
 
       // Minor allele homozygous: 2.0; major: 0.0;
       for (size_t j = 0; j < 4; ++j) {
-        if ((i == (n_bit - 1)) && c == ni_total) {
+        if ((i == (n_bit - 1)) && c == ni_total) // job done
           break;
-        }
-        if (indicator_idv[c] == 0) {
-          c++;
+        if (indicator_idv[c++] == 0) // skip unused individual
           continue;
-        }
-        c++;
 
         if (b[2 * j] == 0) {
           if (b[2 * j + 1] == 0) {
@@ -964,12 +962,23 @@ bool ReadFile_bed(const string &file_bed, const set<string> &setSnps,
             n_0++;
           } else {
             gsl_vector_set(genotype_miss, c_idv, 1);
-            n_miss++;
+            n_miss++; // n_miss only counted for used individuals
           }
         }
         c_idv++;
       }
     }
+
+    enforce(ni_test >= n_miss);
+
+    if (ni_test == n_miss) { // all genotypes missing
+      snpInfo[t].n_miss = -9;
+      snpInfo[t].missingness = -9;
+      snpInfo[t].maf = -9;
+      indicator_snp.push_back(0);
+      continue;
+    }
+
     maf /= 2.0 * (double)(ni_test - n_miss);
 
     snpInfo[t].n_miss = n_miss;
@@ -1477,6 +1486,7 @@ void BimbamKin(const string file_geno, const set<string> ksnps,
       token_i++;
     }
 
+    enforce(ni_total != n_miss);
     geno_mean /= (double)(ni_total - n_miss);
     geno_var += geno_mean * geno_mean * (double)n_miss;
     geno_var /= (double)ni_total;
@@ -1622,6 +1632,7 @@ void PlinkKin(const string &file_bed, vector<int> &indicator_snp,
       }
     }
 
+    enforce(ni_total != n_miss);
     geno_mean /= (double)(ni_total - n_miss);
     geno_var += geno_mean * geno_mean * (double)n_miss;
     geno_var /= (double)ni_total;
@@ -1845,6 +1856,7 @@ bool ReadFile_geno(const string &file_geno, vector<int> &indicator_idv,
       c_idv++;
     }
 
+    enforce(ni_test != n_miss);
     geno_mean /= (double)(ni_test - n_miss);
 
     for (size_t j = 0; j < genotype->size; ++j) {
@@ -1979,6 +1991,7 @@ bool ReadFile_bed(const string &file_bed, vector<int> &indicator_idv,
       }
     }
 
+    enforce(ni_test != n_miss);
     geno_mean /= (double)(ni_test - n_miss);
 
     for (size_t i = 0; i < genotype->size; ++i) {

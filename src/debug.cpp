@@ -164,6 +164,16 @@ void write(const char *s, const char *msg) {
   cout << s << ": " << msg << endl;
 }
 
+
+void write(std::vector<double> v, const char *msg) {
+  if (msg) cout << "// " << msg << endl;
+  cout << "double " << msg << "[" << v.size() << "] = {";
+  for (auto &e : v) {
+    cout << e << ",";
+  }
+  cout << "}" << endl;
+}
+
 void write(const gsl_vector *v, const char *msg) {
   if (!is_debug_data_mode()) return;
   if (msg) cout << "// " << msg << endl;

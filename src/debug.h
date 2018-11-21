@@ -24,6 +24,7 @@
 #include <assert.h>
 #include <iostream>
 #include <csignal>
+#include <vector>
 
 #include "gsl/gsl_matrix.h"
 
@@ -62,6 +63,7 @@ void disable_segfpe();
 void write(const char *s, const char *msg = "");
 void write(const gsl_vector *v, const char *msg = "");
 void write(const gsl_matrix *m, const char *msg = "");
+void write(std::vector<double> v, const char *msg = "");
 
 gsl_matrix *gsl_matrix_safe_alloc(size_t rows,size_t cols);
 int gsl_matrix_safe_memcpy (gsl_matrix *dest, const gsl_matrix *src);

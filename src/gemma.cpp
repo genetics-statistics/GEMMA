@@ -1932,7 +1932,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
     VARCOV cVarcov;
     cVarcov.CopyFromParam(cPar);
 
-    if (is_fpe_check_mode()) disable_segfpe(); // disable fast NaN checking for now
+    // if (is_fpe_check_mode()) disable_segfpe(); // disable fast NaN checking for now
 
     if (!cPar.file_bfile.empty()) {
       cVarcov.AnalyzePlink();
@@ -2047,7 +2047,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
     VARCOV cVarcov;
     cVarcov.CopyFromParam(cPar);
 
-    if (is_fpe_check_mode()) disable_segfpe(); // fast NaN checking for now
+    // if (is_fpe_check_mode()) disable_segfpe(); // fast NaN checking for now
 
     if (!cPar.file_bfile.empty()) {
       cVarcov.AnalyzePlink();
@@ -2965,6 +2965,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
   if (cPar.a_mode == 14 || cPar.a_mode == 15 || cPar.a_mode == 16) {
     if (cPar.a_mode == 14) {
       gsl_vector *y = gsl_vector_safe_alloc(cPar.ni_test);
+
       gsl_matrix *W = gsl_matrix_safe_alloc(y->size, cPar.n_cvt);
       gsl_matrix *G = gsl_matrix_safe_alloc(y->size, y->size);
       gsl_matrix *UtX = gsl_matrix_safe_alloc(y->size, cPar.ns_test);

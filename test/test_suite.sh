@@ -8,7 +8,7 @@ testBslmm1() {
     $gemma $gemmaopts -g ../example/mouse_hs1940.geno.txt.gz \
            -p ../example/mouse_hs1940.pheno.txt \
            -n 2 -a ../example/mouse_hs1940.anno.txt \
-           -bslmm -no-check \
+           -bslmm \
            -o $outn -w 1000 -s 10000 -seed 1
     assertEquals 0 $?
     outfn1=output/$outn.hyp.txt
@@ -39,7 +39,7 @@ testBslmm3() {
            -a ../example/mouse_hs1940.anno.txt \
            -bslmm \
            -o $outn \
-           -w 1000 -s 10000 -seed 1 -no-check
+           -w 1000 -s 10000 -seed 1
     assertEquals 0 $?
     outfn=output/$outn.hyp.txt
     # assertEquals "291" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.0f",(substr($x,,0,6))) } END { printf "%.0f",100*$sum }' $outfn`
@@ -54,7 +54,7 @@ testBslmm4() {
            -emu ./output/mouse_hs1940_CD8_bslmm.log.txt \
            -ebv ./output/mouse_hs1940_CD8_bslmm.bv.txt \
            -k ./output/mouse_hs1940_CD8_train.cXX.txt \
-           -predict -no-check \
+           -predict \
            -o $outn
     assertEquals 0 $?
     outfn=output/$outn.prdt.txt
@@ -98,7 +98,7 @@ testUnivariateLinearMixedModelFullLOCO1() {
 	   -loco 1 \
            -a ../example/mouse_hs1940.anno.txt \
            -k ./output/mouse_hs1940_full_LOCO1.cXX.txt \
-	   -lmm -no-check \
+	   -lmm \
            -o $outn
     assertEquals 0 $?
     grep "total computation time" < output/$outn.log.txt
@@ -142,7 +142,7 @@ testLinearMixedModelPhenotypes() {
            -n 1 6 \
            -a ../example/mouse_hs1940.anno.txt \
            -k ./output/mouse_hs1940.cXX.txt \
-           -lmm -no-check \
+           -lmm \
            -o mouse_hs1940_CD8MCH_lmm
     assertEquals 0 $?
 
@@ -173,7 +173,6 @@ testPlinkLinearMixedModelCovariates() {
            -lmm 1 \
            -maf 0.1 \
            -c $datadir/HLC_covariates.txt \
-           -no-check \
            -o $testname
     assertEquals 0 $?
     outfn=output/$testname.assoc.txt
