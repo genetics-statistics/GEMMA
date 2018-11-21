@@ -79,20 +79,20 @@ void Plink_ReadOneSNP(const int pos, const vector<int> &indicator_idv,
                       ifstream &infile, gsl_vector *geno, double &geno_mean);
 
 void ReadFile_kin(const string &file_kin, vector<int> &indicator_idv,
-                  map<string, int> &mapID2num, const size_t k_mode, bool &error,
+                  map<string, int> &mapID2num, const K_MODE k_mode, bool &error,
                   gsl_matrix *G);
 void ReadFile_mk(const string &file_mk, vector<int> &indicator_idv,
-                 map<string, int> &mapID2num, const size_t k_mode, bool &error,
+                 map<string, int> &mapID2num, const K_MODE k_mode, bool &error,
                  gsl_matrix *G);
 void ReadFile_eigenU(const string &file_u, bool &error, gsl_matrix *U);
 void ReadFile_eigenD(const string &file_d, bool &error, gsl_vector *eval);
 
 void BimbamKin(const string file_geno, const set<string> ksnps,
-               vector<int> &indicator_snp, const int k_mode,
+               vector<int> &indicator_snp, const K_MODE k_mode,
                const int display_pace, gsl_matrix *matrix_kin,
                const bool test_nind);
 void PlinkKin(const string &file_bed, vector<int> &indicator_snp,
-              const int k_mode, const int display_pace, gsl_matrix *matrix_kin);
+              const K_MODE k_mode, const int display_pace, gsl_matrix *matrix_kin);
 
 bool ReadFile_geno(const string file_geno, vector<int> &indicator_idv,
                    vector<int> &indicator_snp, gsl_matrix *UtX, gsl_matrix *K,

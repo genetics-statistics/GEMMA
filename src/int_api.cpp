@@ -50,5 +50,5 @@ void int_api_compute_bimbam_K(const string file_geno, const set<string> ksnps,
     return;
   }
 #endif
-  BimbamKin(file_geno, ksnps, indicator_snp, is_centered, display_pace, matrix_kin, test_nind);
+  BimbamKin(file_geno, ksnps, indicator_snp, (is_centered ? K_CENTERED : K_STANDARD), display_pace, matrix_kin, test_nind);
 }

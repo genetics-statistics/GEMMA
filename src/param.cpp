@@ -92,7 +92,7 @@ void trim_individuals(vector<int> &idvs, size_t ni_max) {
 // ---- PARAM class implementation
 
 PARAM::PARAM(void)
-    : a_mode(0), k_mode(1), d_pace(DEFAULT_PACE),
+    : a_mode(0), k_mode(K_CENTERED), d_pace(DEFAULT_PACE),
       file_out("result"), path_out("./output/"), miss_level(0.05),
       maf_level(0.01), hwe_level(0), r2_level(0.9999), l_min(1e-5), l_max(1e5),
       n_region(10), p_nr(0.001), em_prec(0.0001), nr_prec(0.0001),
@@ -501,7 +501,7 @@ void PARAM::CheckParam(void) {
   string str;
 
   // Check parameters.
-  if (k_mode != 1 && k_mode != 2) {
+  if (k_mode != K_CENTERED && k_mode != K_STANDARD) {
     cout << "error! unknown kinship/relatedness input mode: " << k_mode << endl;
     error = true;
   }
@@ -914,7 +914,7 @@ void PARAM::CheckParam(void) {
   enforce_fexists(file_read, "open file");
 
   // Check if files are compatible with analysis mode.
-  if (k_mode == 2 && !file_geno.empty()) {
+  if (k_mode == K_STANDARD && !file_geno.empty()) {
     cout << "error! use \"-km 1\" when using bimbam mean genotype "
          << "file. " << endl;
     error = true;
@@ -1277,7 +1277,7 @@ void PARAM::CalcKin(gsl_matrix *matrix_kin) {
   bool is_centered = (a_mode == M_KIN_CENTERED);
   if (!file_bfile.empty()) {
     file_str = file_bfile + ".bed";
-    PlinkKin(file_str, indicator_snp, is_centered, d_pace, matrix_kin);
+    PlinkKin(file_str, indicator_snp, (is_centered ? K_CENTERED : K_STANDARD), d_pace, matrix_kin);
   } else {
       int_api_compute_bimbam_K(file_geno, setKSnps, indicator_snp, is_centered, d_pace, matrix_kin, ni_max ==0);
       // BimbamKin(file_geno, setKSnps, indicator_snp, is_centered, d_pace, matrix_kin, ni_max == 0);

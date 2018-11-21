@@ -1,4 +1,3 @@
-
 /*
     Genome-wide Efficient Mixed Model Association (GEMMA)
     Copyright © 2011-2017, Xiang Zhou
@@ -1053,7 +1052,8 @@ void GEMMA::Assign(int argc, char **argv, PARAM &cPar) {
       ++i;
       str.clear();
       str.assign(argv[i]);
-      cPar.k_mode = atoi(str.c_str());
+      auto mode = atoi(str.c_str());
+      cPar.k_mode = (mode == 1 ? K_CENTERED : K_STANDARD);
     } else if (strcmp(argv[i], "-n") == 0) { // set pheno column (list/range)
       (cPar.p_column).clear();
       while (argv[i + 1] != NULL && argv[i + 1][0] != '-') {

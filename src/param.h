@@ -31,6 +31,8 @@
 #define K_BATCH_SIZE 20000 // #snps used for batched K
 #define DEFAULT_PACE 1000  // for display only
 
+enum K_MODE { K_CENTERED=1, K_STANDARD=2 };
+
 using namespace std;
 
 class SNPINFO {
@@ -125,7 +127,7 @@ public:
   // uint issue; // enable tests for issue on github tracker
 
   uint a_mode; // Analysis mode, 1/2/3/4 for Frequentist tests
-  int k_mode; // Kinship read mode: 1: n by n matrix, 2: id/id/k_value;
+  K_MODE k_mode; // Kinship read mode: 1: n by n matrix, 2: id/id/k_value;
   vector<size_t> p_column; // Which phenotype column needs analysis.
   size_t d_pace = DEFAULT_PACE;   // Display pace (-pace switch)
 

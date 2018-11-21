@@ -1168,7 +1168,7 @@ void Plink_ReadOneSNP(const int pos, const vector<int> &indicator_idv,
 }
 
 void ReadFile_kin(const string &file_kin, vector<int> &indicator_idv,
-                  map<string, int> &mapID2num, const size_t k_mode, bool &error,
+                  map<string, int> &mapID2num, const K_MODE k_mode, bool &error,
                   gsl_matrix *G) {
   debug_msg("entered");
   igzstream infile(file_kin.c_str(), igzstream::in);
@@ -1278,7 +1278,7 @@ void ReadFile_kin(const string &file_kin, vector<int> &indicator_idv,
 }
 
 void ReadFile_mk(const string &file_mk, vector<int> &indicator_idv,
-                 map<string, int> &mapID2num, const size_t k_mode, bool &error,
+                 map<string, int> &mapID2num, const K_MODE k_mode, bool &error,
                  gsl_matrix *G) {
   debug_msg("entered");
   igzstream infile(file_mk.c_str(), igzstream::in);
@@ -1400,7 +1400,7 @@ void ReadFile_eigenD(const string &file_kd, bool &error, gsl_vector *eval) {
 
 // Read bimbam mean genotype file and calculate kinship matrix.
 void BimbamKin(const string file_geno, const set<string> ksnps,
-               vector<int> &indicator_snp, const int k_mode,
+               vector<int> &indicator_snp, const K_MODE k_mode,
                const int display_pace, gsl_matrix *matrix_kin,
                const bool test_nind) {
   debug_msg("entered");
@@ -1547,7 +1547,7 @@ void BimbamKin(const string file_geno, const set<string> ksnps,
 }
 
 void PlinkKin(const string &file_bed, vector<int> &indicator_snp,
-              const int k_mode, const int display_pace,
+              const K_MODE k_mode, const int display_pace,
               gsl_matrix *matrix_kin) {
   debug_msg("entered");
   ifstream infile(file_bed.c_str(), ios::binary);
