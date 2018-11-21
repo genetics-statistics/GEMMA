@@ -70,14 +70,14 @@ To build GEMMA from source you can opt to install the build tools with GNU Guix
 Even better you can create a container in the source tree and run our development setup
 
     guix environment -C guix --ad-hoc gcc gdb gfortran:lib gsl eigen openblas zlib bash ld-wrapper perl
-    make clean
-    make check -j 4
+    make LEGACY_CPP=1 clean
+    make LEGACY_CPP=1 check -j 4
 
 and for the Clang edition
 
     guix environment -C guix --ad-hoc clang gcc gdb gfortran:lib gsl eigen openblas zlib bash ld-wrapper perl
-    make clean
-    make CXX=clang++ check -j 4
+    make LEGACY_CPP=1 clean
+    make CXX=clang++ LEGACY_CPP=1 check -j 4
 
 To use faster-lmm-d you need to mount a directory in the container and add ldc
 

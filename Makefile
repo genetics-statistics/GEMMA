@@ -8,10 +8,11 @@
 #       Mac                        OSX
 #       GNU Guix                   GUIX (set to profile)
 #
-# Compilation options
-#       static compilation         FORCE_STATIC
-#
 # Examples:
+#
+#    Compile legacy version without D code
+#
+#      make LEGACY_CPP=1
 #
 #    Make GEMMA on Linux without OPENBLAS support:
 #
@@ -66,7 +67,9 @@ DIST_NAME              = gemma-$(GEMMA_VERSION)
 DEBUG                  = 1                # DEBUG mode, set DEBUG=0 for a release
 PROFILING              =                  # Add profiling info
 SHOW_COMPILER_WARNINGS =
-FASTER_LMM_D_INCLUDE   = ./faster_lmm_d   # directory to faster-lmm-d sources
+ifndef LEGACY_CPP
+  FASTER_LMM_D_INCLUDE   = ./faster_lmm_d   # directory to faster-lmm-d sources
+endif
 BIOD_INCLUDE           = ./BioD           # directory to BioD sources (used by faster-lmm-d)
 WITH_OPENBLAS          = 1                # Without OpenBlas uses LAPACK
 WITH_ATLAS             =                  # In place of OpenBlas(?)
