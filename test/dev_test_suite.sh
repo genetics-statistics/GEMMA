@@ -56,9 +56,6 @@ testBXDStandardRelatednessMatrixK() {
     outn=BXD
     rm -f output/$outn.*
     $gemma $gemmaopts -g ../example/BXD_geno.txt.gz \
-           -p ../example/BXD_pheno.txt \
-           -c ../example/BXD_covariates2.txt \
-           -a ../example/BXD_snps.txt \
            -gk \
            -o $outn
     assertEquals 0 $?

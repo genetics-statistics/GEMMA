@@ -40,9 +40,6 @@ using namespace std;
 // calccor: 71
 // gw:      72
 
-enum M_MODE { M_LMM1=1, M_LMM2=2, M_LMM3=3, M_LMM4=4, M_LMM5=5,
-              M_BSLMM5=15,
-              M_KIN_CENTERED=21, M_KIN_STANDARD=22, M_EIGEN=31 };
 
 class GEMMA {
 

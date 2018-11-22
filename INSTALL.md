@@ -81,7 +81,8 @@ and for the Clang edition
 
 To use faster-lmm-d you need to mount a directory in the container and add ldc
 
-    guix environment -C guix --ad-hoc gcc gdb gfortran:lib gsl eigen openblas zlib bash ld-wrapper perl ldc \
+    ~/.config/guix/current/bin/guix environment -C guix --ad-hoc gcc gdb gfortran:lib gsl eigen openblas zlib bash \
+      ld-wrapper perl ldc \
       --share=/home/wrk/izip/git/opensource/D/faster_lmm_d \
       --share=/home/wrk/izip/git/opensource/D/BioD
     make FASTER_LMM_D_INCLUDE=/home/wrk/izip/git/opensource/D/faster_lmm_d clean

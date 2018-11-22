@@ -35,6 +35,8 @@
 #include <string>
 #include <vector>
 
+#include <sys/stat.h>
+
 #include "gsl/gsl_blas.h"
 #include "gsl/gsl_cdf.h"
 #include "gsl/gsl_linalg.h"
@@ -58,9 +60,6 @@ void ProgressBar(string str, double p, double total, double ratio) {
   if (total <= 0.0) return;
   const double progress = (100.0 * p / total);
   const uint barsize = (int)(progress / 2.0); // characters
-  // cout << barsize << endl;
-  // cout << str << " ";
-  // cout << p << "/" << total << endl;
   assert(barsize < 101); // corrupted data somehow
   if (barsize > 0) {
     cout << std::string(barsize,'=');
@@ -90,7 +89,6 @@ token_list tokenize_whitespace(const string line, uint num, const char *infilen)
   while (token) {
     const char *token2 = strndup(token,256);
     v.push_back(token2);
-    // cout << token << ",";
     token = strtok(NULL, " ,\t");
   }
   return v;
@@ -153,11 +151,8 @@ bool ReadFile_snps(const string file_snps, set<string> &setSnps) {
   debug_msg("entered");
   setSnps.clear();
 
+  enforce_fexists(file_snps, "snps file");
   igzstream infile(file_snps.c_str(), igzstream::in);
-  if (!infile) {
-    cout << "error! fail to open snps file: " << file_snps << endl;
-    return false;
-  }
 
   string line;
   char *ch_ptr;
@@ -181,11 +176,8 @@ bool ReadFile_snps_header(const string &file_snps, set<string> &setSnps) {
   debug_msg("entered");
   setSnps.clear();
 
+  enforce_fexists(file_snps, "snps file");
   igzstream infile(file_snps.c_str(), igzstream::in);
-  if (!infile) {
-    cout << "error! fail to open snps file: " << file_snps << endl;
-    return false;
-  }
 
   string line, rs, chr, pos;
   char *ch_ptr;
@@ -237,11 +229,8 @@ bool ReadFile_snps_header(const string &file_snps, set<string> &setSnps) {
 // Read log file.
 bool ReadFile_log(const string &file_log, double &pheno_mean) {
   debug_msg("ReadFile_log");
+  enforce_fexists(file_log, "log file");
   ifstream infile(file_log.c_str(), ifstream::in);
-  if (!infile) {
-    cout << "error! fail to open log file: " << file_log << endl;
-    return false;
-  }
 
   string line;
   char *ch_ptr;
@@ -283,11 +272,8 @@ bool ReadFile_anno(const string &file_anno, map<string, string> &mapRS2chr,
   mapRS2chr.clear();
   mapRS2bp.clear();
 
+  enforce_fexists(file_anno,"annotation file");
   ifstream infile(file_anno.c_str(), ifstream::in);
-  if (!infile) {
-    cout << "error opening annotation file: " << file_anno << endl;
-    return false;
-  }
 
   string line;
 
@@ -344,10 +330,7 @@ bool ReadFile_column(const string &file_pheno, vector<int> &indicator_idv,
   pheno.clear();
 
   igzstream infile(file_pheno.c_str(), igzstream::in);
-  if (!infile) {
-    cout << "error! fail to open phenotype file: " << file_pheno << endl;
-    return false;
-  }
+  enforce_msg(infile,"fail to open phenotype file");
 
   string line;
   char *ch_ptr;
@@ -383,15 +366,13 @@ bool ReadFile_pheno(const string &file_pheno,
                     vector<vector<int>> &indicator_pheno,
                     vector<vector<double>> &pheno,
                     const vector<size_t> &p_column) {
-  debug_msg("entered");
+  debug_msg(file_pheno);
   indicator_pheno.clear();
   pheno.clear();
 
+  struct stat fileInfo;
+  enforce_msg(stat(file_pheno.c_str(), &fileInfo) != -1,"fail to open phenotype file");
   igzstream infile(file_pheno.c_str(), igzstream::in);
-  if (!infile) {
-    cout << "error! fail to open phenotype file: " << file_pheno << endl;
-    return false;
-  }
 
   string line;
   char *ch_ptr;
@@ -444,11 +425,8 @@ bool ReadFile_cvt(const string &file_cvt, vector<int> &indicator_cvt,
   debug_msg("entered");
   indicator_cvt.clear();
 
+  enforce_fexists(file_cvt,"covariates file");
   ifstream infile(file_cvt.c_str(), ifstream::in);
-  if (!infile) {
-    cout << "error! fail to open covariates file: " << file_cvt << endl;
-    return false;
-  }
 
   string line;
   char *ch_ptr;
@@ -560,11 +538,8 @@ bool ReadFile_fam(const string &file_fam, vector<vector<int>> &indicator_pheno,
   pheno.clear();
   mapID2num.clear();
 
+  enforce_fexists(file_fam, "fam file");
   igzstream infile(file_fam.c_str(), igzstream::in);
-  if (!infile) {
-    cout << "error opening .fam file: " << file_fam << endl;
-    return false;
-  }
 
   string line;
   char *ch_ptr;
@@ -644,11 +619,8 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
   indicator_snp.clear();
   snpInfo.clear();
 
+  enforce_fexists(file_geno, "genotype file");
   igzstream infile(file_geno.c_str(), igzstream::in);
-  if (!infile) {
-    cout << "error reading genotype file:" << file_geno << endl;
-    return false;
-  }
 
   gsl_vector *genotype = gsl_vector_safe_alloc(W->size1);
   gsl_vector *genotype_miss = gsl_vector_safe_alloc(W->size1);
@@ -1403,7 +1375,7 @@ void BimbamKin(const string file_geno, const set<string> ksnps,
                vector<int> &indicator_snp, const K_MODE k_mode,
                const int display_pace, gsl_matrix *matrix_kin,
                const bool test_nind) {
-  debug_msg("entered");
+  debug_msg(file_geno);
   auto infilen = file_geno.c_str();
   igzstream infile(infilen, igzstream::in);
   enforce_msg(infilen, "error reading genotype file");
@@ -1415,6 +1387,7 @@ void BimbamKin(const string file_geno, const set<string> ksnps,
   bool process_ksnps = ksnps.size();
 
   size_t ni_total = matrix_kin->size1;
+  enforce(ni_total>0);
   gsl_vector *geno = gsl_vector_safe_alloc(ni_total);
   gsl_vector *geno_miss = gsl_vector_safe_alloc(ni_total);
 

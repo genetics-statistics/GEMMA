@@ -285,7 +285,7 @@ void PARAM::ReadFiles(void) {
   }
 
   // Read genotype and phenotype file for BIMBAM format.
-  if (!file_geno.empty()) {
+  if (!file_geno.empty() && !file_pheno.empty()) {
 
     // Annotation file before genotype file.
     if (!file_anno.empty()) {
@@ -707,49 +707,28 @@ void PARAM::CheckParam(void) {
     }
   }
 
-  if ((!file_geno.empty() || !file_gene.empty())) {
+  if (is_legacy_mode() && (!file_geno.empty() || !file_gene.empty())) {
     str = file_pheno;
-    if (stat(str.c_str(), &fileInfo) == -1) {
-      cout << "error! fail to open phenotype file: " << str << endl;
-      error = true;
-    }
+    enforce_msg(stat(str.c_str(), &fileInfo) != -1,"fail to open phenotype file");
   }
 
   str = file_geno;
-  if (!str.empty() && stat(str.c_str(), &fileInfo) == -1) {
-    cout << "error! fail to open mean genotype file: " << str << endl;
-    error = true;
-  }
+  if (!str.empty()) enforce_msg(stat(str.c_str(), &fileInfo) != -1,"fail to open mean genotype file");
 
   str = file_gene;
-  if (!str.empty() && stat(str.c_str(), &fileInfo) == -1) {
-    cout << "error! fail to open gene expression file: " << str << endl;
-    error = true;
-  }
+  if (!str.empty()) enforce_msg(stat(str.c_str(), &fileInfo) != -1,"fail to open geno expression file");
 
   str = file_cat;
-  if (!str.empty() && stat(str.c_str(), &fileInfo) == -1) {
-    cout << "error! fail to open category file: " << str << endl;
-    error = true;
-  }
+  if (!str.empty()) enforce_msg(stat(str.c_str(), &fileInfo) != -1,"fail to open category file");
 
   str = file_mcat;
-  if (!str.empty() && stat(str.c_str(), &fileInfo) == -1) {
-    cout << "error! fail to open mcategory file: " << str << endl;
-    error = true;
-  }
+  if (!str.empty()) enforce_msg(stat(str.c_str(), &fileInfo) != -1,"fail to open mcategory file");
 
   str = file_beta;
-  if (!str.empty() && stat(str.c_str(), &fileInfo) == -1) {
-    cout << "error! fail to open beta file: " << str << endl;
-    error = true;
-  }
+  if (!str.empty()) enforce_msg(stat(str.c_str(), &fileInfo) != -1,"fail to open beta file");
 
   str = file_cor;
-  if (!str.empty() && stat(str.c_str(), &fileInfo) == -1) {
-    cout << "error! fail to open correlation file: " << str << endl;
-    error = true;
-  }
+  if (!str.empty()) enforce_msg(stat(str.c_str(), &fileInfo) != -1,"fail to open correlation file");
 
   if (!file_study.empty()) {
     str = file_study + ".Vq.txt";
@@ -1049,6 +1028,8 @@ void PARAM::CheckData(void) {
       }
     }
   }
+
+  if (!is_legacy_mode() && is_compute_kinship()) return;
 
   enforce_msg(ni_test,"number of analyzed individuals equals 0.");
 
@@ -2048,12 +2029,8 @@ void PARAM::ProcessCvtPhen() {
   }
 
   // Check ni_test.
-  if (a_mode != M_BSLMM5)
+  if (a_mode != M_BSLMM5 && a_mode != M_KIN_CENTERED && a_mode != M_KIN_STANDARD)
     enforce_msg(ni_test,"number of analyzed individuals equals 0.");
-  if (ni_test == 0 && a_mode != M_BSLMM5) {
-    error = true;
-    cout << "error! number of analyzed individuals equals 0. " << endl;
-  }
 
   // Check covariates to see if they are correlated with each
   // other, and to see if the intercept term is included.

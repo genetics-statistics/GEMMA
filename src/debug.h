@@ -186,9 +186,10 @@ inline void __enforce_fail(const char *__assertion, const char *__file,
                         __LINE__, __SHOW_FUNC))
 
 #define enforce_fexists(fn, msg)                                               \
-  if (!fn.empty())                                                             \
-    enforce_msg(stat(fn.c_str(), &fileInfo) == 0,                              \
-                ((std::string(__STRING(fn)) + " " + fn + ": " + msg).c_str()));
+  if (!fn.empty()) {                                                    \
+    struct stat COMBINE(fileInfo, __LINE__);                               \
+    enforce_msg(stat(fn.c_str(), &COMBINE(fileInfo, __LINE__)) == 0,    \
+                ((std::string(__STRING(fn)) + " " + fn + ": " + msg).c_str())); };
 
 #define gsl_matrix_safe_free(m) \
   do_gsl_matrix_safe_free(m,__SHOW_FUNC,__FILE__,__LINE__,false);
