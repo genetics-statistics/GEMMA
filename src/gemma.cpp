@@ -1901,16 +1901,14 @@ void GEMMA::BatchRun(PARAM &cPar) {
 
   // Generate Kinship matrix (optionally using LOCO)
   if (cPar.is_compute_kinship()) {
-    if (!is_legacy_mode()) {
+    if (!is_legacy_mode() && !cPar.file_geno.empty()) {
       string target = cPar.path_out + "/" + cPar.file_out;
       bool is_centered = (cPar.a_mode == M_KIN_CENTERED); // used for the filename
 
-      // api_compute_and_write_K(target, file_geno, setKSnps, indicator_snp, is_centered);
       api_compute_and_write_K(target.c_str(), cPar.file_geno.c_str(), is_centered);
-
     }
     else {
-
+      // ---- legacy mode
       cout << "Calculating Relatedness Matrix... " << endl;
 
       // K is the resulting K matrix
