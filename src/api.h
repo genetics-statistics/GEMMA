@@ -23,6 +23,8 @@
 
 extern "C" {
   char *api_faster_lmm_d_version(char *buf);
+  void api_compute_and_write_K(const char* target, const char* file_geno, int is_centered);
 }
+
 
 #endif

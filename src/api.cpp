@@ -36,10 +36,11 @@ char *api_faster_lmm_d_version(char *buf) {
   return NULL;
 }
 
+void api_compute_and_write_K(const char* target, const char* file_geno, int is_centered) {
+  flmmd_compute_and_write_K(target, file_geno, is_centered);
+}
 
-void int_api_write_K(const PARAM *cPar, const gsl_matrix *G, bool is_centered);
-
-void api_write_K(string filen, const gsl_matrix *G) {
+void api_write_K(string filen, const gsl_matrix *K) {
   // if (use_fast_lmm_d())
   //   flmmd_write_K(inds,G,is_centered);
   // else
@@ -47,10 +48,10 @@ void api_write_K(string filen, const gsl_matrix *G) {
 }
 
 // Handles internal state
-void int_api_write_K(const PARAM *cPar, const gsl_matrix *G, bool is_centered) {
+void int_api_write_K(const PARAM *cPar, const gsl_matrix *K, bool is_centered) {
   // if (use_faster_lmm_d())
-  //   api_write_K(filename, cPar.setKSnps(), G, is_centered);
+  //   api_write_K(filename, cPar.setKSnps(), K, is_centered);
   // else {
-    cPar->WriteMatrix(G, (is_centered ? "cXX" : "sXX"));
+    cPar->WriteMatrix(K, (is_centered ? "cXX" : "sXX"));
   // }
 }

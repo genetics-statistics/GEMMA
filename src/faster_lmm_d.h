@@ -25,5 +25,6 @@
 // The following functions are C++ bindings for faster-lmm-d.
 char *flmmd_api_version(char *buf);
 void flmmd_compute_bimbam_K(const char *geno_fn, int isnp_size, int *isnp, gsl_matrix *k_result);
+void flmmd_compute_and_write_K(const char *target, const char *geno_fn, const bool is_centered);
 
 // } // extern C

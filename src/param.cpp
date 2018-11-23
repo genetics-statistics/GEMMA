@@ -2,7 +2,7 @@
     Genome-wide Efficient Mixed Model Association (GEMMA)
     Copyright © 2011-2017, Xiang Zhou
     Copyright © 2017, Peter Carbonetto
-    Copyright © 2017, Pjotr Prins
+    Copyright © 2017,2018 Pjotr Prins
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -1260,8 +1260,8 @@ void PARAM::CalcKin(gsl_matrix *matrix_kin) {
     file_str = file_bfile + ".bed";
     PlinkKin(file_str, indicator_snp, (is_centered ? K_CENTERED : K_STANDARD), d_pace, matrix_kin);
   } else {
-      int_api_compute_bimbam_K(file_geno, setKSnps, indicator_snp, is_centered, d_pace, matrix_kin, ni_max ==0);
-      // BimbamKin(file_geno, setKSnps, indicator_snp, is_centered, d_pace, matrix_kin, ni_max == 0);
+    //  int_api_compute_bimbam_K(file_geno, setKSnps, indicator_snp, is_centered, d_pace, matrix_kin, ni_max ==0);
+    BimbamKin(file_geno, setKSnps, indicator_snp, (is_centered ? K_CENTERED : K_STANDARD) , d_pace, matrix_kin, ni_max == 0);
   }
 
   return;

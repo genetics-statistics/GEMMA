@@ -1677,7 +1677,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
     if (!cPar.file_kin.empty() && !cPar.file_ebv.empty()) {
       cout << "Adding Breeding Values ... " << endl;
 
-      gsl_matrix *G = gsl_matrix_safe_alloc(cPar.ni_total, cPar.ni_total);
+      gsl_matrix *K = gsl_matrix_safe_alloc(cPar.ni_total, cPar.ni_total);
       gsl_vector *u_hat = gsl_vector_safe_alloc(cPar.ni_test);
 
       // read kinship matrix and set u_hat
@@ -1692,16 +1692,16 @@ void GEMMA::BatchRun(PARAM &cPar) {
       }
 
       ReadFile_kin(cPar.file_kin, indicator_all, cPar.mapID2num, cPar.k_mode,
-                   cPar.error, G);
+                   cPar.error, K);
       if (cPar.error == true) {
         cout << "error! fail to read kinship/relatedness file. " << endl;
         return;
       }
 
       // read u
-      cPRDT.AddBV(G, u_hat, y_prdt);
+      cPRDT.AddBV(K, u_hat, y_prdt);
 
-      gsl_matrix_safe_free(G);
+      gsl_matrix_safe_free(K);
       gsl_vector_safe_free(u_hat);
     }
 
@@ -1900,29 +1900,41 @@ void GEMMA::BatchRun(PARAM &cPar) {
   }
 
   // Generate Kinship matrix (optionally using LOCO)
-  if (cPar.a_mode == M_KIN_STANDARD || cPar.a_mode == M_KIN_CENTERED) {
-    cout << "Calculating Relatedness Matrix ... " << endl;
+  if (cPar.is_compute_kinship()) {
+    if (!is_legacy_mode()) {
+      string target = cPar.path_out + "/" + cPar.file_out;
+      bool is_centered = (cPar.a_mode == M_KIN_CENTERED); // used for the filename
 
-    gsl_matrix *G = gsl_matrix_safe_alloc(cPar.ni_total, cPar.ni_total);
-    enforce_msg(G, "allocate G"); // just to be sure
+      // api_compute_and_write_K(target, file_geno, setKSnps, indicator_snp, is_centered);
+      api_compute_and_write_K(target.c_str(), cPar.file_geno.c_str(), is_centered);
 
-    time_start = clock();
-
-    cPar.CalcKin(G);
-
-    cPar.time_G = (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
-    if (cPar.error == true) {
-      cout << "error! fail to calculate relatedness matrix. " << endl;
-      return;
     }
+    else {
 
-    // Now we have the Kinship matrix test it
-    validate_K(G);
+      cout << "Calculating Relatedness Matrix... " << endl;
 
-    bool is_centered = (cPar.a_mode == M_KIN_CENTERED);
-    int_api_write_K(&cPar,G,is_centered);
+      // K is the resulting K matrix
+      gsl_matrix *K = gsl_matrix_safe_alloc(cPar.ni_total, cPar.ni_total);
+      enforce_msg(K, "allocate K"); // just to be sure
 
-    gsl_matrix_safe_free(G);
+      time_start = clock();
+
+      cPar.CalcKin(K);
+
+      cPar.time_G = (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
+      if (cPar.error == true) {
+        cout << "error! fail to calculate relatedness matrix. " << endl;
+        return;
+      }
+
+      // Now we have the Kinship matrix test it
+      validate_K(K);
+
+      bool is_centered = (cPar.a_mode == M_KIN_CENTERED); // used for the filename
+      cPar.WriteMatrix(K, (is_centered ? "cXX" : "sXX"));
+
+      gsl_matrix_safe_free(K);
+    }
   }
 
   // Compute the LDSC weights (not implemented yet)
