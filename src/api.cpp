@@ -37,7 +37,11 @@ char *api_faster_lmm_d_version(char *buf) {
 }
 
 void api_compute_and_write_K(const char* target, const char* file_geno, int is_centered) {
-  flmmd_compute_and_write_K(target, file_geno, is_centered);
+  #ifdef FASTER_LMM_D
+    flmmd_compute_and_write_K(target, file_geno, is_centered);
+  #else
+    fail_msg("Unsupported function without faster-lmm-d");
+  #endif
 }
 
 void api_write_K(string filen, const gsl_matrix *K) {
