@@ -366,6 +366,7 @@ public:
   void UpdateSNP(const map<string, double> &mapRS2wA);
 
   bool is_compute_kinship() const { return (a_mode == M_KIN_CENTERED || a_mode == M_KIN_STANDARD); };
+  bool is_loco() const { return loco.size() > 0; }
 };
 
 size_t GetabIndex(const size_t a, const size_t b, const size_t n_cvt);

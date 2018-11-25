@@ -36,11 +36,11 @@ char *api_faster_lmm_d_version(char *buf) {
   return NULL;
 }
 
-void api_compute_and_write_K(const char* target, const char* file_geno, int is_centered, double maf_level) {
+void api_compute_and_write_K(const char* target, const char* file_geno, const char *file_anno, int is_loco, int is_centered, double maf_level) {
   #ifdef FASTER_LMM_D
-    flmmd_compute_and_write_K(target, file_geno, is_centered, maf_level);
+  flmmd_compute_and_write_K(target, file_geno, file_anno, is_loco, is_centered, maf_level);
   #else
-    fail_msg("Unsupported function without faster-lmm-d");
+  fail_msg("Unsupported function without faster-lmm-d");
   #endif
 }
 
@@ -48,7 +48,7 @@ void api_write_K(string filen, const gsl_matrix *K) {
   // if (use_fast_lmm_d())
   //   flmmd_write_K(inds,G,is_centered);
   // else
-    fail_msg("Unsupported function without faster-lmm-d");
+  fail_msg("Unsupported function without faster-lmm-d");
 }
 
 // Handles internal state

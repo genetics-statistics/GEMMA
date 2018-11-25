@@ -1123,7 +1123,10 @@ void GEMMA::Assign(int argc, char **argv, PARAM &cPar) {
     } else if (strcmp(argv[i], "-notsnp") == 0) {
       cPar.maf_level = -1;
     } else if (strcmp(argv[i], "-loco") == 0) {
-      assert(argv[i + 1]);
+      cPar.loco = "auto";
+      if (argv[i + 1] == NULL || argv[i + 1][0] == '-') {
+        continue;
+      }
       ++i;
       str.clear();
       str.assign(argv[i]);
@@ -1906,7 +1909,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
       string target = cPar.path_out + "/" + cPar.file_out;
       bool is_centered = (cPar.a_mode == M_KIN_CENTERED); // used for the filename
 
-      api_compute_and_write_K(target.c_str(), cPar.file_geno.c_str(), is_centered, cPar.maf_level);
+      api_compute_and_write_K(target.c_str(), cPar.file_geno.c_str(), cPar.file_anno.c_str(), cPar.is_loco(), is_centered, cPar.maf_level);
     }
     else {
       // ---- legacy mode
