@@ -36,9 +36,9 @@ char *api_faster_lmm_d_version(char *buf) {
   return NULL;
 }
 
-void api_compute_and_write_K(const char* target, const char* file_geno, int is_centered) {
+void api_compute_and_write_K(const char* target, const char* file_geno, int is_centered, double maf_level) {
   #ifdef FASTER_LMM_D
-    flmmd_compute_and_write_K(target, file_geno, is_centered);
+    flmmd_compute_and_write_K(target, file_geno, is_centered, maf_level);
   #else
     fail_msg("Unsupported function without faster-lmm-d");
   #endif

@@ -30,25 +30,3 @@
 #include "int_api.h"
 #include "debug.h"
 #include "faster_lmm_d.h"
-
-
-void int_api_compute_bimbam_K(const string file_geno, const set<string> ksnps,
-                              vector<int> &indicator_snp, const int is_centered,
-                              const int display_pace, gsl_matrix *matrix_kin,
-                              const bool test_nind) {
-#ifdef FASTER_LMM_D
-  if (use_faster_lmm_d()) {
-    size_t ni_total = matrix_kin->size1;
-    std::vector<char *> v(ksnps.size());
-    cerr << "****" << ksnps.size() << " " << indicator_snp.size() << " " << ni_total << endl;
-    // std::vector<char *> v(ksnps.begin(), ksnps.end());
-    for (auto snp : indicator_snp) {
-      // cout << snp << "\n";
-    }
-    flmmd_compute_bimbam_K(file_geno.c_str(), indicator_snp.size(), indicator_snp.data(),
-                           matrix_kin);
-    return;
-  }
-#endif
-  BimbamKin(file_geno, ksnps, indicator_snp, (is_centered ? K_CENTERED : K_STANDARD), display_pace, matrix_kin, test_nind);
-}

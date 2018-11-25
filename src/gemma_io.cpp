@@ -724,6 +724,8 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
         continue;
       }
 
+      // geno is a probability ranging from 0.0 - 2.0.
+
       geno = atof(ch_ptr);
       if (geno >= 0 && geno <= 0.5) {
         n_0++;
@@ -745,10 +747,11 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
         flag_poly = 1;
       }
 
-      maf += geno;
+      maf += geno; // takes account of heterozygous too - with additive this makes sense
 
       c_idv++;
     }
+
     maf /= 2.0 * (double)(ni_test - n_miss);
 
     SNPINFO sInfo = {chr,    rs,
@@ -783,8 +786,7 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
       }
     }
 
-    // Filter SNP if it is correlated with W unless W has
-    // only one column, of 1s.
+    // Plug average genotype value into missing values
     for (size_t i = 0; i < genotype->size; ++i) {
       if (gsl_vector_get(genotype_miss, i) == 1) {
         geno = maf * 2.0;
@@ -792,6 +794,8 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
       }
     }
 
+    // Filter SNP if it is correlated with W unless W has
+    // only one column, of 1s.
     gsl_blas_dgemv(CblasTrans, 1.0, W, genotype, 0.0, Wtx);
     gsl_blas_dgemv(CblasNoTrans, 1.0, WtWi, Wtx, 0.0, WtWiWtx);
     gsl_blas_ddot(genotype, genotype, &v_x);
@@ -1438,14 +1442,13 @@ void BimbamKin(const string file_geno, const set<string> ksnps,
     geno_mean = 0.0;
     n_miss = 0;
     geno_var = 0.0;
-    gsl_vector_set_all(geno_miss, 0);
+    gsl_vector_set_all(geno_miss, 0); // keep track of missing genotypes
     for (size_t i = 0; i < ni_total; ++i) {
       enforce_str(token_i != tokens.end(), line + " number of fields");
       auto field = *token_i;
       auto sfield = std::string(field);
-      // cout << i << ":" << sfield << "," << endl;
       if (strncmp(field,"NA",2)==0) {
-        gsl_vector_set(geno_miss, i, 0);
+        gsl_vector_set(geno_miss, i, 0); // missing genotype
         n_miss++;
       } else {
         double d = stod(field);
@@ -1465,6 +1468,7 @@ void BimbamKin(const string file_geno, const set<string> ksnps,
     geno_var /= (double)ni_total;
     geno_var -= geno_mean * geno_mean;
 
+    // plug the mean value back in for missing genotypes
     for (size_t i = 0; i < ni_total; ++i) {
       if (gsl_vector_get(geno_miss, i) == 0) {
         gsl_vector_set(geno, i, geno_mean);
@@ -1473,7 +1477,7 @@ void BimbamKin(const string file_geno, const set<string> ksnps,
 
     gsl_vector_add_constant(geno, -1.0 * geno_mean);
 
-    if (k_mode == 2 && geno_var != 0) {
+    if (k_mode == K_STANDARD && geno_var != 0) {
       gsl_vector_scale(geno, 1.0 / sqrt(geno_var));
     }
     // set the SNP column ns_test

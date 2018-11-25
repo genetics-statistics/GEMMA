@@ -1901,11 +1901,12 @@ void GEMMA::BatchRun(PARAM &cPar) {
 
   // Generate Kinship matrix (optionally using LOCO)
   if (cPar.is_compute_kinship()) {
-    if (!is_legacy_mode() && !cPar.file_geno.empty()) {
+    if (!is_legacy_mode() && !cPar.file_geno.empty()
+        && cPar.hwe_level == 0.0) {
       string target = cPar.path_out + "/" + cPar.file_out;
       bool is_centered = (cPar.a_mode == M_KIN_CENTERED); // used for the filename
 
-      api_compute_and_write_K(target.c_str(), cPar.file_geno.c_str(), is_centered);
+      api_compute_and_write_K(target.c_str(), cPar.file_geno.c_str(), is_centered, cPar.maf_level);
     }
     else {
       // ---- legacy mode
