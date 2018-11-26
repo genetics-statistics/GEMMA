@@ -77,7 +77,6 @@ WITH_LAPACK            =                  # Force linking LAPACK (if OpenBlas la
 WITH_GSLCBLAS          =                  # Force linking gslcblas (if OpenBlas lacks it)
 WITH_GFORTRAN          =                  # Add -lgfortran (if OpenBlas does not pull it in)
 OPENBLAS_LEGACY        =                  # Using older OpenBlas
-FORCE_STATIC           =                  # Static linking of libraries
 GCC_FLAGS              = -DHAVE_INLINE -pthread -Wall -std=gnu++11 # extra flags -Wl,--allow-multiple-definition
 
 GSL_INCLUDE_PATH =
@@ -102,10 +101,8 @@ else
     OPENBLAS_INCLUDE_PATH = .
     EIGEN_INCLUDE_PATH = $(GUIX)/include/eigen3
     # RPATH = -Xlinker --rpath=$(GUIX)/lib
-    ifdef FORCE_STATIC
-      LIBS = -L$(GUIX)/lib
-    endif
     GUIX_PROFILE =$(realpath $(GUIX))
+    LIBS += -L$(GUIX)/lib
   endif
 endif
 
@@ -160,6 +157,8 @@ profile: CPPFLAGS += -pg
 
 release: CPPFLAGS += -DNDEBUG -O3 $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
 
+static: CPPFLAGS += -DNDEBUG -O3 $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc -static
+
 ifeq ($(SYS), WIN)
   CPPFLAGS += -Duint="unsigned int" -D__CRT__NO_INLINE -D__STRING="__STRINGIFY" -DWINDOWS -DWITH_GSLCBLAS=1
 endif
@@ -170,8 +169,6 @@ endif
 ifdef FASTER_LMM_D_INCLUDE
   CPPFLAGS += -DFASTER_LMM_D
 endif
-
-static: CPPFLAGS += -static
 
 ifdef FASTER_LMM_D_INCLUDE
   LIBS += $(FASTER_LMM_D_LIB) -lphobos2-ldc-debug -ldruntime-ldc-debug -ldl
@@ -219,6 +216,8 @@ OBJS = $(SOURCES:.cpp=.o)
 all: release
 
 release: $(OUTPUT)
+
+static: $(OUTPUT)
 
 debug: $(OUTPUT)
 
