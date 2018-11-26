@@ -83,20 +83,20 @@ To use faster-lmm-d you need to mount a directory in the container and add ldc
 
     ~/.config/guix/current/bin/guix environment -C guix --ad-hoc gcc gdb gfortran:lib gsl eigen openblas zlib bash \
       ld-wrapper perl ldc \
-      --share=/home/wrk/izip/git/opensource/D/faster_lmm_d \
-      --share=/home/wrk/izip/git/opensource/D/BioD
-    make FASTER_LMM_D_INCLUDE=/home/wrk/izip/git/opensource/D/faster_lmm_d clean
-    make FASTER_LMM_D_INCLUDE=/home/wrk/izip/git/opensource/D/faster_lmm_d BIOD_INCLUDE=/home/wrk/izip/git/opensource/D/BioD -j 4
+      --share=$HOME/izip/git/opensource/D/faster_lmm_d \
+      --share=$HOME/izip/git/opensource/D/BioD
+    make FASTER_LMM_D_INCLUDE=$HOME/izip/git/opensource/D/faster_lmm_d clean
+    make FASTER_LMM_D_INCLUDE=$HOME/izip/git/opensource/D/faster_lmm_d BIOD_INCLUDE=$HOME/izip/git/opensource/D/BioD -j 4 debug
 
 And to create a debug version
 
-    make FASTER_LMM_D_INCLUDE=/home/wrk/izip/git/opensource/D/faster_lmm_d BIOD_INCLUDE=/home/wrk/izip/git/opensource/D/BioD -j 4 debug
+    make FASTER_LMM_D_INCLUDE=$HOME/izip/git/opensource/D/faster_lmm_d BIOD_INCLUDE=$HOME/g/izip/git/opensource/D/BioD -j 4 debug
 
 Finally, instead of pulling in the guix package you can be even more explicit with
 
     guix environment -C --ad-hoc gcc gdb gfortran:lib gsl eigen openblas zlib bash ld-wrapper perl ldc \
       make coreutils linux-libre-headers binutils glibc \
-      --share=/home/wrk/izip/git/opensource/D/faster_lmm_d
+      --share=$HOME/g/izip/git/opensource/D/faster_lmm_d
 
 To test with another dependency, e.g. GSLv1
 
@@ -156,16 +156,16 @@ Another way to view the runtime graph is to use
 
     ldd gemma
 
-        libgsl.so.23 => /home/wrk/opt/gemma-dev-env/lib/libgsl.so.23 (0x00007efec0826000)
-        libopenblas.so.0 => /home/wrk/opt/gemma-dev-env/lib/libopenblas.so.0 (0x00007efebe288000)
-        libz.so.1 => /home/wrk/opt/gemma-dev-env/lib/libz.so.1 (0x00007efebe06d000)
-        libgfortran.so.3 => /home/wrk/opt/gemma-dev-env/lib/libgfortran.so.3 (0x00007efebdd4c000)
-        libquadmath.so.0 => /home/wrk/opt/gemma-dev-env/lib/libquadmath.so.0 (0x00007efebdb0b000)
-        libstdc++.so.6 => /home/wrk/opt/gemma-dev-env/lib/libstdc++.so.6 (0x00007efebd790000)
-        libm.so.6 => /home/wrk/opt/gemma-dev-env/lib/libm.so.6 (0x00007efebd444000)
-        libgcc_s.so.1 => /home/wrk/opt/gemma-dev-env/lib/libgcc_s.so.1 (0x00007efebd22d000)
-        libpthread.so.0 => /home/wrk/opt/gemma-dev-env/lib/libpthread.so.0 (0x00007efebd00f000)
-        libc.so.6 => /home/wrk/opt/gemma-dev-env/lib/libc.so.6 (0x00007efebcc5d000)
+        libgsl.so.23 => $HOME/g/opt/gemma-dev-env/lib/libgsl.so.23 (0x00007efec0826000)
+        libopenblas.so.0 => $HOME/g/opt/gemma-dev-env/lib/libopenblas.so.0 (0x00007efebe288000)
+        libz.so.1 => $HOME/g/opt/gemma-dev-env/lib/libz.so.1 (0x00007efebe06d000)
+        libgfortran.so.3 => $HOME/g/opt/gemma-dev-env/lib/libgfortran.so.3 (0x00007efebdd4c000)
+        libquadmath.so.0 => $HOME/g/opt/gemma-dev-env/lib/libquadmath.so.0 (0x00007efebdb0b000)
+        libstdc++.so.6 => $HOME/g/opt/gemma-dev-env/lib/libstdc++.so.6 (0x00007efebd790000)
+        libm.so.6 => $HOME/g/opt/gemma-dev-env/lib/libm.so.6 (0x00007efebd444000)
+        libgcc_s.so.1 => $HOME/g/opt/gemma-dev-env/lib/libgcc_s.so.1 (0x00007efebd22d000)
+        libpthread.so.0 => $HOME/g/opt/gemma-dev-env/lib/libpthread.so.0 (0x00007efebd00f000)
+        libc.so.6 => $HOME/g/opt/gemma-dev-env/lib/libc.so.6 (0x00007efebcc5d000)
         /gnu/store/n6acaivs0jwiwpidjr551dhdni5kgpcr-glibc-2.26.105-g0890d5379c/lib/ld-linux-x86-64.so.2
 
 and follow the paths.
