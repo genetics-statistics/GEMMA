@@ -151,7 +151,7 @@ ifneq ($(CXX), clang++)
   debug check fast-check: CPPFLAGS += -Og
 endif
 
-debug check fast-check: CPPFLAGS += -g $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
+debug profile check fast-check: CPPFLAGS += -g $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
 
 profile: CPPFLAGS += -pg
 
