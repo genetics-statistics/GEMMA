@@ -275,6 +275,11 @@ Latest (INT64, no gslcblas):
 
     time env OPENBLAS_NUM_THREADS=4 make EIGEN_INCLUDE_PATH=~/.guix-profile/include/eigen3 LIBS="~/opt/gsl2/lib/libgsl.a ~/tmp/OpenBLAS/libopenblas_haswellp-r0.3.0.dev.a -pthread -lz  -llapack" OPENBLAS_INCLUDE_PATH=~/tmp/OpenBLAS/ -j 4 fast-check
 
+### Build a special OpenBlas with Guix
+
+We use the following for pulling in a different openblas version
+
+    env GUIX_PACKAGE_PATH=../guix-bioinformatics/  ~/.config/guix/current/bin/guix environment -C guix --ad-hoc gcc gdb gfortran:lib gsl eigen openblas-git zlib bash       ld-wrapper perl ldc       --share=$HOME/izip/git/opensource/D/faster_lmm_d       --share=$HOME/izip/git/opensource/D/BioD  --substitute-urls="http://guix.genenetwork.org https://berlin.guixsd.org https://mirror.hydra.gnu.org"
 
 ### OpenBlas 64-bit API
 
