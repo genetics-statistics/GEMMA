@@ -64,6 +64,19 @@ testBXDStandardRelatednessMatrixK() {
     assertEquals "204.13" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
+testBXDStandardRelatednessMatrixKLOCO() {
+    outn=BXD-LOCO
+    rm -f output/$outn.*
+    $gemma $gemmaopts -g ../example/BXD_geno.txt.gz \
+           -gk -loco \
+           -a ../example/BXD_snps.txt \
+           -o $outn
+    assertEquals 0 $?
+    outfn=output/BXD-LOCO.1.cXX.txt
+    assertEquals "198" `wc -l < $outfn`
+    assertEquals "-20.89" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+}
+
 testBXDLMLikelihoodRatio() {
     return
     outn=BXD_LM_LR
