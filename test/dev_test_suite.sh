@@ -59,9 +59,9 @@ testBXDStandardRelatednessMatrixK() {
            -gk \
            -o $outn
     assertEquals 0 $?
-    outfn=output/$outn.cXX.txt
+    outfn=output/$outn.all.cXX.txt
     assertEquals "198" `wc -l < $outfn`
-    assertEquals "-116.11" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+    assertEquals "204.13" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
 testBXDLMLikelihoodRatio() {
