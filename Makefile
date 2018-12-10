@@ -149,6 +149,8 @@ profile: CPPFLAGS += -pg
 
 release: CPPFLAGS += -DNDEBUG -O3 $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
 
+static: CPPFLAGS += -DNDEBUG -O3 $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
+
 
 ifeq ($(SYS), WIN)
   CPPFLAGS += -Duint="unsigned int" -D__CRT__NO_INLINE -D__STRING="__STRINGIFY" -DWINDOWS -DWITH_GSLCBLAS=1
@@ -170,7 +172,7 @@ ifdef WITH_GSLCBLAS
   LIBS += -lgslcblas
 endif
 ifdef WITH_GFORTRAN
-  LIBS += -lgfortran
+  LIBS += -lgfortran -lquadmath
 endif
 
 .PHONY: all test
@@ -202,6 +204,8 @@ OBJS = $(SOURCES:.cpp=.o)
 all: release
 
 release: $(OUTPUT)
+
+static: $(OUTPUT)
 
 debug: $(OUTPUT)
 

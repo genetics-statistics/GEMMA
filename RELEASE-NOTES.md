@@ -4,6 +4,12 @@ see
 and
 [commits](https://github.com/genetics-statistics/GEMMA/commits/master).
 
+## ChangeLog v0.98.1 (2018/12/10)
+
+Bug fix release
+
+* Fixes regression on Plink analysis with missing data (thank you @voichek)
+
 ## ChangeLog v0.98 (2018/09/28)
 
 With the v0.98 release GEMMA has stabilized, is faster than ever, and
