@@ -2,7 +2,7 @@
     Genome-wide Efficient Mixed Model Association (GEMMA)
     Copyright © 2011-2017, Xiang Zhou
     Copyright © 2017, Peter Carbonetto
-    Copyright © 2017, Pjotr Prins
+    Copyright © 2017-2018 Pjotr Prins
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -1690,6 +1690,8 @@ void LMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
   infile.clear();
 }
 
+#include "eigenlib.h"
+
 void LMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
                        const gsl_matrix *UtW, const gsl_vector *Uty,
                        const gsl_matrix *W, const gsl_vector *y,
@@ -1700,53 +1702,97 @@ void LMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
   ifstream infile(file_bed.c_str(), ios::binary);
   enforce_msg(infile,"error reading genotype (.bed) file");
 
-  char ch[1]; // 1 byte buffer
-  // Calculate n_bit and c, the number of bit for each SNP.
-  const size_t n_bit = (ni_total % 4 == 0 ? ni_total / 4 : ni_total / 4 + 1);
+  clock_t time_start = clock();
 
-  // first three magic numbers.
-  for (int i = 0; i < 3; ++i) {
-    infile.read(ch, 1);
-    // const bitset<8> b = ch[0];  b is never used
+  char ch[1];
+  bitset<8> b;
+
+  double lambda_mle = 0, lambda_remle = 0, beta = 0, se = 0, p_wald = 0;
+  double p_lrt = 0, p_score = 0;
+  double logl_H1 = 0.0;
+  int n_bit, n_miss, ci_total, ci_test;
+  double geno, x_mean;
+
+  // Calculate basic quantities.
+  size_t n_index = (n_cvt + 2 + 1) * (n_cvt + 2) / 2;
+
+  gsl_vector *x = gsl_vector_alloc(U->size1);
+  gsl_vector *Utx = gsl_vector_alloc(U->size2);
+  gsl_matrix *Uab = gsl_matrix_alloc(U->size2, n_index);
+  gsl_vector *ab = gsl_vector_alloc(n_index);
+
+  // Create a large matrix.
+  size_t msize = LMM_BATCH_SIZE;
+  gsl_matrix *Xlarge = gsl_matrix_alloc(U->size1, msize);
+  gsl_matrix *UtXlarge = gsl_matrix_alloc(U->size1, msize);
+  gsl_matrix_set_zero(Xlarge);
+
+  gsl_matrix_set_zero(Uab);
+  CalcUab(UtW, Uty, Uab);
+
+  // Calculate n_bit and c, the number of bit for each SNP.
+  if (ni_total % 4 == 0) {
+    n_bit = ni_total / 4;
+  } else {
+    n_bit = ni_total / 4 + 1;
   }
 
-  std::vector <double> gs;
-  gs.resize(ni_total);
+  // Print the first three magic numbers.
+  for (int i = 0; i < 3; ++i) {
+    infile.read(ch, 1);
+    b = ch[0];
+  }
 
-  // fetch_snp is a callback function for every SNP row
-  std::function<SnpNameValues(size_t)>  fetch_snp = [&](size_t num) {
-    gs.assign (ni_total,nan("")); // wipe values
+  size_t c = 0, t_last = 0;
+  for (size_t t = 0; t < snpInfo.size(); ++t) {
+    if (indicator_snp[t] == 0)
+      continue;
+    t_last++;
+  }
+  for (vector<SNPINFO>::size_type t = 0; t < snpInfo.size(); ++t) {
+    if (t % d_pace == 0 || t == snpInfo.size() - 1) {
+      ProgressBar("Reading SNPs  ", t, snpInfo.size() - 1);
+    }
+    if (indicator_snp[t] == 0) {
+      continue;
+    }
+
     // n_bit, and 3 is the number of magic numbers.
-    auto t = num;
     infile.seekg(t * n_bit + 3);
-    auto ci_total = 0;
-    auto ci_test = 0;
-    // ---- for all genotypes
-    for (uint i = 0; i < n_bit; ++i) {
+
+    // Read genotypes.
+    x_mean = 0.0;
+    n_miss = 0;
+    ci_total = 0;
+    ci_test = 0;
+    for (int i = 0; i < n_bit; ++i) {
       infile.read(ch, 1);
-      bitset<8> bset8 = ch[0];
+      b = ch[0];
 
       // Minor allele homozygous: 2.0; major: 0.0.
       for (size_t j = 0; j < 4; ++j) {
         if ((i == (n_bit - 1)) && ci_total == (int)ni_total) {
           break;
         }
-        if (indicator_idv[ci_total] == 0) { // skip individual
+        if (indicator_idv[ci_total] == 0) {
           ci_total++;
           continue;
         }
 
-        if (bset8[2 * j] == 0) {
-          if (bset8[2 * j + 1] == 0) {
-            gs[ci_test] = 2.0;
+        if (b[2 * j] == 0) {
+          if (b[2 * j + 1] == 0) {
+            gsl_vector_set(x, ci_test, 2);
+            x_mean += 2.0;
           } else {
-            gs[ci_test] = 1.0;
+            gsl_vector_set(x, ci_test, 1);
+            x_mean += 1.0;
           }
         } else {
-          if (bset8[2 * j + 1] == 1) {
-            gs[ci_test] = 0.0;
+          if (b[2 * j + 1] == 1) {
+            gsl_vector_set(x, ci_test, 0);
           } else {
-            gs[ci_test] = nan(""); // already set to NaN - originally was -9.0
+            gsl_vector_set(x, ci_test, -9);
+            n_miss++;
           }
         }
 
@@ -1754,11 +1800,84 @@ void LMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
         ci_test++;
       }
     }
-    string snp="unknown";
-    return std::make_tuple(snp,gs);
-  };
 
-  LMM::Analyze(fetch_snp,U,eval,UtW,Uty,W,y,gwasnps);
+    x_mean /= (double)(ni_test - n_miss);
+
+    for (size_t i = 0; i < ni_test; ++i) {
+      geno = gsl_vector_get(x, i);
+      if (geno == -9) {
+        gsl_vector_set(x, i, x_mean);
+        geno = x_mean;
+      }
+    }
+
+    gsl_vector_view Xlarge_col = gsl_matrix_column(Xlarge, c % msize);
+    gsl_vector_memcpy(&Xlarge_col.vector, x);
+    c++;
+
+    if (c % msize == 0 || c == t_last) {
+      size_t l = 0;
+      if (c % msize == 0) {
+        l = msize;
+      } else {
+        l = c % msize;
+      }
+
+      gsl_matrix_view Xlarge_sub =
+          gsl_matrix_submatrix(Xlarge, 0, 0, Xlarge->size1, l);
+      gsl_matrix_view UtXlarge_sub =
+          gsl_matrix_submatrix(UtXlarge, 0, 0, UtXlarge->size1, l);
+
+      time_start = clock();
+      eigenlib_dgemm("T", "N", 1.0, U, &Xlarge_sub.matrix, 0.0,
+                     &UtXlarge_sub.matrix);
+      time_UtX += (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
+
+      gsl_matrix_set_zero(Xlarge);
+
+      for (size_t i = 0; i < l; i++) {
+        gsl_vector_view UtXlarge_col = gsl_matrix_column(UtXlarge, i);
+        gsl_vector_memcpy(Utx, &UtXlarge_col.vector);
+
+        CalcUab(UtW, Uty, Utx, Uab);
+
+        time_start = clock();
+        FUNC_PARAM param1 = {false, ni_test, n_cvt, eval, Uab, ab, 0};
+
+        // 3 is before 1, for beta.
+        if (a_mode == 3 || a_mode == 4) {
+          CalcRLScore(l_mle_null, param1, beta, se, p_score);
+        }
+
+        if (a_mode == 1 || a_mode == 4) {
+          CalcLambda('R', param1, l_min, l_max, n_region, lambda_remle,
+                     logl_H1);
+          CalcRLWald(lambda_remle, param1, beta, se, p_wald);
+        }
+
+        if (a_mode == 2 || a_mode == 4) {
+          CalcLambda('L', param1, l_min, l_max, n_region, lambda_mle, logl_H1);
+          p_lrt = gsl_cdf_chisq_Q(2.0 * (logl_H1 - logl_mle_H0), 1);
+        }
+
+        time_opt += (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
+
+        // Store summary data.
+        SUMSTAT SNPs = {beta,   se,    lambda_remle, lambda_mle,
+                        p_wald, p_lrt, p_score, logl_H1};
+        sumStat.push_back(SNPs);
+      }
+    }
+  }
+  cout << endl;
+
+  gsl_vector_free(x);
+  gsl_vector_free(Utx);
+  gsl_matrix_free(Uab);
+  gsl_vector_free(ab);
+
+  gsl_matrix_free(Xlarge);
+  gsl_matrix_free(UtXlarge);
 
   infile.close();
   infile.clear();
