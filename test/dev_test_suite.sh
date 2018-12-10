@@ -81,6 +81,23 @@ testBXDLMMLikelihoodRatio() {
     assertEquals "3088458212.93" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
+testCenteredRelatednessMatrixissue188() {
+    outn=issue188
+    rm -f output/$outn.*
+    $gemma $gemmaopts -b data/issue188/2000 -gk -o $outn
+    assertEquals 0 $?
+    outfn=output/$outn.cXX.txt
+    assertEquals "193.80" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+}
+
+testLMMissue188() {
+    outn=issue188
+    $gemma $gemmaopts -b data/issue188/2000 -lmm 2 -k output/$outn.cXX.txt -maf 0.01 -o $outn -n 1
+    assertEquals 0 $?
+    outfn=output/$outn.assoc.txt
+    assertEquals "338154001.76" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+}
+
 testCenteredRelatednessMatrixKLOCO1() {
     outn=mouse_hs1940_LOCO1
     rm -f output/$outn.*
