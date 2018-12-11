@@ -13,7 +13,7 @@ matrix:
           packages:
             # Our dev environment is a more recent GNU C++ and GSL2
             - g++-4.9
-            - libopenblas-dev 
+            - libopenblas-dev
             - zlib1g-dev
             - libeigen3-dev
             - libgsl0-dev
@@ -34,8 +34,8 @@ matrix:
 #             - g++-6
 #       env:
 #         - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
-# before_install:
-#   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew cask uninstall oclint && brew update && brew install gsl openblas zlib eigen lapack ; fi
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update && brew install gsl openblas zlib eigen lapack ; fi
 script:
   - echo $MATRIX_EVAL
   - eval "${MATRIX_EVAL}"
