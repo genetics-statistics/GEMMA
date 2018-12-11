@@ -10,6 +10,47 @@ Bug fix release
 
 * Fixes regression on Plink analysis with missing data (thank you @voichek)
 
+To install the image, download and
+
+```sh
+md5sum gemma-0.98.1.gz
+8e7eda8091e4c4e587d91cf9d94ed147  gemma-0.98.1.gz
+gzip -d gemma-0.98.1.gz
+chmod a+x gemma-0.98.1
+./gemma-0.98.1
+
+GEMMA 0.98.1 (2018-12-10) by Xiang Zhou and team (C) 2012-2018
+
+type ./gemma -h [num] for detailed help
+```
+
+The binary images were reproducibly built on x86_64 with
+
+```sh
+Generation 1    Nov 03 2018 12:30:38    (current)
+  guix ff34941
+    repository URL: https://git.savannah.gnu.org/git/guix.git
+    commit: ff349415b27cc764fd7168ef35ca76c3b8b05889
+
+guix environment -C guix --ad-hoc gcc gdb gfortran:lib gsl eigen openblas zlib bash ld-wrapper perl
+make clean && make -j 16 && make fast-check
+for x in `ldd bin/gemma|cut -d ' ' -f 3` ; do realpath $x ; done
+/gnu/store/kf8pva0pgwg6yrcpa52iri293j8fc56q-gsl-2.5/lib/libgsl.so.23.1.0
+/gnu/store/fxiwj2wpp11sif613axdax7gmwzsg6kp-zlib-1.2.11/lib/libz.so.1.2.11
+/gnu/store/zpm494j02m6snmvcjxcdqxkgwx43nkmj-openblas-0.3.2/lib/libopenblasp-r0.3.2.so
+/gnu/store/4ik1aw34nxs4372xlimvnaq2ilhclwpw-gfortran-8.2.0-lib/lib/libgfortran.so.5.0.0
+/gnu/store/bmaxmigwnlbdpls20px2ipq1fll36ncd-gcc-8.2.0-lib/lib/libquadmath.so.0.0.0
+/gnu/store/bmaxmigwnlbdpls20px2ipq1fll36ncd-gcc-8.2.0-lib/lib/libstdc++.so.6.0.25
+/gnu/store/l4lr0f5cjd0nbsaaf8b5dmcw1a1yypr3-glibc-2.27/lib/libm-2.27.so
+/gnu/store/bmaxmigwnlbdpls20px2ipq1fll36ncd-gcc-8.2.0-lib/lib/libgcc_s.so.1
+/gnu/store/l4lr0f5cjd0nbsaaf8b5dmcw1a1yypr3-glibc-2.27/lib/libpthread-2.27.so
+/gnu/store/l4lr0f5cjd0nbsaaf8b5dmcw1a1yypr3-glibc-2.27/lib/libc-2.27.so
+/gnu/store/1yym4xrvnlsvcnbzgxy967cg6dlb19gq-gfortran-5.5.0-lib/lib/libgfortran.so.3.0.0
+
+# build static image
+make clean && make WITH_GFORTRAN=1 static -j 16 && make check
+```
+
 ## ChangeLog v0.98 (2018/09/28)
 
 With the v0.98 release GEMMA has stabilized, is faster than ever, and
