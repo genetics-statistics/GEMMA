@@ -29,6 +29,7 @@
 #include "mathfunc.h"
 #include <string.h>
 #include "eigenlib.h"
+#include <cblas.h>
 
 const char *FastblasTrans = "T";
 const char *FastblasNoTrans = "N";
@@ -243,7 +244,12 @@ void fast_eigen_dgemm(const char *TransA, const char *TransB, const double alpha
  */
 
 #include <gsl/gsl_permutation.h>
-#include <gsl/gsl_linalg.h>
+// #include <gsl/gsl_linalg.h>
+
+extern "C" {
+  int gsl_linalg_LU_invert(const gsl_matrix * LU, const gsl_permutation * p, gsl_matrix * inverse);
+  int gsl_linalg_LU_decomp(gsl_matrix * A, gsl_permutation * p, int * signum);
+}
 
 void gsl_matrix_inv(gsl_matrix *m)  
 {  

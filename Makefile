@@ -76,15 +76,9 @@ GCC_FLAGS              = -DHAVE_INLINE -pthread -Wall -std=gnu++11 # extra flags
 GSL_INCLUDE_PATH =
 ifeq ($(SYS), WIN)
   GSL_INCLUDE_PATH = -isystemc:/MinGW/include -LC:/MinGW/lib
-  EIGEN_INCLUDE_PATH = ../eigen-git-mirror
   OPENBLAS_INCLUDE_PATH = ../OpenBLAS-v0.2.19-Win64-int32/include -L../OpenBLAS-v0.2.19-Win64-int32/lib
 else
   OPENBLAS_INCLUDE_PATH = /usr/local/opt/openblas/include
-  ifeq ($(SYS), OSX)
-    EIGEN_INCLUDE_PATH = /usr/local/include/eigen3
-  else
-    EIGEN_INCLUDE_PATH = /usr/include/eigen3
-  endif
   ifndef GUIX
     ifdef GUIX_ENVIRONMENT
       GUIX=$(GUIX_ENVIRONMENT)
@@ -93,7 +87,6 @@ else
   ifdef GUIX
     # Effectively disable paths for GNU Guix
     OPENBLAS_INCLUDE_PATH = .
-    # EIGEN_INCLUDE_PATH = $(GUIX)/include/eigen3
     # RPATH = -Xlinker --rpath=$(GUIX)/lib
     ifdef FORCE_STATIC
       LIBS = -L$(GUIX)/lib
@@ -118,7 +111,7 @@ else
 endif
 
 ifeq ($(CPP), clang++)
-  GCC_FLAGS=-std=c++11 -isystem$(OPENBLAS_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH)
+  GCC_FLAGS=-std=c++11 -isystem$(OPENBLAS_INCLUDE_PATH) 
   ifdef GUIX
     CPPFLAGS += -I$(GUIX)/include/c++ -I$(GUIX)/include/c++/x86_64-unknown-linux-gnu
   endif
@@ -147,9 +140,9 @@ debug check fast-check: CPPFLAGS += -g $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -Icontri
 
 profile: CPPFLAGS += -pg
 
-release: CPPFLAGS += -DNDEBUG -O3 $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
+release: CPPFLAGS += -DNDEBUG -O3 $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
 
-static: CPPFLAGS += -DNDEBUG -O3 $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
+static: CPPFLAGS += -DNDEBUG -O3 $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
 
 
 ifeq ($(SYS), WIN)
