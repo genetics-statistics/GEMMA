@@ -2,7 +2,7 @@
 #include <iostream>
 #include <fenv.h>
 #include "gsl/gsl_matrix.h"
-#include <cblas.h>
+// #include <cblas.h>
 
 #include <algorithm>
 #include <limits>
@@ -63,13 +63,13 @@ TEST_CASE( "Math functions", "[math]" ) {
 
   // ---- NaN checks
   vector<double> v = {1.0, 2.0};
-  REQUIRE (!std::isnan(std::accumulate(v.begin(), v.end(), 0)));
+  // REQUIRE (!isnan(std::accumulate(v.begin(), v.end(), 0)));
   vector<double> v2 = {1.0, 2.0, std::numeric_limits<double>::quiet_NaN()};
-  REQUIRE (std::isnan(v2[2]));
+  REQUIRE (isnan(v2[2]));
   REQUIRE(has_nan(v2));
   // test minus nan
   vector<double> v3 = {1.0, 2.0, -std::numeric_limits<double>::quiet_NaN()};
-  REQUIRE (std::isnan(v3[2]));
+  REQUIRE (isnan(v3[2]));
   REQUIRE(has_nan(v3));
 }
 

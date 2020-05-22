@@ -31,7 +31,7 @@
 using namespace std;
 
 inline bool is_nan(double f) {
-  return (std::isnan(f));
+  return (isnan(f));
 }
 
 #define is_inf(d) gsl_isinf(d)

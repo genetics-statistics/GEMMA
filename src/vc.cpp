@@ -43,7 +43,6 @@
 
 // #include "Eigen/Dense"
 
-#include "eigenlib.h"
 #include "gzstream.h"
 #include "gemma_io.h"
 #include "lapack.h"
@@ -51,6 +50,7 @@
 #include "mathfunc.h"
 #include "param.h"
 #include "vc.h"
+#include "fastblas.h"
 
 using namespace std;
 // using namespace Eigen;
@@ -198,16 +198,16 @@ void UpdateParam(const gsl_vector *log_sigma2, VC_PARAM *p) {
   }
 
   // Calculate H^{-1}.
-  eigenlib_invert(p->P);
+  fast_inverse(p->P);
 
-  eigenlib_dgemm("N", "N", 1.0, p->P, p->W, 0.0, HiW);
-  eigenlib_dgemm("T", "N", 1.0, p->W, HiW, 0.0, WtHiW);
+  fast_dgemm("N", "N", 1.0, p->P, p->W, 0.0, HiW);
+  fast_dgemm("T", "N", 1.0, p->W, HiW, 0.0, WtHiW);
 
-  eigenlib_invert(WtHiW);
+  fast_inverse(WtHiW);
   gsl_matrix_memcpy(WtHiWi, WtHiW);
 
-  eigenlib_dgemm("N", "T", 1.0, WtHiWi, HiW, 0.0, WtHiWiWtHi);
-  eigenlib_dgemm("N", "N", -1.0, HiW, WtHiWiWtHi, 1.0, p->P);
+  fast_dgemm("N", "T", 1.0, WtHiWi, HiW, 0.0, WtHiWiWtHi);
+  fast_dgemm("N", "N", -1.0, HiW, WtHiWiWtHi, 1.0, p->P);
 
   // Calculate Py, KPy, PKPy.
   gsl_blas_dgemv(CblasNoTrans, 1.0, p->P, p->y, 0.0, p->Py);
@@ -224,7 +224,7 @@ void UpdateParam(const gsl_vector *log_sigma2, VC_PARAM *p) {
           gsl_matrix_const_submatrix(p->K, 0, n1 * i, n1, n1);
 
       // Seems to be important to use gsl dgemv here instead of
-      // eigenlib_dgemv; otherwise.
+      // fast_dgemv; otherwise.
       gsl_blas_dgemv(CblasNoTrans, 1.0, &K_sub.matrix, p->Py, 0.0, &KPy.vector);
     }
 
@@ -232,15 +232,15 @@ void UpdateParam(const gsl_vector *log_sigma2, VC_PARAM *p) {
 
     // When phenotypes are not normalized well, then some values in
     // the following matrix maybe NaN; change that to 0; this seems to
-    // only happen when eigenlib_dgemv was used above.
+    // only happen when fast_dgemv was used above.
     for (size_t j = 0; j < p->KPy_mat->size1; j++) {
       d = gsl_matrix_get(p->KPy_mat, j, i);
-      if (std::isnan(d)) {
+      if (isnan(d)) {
         gsl_matrix_set(p->KPy_mat, j, i, 0);
         cout << "nan appears in " << i << " " << j << endl;
       }
       d = gsl_matrix_get(p->PKPy_mat, j, i);
-      if (std::isnan(d)) {
+      if (isnan(d)) {
         gsl_matrix_set(p->PKPy_mat, j, i, 0);
         cout << "nan appears in " << i << " " << j << endl;
       }

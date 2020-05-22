@@ -39,6 +39,7 @@
 #include "gemma_io.h"
 #include "mathfunc.h"
 #include "param.h"
+#include "fastblas.h"
 
 using namespace std;
 
@@ -1412,7 +1413,7 @@ void compKtoV(const gsl_matrix *G, gsl_matrix *V) {
           gsl_matrix_const_submatrix(G, 0, j * ni_test, ni_test, ni_test);
       gsl_matrix_view KiKj_sub =
           gsl_matrix_submatrix(KiKj, 0, t * ni_test, ni_test, ni_test);
-      eigenlib_dgemm("N", "N", 1.0, &Ki.matrix, &Kj.matrix, 0.0,
+      fast_dgemm("N", "N", 1.0, &Ki.matrix, &Kj.matrix, 0.0,
                      &KiKj_sub.matrix);
       t++;
     }

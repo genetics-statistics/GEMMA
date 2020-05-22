@@ -37,4 +37,6 @@ void fast_eigen_dgemm(const char *TransA, const char *TransB, const double alpha
                       const gsl_matrix *A, const gsl_matrix *B, const double beta,
                       gsl_matrix *C);
 
+void fast_inverse(gsl_matrix *m);
+
 #endif

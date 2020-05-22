@@ -1582,7 +1582,7 @@ void LMM::Analyze(std::function< SnpNameValues(size_t) >& fetch_snp,
         continue;
 
       double geno = gs[i];
-      if (std::isnan(geno)) {
+      if (isnan(geno)) {
         gsl_vector_set(x_miss, pos, 1.0);
         n_miss++;
       } else {
@@ -1829,7 +1829,7 @@ void LMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
           gsl_matrix_submatrix(UtXlarge, 0, 0, UtXlarge->size1, l);
 
       time_start = clock();
-      eigenlib_dgemm("T", "N", 1.0, U, &Xlarge_sub.matrix, 0.0,
+      fast_dgemm("T", "N", 1.0, U, &Xlarge_sub.matrix, 0.0,
                      &UtXlarge_sub.matrix);
       time_UtX += (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
 

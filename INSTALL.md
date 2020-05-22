@@ -17,7 +17,6 @@ dependencies:
 * GNU Science library (GSL) 1.x (GEMMA does not currently work with GSL >= 2).
 * blas/openblas
 * lapack
-* [Eigen3 library](http://eigen.tuxfamily.org/dox/)
 * zlib
 
 See below for installation on Guix.
@@ -51,9 +50,15 @@ using the following command
 
 To build GEMMA from source you can opt to install the build tools with GNU Guix
 
-    guix package -i make gcc linux-libre-headers gsl eigen openblas lapack glibc ld-wrapper
+    guix package -i make gcc linux-libre-headers gsl openblas lapack glibc ld-wrapper
+
+The current build container is
+
+    guix environment -C guix --ad-hoc gcc-toolchain gdb gsl openblas zlib bash ld-wrapper perl vim
 
 ### Install from source
+
+Note: Eigen is no longer required!
 
 Install listed dependencies and run
 
