@@ -25,9 +25,9 @@
 #include <iostream>
 extern "C"
 {
-   #include <cblas.h>   // For OpenBlas / Atlas
+  // #include <cblas.h>   // For OpenBlas / Atlas
 }
-#include "gsl/gsl_matrix.h"
+// #include "gsl/gsl_matrix.h"
 
 void fast_cblas_dgemm(const enum CBLAS_ORDER Order,
                       const enum CBLAS_TRANSPOSE TransA,

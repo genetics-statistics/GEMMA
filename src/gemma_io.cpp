@@ -1470,7 +1470,7 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
         gsl_vector_set(geno_miss, i, 0);
         n_miss++;
       } else {
-        double d = stod(field);
+        double d = atof(field);
         if (is_strict_mode() && d == 0.0)
           enforce_is_float(std::string(field));  // rule out non NA and non-float fields
         gsl_vector_set(geno, i, d);

@@ -93,7 +93,7 @@ else
   ifdef GUIX
     # Effectively disable paths for GNU Guix
     OPENBLAS_INCLUDE_PATH = .
-    EIGEN_INCLUDE_PATH = $(GUIX)/include/eigen3
+    # EIGEN_INCLUDE_PATH = $(GUIX)/include/eigen3
     # RPATH = -Xlinker --rpath=$(GUIX)/lib
     ifdef FORCE_STATIC
       LIBS = -L$(GUIX)/lib
@@ -139,11 +139,11 @@ else
 endif
 
 ifneq ($(CXX), clang++)
-  # Clang does not like this switch
-  debug check fast-check: CPPFLAGS += -Og
+  # Clang does not like these switches
+  debug check fast-check: CPPFLAGS += -Og -Wfatal-errors
 endif
 
-debug check fast-check: CPPFLAGS += -g $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -isystem$(EIGEN_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
+debug check fast-check: CPPFLAGS += -g $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
 
 profile: CPPFLAGS += -pg
 

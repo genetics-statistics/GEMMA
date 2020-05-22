@@ -18,7 +18,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "gsl/gsl_matrix.h"
+// #include "gsl/gsl_matrix.h"
 #include <algorithm>    // std::min
 #include <cmath>
 #include <iomanip>
@@ -235,8 +235,39 @@ void fast_dgemm(const char *TransA, const char *TransB, const double alpha,
 void fast_eigen_dgemm(const char *TransA, const char *TransB, const double alpha,
                       const gsl_matrix *A, const gsl_matrix *B, const double beta,
                       gsl_matrix *C) {
-  if (is_legacy_mode())
-    eigenlib_dgemm(TransA,TransB,alpha,A,B,beta,C);
-  else
     fast_cblas_dgemm(TransA,TransB,alpha,A,B,beta,C);
 }
+
+/*
+ *  Inverse in place
+ */
+
+#include <gsl/gsl_permutation.h>
+#include <gsl/gsl_linalg.h>
+
+void gsl_matrix_inv(gsl_matrix *m)  
+{  
+    size_t n=m->size1;  
+  
+    gsl_matrix *temp1=gsl_matrix_calloc(n,n);  
+    gsl_matrix_memcpy(temp1,m);  
+  
+    gsl_permutation *p=gsl_permutation_calloc(n);  
+    int sign=0;  
+    gsl_linalg_LU_decomp(temp1,p,&sign);  
+    gsl_matrix *inverse=gsl_matrix_calloc(n,n);  
+  
+    gsl_linalg_LU_invert(temp1,p,inverse);  
+    gsl_matrix_memcpy(m,inverse);  
+  
+    gsl_permutation_free(p);  
+    gsl_matrix_free(temp1);  
+    gsl_matrix_free(inverse);  
+  
+}
+
+void fast_inverse(gsl_matrix *m) {
+    gsl_matrix_inv(m);
+}
+
+  

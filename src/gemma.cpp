@@ -2697,25 +2697,25 @@ void GEMMA::BatchRun(PARAM &cPar) {
 
         CalcLambda('L', eval, UtW, &UtY_col.vector, cPar.l_min, cPar.l_max,
                    cPar.n_region, cPar.l_mle_null, cPar.logl_mle_H0);
-        assert(!std::isnan(UtY->data[0]));
+        assert(!isnan(UtY->data[0]));
 
         CalcLmmVgVeBeta(eval, UtW, &UtY_col.vector, cPar.l_mle_null,
                         cPar.vg_mle_null, cPar.ve_mle_null, &beta.vector,
                         &se_beta.vector);
 
-        assert(!std::isnan(UtY->data[0]));
+        assert(!isnan(UtY->data[0]));
 
         cPar.beta_mle_null.clear();
         cPar.se_beta_mle_null.clear();
-        assert(!std::isnan(B->data[0]));
-        assert(!std::isnan(se_B->data[0]));
+        assert(!isnan(B->data[0]));
+        assert(!isnan(se_B->data[0]));
         for (size_t i = 0; i < B->size2; i++) {
           cPar.beta_mle_null.push_back(gsl_matrix_get(B, 0, i));
           cPar.se_beta_mle_null.push_back(gsl_matrix_get(se_B, 0, i));
         }
-        assert(!std::isnan(UtY->data[0]));
-        assert(!std::isnan(cPar.beta_mle_null.front()));
-        assert(!std::isnan(cPar.se_beta_mle_null.front()));
+        assert(!isnan(UtY->data[0]));
+        assert(!isnan(cPar.beta_mle_null.front()));
+        assert(!isnan(cPar.se_beta_mle_null.front()));
 
         // the following functions do not modify eval
         CalcLambda('R', eval, UtW, &UtY_col.vector, cPar.l_min, cPar.l_max,
@@ -2726,8 +2726,8 @@ void GEMMA::BatchRun(PARAM &cPar) {
 
         cPar.beta_remle_null.clear();
         cPar.se_beta_remle_null.clear();
-        assert(!std::isnan(B->data[0]));
-        assert(!std::isnan(se_B->data[0]));
+        assert(!isnan(B->data[0]));
+        assert(!isnan(se_B->data[0]));
 
         for (size_t i = 0; i < B->size2; i++) {
           cPar.beta_remle_null.push_back(gsl_matrix_get(B, 0, i));
@@ -3124,7 +3124,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
   return;
 }
 
-#include "Eigen/Dense"
+// #include "Eigen/Dense"
 
 void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
   string file_str;
@@ -3144,7 +3144,7 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
   outfile << "## GCC version      = " << __GNUC__ << "." << __GNUC_MINOR__ << "." << __GNUC_PATCHLEVEL__ << endl;
   #endif
   outfile << "## GSL Version      = " << GSL_VERSION << endl;
-  outfile << "## Eigen Version    = " << EIGEN_WORLD_VERSION << "." << EIGEN_MAJOR_VERSION << "." << EIGEN_MINOR_VERSION << endl;
+  // outfile << "## Eigen Version    = " << EIGEN_WORLD_VERSION << "." << EIGEN_MAJOR_VERSION << "." << EIGEN_MINOR_VERSION << endl;
 #ifdef OPENBLAS
 
   #ifndef OPENBLAS_LEGACY
