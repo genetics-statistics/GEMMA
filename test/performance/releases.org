@@ -90,6 +90,70 @@ trix const*, gsl_matrix*, gsl_matrix*)
 onst*)
 #+END_SRC
 
+* GEMMA 0.99 (release)
+
+On a 26 core Intel(R) Xeon(R) CPU E5-2683 v3 @ 2.00GHz
+
+The newer OpenBLAS is a tad faster on multi-core at the expense of
+user land.
+
+#+begin_src sh
+time ./bin/gemma -g ./example/mouse_hs1940.geno.txt.gz -p ./example/mouse_hs1940.pheno.txt -a ./example/mouse_hs1940.anno.txt -gk -no-check
+GEMMA 0.98.2 (2020-05-28) by Xiang Zhou and team (C) 2012-2020
+Reading Files ...
+## number of total individuals = 1940
+## number of analyzed individuals = 1410
+## number of covariates = 1
+## number of phenotypes = 1
+## number of total SNPs/var        =    12226
+## number of analyzed SNPs         =    10768
+Calculating Relatedness Matrix ...
+================================================== 100%
+**** INFO: Done.
+
+real    0m7.590s
+user    0m30.392s
+sys     0m12.072s
+
+while
+
+time ./gemma-0.98.1-linux-static -g ./example/mouse_hs1940.geno.txt.gz -p ./example/mouse_hs1940.pheno.txt -a ./example/mouse_hs1940.anno.txt -gk -no-check
+GEMMA 0.98.1 (2018-12-10) by Xiang Zhou and team (C) 2012-2018
+real    0m9.272s
+user    0m13.904s
+sys     0m1.636s
+#+end_src
+
+#+begin_src sh
+penguin2:~/iwrk/opensource/code/genetics/gemma$ time ./bin/gemma -g ./example/mouse_hs1940.geno.txt.gz -p ./example/mouse_hs1940.pheno.txt -n 1 -a ./example/mouse_hs1940.anno.txt -k ./output/result.cXX.txt -lmm -no-check
+GEMMA 0.98.2 (2020-05-28) by Xiang Zhou and team (C) 2012-2020
+Reading Files ...
+## number of total individuals = 1940
+## number of analyzed individuals = 1410
+## number of covariates = 1
+## number of phenotypes = 1
+## number of total SNPs/var        =    12226
+## number of analyzed SNPs         =    10768
+Start Eigen-Decomposition...
+pve estimate =0.608801
+se(pve) =0.032774
+================================================== 100%
+**** INFO: Done.
+
+real    0m17.813s
+user    0m43.460s
+sys     0m36.208s
+
+penguin2:~/iwrk/opensource/code/genetics/gemma$ time ./gemma-0.98.1-linux-static -g ./example/mouse_hs1940.geno.txt.gz -p ./example/mouse_hs1940.pheno.txt -n 1 -a ./example/mouse_hs1940.anno.txt -k ./output/result.cXX.txt -lmm -no-check
+GEMMA 0.98.1 (2018-12-10) by Xiang Zhou and team (C) 2012-2018
+Reading Files ...
+
+real    0m19.481s
+user    0m23.072s
+sys     0m2.684s
+
+#+end_src
+
 * GEMMA 0.98 (release)
 
 #+BEGIN_SRC bash
