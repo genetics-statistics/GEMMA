@@ -9,6 +9,8 @@ and
 GCC 10.1 fix release
 
 * Fix build on gcc 10.1 (mostly BLAS include files)
+* Removed Eigenlib dependencies and modifed test results to match openblas output
+* Also tested with guix gcc-toolchain@8.4.0 gdb gsl openblas zlib bash ld-wrapper perl vim which
 
 ## ChangeLog v0.98.1 (2018/12/10)
 
