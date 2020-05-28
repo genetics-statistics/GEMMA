@@ -4,6 +4,12 @@ see
 and
 [commits](https://github.com/genetics-statistics/GEMMA/commits/master).
 
+## ChangeLog v0.98.2 (2018/05/28)
+
+GCC 10.1 fix release
+
+* Fix build on gcc 10.1 (mostly BLAS include files)
+
 ## ChangeLog v0.98.1 (2018/12/10)
 
 Bug fix release
