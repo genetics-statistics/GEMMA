@@ -178,7 +178,7 @@ testPlinkLinearMixedModelCovariates() {
     assertEquals 0 $?
     outfn=output/$testname.assoc.txt
     assertEquals "223243" `wc -l < $outfn`
-    assertEquals "89757159113.77" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+    assertEquals "89757159113.94" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
 shunit2=`which shunit2`
