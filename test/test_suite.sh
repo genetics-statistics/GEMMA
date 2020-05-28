@@ -26,7 +26,7 @@ testBslmm2() {
            -gk 1 -o $outn
     assertEquals 0 $?
     outfn=output/$outn.cXX.txt
-    assertEquals "579.66" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+    assertEquals "579.50" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
 testBslmm3() {
@@ -87,7 +87,7 @@ testCenteredRelatednessMatrixKFullLOCO1() {
     assertEquals 0 $?
     outfn=output/$outn.cXX.txt
     assertEquals "1940" `wc -l < $outfn`
-    assertEquals "2246.57" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+    assertEquals "2246.49" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
 testUnivariateLinearMixedModelFullLOCO1() {
@@ -105,7 +105,7 @@ testUnivariateLinearMixedModelFullLOCO1() {
     assertEquals 0 $?
     outfn=output/$outn.assoc.txt
     assertEquals "951" `wc -l < $outfn`
-    assertEquals "267507851.98" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+    assertEquals "267507852.03" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
 testCenteredRelatednessMatrixK() {
@@ -117,7 +117,7 @@ testCenteredRelatednessMatrixK() {
     assertEquals "1940" `wc -l < $outfn`
     assertEquals "3763600" `wc -w < $outfn`
     assertEquals "0.335" `head -c 5 $outfn`
-    assertEquals "1119.64" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+    assertEquals "1119.60" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
 testUnivariateLinearMixedModel() {
@@ -133,7 +133,7 @@ testUnivariateLinearMixedModel() {
     assertEquals 0 $?
     outfn=output/mouse_hs1940_CD8_lmm.assoc.txt
     assertEquals "129228" `wc -w < $outfn`
-    assertEquals "4038540440.86" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+    assertEquals "4038540440.81" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
 testLinearMixedModelPhenotypes() {
@@ -148,7 +148,7 @@ testLinearMixedModelPhenotypes() {
 
     outfn=output/mouse_hs1940_CD8MCH_lmm.assoc.txt
     assertEquals "139867" `wc -w < $outfn`
-    assertEquals "4029037056.54" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+    assertEquals "4029037056.58" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
 testPlinkStandardRelatednessMatrixK() {
@@ -160,7 +160,7 @@ testPlinkStandardRelatednessMatrixK() {
            -gk 2 -o $testname
     assertEquals 0 $?
     assertEquals "427" `wc -l < $outfn`
-    assertEquals "-358.07" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+    assertEquals "-358.05" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
 # Test for https://github.com/genetics-statistics/GEMMA/issues/58

@@ -16,7 +16,7 @@ testLinearModel() {
     assertEquals 0 $?
     outfn=output/mouse_hs1940_CD8_lm.assoc.txt
     assertEquals "118459" `wc -w < $outfn`
-    assertEquals "4053667109.69" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+    assertEquals "4053667109.67" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
 # Related to https://github.com/genetics-statistics/GEMMA/issues/78
@@ -46,7 +46,7 @@ testBXDStandardRelatednessMatrixK() {
     assertEquals 0 $?
     outfn=output/$outn.cXX.txt
     assertEquals "198" `wc -l < $outfn`
-    assertEquals "-116.11" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+    assertEquals "-116.13" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
 testBXDLMLikelihoodRatio() {
@@ -62,7 +62,7 @@ testBXDLMLikelihoodRatio() {
 
     outfn=output/$outn.assoc.txt
     assertEquals "95134" `wc -w < $outfn`
-    assertEquals "3089042886.28" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+    assertEquals "3089042886.08" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
 testBXDLMMLikelihoodRatio() {
@@ -78,7 +78,7 @@ testBXDLMMLikelihoodRatio() {
 
     outfn=output/$outn.assoc.txt
     assertEquals "73180" `wc -w < $outfn`
-    assertEquals "3088458212.93" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+    assertEquals "3088458212.86" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
 testCenteredRelatednessMatrixissue188() {
@@ -87,7 +87,7 @@ testCenteredRelatednessMatrixissue188() {
     $gemma $gemmaopts -b data/issue188/2000 -gk -o $outn
     assertEquals 0 $?
     outfn=output/$outn.cXX.txt
-    assertEquals "193.80" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+    assertEquals "193.78" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
 testLMMissue188() {

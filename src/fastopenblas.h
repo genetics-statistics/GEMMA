@@ -21,13 +21,8 @@
 #ifndef __FASTOPENBLAS_H__
 #define __FASTOPENBLAS_H__
 
-#include <assert.h>
-#include <iostream>
-extern "C"
-{
-  #include <cblas.h>   // For OpenBlas / Atlas
-}
-// #include "gsl/gsl_matrix.h"
+// #include <assert.h>
+// #include <iostream>
 
 void fast_cblas_dgemm(const enum CBLAS_ORDER ,
                       const enum CBLAS_TRANSPOSE TransA,

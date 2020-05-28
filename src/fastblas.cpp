@@ -18,18 +18,13 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-// #include "gsl/gsl_matrix.h"
 #include <algorithm>    // std::min
 #include <cmath>
 #include <iomanip>
 #include <vector>
 #include "debug.h"
-#include "fastblas.h"
-#include "fastopenblas.h"
 #include "mathfunc.h"
 #include <string.h>
-#include "eigenlib.h"
-#include <cblas.h>
 
 const char *FastblasTrans = "T";
 const char *FastblasNoTrans = "N";
