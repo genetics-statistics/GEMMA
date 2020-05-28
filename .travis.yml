@@ -15,16 +15,9 @@ matrix:
             - g++-4.9
             - libopenblas-dev
             - zlib1g-dev
-            - libeigen3-dev
             - libgsl0-dev
-            - liblapack-dev
-            # - gfortran-dev for static
-      env:
-         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9 && EIGEN_INCLUDE_PATH=/usr/include/eigen3"
     - os: osx
       compiler: clang
-      env:
-         - MATRIX_EVAL="EIGEN_INCLUDE_PATH=/usr/local/include/eigen3"
 #     - os: linux
 #       addons:
 #         apt:
@@ -41,8 +34,8 @@ script:
   - eval "${MATRIX_EVAL}"
   - $CXX --version
   # build and test debug version
-  - make      CXX=$CXX EIGEN_INCLUDE_PATH=$EIGEN_INCLUDE_PATH WITH_LAPACK=1 OPENBLAS_LEGACY=1 WITH_GSLCBLAS=1 -j 4 -k
-  - time make CXX=$CXX EIGEN_INCLUDE_PATH=$EIGEN_INCLUDE_PATH WITH_LAPACK=1 OPENBLAS_LEGACY=1 WITH_GSLCBLAS=1 check
+  - make      CXX=$CXX OPENBLAS_LEGACY=1 WITH_GSLCBLAS=1 -j 4 -k
+  - time make CXX=$CXX OPENBLAS_LEGACY=1 WITH_GSLCBLAS=1 check
   # - make clean
   # build and test release version (integration test mostly)
   # - make CXX=$CXX EIGEN_INCLUDE_PATH=$EIGEN_INCLUDE_PATH DEBUG= FORCE_DYNAMIC=1 WITH_OPENBLAS=1 OPENBLAS_LEGACY=1 -j 4
