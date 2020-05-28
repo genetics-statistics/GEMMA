@@ -1,8 +1,6 @@
 #include <catch.hpp>
 #include <iostream>
 #include <fenv.h>
-#include "gsl/gsl_matrix.h"
-// #include <cblas.h>
 
 #include <algorithm>
 #include <limits>

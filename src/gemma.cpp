@@ -28,7 +28,7 @@
 #ifdef OPENBLAS
 extern "C" {
   // these functions are defined in cblas.h - but if we include that we
-  // conflicts with other BLAS includes
+  // conflicts with other BLAS includes (GSL)
   int openblas_get_num_threads(void);
   int openblas_get_parallel(void);
   char* openblas_get_config(void);
