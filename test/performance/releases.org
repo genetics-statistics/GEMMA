@@ -90,7 +90,49 @@ trix const*, gsl_matrix*, gsl_matrix*)
 onst*)
 #+END_SRC
 
-* GEMMA 0.99 (release)
+* GEMMA 0.98.2 (release)
+
+Looks like openblas is getting faster. Two metrics on the same machine:
+
+#+BEGIN_SRC sh
+lario:~/iwrk/opensource/code/genetics/gemma$ time ~/opt/gemma-gn2/bin/gemma -g ./example/mouse_hs1940.geno.txt.gz -p ./example/mouse_hs1940.pheno.txt -a ./example/mouse_hs1940.anno.txt -gk -no-check
+GEMMA 0.98.2 (2020-05-28) by Xiang Zhou and team (C) 2012-2020
+Reading Files ...
+## number of total individuals = 1940
+## number of analyzed individuals = 1410
+## number of covariates = 1
+## number of phenotypes = 1
+## number of total SNPs/var        =    12226
+## number of analyzed SNPs         =    10768
+Calculating Relatedness Matrix ...
+================================================== 100%
+**** INFO: Done.
+
+real    0m7.635s
+user    0m14.821s
+sys     0m1.077s
+#+END_SRC
+
+
+#+BEGIN_SRC sh
+lario:~/iwrk/opensource/code/genetics/gemma$ time ./bin/gemma-0.98-linux-static -g ./example/mouse_hs1940.geno.txt.gz -p ./example/mouse_hs1940.pheno.txt -a ./example/mouse_hs1940.anno.txt -gk -no-check
+GEMMA 0.98 (2018-09-28) by Xiang Zhou and team (C) 2012-2018
+Reading Files ...
+## number of total individuals = 1940
+## number of analyzed individuals = 1410
+## number of covariates = 1
+## number of phenotypes = 1
+## number of total SNPs/var        =    12226
+## number of analyzed SNPs         =    10768
+Calculating Relatedness Matrix ...
+================================================== 100%
+**** INFO: Done.
+
+real    0m10.663s
+user    0m20.994s
+sys     0m4.268s
+#+END_SRC
+
 
 On a 26 core Intel(R) Xeon(R) CPU E5-2683 v3 @ 2.00GHz
 
@@ -155,6 +197,7 @@ sys     0m2.684s
 #+end_src
 
 * GEMMA 0.98 (release)
+
 
 #+BEGIN_SRC bash
         libgsl.so.23 => /gnu/store/79fw0qqlgpk7n8vll6lnlc4ahahn4gbw-profile/lib/libgsl.so.23 (0x00007fcb53b1f000)
