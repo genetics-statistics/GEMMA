@@ -1765,6 +1765,7 @@ void PARAM::CalcS(const map<string, double> &mapRS2wA,
     gsl_matrix_view Ksub =
         gsl_matrix_submatrix(K, 0, i * ni_test, ni_test, ni_test);
     CenterMatrix(&Ksub.matrix);
+    // Scale the matrix G such that the mean diagonal = 1.
     ScaleMatrix(&Ksub.matrix);
 
     gsl_matrix_view Asub =

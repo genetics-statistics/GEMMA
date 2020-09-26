@@ -2,7 +2,7 @@
     Genome-wide Efficient Mixed Model Association (GEMMA)
     Copyright © 2011-2017, Xiang Zhou
     Copyright © 2017, Peter Carbonetto
-    Copyright © 2017, Pjotr Prins
+    Copyright © 2017-2020, Pjotr Prins
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -1494,7 +1494,7 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
 
     gsl_vector_add_constant(geno, -1.0 * geno_mean);
 
-    if (k_mode == 2 && geno_var != 0) {
+    if (k_mode == 2 && geno_var != 0) { // centering
       gsl_vector_scale(geno, 1.0 / sqrt(geno_var));
     }
     // set the SNP column ns_test

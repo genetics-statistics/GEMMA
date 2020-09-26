@@ -169,6 +169,7 @@ void CenterMatrix(gsl_matrix *G) {
 }
 
 // Center the matrix G.
+// Only used in vc
 void CenterMatrix(gsl_matrix *G, const gsl_vector *w) {
   double d, wtw;
   gsl_vector *Gw = gsl_vector_safe_alloc(G->size1);
@@ -192,6 +193,7 @@ void CenterMatrix(gsl_matrix *G, const gsl_vector *w) {
 }
 
 // Center the matrix G.
+// Only used in vc
 void CenterMatrix(gsl_matrix *G, const gsl_matrix *W) {
   gsl_matrix *WtW = gsl_matrix_safe_alloc(W->size2, W->size2);
   gsl_matrix *WtWi = gsl_matrix_safe_alloc(W->size2, W->size2);
@@ -233,6 +235,7 @@ void CenterMatrix(gsl_matrix *G, const gsl_matrix *W) {
 }
 
 // "Standardize" the matrix G such that all diagonal elements = 1.
+// (only used by vc)
 void StandardizeMatrix(gsl_matrix *G) {
   double d = 0.0;
   vector<double> vec_d;
@@ -260,11 +263,13 @@ void StandardizeMatrix(gsl_matrix *G) {
 double ScaleMatrix(gsl_matrix *G) {
   double d = 0.0;
 
+  // Compute mean of diagonal
   for (size_t i = 0; i < G->size1; ++i) {
     d += gsl_matrix_get(G, i, i);
   }
   d /= (double)G->size1;
 
+  // Scale the matrix using the diagonal mean
   if (d != 0) {
     gsl_matrix_scale(G, 1.0 / d);
   }
