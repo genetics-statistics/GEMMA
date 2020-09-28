@@ -1482,6 +1482,9 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
       token_i++;
     }
 
+    if (ns_test<1)
+      write(geno,"geno raw");
+
     geno_mean /= (double)(ni_total - n_miss);
     geno_var += geno_mean * geno_mean * (double)n_miss;
     geno_var /= (double)ni_total;
@@ -1494,14 +1497,19 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
       }
     }
 
-    // subtract the mean
-    gsl_vector_add_constant(geno, -1.0 * geno_mean);
+    if (ns_test<1) write(geno,"geno imputed");
 
-    // center the genotypes
+    // subtract the mean (centering genotype values)
+    gsl_vector_add_constant(geno, -1.0 * geno_mean);
+    if (ns_test<1) write(geno,"geno mean");
+
+    // z-score the genotypes
     if (k_mode == 2 && geno_var != 0) { // centering
       gsl_vector_scale(geno, 1.0 / sqrt(geno_var));
     }
-    write(geno,"geno");
+
+    if (ns_test<1) write(geno,"geno z-scored");
+
     // set the SNP column ns_test
     gsl_vector_view Xlarge_col = gsl_matrix_column(Xlarge, ns_test % msize);
     enforce_gsl(gsl_vector_memcpy(&Xlarge_col.vector, geno));
