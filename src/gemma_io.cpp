@@ -1482,13 +1482,15 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
       token_i++;
     }
 
-    if (ns_test<1)
-      write(geno,"geno raw");
-
     geno_mean /= (double)(ni_total - n_miss);
     geno_var += geno_mean * geno_mean * (double)n_miss;
     geno_var /= (double)ni_total;
     geno_var -= geno_mean * geno_mean;
+
+    if (ns_test<1) {
+      write(geno,"geno raw");
+      write(geno_mean,"geno mean");
+    }
 
     // impute missing values by plugging in the mean
     for (size_t i = 0; i < ni_total; ++i) {
@@ -1504,7 +1506,7 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
     if (ns_test<1) write(geno,"geno mean");
 
     // z-score the genotypes
-    if (k_mode == 2 && geno_var != 0) { // centering
+    if (k_mode == 2 && geno_var != 0) { // some confusion here
       gsl_vector_scale(geno, 1.0 / sqrt(geno_var));
     }
 

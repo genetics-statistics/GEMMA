@@ -160,6 +160,11 @@ void write(const char *s, const char *msg) {
   cout << s << ": " << msg << endl;
 }
 
+void write(const double d, const char *msg) {
+  if (!is_debug_data_mode()) return;
+  cout << d << ": " << msg << endl;
+}
+
 void write(const gsl_vector *v, const char *msg) {
   if (!is_debug_data_mode()) return;
   if (msg) cout << "// " << msg << endl;
