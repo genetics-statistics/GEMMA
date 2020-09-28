@@ -1415,6 +1415,7 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
   enforce_msg(Xlarge, "allocate Xlarge");
 
   gsl_matrix_set_zero(Xlarge);
+  write(matrix_kin,"K before");
 
   // For every SNP read the genotype per individual
   size_t ns_test = 0;
@@ -1505,7 +1506,7 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
     gsl_vector_add_constant(geno, -1.0 * geno_mean);
     if (ns_test<1) write(geno,"geno mean");
 
-    // z-score the genotypes
+    // scale the genotypes
     if (k_mode == 2 && geno_var != 0) { // some confusion here
       gsl_vector_scale(geno, 1.0 / sqrt(geno_var));
     }
@@ -1515,30 +1516,37 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
       write(geno,"geno z-scored");
     }
 
-    // set the SNP column ns_test
+    // set the SNP column ns_test to copy geno into the compute matrix Xlarge
     gsl_vector_view Xlarge_col = gsl_matrix_column(Xlarge, ns_test % msize);
     enforce_gsl(gsl_vector_memcpy(&Xlarge_col.vector, geno));
 
     ns_test++;
 
-    // compute kinship matrix and return in matrix_kin a SNP at a time
+    // Every msize rows batch compute kinship matrix and return
+    // by adding to matrix_kin
     if (ns_test % msize == 0) {
       fast_eigen_dgemm("N", "T", 1.0, Xlarge, Xlarge, 1.0, matrix_kin);
       gsl_matrix_set_zero(Xlarge);
+      write(matrix_kin,"K updated");
     }
   }
-  if (ns_test % msize != 0) {
+  if (ns_test % msize != 0) { // compute last batch
     fast_eigen_dgemm("N", "T", 1.0, Xlarge, Xlarge, 1.0, matrix_kin);
+    write(matrix_kin,"K updated");
   }
   ProgressBar("Reading SNPs", 100, 100);
   cout << endl;
 
-  // scale the kinship matrix
+  write(matrix_kin,"K prescaled");
+
+  // scale the kinship matrix (ns_test is used SNPs minus 1)
   write(ns_test,"ns_test scale");
   enforce_gsl(gsl_matrix_scale(matrix_kin, 1.0 / (double)ns_test));
 
+  write(matrix_kin,"K scaled");
   // and transpose
-  // FIXME: the following is not so slow
+  // FIXME: the following is not so slow but appears to generate an
+  // identical matrix
 
   for (size_t i = 0; i < ni_total; ++i) {
     for (size_t j = 0; j < i; ++j) {
@@ -1546,6 +1554,7 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
       gsl_matrix_set(matrix_kin, i, j, d);
     }
   }
+  write(matrix_kin,"K rotated");
   // GSL is faster - and there are even faster methods
   // enforce_gsl(gsl_matrix_transpose(matrix_kin));
 
