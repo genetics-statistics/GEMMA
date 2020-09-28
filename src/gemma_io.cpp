@@ -1510,7 +1510,10 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
       gsl_vector_scale(geno, 1.0 / sqrt(geno_var));
     }
 
-    if (ns_test<1) write(geno,"geno z-scored");
+    if (ns_test<1) {
+      write(geno_var,"geno var");
+      write(geno,"geno z-scored");
+    }
 
     // set the SNP column ns_test
     gsl_vector_view Xlarge_col = gsl_matrix_column(Xlarge, ns_test % msize);

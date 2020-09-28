@@ -163,7 +163,7 @@ void write(const char *s, const char *msg) {
 
 void write(const double d, const char *msg) {
   if (!is_debug_data_mode()) return;
-  cout << std::setprecision(3) << d << ": " << msg << endl;
+  cout << std::setprecision(6) << d << ": " << msg << endl;
 }
 
 void write(const gsl_vector *v, const char *msg) {
