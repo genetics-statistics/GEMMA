@@ -278,8 +278,8 @@ void CalcPab(const size_t n_cvt, const size_t e_mode, const gsl_vector *Hi_eval,
              const gsl_matrix *Uab, const gsl_vector *unused, gsl_matrix *Pab) {
 
 
-  size_t n_index = (n_cvt + 2 + 1) * (n_cvt + 2) / 2; // result size
-  auto ni_test = Uab->size1; // inds
+  // size_t n_index = (n_cvt + 2 + 1) * (n_cvt + 2) / 2; // result size
+  // auto ni_test = Uab->size1; // inds
   assert(Uab->size1 == Hi_eval->size);
   assert(Uab->size2 == n_index);
 
@@ -593,8 +593,8 @@ $7 = 3
 $8 = 6
   */
 
-  auto Uab = p->Uab;
-  auto ab = p->ab;
+    // auto Uab = p->Uab;
+    // auto ab = p->ab;
   assert(n_index == (n_cvt + 2 + 1) * (n_cvt + 2) / 2);
   assert(Uab->size1 == ni_test);
   assert(Uab->size2 == n_index); // n_cvt == 1 -> n_index == 6?

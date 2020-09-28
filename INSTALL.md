@@ -13,7 +13,7 @@ and it should give you the version.
 GEMMA runs on Linux and MAC OSX and the runtime has the following
 dependencies:
 
-* C++ tool chain >= 4.9
+* C++ tool chain >= 6.5.0 (we test with file .guix-dev-gcc-older)
 * GNU Science library (GSL) 1.x (GEMMA does not currently work with GSL >= 2).
 * blas/openblas
 * lapack

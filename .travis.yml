@@ -1,8 +1,5 @@
 language: C++
 matrix:
-  # OSX testing is under development
-  # allow_failures:
-  #   - os: osx
   include:
     - os: linux
       compiler: gcc
@@ -11,36 +8,11 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            # Our dev environment is a more recent GNU C++ and GSL2
-            - g++-4.9
+            - libgsl-dev
             - libopenblas-dev
-            - zlib1g-dev
-            - libgsl0-dev
-    - os: osx
-      compiler: clang
-#     - os: linux
-#       addons:
-#         apt:
-#           sources:
-#             - ubuntu-toolchain-r-test
-#           packages:
-#             - g++-6
-#       env:
-#         - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
-before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update && brew install gsl openblas zlib eigen lapack ; fi
 script:
   - echo $MATRIX_EVAL
   - eval "${MATRIX_EVAL}"
   - $CXX --version
-  # build and test debug version
-  - make      CXX=$CXX OPENBLAS_LEGACY=1 WITH_GSLCBLAS=1 -j 4 -k
-  - time make CXX=$CXX OPENBLAS_LEGACY=1 WITH_GSLCBLAS=1 check
-  # - make clean
-  # build and test release version (integration test mostly)
-  # - make CXX=$CXX EIGEN_INCLUDE_PATH=$EIGEN_INCLUDE_PATH DEBUG= FORCE_DYNAMIC=1 WITH_OPENBLAS=1 OPENBLAS_LEGACY=1 -j 4
-  # - time make CXX=$CXX DEBUG= WITH_OPENBLAS=1 fast-check
-  # build static release (fast-check only)
-  # - make clean
-  # - make CXX=$CXX TRAVIS_CI=1 -j 4 fast-check
-  # - ldd ./bin/gemma
+  - make -j 4 OPENBLAS_LEGACY=1 
+  - make OPENBLAS_LEGACY=1 fast-check

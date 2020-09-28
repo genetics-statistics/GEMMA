@@ -4,7 +4,10 @@ see
 and
 [commits](https://github.com/genetics-statistics/GEMMA/commits/master).
 
-## ChangeLog v0.98.2 (2018/05/28)
+## ChangeLog v0.98.3 (2020/?)
+
+
+## ChangeLog v0.98.2 (2019/05/28)
 
 GCC 10.1 fix release
 

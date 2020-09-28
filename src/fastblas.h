@@ -23,7 +23,8 @@
 
 #include <assert.h>
 #include <iostream>
-// #include "gsl/gsl_matrix.h"
+#include "gsl/gsl_cblas.h"
+#include "gsl/gsl_matrix.h"
 
 gsl_matrix *fast_copy(gsl_matrix *m, const double *mem);
 

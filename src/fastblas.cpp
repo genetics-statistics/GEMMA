@@ -2,7 +2,7 @@
     Genome-wide Efficient Mixed Model Association (GEMMA)
     Copyright © 2011-2017, Xiang Zhou
     Copyright © 2017, Peter Carbonetto
-    Copyright © 2017, Pjotr Prins
+    Copyright © 2017-2020, Pjotr Prins
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 #include "debug.h"
 #include "mathfunc.h"
 #include <string.h>
+#include "fastblas.h"
 
 const char *FastblasTrans = "T";
 const char *FastblasNoTrans = "N";
@@ -246,29 +247,27 @@ extern "C" {
   int gsl_linalg_LU_decomp(gsl_matrix * A, gsl_permutation * p, int * signum);
 }
 
-void gsl_matrix_inv(gsl_matrix *m)  
-{  
-    size_t n=m->size1;  
-  
-    gsl_matrix *temp1=gsl_matrix_calloc(n,n);  
-    gsl_matrix_memcpy(temp1,m);  
-  
-    gsl_permutation *p=gsl_permutation_calloc(n);  
-    int sign=0;  
-    gsl_linalg_LU_decomp(temp1,p,&sign);  
-    gsl_matrix *inverse=gsl_matrix_calloc(n,n);  
-  
-    gsl_linalg_LU_invert(temp1,p,inverse);  
-    gsl_matrix_memcpy(m,inverse);  
-  
-    gsl_permutation_free(p);  
-    gsl_matrix_free(temp1);  
-    gsl_matrix_free(inverse);  
-  
+void gsl_matrix_inv(gsl_matrix *m)
+{
+    size_t n=m->size1;
+
+    gsl_matrix *temp1=gsl_matrix_calloc(n,n);
+    gsl_matrix_memcpy(temp1,m);
+
+    gsl_permutation *p=gsl_permutation_calloc(n);
+    int sign=0;
+    gsl_linalg_LU_decomp(temp1,p,&sign);
+    gsl_matrix *inverse=gsl_matrix_calloc(n,n);
+
+    gsl_linalg_LU_invert(temp1,p,inverse);
+    gsl_matrix_memcpy(m,inverse);
+
+    gsl_permutation_free(p);
+    gsl_matrix_free(temp1);
+    gsl_matrix_free(inverse);
+
 }
 
 void fast_inverse(gsl_matrix *m) {
     gsl_matrix_inv(m);
 }
-
-  
