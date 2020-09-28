@@ -1428,6 +1428,7 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
     if (indicator_snp[t] == 0)
       continue;
 
+    // Using regular expressions is slow:
     // std::regex_token_iterator<std::string::iterator> rend;
     // regex split_on("[,[:blank:]]+");
     // regex_token_iterator<string::iterator> tokens(line.begin(), line.end(),
@@ -1438,10 +1439,10 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
       uint token_num = tokens.size();
       if (token_num != ni_total+3) {
         cerr << line << endl;
-        cerr << token_num << " != " << ni_total << endl;
-        warning_msg("Columns in geno file do not match # individuals");
+        cerr << token_num-3 << " != " << ni_total << endl;
+        warning_msg("Columns in geno file do not match # individuals in phenotypes");
       }
-      enforce_msg(token_num <= ni_total + 3,"not enough genotype fields");
+      enforce_msg(token_num <= ni_total + 3,"not enough genotype fields for marker");
     }
 
     auto token_i = tokens.begin();
@@ -1466,7 +1467,7 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
       auto field = *token_i;
       auto sfield = std::string(field);
       // cout << i << ":" << sfield << "," << endl;
-      if (strncmp(field,"NA",2)==0) {
+      if (strncmp(field,"NA",2)==0) { // missing value
         gsl_vector_set(geno_miss, i, 0);
         n_miss++;
       } else {
@@ -1486,17 +1487,21 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
     geno_var /= (double)ni_total;
     geno_var -= geno_mean * geno_mean;
 
+    // impute missing values by plugging in the mean
     for (size_t i = 0; i < ni_total; ++i) {
       if (gsl_vector_get(geno_miss, i) == 0) {
         gsl_vector_set(geno, i, geno_mean);
       }
     }
 
+    // subtract the mean
     gsl_vector_add_constant(geno, -1.0 * geno_mean);
 
+    // center the genotypes
     if (k_mode == 2 && geno_var != 0) { // centering
       gsl_vector_scale(geno, 1.0 / sqrt(geno_var));
     }
+    write(geno,"geno");
     // set the SNP column ns_test
     gsl_vector_view Xlarge_col = gsl_matrix_column(Xlarge, ns_test % msize);
     enforce_gsl(gsl_vector_memcpy(&Xlarge_col.vector, geno));

@@ -150,11 +150,19 @@ void CenterMatrix(gsl_matrix *G) {
   gsl_vector *Gw = gsl_vector_safe_alloc(G->size1);
   gsl_vector_set_all(w, 1.0);
 
+  //  y := alpha*A*x+ beta*y or Gw = G*w
   gsl_blas_dgemv(CblasNoTrans, 1.0, G, w, 0.0, Gw);
+
+  // int gsl_blas_dsyr2(CBLAS_UPLO_t Uplo, double alpha, const gsl_vector * x, const gsl_vector * y, gsl_matrix * A)
+  // compute the symmetric rank-2 update A = \alpha x y^T + \alpha y x^T + A of the symmetric matrix A. Since the matrix A is symmetric only its upper half or lower half need to be stored
+  // or G = (UpperTriangle) alpha*Gw*w' + alpha*w*Gw' + G
   gsl_blas_dsyr2(CblasUpper, -1.0 / (double)G->size1, Gw, w, G);
+  // compute dot product of vectors w.Gw and store in d
   gsl_blas_ddot(w, Gw, &d);
+  // G = (upper) alpha w*w' + G
   gsl_blas_dsyr(CblasUpper, d / ((double)G->size1 * (double)G->size1), w, G);
 
+  // Transpose the matrix
   for (size_t i = 0; i < G->size1; ++i) {
     for (size_t j = 0; j < i; ++j) {
       d = gsl_matrix_get(G, j, i);
