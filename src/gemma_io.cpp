@@ -1534,6 +1534,7 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
   cout << endl;
 
   // scale the kinship matrix
+  write(ns_test,"ns_test scale");
   enforce_gsl(gsl_matrix_scale(matrix_kin, 1.0 / (double)ns_test));
 
   // and transpose
