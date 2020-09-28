@@ -1671,7 +1671,7 @@ bool PlinkKin(const string &file_bed, vector<int> &indicator_snp,
 
     gsl_vector_add_constant(geno, -1.0 * geno_mean);
 
-    if (k_mode == 2 && geno_var != 0) {
+    if (k_mode == 2 && geno_var != 0) { // k_mode is a_mode-20
       gsl_vector_scale(geno, 1.0 / sqrt(geno_var));
     }
     gsl_vector_view Xlarge_col = gsl_matrix_column(Xlarge, ns_test % msize);

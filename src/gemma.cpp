@@ -1129,7 +1129,7 @@ void GEMMA::Assign(int argc, char **argv, PARAM &cPar) {
         break;
       }
       if (argv[i + 1] == NULL || argv[i + 1][0] == '-') {
-        cPar.a_mode = M_KIN;
+        cPar.a_mode = M_KIN; // default
         continue;
       }
       ++i;
@@ -1913,7 +1913,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
 
     if (cPar.a_mode == M_KIN) {
       cPar.WriteMatrix(G, "cXX");
-    } else {
+    } else { // M_KIN2
       cPar.WriteMatrix(G, "sXX");
     }
 
