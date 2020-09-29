@@ -111,7 +111,7 @@ else
 endif
 
 ifeq ($(CPP), clang++)
-  GCC_FLAGS=-std=c++11 -isystem$(OPENBLAS_INCLUDE_PATH) 
+  GCC_FLAGS=-std=c++11 -isystem$(OPENBLAS_INCLUDE_PATH)
   ifdef GUIX
     CPPFLAGS += -I$(GUIX)/include/c++ -I$(GUIX)/include/c++/x86_64-unknown-linux-gnu
   endif
@@ -158,6 +158,11 @@ static: CPPFLAGS += -static
 LIBS += -lgsl -lz
 ifdef WITH_OPENBLAS
   LIBS += -lopenblas
+  ifeq ($(SYS), OSX)
+    ifdef WITH_OPENBLAS
+      LIBS += -Wl,-L/usr/local/opt/openblas/lib
+    endif
+  endif
 else
   LIBS += -latlas -lcblas -llapack -lblas
 endif
