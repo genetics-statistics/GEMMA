@@ -10,9 +10,21 @@ matrix:
           packages:
             - libgsl-dev
             - libopenblas-dev
+    - os: linux
+      compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - libgsl-dev
+            - libopenblas-dev
+    - os: osx
+      compiler: clang
 script:
   - echo $MATRIX_EVAL
   - eval "${MATRIX_EVAL}"
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew cask uninstall oclint && brew update && brew install gsl openblas zlib eigen lapack ; fi
   - $CXX --version
   - make -j 4 OPENBLAS_LEGACY=1 
   - make OPENBLAS_LEGACY=1 fast-check
