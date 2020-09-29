@@ -24,7 +24,9 @@ matrix:
 script:
   - echo $MATRIX_EVAL
   - eval "${MATRIX_EVAL}"
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install gsl openblas zlib ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install gsl ; fi
   - $CXX --version
-  - make -j 4 OPENBLAS_LEGACY=1 
+  - OPENBLAS="$(brew --prefix openblas)"
+  - echo $OPENBLAS
+  - make -j 4 CXX=$CXX WITH_OPENBLAS=1 OPENBLAS_LEGACY=1 
   - make OPENBLAS_LEGACY=1 fast-check
