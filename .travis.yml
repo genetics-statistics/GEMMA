@@ -10,9 +10,23 @@ matrix:
           packages:
             - libgsl-dev
             - libopenblas-dev
+    - os: linux
+      compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - libgsl-dev
+            - libopenblas-dev
+    - os: osx
+      compiler: clang
 script:
   - echo $MATRIX_EVAL
   - eval "${MATRIX_EVAL}"
   - $CXX --version
-  - make -j 4 OPENBLAS_LEGACY=1 
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install gsl ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then OPENBLAS="$(brew --prefix openblas)" ; fi
+  - echo $OPENBLAS
+  - make -j 4 CXX=$CXX WITH_OPENBLAS=1 OPENBLAS_LEGACY=1 
   - make OPENBLAS_LEGACY=1 fast-check
