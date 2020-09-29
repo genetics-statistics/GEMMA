@@ -24,7 +24,7 @@ matrix:
 script:
   - echo $MATRIX_EVAL
   - eval "${MATRIX_EVAL}"
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew cask uninstall oclint && brew update && brew install gsl openblas zlib eigen lapack ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update && brew install gsl openblas zlib ; fi
   - $CXX --version
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install gsl ; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then OPENBLAS="$(brew --prefix openblas)" ; fi
