@@ -7,6 +7,7 @@ and
 ## ChangeLog v0.98.3 (2020/?)
 
 * Fix Travis build with gcc 5.5 (OpenBLAS related round-offs)
+* Fix Travis build on OSX (brew related)
 * GEMMA installs on FreeBSD (thanks @outpaddling)
 
 ## ChangeLog v0.98.2 (2019/05/28)
