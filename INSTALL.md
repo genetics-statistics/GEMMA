@@ -13,8 +13,8 @@ and it should give you the version.
 GEMMA runs on Linux and MAC OSX and the runtime has the following
 dependencies:
 
-* C++ tool chain >= 6.5.0 (we test with file .guix-dev-gcc-older)
-* GNU Science library (GSL) 1.x (GEMMA does not currently work with GSL >= 2).
+* C++ tool chain >= 5.5.0 (see Travis CI and we test with file .guix-dev-gcc-older)
+* GNU Science library (GSL) 2.x (GEMMA dropped support for GSL 1.x)
 * blas/openblas
 * lapack
 * zlib
@@ -40,6 +40,10 @@ Recent versions of GEMMA can be installed with
 command
 
     conda install gemma
+
+### FreeBSD
+
+Recent editions of FreeBSD ports include [GEMMA](https://www.freebsd.org/cgi/ports.cgi?query=gemma&stype=all)
 
 ### GNU Guix
 
