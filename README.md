@@ -253,7 +253,7 @@ program and the contents of the .log.txt file in the output directory.
 
 ### Check list:
 
-1. [X] I have found and issue with GEMMA
+1. [X] I have found an issue with GEMMA
 2. [ ] I have searched for it on the [issue tracker](https://github.com/genetics-statistics/GEMMA/issues?q=is%3Aissue) (incl. closed issues)
 3. [ ] I have searched for it on the [mailing list](https://groups.google.com/forum/#!forum/gemma-discussion)
 4. [ ] I have tried the latest [release](https://github.com/genetics-statistics/GEMMA/releases) of GEMMA
