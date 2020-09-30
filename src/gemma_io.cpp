@@ -824,7 +824,7 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
     gsl_blas_ddot(genotype, genotype, &v_x);
     gsl_blas_ddot(Wtx, WtWiWtx, &v_w);
 
-    if (W->size2 != 1 && v_w / v_x >= r2_level) {
+    if (W->size2 != 1 && v_w / v_x > r2_level) {
       indicator_snp.push_back(0);
       continue;
     }
