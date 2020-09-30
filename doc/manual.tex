@@ -733,21 +733,24 @@ The are a few SNP filters implemented in the software.
 
 \item Missingness. By default, SNPs with missingness below 5\% will
   not be included in the analysis. Use ``-miss [num]'' to change. For
-  example, ``-miss 0.1'' changes the threshold to 10\%.
+  example, ``-miss 0.1'' changes the threshold to 10\%. With
+  ``-miss 1.0'' the filter is disabled.
 
 \item Minor allele frequency. By default, SNPs with minor allele
   frequency below 1\% will not be included in the analysis. Use ``-maf
   [num]" to change. For example, ``-maf 0.05'' changes the threshold
-  to 5\%.
+  to 5\%. With ``-notsnp'' the filter is disabled.
 
 \item Correlation with any covariate. By default, SNPs with $r^2$
   correlation with any of the covariates above 0.9999 will not be
   included in the analysis. Use ``-r2 [num]'' to change. For example,
-  ``-r2 0.999999'' changes the threshold to 0.999999.
+  ``-r2 0.999999'' changes the threshold to 0.999999.  With ``-r2
+  1.0'' the filter is disabled.
 
 \item Hardy-Weinberg equilibrium. Use ``-hwe [num]'' to specify. For
   example, ``-hwe 0.001'' will filter out SNPs with Hardy-Weinberg $p$
-  values below 0.001.
+  values below 0.001.  With ``-hwe 0'' or ``--notsnp'' the filter is
+  disabled.
 
 \item User-defined SNP list. Use ``-snps [filename]'' to specify a
   list of SNPs to be included in the analysis.
@@ -1452,7 +1455,7 @@ You can use -outdir with gemma as a bash script
 \end{verbatim}
 
 makes a unique temp directory where the output is stored, here
-relative to $HOME, but you can take any path.
+relative to \$HOME, but you can take any path.
 
 
 \subsection{How do I prepare the phenotype file for BSLMM?}
@@ -1479,8 +1482,6 @@ phenotypes so that the number of individuals in the output
 prefix.prdt.txt file will match the total sample size. Please refer to
 the GWAS sample data set and some demo scripts included with the GEMMA
 source code for detailed examples.
-
-\end{enumerate}
 
 \clearpage
 \newpage
