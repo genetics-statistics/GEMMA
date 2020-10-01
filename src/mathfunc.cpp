@@ -400,7 +400,11 @@ uint count_abs_small_values(const gsl_vector *v, double min) {
 // and the ratio of max and min but one (min is expected to be zero).
 bool isMatrixIllConditioned(const gsl_vector *eigenvalues, double max_ratio) {
   auto t = abs_minmax(eigenvalues);
-  // auto absmin = get<0>(t);
+
+#if !defined NDEBUG
+  auto absmin = get<0>(t);
+#endif
+
   auto absmin1 = get<1>(t);
   auto absmax = get<2>(t);
   if (absmax/absmin1 > max_ratio) {

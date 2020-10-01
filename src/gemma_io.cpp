@@ -1557,6 +1557,7 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
   // FIXME: the following is not so slow but appears to generate an
   // identical matrix
 
+  /*
   for (size_t i = 0; i < ni_total; ++i) {
     for (size_t j = 0; j < i; ++j) {
       double d = gsl_matrix_get(matrix_kin, j, i);
@@ -1564,6 +1565,7 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
     }
   }
   write(matrix_kin,"K rotated");
+  */
   // GSL is faster - and there are even faster methods
   // enforce_gsl(gsl_matrix_transpose(matrix_kin));
 

@@ -277,9 +277,9 @@ Iterating through a dataset Hi_eval differs and Uab (last row)
 void CalcPab(const size_t n_cvt, const size_t e_mode, const gsl_vector *Hi_eval,
              const gsl_matrix *Uab, const gsl_vector *unused, gsl_matrix *Pab) {
 
-
-  // size_t n_index = (n_cvt + 2 + 1) * (n_cvt + 2) / 2; // result size
-  // auto ni_test = Uab->size1; // inds
+#if !defined NDEBUG
+  size_t n_index = (n_cvt + 2 + 1) * (n_cvt + 2) / 2; // result size
+  auto ni_test = Uab->size1; // inds
   assert(Uab->size1 == Hi_eval->size);
   assert(Uab->size2 == n_index);
 
@@ -287,6 +287,7 @@ void CalcPab(const size_t n_cvt, const size_t e_mode, const gsl_vector *Hi_eval,
   assert(Pab->size2 == n_index);
   assert(Hi_eval->size == ni_test);
   // assert(ab->size == n_index);
+#endif // DEBUG
 
   // compute Hi_eval (inds)  * Uab  (inds x n_index) * ab (n_index) and return in Pab (cvt x n_index).
 
@@ -593,8 +594,9 @@ $7 = 3
 $8 = 6
   */
 
-    // auto Uab = p->Uab;
-    // auto ab = p->ab;
+#if !defined NDEBUG
+  auto Uab = p->Uab;
+  auto ab = p->ab;
   assert(n_index == (n_cvt + 2 + 1) * (n_cvt + 2) / 2);
   assert(Uab->size1 == ni_test);
   assert(Uab->size2 == n_index); // n_cvt == 1 -> n_index == 6?
@@ -606,6 +608,7 @@ $8 = 6
 
   assert(p->e_mode == 0);
   assert(Hi_eval->size == ni_test);
+#endif // DEBUG
 
   CalcPab(n_cvt, p->e_mode, Hi_eval, p->Uab, p->ab, Pab);
   CalcPPab(n_cvt, p->e_mode, HiHi_eval, p->Uab, p->ab, Pab, PPab);
