@@ -729,6 +729,7 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
       cM = mapRS2cM[rs];
     }
 
+    // Start on a new marker/SNP
     maf = 0;
     n_miss = 0;
     flag_poly = 0;
@@ -765,12 +766,13 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
 
       gsl_vector_set(genotype, c_idv, geno);
 
-      if (flag_poly == 0) {
-        geno_old = geno;
-        flag_poly = 2;
+      // going through genotypes with 0.0 < geno < 2.0
+      if (flag_poly == 0) { // first init in marker
+        geno_old = geno;    // set geno_old (double) to previous genotype
+        flag_poly = 2;      // initialized state
       }
       if (flag_poly == 2 && geno != geno_old) {
-        flag_poly = 1;
+        flag_poly = 1;      // genotypes differ
       }
 
       maf += geno;
@@ -788,21 +790,25 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
     snpInfo.push_back(sInfo);
     file_pos++;
 
+    // -miss flag
     if ((double)n_miss / (double)ni_test > miss_level) {
       indicator_snp.push_back(0);
       continue;
     }
 
+    // -maf flag
     if ((maf < maf_level || maf > (1.0 - maf_level)) && maf_level != -1) {
       indicator_snp.push_back(0);
       continue;
     }
 
+    // remove genotype lines that are identical to the one read before
     if (flag_poly != 1) {
       indicator_snp.push_back(0);
       continue;
     }
 
+    // -hwe flag
     if (hwe_level != 0 && maf_level != -1) {
       if (CalcHWE(n_0, n_2, n_1) < hwe_level) {
         indicator_snp.push_back(0);
@@ -810,8 +816,8 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
       }
     }
 
-    // Filter SNP if it is correlated with W unless W has
-    // only one column, of 1s.
+
+    // -r2 flag
     for (size_t i = 0; i < genotype->size; ++i) {
       if (gsl_vector_get(genotype_miss, i) == 1) {
         geno = maf * 2.0;
@@ -824,6 +830,8 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
     gsl_blas_ddot(genotype, genotype, &v_x);
     gsl_blas_ddot(Wtx, WtWiWtx, &v_w);
 
+    // Filter SNP if it is correlated with covariates W, unless W has
+    // only one column, of 1s (-r2 flag)
     if (W->size2 != 1 && v_w / v_x > r2_level) {
       indicator_snp.push_back(0);
       continue;
@@ -1181,7 +1189,7 @@ void ReadFile_kin(const string &file_kin, vector<int> &indicator_idv,
     size_t i_test = 0, i_total = 0, j_test = 0, j_total = 0;
     while (getline(infile, line)) {
       if (i_total == ni_total) {
-        fail_msg("number of rows in the kinship file is larger than the number of phentypes");
+        fail_msg("number of rows in the kinship file is larger than the number of phenotypes");
       }
 
       if (indicator_idv[i_total] == 0) {
@@ -1507,7 +1515,8 @@ bool BimbamKin(const string file_geno, const set<string> ksnps,
     if (ns_test<1) write(geno,"geno mean");
 
     // scale the genotypes
-    if (k_mode == 2 && geno_var != 0) { // some confusion here
+    if (k_mode == 2 && geno_var != 0) { // some confusion here, -gk 2
+                                        // flag does this
       gsl_vector_scale(geno, 1.0 / sqrt(geno_var));
     }
 
