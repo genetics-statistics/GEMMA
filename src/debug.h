@@ -118,7 +118,7 @@ inline void fail_msg(std::string msg) {
   std::raise(SIGINT); // keep stack trace for gdb
 }
 
-#define info_msg(msg) cerr << "**** INFO: " << msg << "." << endl;
+#define info_msg(msg) if (!is_quiet_mode()) cerr << "**** INFO: " << msg << "." << endl;
 #define msg(msg) info_msg(msg);
 
 #if defined NDEBUG
