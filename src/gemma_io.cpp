@@ -414,7 +414,7 @@ bool ReadFile_pheno(const string &file_pheno,
     ch_ptr = strtok((char *)line.c_str(), " ,\t");
     size_t i = 0;
     while (i < p_max) {
-      enforce_msg(ch_ptr,"Number of phenotypes out of range");
+      enforce_msg(ch_ptr,"Number of phenotypes in pheno file do not match phenotypes in geno file");
       if (mapP2c.count(i + 1) != 0) {
         if (strcmp(ch_ptr, "NA") == 0) {
           ind_pheno_row[mapP2c[i + 1]] = 0;
@@ -597,7 +597,7 @@ bool ReadFile_fam(const string &file_fam, vector<vector<int>> &indicator_pheno,
     size_t i = 0;
     while (i < p_max) {
       if (mapP2c.count(i + 1) != 0) {
-        enforce_msg(ch_ptr,"Problem reading FAM file (phenotypes out of range)");
+        enforce_msg(ch_ptr,"Problem reading FAM file (phenotypes do not match geno file)");
 
         if (strcmp(ch_ptr, "NA") == 0) {
           ind_pheno_row[mapP2c[i + 1]] = 0;
@@ -745,7 +745,7 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
       if (indicator_idv[i] == 0)
         continue;
 
-      enforce_msg(ch_ptr,"Problem reading geno file");
+      enforce_msg(ch_ptr,"Problem reading geno file (not enough genotypes in line)");
       if (strcmp(ch_ptr, "NA") == 0) {
         gsl_vector_set(genotype_miss, c_idv, 1);
         n_miss++;
