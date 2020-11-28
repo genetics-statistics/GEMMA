@@ -106,6 +106,10 @@ PARAM::PARAM(void)
       time_total(0.0), time_G(0.0), time_eigen(0.0), time_UtX(0.0),
       time_UtZ(0.0), time_opt(0.0), time_Omega(0.0) {}
 
+PARAM::~PARAM() {
+  gsl_rng_free(gsl_r);
+}
+
 // Read files: obtain ns_total, ng_total, ns_test, ni_test.
 void PARAM::ReadFiles(void) {
   string file_str;
@@ -815,6 +819,28 @@ void PARAM::CheckParam(void) {
   }
   if (!file_gene.empty()) {
     flag++;
+  }
+
+  // Always set up random environment.
+  gsl_rng_env_setup(); // sets gsl_rng_default_seed
+  const gsl_rng_type *T = gsl_rng_default; // pick up environment GSL_RNG_SEED
+
+  if (randseed >= 0)
+    gsl_rng_default_seed = randseed; // CLI option used
+  else if (gsl_rng_default_seed == 0) { // by default we will randomize the seed
+    time_t rawtime;
+    time(&rawtime);
+    tm *ptm = gmtime(&rawtime);
+
+    gsl_rng_default_seed =
+      (unsigned)(ptm->tm_hour % 24 * 3600 + ptm->tm_min * 60 + ptm->tm_sec);
+  }
+  gsl_r = gsl_rng_alloc(T);
+
+  if (is_debug_mode()) {
+    printf ("GSL random generator type: %s; ", gsl_rng_name (gsl_r));
+    printf ("seed = %lu (option %li); ", gsl_rng_default_seed, randseed);
+    printf ("first value = %lu\n", gsl_rng_get (gsl_r));
   }
 
   if (flag != 1 && a_mode != 15 && a_mode != 27 && a_mode != 28 &&
@@ -2014,22 +2040,6 @@ void PARAM::ProcessCvtPhen() {
       cout << "error! number of subsamples is less than number of"
            << "analyzed individuals. " << endl;
     } else {
-
-      // Set up random environment.
-      gsl_rng_env_setup();
-      gsl_rng *gsl_r;
-      const gsl_rng_type *gslType;
-      gslType = gsl_rng_default;
-      if (randseed < 0) {
-        time_t rawtime;
-        time(&rawtime);
-        tm *ptm = gmtime(&rawtime);
-
-        randseed = (unsigned)(ptm->tm_hour % 24 * 3600 + ptm->tm_min * 60 +
-                              ptm->tm_sec);
-      }
-      gsl_r = gsl_rng_alloc(gslType);
-      gsl_rng_set(gsl_r, randseed);
 
       // From ni_test, sub-sample ni_subsample.
       vector<size_t> a, b;

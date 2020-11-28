@@ -21,7 +21,7 @@
 
 #include "param.h"
 #include <gsl/gsl_randist.h>
-#include <gsl/gsl_rng.h>
+// #include <gsl/gsl_rng.h>
 #include <map>
 #include <vector>
 
@@ -44,7 +44,7 @@ public:
   double pheno_mean;
 
   // BSLMM MCMC related parameters
-  long int randseed;
+  // long int randseed;
   double trace_G;
 
   HYPBSLMM cHyp_initial;

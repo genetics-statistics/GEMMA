@@ -20,7 +20,7 @@
 #define __BSLMM_H__
 
 #include <gsl/gsl_randist.h>
-#include <gsl/gsl_rng.h>
+// #include <gsl/gsl_rng.h>
 #include <map>
 #include <vector>
 
@@ -60,7 +60,8 @@ public:
   size_t n_accept;                       // Number of acceptances.
   size_t n_mh;                           // Number of MH steps per iter.
   double geo_mean;                       // Mean of geometric dist.
-  long int randseed;
+  // long int randseed;
+  gsl_rng *gsl_r;                        // Track randomizer state
   double trace_G;
 
   HYPBSLMM cHyp_initial;
@@ -88,7 +89,7 @@ public:
   vector<SNPINFO> snpInfo;
 
   // Not included in PARAM.
-  gsl_rng *gsl_r;
+  // gsl_rng *gsl_r;
   gsl_ran_discrete_t *gsl_t;
   map<size_t, size_t> mapRank2pos;
 
