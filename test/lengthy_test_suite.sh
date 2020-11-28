@@ -3,6 +3,7 @@
 # Long running tests go here
 
 gemma=../bin/gemma
+export GSL_RNG_SEED=100
 
 testPlinkStandardRelatednessMatrixK() {
     testname=testPlinkStandardRelatednessMatrixK

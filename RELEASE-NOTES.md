@@ -11,6 +11,15 @@ Maintenance release
 * Fix Travis build with gcc 5.5 (OpenBLAS related round-offs)
 * Fix Travis build on OSX (brew related)
 * GEMMA installs on FreeBSD (thanks @outpaddling)
+* Added github issue templates to ascertain the github issue
+  tracker is only used for reporting bugs
+* Added more debug output creating the GRM
+* Remove info on the floating point version (gemmaf).
+* Sane randomization handling: GEMMA now honours the -seed option
+  (mostly for bslmm). It also allows GSL_RNG_SEED and GSL_RNG_TYPE to
+  be used. See the
+  [docs](https://www.gnu.org/software/gsl/doc/html/rng.html).
+* The tests now use a fixed seed for the randomizer
 
 ## ChangeLog v0.98.2 (2019/05/28)
 
@@ -24,7 +33,7 @@ GCC 10.1 fix release
 
 Bug fix release
 
-* Fixes regression on Plink analysis with missing data (thank you @voichek)
+* Fixes regression on Plink analysis with missing data #188 (thank you @voichek)
 
 To install the image, download and
 

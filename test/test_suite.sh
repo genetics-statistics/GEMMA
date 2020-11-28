@@ -2,6 +2,7 @@
 
 gemma=../bin/gemma
 gemmaopts="-debug"
+export GSL_RNG_SEED=10
 
 testBslmm1() {
     outn=mouse_hs1940_CD8_bslmm
@@ -72,10 +73,10 @@ testBslmm5() {
            -epm ./output/mouse_hs1940_CD8_bslmm_cc1.param.txt \
            -emu ./output/mouse_hs1940_CD8_bslmm_cc1.log.txt \
            -predict \
-           -o $outn
+           -o $outn -seed 100
     assertEquals 0 $?
     outfn=output/$outn.prdt.txt
-    assertEquals "550.67" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
+    assertEquals "571.08" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.2f",$sum }' $outfn`
 }
 
 testCenteredRelatednessMatrixKFullLOCO1() {
