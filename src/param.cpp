@@ -1961,7 +1961,7 @@ void PARAM::CheckCvt() {
   return;
 }
 
-// Post-process phentoypes and covariates.
+// Post-process phenotypes and covariates.
 void PARAM::ProcessCvtPhen() {
 
   // Convert indicator_pheno to indicator_idv.
