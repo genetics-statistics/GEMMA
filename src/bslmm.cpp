@@ -84,7 +84,8 @@ void BSLMM::CopyFromParam(PARAM &cPar) {
   w_pace = cPar.w_pace;
   n_mh = cPar.n_mh;
   geo_mean = cPar.geo_mean;
-  randseed = cPar.randseed;
+  // randseed = cPar.randseed;
+  gsl_r = cPar.gsl_r;
   trace_G = cPar.trace_G;
 
   ni_total = cPar.ni_total;
@@ -107,7 +108,7 @@ void BSLMM::CopyToParam(PARAM &cPar) {
   cPar.cHyp_initial = cHyp_initial;
   cPar.n_accept = n_accept;
   cPar.pheno_mean = pheno_mean;
-  cPar.randseed = randseed;
+  // cPar.randseed = randseed;
 
   return;
 }
@@ -938,19 +939,6 @@ void BSLMM::MCMC(const gsl_matrix *U, const gsl_matrix *UtX,
 
   // Calculate proposal distribution for gamma (unnormalized),
   // and set up gsl_r and gsl_t.
-  gsl_rng_env_setup();
-  const gsl_rng_type *gslType;
-  gslType = gsl_rng_default;
-  if (randseed < 0) {
-    time_t rawtime;
-    time(&rawtime);
-    tm *ptm = gmtime(&rawtime);
-
-    randseed =
-        (unsigned)(ptm->tm_hour % 24 * 3600 + ptm->tm_min * 60 + ptm->tm_sec);
-  }
-  gsl_r = gsl_rng_alloc(gslType);
-  gsl_rng_set(gsl_r, randseed);
 
   double *p_gamma = new double[ns_test];
   CalcPgamma(p_gamma);
@@ -1643,21 +1631,6 @@ void BSLMM::MCMC(const gsl_matrix *X, const gsl_vector *y) {
   }
 
   // Calculate proposal distribution for gamma (unnormalized),
-  // and set up gsl_r and gsl_t.
-  gsl_rng_env_setup();
-  const gsl_rng_type *gslType;
-  gslType = gsl_rng_default;
-  if (randseed < 0) {
-    time_t rawtime;
-    time(&rawtime);
-    tm *ptm = gmtime(&rawtime);
-
-    randseed =
-        (unsigned)(ptm->tm_hour % 24 * 3600 + ptm->tm_min * 60 + ptm->tm_sec);
-  }
-  gsl_r = gsl_rng_alloc(gslType);
-  gsl_rng_set(gsl_r, randseed);
-
   double *p_gamma = new double[ns_test];
   CalcPgamma(p_gamma);
 

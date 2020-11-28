@@ -23,6 +23,7 @@
 
 #include "debug.h"
 #include "gsl/gsl_matrix.h"
+#include <gsl/gsl_rng.h>
 #include "gsl/gsl_vector.h"
 #include <map>
 #include <set>
@@ -211,7 +212,8 @@ public:
   size_t n_accept;     // Number of acceptance.
   size_t n_mh;         // # MH steps in each iter.
   double geo_mean;     // Mean of geometric dist.
-  long int randseed;
+  long int randseed;   // holds -seed parameter
+  gsl_rng *gsl_r;      // Track the randomizer
   double trace_G;
 
   HYPBSLMM cHyp_initial;
@@ -324,8 +326,9 @@ public:
   set<string> setKSnps;             // Set of snps for K (-ksnps and LOCO)
   set<string> setGWASnps;           // Set of snps for GWA (-gwasnps and LOCO)
 
-  // Constructor.
+  // Constructor and destructor
   PARAM();
+  ~PARAM();
 
   // Functions.
   void ReadFiles();
