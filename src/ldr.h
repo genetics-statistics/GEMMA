@@ -20,8 +20,8 @@
 #define __LDR_H__
 
 #include "param.h"
-#include <gsl/gsl_randist.h>
-#include <gsl/gsl_rng.h>
+// #include <gsl/gsl_randist.h>
+// #include <gsl/gsl_rng.h>
 #include <map>
 #include <vector>
 
@@ -56,7 +56,7 @@ public:
   vector<SNPINFO> snpInfo; // Record SNP information.
 
   // Not included in PARAM.
-  gsl_rng *gsl_r;
+  // gsl_rng *gsl_r;
 
   // Main functions.
   void CopyFromParam(PARAM &cPar);

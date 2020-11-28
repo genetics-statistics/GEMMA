@@ -4,7 +4,9 @@ see
 and
 [commits](https://github.com/genetics-statistics/GEMMA/commits/master).
 
-## ChangeLog v0.98.3 (2020/?)
+## ChangeLog v0.98.3 (2020/11/28)
+
+Maintenance release
 
 * Fix Travis build with gcc 5.5 (OpenBLAS related round-offs)
 * Fix Travis build on OSX (brew related)
