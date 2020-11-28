@@ -3,6 +3,7 @@
 gemma=../bin/gemma
 # gemmaopts="-debug -strict"
 gemmaopts="-debug -check"
+export GSL_RNG_SEED=100
 
 testLinearModel() {
     $gemma $gemmaopts -g ../example/mouse_hs1940.geno.txt.gz \
