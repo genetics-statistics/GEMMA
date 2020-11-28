@@ -321,15 +321,6 @@ installing GSL library, please refer to
 \url{http://www.gnu.org/s/gsl/}. For details on installing LAPACK
 library, please refer to \url{http://www.netlib.org/lapack/}.
 
-If you are interested in fitting BSLMM for a large scale GWAS data set
-but have limited memory to store the entire genotype matrix, you could
-compile GEMMA in float precision. A float precision binary executable,
-named ``gemmaf", is available inside the ``bin" folder in the source
-code. To compile a float precision binary by yourself, you can first
-run ``d2f.sh" script inside the ``src" folder, and then enable
-``FORCE\_FLOAT" option in the Makefile. The float version could save
-about half of the memory without appreciable loss of accuracy.
-
 \newpage
 
 \section{Input File Formats}
@@ -1123,8 +1114,7 @@ compressed format.
 Notice that a large memory is needed to fit BSLMM (e.g. may need 20 GB
 for a data set with 4000 individuals and 400,000 SNPs), because the
 software has to store the whole genotype matrix in the physical
-memory. The float version (gemmaf) can be used to save about half of
-the memory requirement without noticeable loss of accuracy.
+memory.
 
 In default, GEMMA does not require the user to provide a relatedness
 matrix explicitly. It internally calculates and uses the centered
