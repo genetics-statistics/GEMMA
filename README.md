@@ -9,22 +9,23 @@ GEMMA is a software toolkit for fast application of linear mixed
 models (LMMs) and related models to genome-wide association studies
 (GWAS) and other large-scale data sets.
 
-Check out [NEWS.md](NEWS.md) to see what's new in each GEMMA release.
+Check out [RELEASE-NOTES.md](RELEASE-NOTES.md) to see what's new in
+each GEMMA release.
 
-Please post feature requests or suspected bugs to
+Please post suspected bugs to
 [Github issues](https://github.com/genetics-statistics/GEMMA/issues). For
 questions or other discussion, please post to the
 [GEMMA Google Group](https://groups.google.com/group/gemma-discussion). We
 also encourage contributions, for example, by forking the repository,
 making your changes to the code, and issuing a pull request.
 
-Currently, GEMMA is supported for 64-bit Mac OS X and Linux
-platforms. *Windows is not currently supported.* though you can
-run GEMMA in a Linux VM or [container](https://docs.docker.com/docker-for-windows/). If you are interested
-in helping to make GEMMA available on Windows platforms (e.g., by
-providing installation instructions for Windows, or by contributing
-Windows binaries) please post a note in the
-[Github issues](https://github.com/genetics-statistics/GEMMA/issues).
+Currently, GEMMA provides a runnable Docker container for 64-bit
+MacOS, Windows and Linux platforms. GEMMA can be installed with
+Debian, Conda, Homebrew and GNU Guix. With Guix you find the latest
+version
+[here](http://git.genenetwork.org/guix-bioinformatics/guix-bioinformatics)
+as it is the version we use every day on http://genenetwork.org. For
+installation instructions see also [INSTALL.md](INSTALL.md).
 
 *(The above image depicts physiological and behavioral trait
 loci identified in CFW mice using GEMMA, from [Parker et al, Nature
