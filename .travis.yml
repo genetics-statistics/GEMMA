@@ -2,6 +2,9 @@ language: C++
 matrix:
   include:
     - os: linux
+      arch:
+        - amd64
+        - arm64
       compiler: gcc
       addons:
         apt:
