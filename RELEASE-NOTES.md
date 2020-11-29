@@ -7,7 +7,7 @@ and
 ## ChangeLog v0.99-pre1 (2020/??)
 
 * GEMMA builds on ARM
-* Fixed static build - requires gfortran path for OpenBLAS
+* Fixed static build with 00480e8549987b6cae7100b28bcead2a2d501177 - requires gfortran path for OpenBLAS
 * Updated README's and Manual
 
 ## ChangeLog v0.98.3 (2020/11/28)
