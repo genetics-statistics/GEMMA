@@ -69,6 +69,11 @@ example:
 
     guix environment -C guix --ad-hoc gcc-toolchain@9.3.0 gdb gsl openblas zlib bash ld-wrapper perl vim which
 
+### Install with Docker
+
+Recent version of GEMMA come with a 64-bit Docker image that should run
+on Linux, Windows and MacOS.
+
 ### Install from source
 
 Install listed dependencies (you may want to take hints from
