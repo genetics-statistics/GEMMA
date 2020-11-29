@@ -4,7 +4,6 @@ matrix:
     - os: linux
       arch:
         - amd64
-        - arm64
       compiler: gcc
       addons:
         apt:
@@ -24,6 +23,17 @@ matrix:
             - libopenblas-dev
     - os: osx
       compiler: clang
+    - os: linux
+      arch:
+        - arm64
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - libgsl-dev
+            - libopenblas-dev
 script:
   - echo $MATRIX_EVAL
   - eval "${MATRIX_EVAL}"
