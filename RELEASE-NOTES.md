@@ -4,6 +4,12 @@ see
 and
 [commits](https://github.com/genetics-statistics/GEMMA/commits/master).
 
+## ChangeLog v0.99-pre1 (2020/??)
+
+* GEMMA builds on ARM
+* Fixed static build - requires gfortran path for OpenBLAS
+* Updated README's and Manual
+
 ## ChangeLog v0.98.3 (2020/11/28)
 
 Maintenance release

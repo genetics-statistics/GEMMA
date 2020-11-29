@@ -23,6 +23,10 @@
 #
 #      make static
 #
+#    Static build may require some extra flags
+#
+#      make WITH_GFORTRAN=1 EXTRA_FLAGS=-L/gnu/store/741057r2x06zwg6zcmqmdyv51spm6n9i-gfortran-7.5.0-lib/lib static
+#
 #    Run tests with
 #
 #      make check
@@ -72,6 +76,7 @@ WITH_GFORTRAN          =                  # Add -lgfortran (if OpenBlas does not
 OPENBLAS_LEGACY        =                  # Using older OpenBlas
 FORCE_STATIC           =                  # Static linking of libraries
 GCC_FLAGS              = -DHAVE_INLINE -pthread -Wall -std=gnu++11 # extra flags -Wl,--allow-multiple-definition
+EXTRA_FLAGS            =
 
 GSL_INCLUDE_PATH =
 ifeq ($(SYS), WIN)
@@ -171,6 +176,9 @@ ifdef WITH_GSLCBLAS
 endif
 ifdef WITH_GFORTRAN
   LIBS += -lgfortran -lquadmath
+endif
+ifdef EXTRA_FLAGS
+  LIBS += $(EXTRA_FLAGS)
 endif
 
 .PHONY: all test

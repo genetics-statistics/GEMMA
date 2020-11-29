@@ -122,3 +122,31 @@ GEMMA includes the shunit2 test framework (version 2.0).
 or
 
     ./run_tests.sh
+
+## Releases
+
+### Docker release
+
+To distribute GEMMA I made static versions of the binary. A container
+can be made instead with, for example
+
+```sh
+env GUIX_PACKAGE_PATH=~/guix-bioinformatics ~/.config/guix/current/bin/guix \
+  pack -f docker gemma-gn2 -S /bin=bin
+```
+
+which created a container in of size 51MB. Tiny! For more information
+see
+[GUIX-NOTES](http://git.genenetwork.org/guix-bioinformatics/guix-notes/CONTAINERS.org).
+
+
+### Static release
+
+To create a static release, locate the gfortran lib and use
+
+    source .guix-dev-static
+    make WITH_GFORTRAN=1 EXTRA_FLAGS=-L/gnu/store/741057r2x06zwg6zcmqmdyv51spm6n9i-gfortran-7.5.0-lib/lib static
+
+otherwise OpenBlas will complain with
+
+    undefined reference to `_gfortran_concat_string'

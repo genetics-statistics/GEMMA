@@ -1,0 +1,2 @@
+# Typical Guix container invocation
+~/opt/guix/bin/guix environment -C guix --ad-hoc gcc-toolchain:static gdb gsl openblas zlib:static bash ld-wrapper perl vim which gfortran-toolchain
