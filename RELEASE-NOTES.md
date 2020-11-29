@@ -21,6 +21,15 @@ Maintenance release
   [docs](https://www.gnu.org/software/gsl/doc/html/rng.html).
 * The tests now use a fixed seed for the randomizer
 
+A docker binary that runs on Linux, MaxOS and Windows can be downloaded from
+
+http://ipfs.genenetwork.org/ipfs/Qmaq1q73ox53ykKdRF6tYDXL9bEKJQfnGCqBxFdo1fcYPb/gemma-0.98.3-AMD64-Guix-docker-release.tgz
+
+After loading the image into Docker, run with something like
+
+    docker run -w /run -v ${PWD}:/run ed5bf7499691 gemma -gk -bfile example/mouse_hs1940
+
+
 ## ChangeLog v0.98.2 (2019/05/28)
 
 GCC 10.1 fix release
