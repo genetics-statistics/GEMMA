@@ -25,7 +25,9 @@ Debian, Conda, Homebrew and GNU Guix. With Guix you find the latest
 version
 [here](http://git.genenetwork.org/guix-bioinformatics/guix-bioinformatics)
 as it is the version we use every day on http://genenetwork.org. For
-installation instructions see also [INSTALL.md](INSTALL.md).
+installation instructions see also [INSTALL.md](INSTALL.md).  We use
+continous integration builds on Travis-CI for Linux (amd64 & arm64)
+and MacOS (amd64).
 
 *(The above image depicts physiological and behavioral trait
 loci identified in CFW mice using GEMMA, from [Parker et al, Nature
@@ -51,19 +53,19 @@ Genetics, 2016](https://doi.org/10.1038/ng.3609).)
 
 1. Fast assocation tests implemented using the univariate linear mixed
 model (LMM). In GWAS, this can correct for population structure and
-sample nonexchangeability. It also provides estimates of the
+sample non-exchangeability. It also provides estimates of the
 proportion of variance in phenotypes explained by available genotypes
 (PVE), often called "chip heritability" or "SNP heritability".
 
 2. Fast association tests for multiple phenotypes implemented using a
 multivariate linear mixed model (mvLMM). In GWAS, this can correct for
-populations tructure and sample nonexchangeability jointly in multiple
-complex phenotypes.
+population structure and sample (non)exchangeability - jointly in
+multiple complex phenotypes.
 
 3. Bayesian sparse linear mixed model (BSLMM) for estimating PVE,
 phenotype prediction, and multi-marker modeling in GWAS.
 
-4. Estimation of variance components ("chip heritability") partitioned
+4. Estimation of variance components ("chip/SNP heritability") partitioned
 by different SNP functional categories from raw (individual-level)
 data or summary data. For raw data, HE regression or the REML AI
 algorithm can be used to estimate variance components when
@@ -74,7 +76,8 @@ MQS algorithm to estimate variance components.
 
 To install GEMMA you can
 
-1. Download the precompiled binaries (64-bit Linux and Mac only)
+1. Download the precompiled or Docker binaries
+   from [releases](https://github.com/genetics-statistics/GEMMA/releases).
 
 2. Use existing package managers, see [INSTALL.md](INSTALL.md).
 
@@ -89,20 +92,16 @@ numerical libraries.
 1. Fetch the [latest stable release][latest_release] and download the
    file appropriate for your platform.
 
-2. For .tar.bz2 files unpack the tar ball
+2. For Docker images, install Docker, load the image into Docker and
+   run with something like
 
-        tar xvjf gemma-$version-installer.tar.bz2
-
-    run the installer
-
-        ./install.sh ~/gemma
-
-    and run gemma
-
-        ~/gemma/bin/gemma
+        docker run -w /run -v ${PWD}:/run ed5bf7499691 gemma -gk -bfile example/mouse_hs1940
 
 3. For .gz files run `gunzip gemma.linux.gz` or `gunzip
-gemma.linux.gz` to unpack the file.
+gemma.linux.gz` to unpack the file. And make sure it is executable with
+
+        chmod u+x gemma-linux
+        ./gemma-linux
 
 ## Run GEMMA
 
@@ -132,24 +131,25 @@ Above example files can be downloaded from
 GEMMA has a wide range of debugging options which can be viewed with
 
 ```
-gemma -h 14
-
  DEBUG OPTIONS
+
  -check                   enable checks (slower)
  -no-fpe-check            disable hardware floating point checking
  -strict                  strict mode will stop when there is a problem
  -silence                 silent terminal display
  -debug                   debug output
  -debug-data              debug data output
+ -nind       [num]        read up to num individuals
+ -issue      [num]        enable tests relevant to issue tracker
  -legacy                  run gemma in legacy mode
 ```
 
-typically when running gemma you should use -debug which includes relevant
-checks.
+typically when running gemma you should use -debug which includes
+relevant checks. When compiled for debugging the debug version of
+GEMMA gives more information.
 
-For performances you may want to use the -no-check option
-instead. Also check the build optimization notes in
-[INSTALL.md](INSTALL.md).
+For performance you may want to use the -no-check option. Also check
+the build optimization notes in [INSTALL.md](INSTALL.md).
 
 ## Help
 
@@ -192,7 +192,7 @@ studies.](https://doi.org/10.1101/042846) *Annals of Applied Statistics*, in pre
 
 ## License
 
-Copyright (C) 2012–2018, Xiang Zhou and team.
+Copyright (C) 2012–2020, Xiang Zhou and team.
 
 The *GEMMA* source code repository is free software: you can
 redistribute it under the terms of the

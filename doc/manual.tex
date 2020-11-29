@@ -75,7 +75,7 @@ association studies (GWAS). It fits a univariate linear mixed model
 (LMM) for marker association tests with a single phenotype to account
 for population stratification and sample structure, and for estimating
 the proportion of variance in phenotypes explained (PVE) by typed
-genotypes (i.e. "chip heritability") \cite{Zhou:2012}. It fits a
+genotypes (i.e. ``chip heritability'' or ``SNP heritability'') \cite{Zhou:2012}. It fits a
 multivariate linear mixed model (mvLMM) for testing marker
 associations with multiple phenotypes simultaneously while controlling
 for population stratification, and for estimating genetic correlations
@@ -139,8 +139,8 @@ score). GEMMA obtains either the maximum likelihood estimate (MLE) or
 the restricted maximum likelihood estimate (REML) of $\lambda$ and
 $\beta$, and outputs the corresponding $p$ value.
 
-In addition, GEMMA estimates the PVE by typed genotypes or ``chip
-heritability".
+In addition, GEMMA estimates the PVE by typed genotypes or ``chip or
+SNP heritability''.
 
 \subsubsection{Multivariate Linear Mixed Model}
 GEMMA can fit a multivariate linear mixed model in the following form:
@@ -307,19 +307,12 @@ platform.
 
 The binary executable of GEMMA works well for a reasonably large
 number of individuals (say, for example, the ``-eigen " option works
-for at least 45,000 individuals). Due to the outdated computation
-environment the software was compiled on, however, for larger sample
-size and for improved computation efficiency, it is recommended to
-compile GEMMA on user's own modern computer system.
+for at least 45,000 individuals).
 
 If you want to compile GEMMA by yourself, you will need to download
 the source code, and you will need a standard C/C++ compiler such as
-GNU gcc, as well as the GSL and LAPACK libraries. You will need to
-change the library paths in the Makefile accordingly. A sample
-Makefile is provided along with the source code. For details on
-installing GSL library, please refer to
-\url{http://www.gnu.org/s/gsl/}. For details on installing LAPACK
-library, please refer to \url{http://www.netlib.org/lapack/}.
+GNU gcc, as well as GSL and OpenBLAS libraries.  A sample
+Makefile is provided along with the source code.
 
 \newpage
 
@@ -334,7 +327,7 @@ genotypes and using BIMBAM files for phenotypes) will result in
 unwanted errors. BIMBAM format is particularly useful for imputed
 genotypes, as PLINK codes genotypes using 0/1/2, while BIMBAM can
 accommodate any real values between 0 and 2 (and any real values if
-paired with ``-notsnp" option). In addition, to estimate variance
+paired with ``-notsnp'' option). In addition, to estimate variance
 components using summary statistics, GEMMA requires two other input
 files: one contains marginal z-scores and the other contains SNP
 category.
