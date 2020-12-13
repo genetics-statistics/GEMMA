@@ -27,7 +27,8 @@ version
 as it is the version we use every day on http://genenetwork.org. For
 installation instructions see also [INSTALL.md](INSTALL.md).  We use
 continous integration builds on Travis-CI for Linux (amd64 & arm64)
-and MacOS (amd64).
+and MacOS (amd64). GEMMA builds on multiple architectures, see the
+[Debian build farm](https://buildd.debian.org/status/package.php?p=gemma).
 
 *(The above image depicts physiological and behavioral trait
 loci identified in CFW mice using GEMMA, from [Parker et al, Nature
