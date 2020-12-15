@@ -2,7 +2,7 @@
 ;;
 ;;   guix build -f guix.scm
 ;;
-;; To get a development container (run in emacs shell).
+;; To get a development container (e.g., run in emacs shell).
 ;;
 ;;   guix environment -C -l guix.scm
 

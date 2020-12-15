@@ -114,8 +114,8 @@ void LMM::WriteFiles() {
       outfile << "se" << "\t";
     }
 
-    // a_mode 1
-    outfile << "logl_H1" << "\t";  // we may make this an option
+    if (a_mode != 3)
+      outfile << "logl_H1" << "\t";  // we may make this an option
 
     switch(a_mode) {
     case 1:
@@ -147,7 +147,7 @@ void LMM::WriteFiles() {
       outfile << st.se << "\t";
     }
 
-    if (!is_legacy_mode())
+    if (a_mode != 3)
       outfile << st.logl_H1 << "\t";
 
     switch(a_mode) {
