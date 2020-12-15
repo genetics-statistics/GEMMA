@@ -1157,7 +1157,8 @@ void LMM::CalcRLWald(const double l, const FUNC_PARAM &params, double &beta,
   return;
 }
 
-void CalcRLScore(const double l, size_t ni_test, const FUNC_PARAM &params, double &beta,
+
+void LMM::CalcRLScore(const double l, const FUNC_PARAM &params, double &beta,
                       double &se, double &p_score) {
   size_t n_cvt = params.n_cvt;
   size_t n_index = (n_cvt + 2 + 1) * (n_cvt + 2) / 2;
