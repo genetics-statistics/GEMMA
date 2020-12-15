@@ -130,7 +130,7 @@ void LMM::WriteFiles() {
     case M_LMM3:
       outfile << "p_score" << endl;
       break;
-    case M_LL4:
+    case M_LMM4:
       outfile << "l_remle" << "\t"
               << "l_mle" << "\t"
               << "p_wald" << "\t"
@@ -143,27 +143,27 @@ void LMM::WriteFiles() {
   auto sumstats = [&] (SUMSTAT st) {
     outfile << scientific << setprecision(6);
 
-    if (a_mode != 2) {
+    if (a_mode != M_LMM2) {
       outfile << st.beta << "\t";
       outfile << st.se << "\t";
     }
 
-    if (a_mode != 3)
+    if (a_mode != M_LMM3)
       outfile << st.logl_H1 << "\t";
 
     switch(a_mode) {
-    case 1:
+    case M_LMM1:
       outfile << st.lambda_remle << "\t"
               << st.p_wald << endl;
       break;
-    case 2:
+    case M_LMM2:
       outfile << st.lambda_mle << "\t"
               << st.p_lrt << endl;
       break;
-    case 3:
+    case M_LMM3:
       outfile << st.p_score << endl;
       break;
-    case 4:
+    case M_LMM4:
       outfile << st.lambda_remle << "\t"
               << st.lambda_mle << "\t"
               << st.p_wald << "\t"
@@ -1157,7 +1157,7 @@ void LMM::CalcRLWald(const double l, const FUNC_PARAM &params, double &beta,
   return;
 }
 
-void LMM::CalcRLScore(const double l, const FUNC_PARAM &params, double &beta,
+void CalcRLScore(const double l, size_t ni_test, const FUNC_PARAM &params, double &beta,
                       double &se, double &p_score) {
   size_t n_cvt = params.n_cvt;
   size_t n_index = (n_cvt + 2 + 1) * (n_cvt + 2) / 2;
@@ -1198,7 +1198,6 @@ void LMM::CalcRLScore(const double l, const FUNC_PARAM &params, double &beta,
   gsl_matrix_free(Pab);
   gsl_vector_safe_free(Hi_eval);
   gsl_vector_safe_free(v_temp);
-  return;
 }
 
 void CalcUab(const gsl_matrix *UtW, const gsl_vector *Uty, gsl_matrix *Uab) {
@@ -1419,7 +1418,7 @@ void LMM::AnalyzeGene(const gsl_matrix *U, const gsl_vector *eval,
     CalcUab(UtW, Uty, Uab);
     FUNC_PARAM param0 = {false, ni_test, n_cvt, eval, Uab, ab, 0};
 
-    if (a_mode == 2 || a_mode == 3 || a_mode == 4) {
+    if (a_mode == M_LMM2 || a_mode == M_LMM3 || a_mode == M_LMM4) {
       CalcLambda('L', param0, l_min, l_max, n_region, l_H0, logl_H0);
     }
 
@@ -1428,16 +1427,16 @@ void LMM::AnalyzeGene(const gsl_matrix *U, const gsl_vector *eval,
     FUNC_PARAM param1 = {false, ni_test, n_cvt, eval, Uab, ab, 0};
 
     // 3 is before 1.
-    if (a_mode == 3 || a_mode == 4) {
+    if (a_mode == M_LMM3 || a_mode == M_LMM4) {
       CalcRLScore(l_H0, param1, beta, se, p_score);
     }
 
-    if (a_mode == 1 || a_mode == 4) {
+    if (a_mode == M_LMM1 || a_mode == M_LMM4) {
       CalcLambda('R', param1, l_min, l_max, n_region, lambda_remle, logl_H1);
       CalcRLWald(lambda_remle, param1, beta, se, p_wald);
     }
 
-    if (a_mode == 2 || a_mode == 4) {
+    if (a_mode == M_LMM2 || a_mode == M_LMM4) {
       CalcLambda('L', param1, l_min, l_max, n_region, lambda_mle, logl_H1);
       p_lrt = gsl_cdf_chisq_Q(2.0 * (logl_H1 - logl_H0), 1);
     }
