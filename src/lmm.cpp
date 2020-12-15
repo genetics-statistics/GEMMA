@@ -114,8 +114,8 @@ void LMM::WriteFiles() {
       outfile << "se" << "\t";
     }
 
-    if (!is_legacy_mode())
-      outfile << "logl_H1" << "\t";  // we may make this an option
+    // a_mode 1
+    outfile << "logl_H1" << "\t";  // we may make this an option
 
     switch(a_mode) {
     case 1:
@@ -1114,7 +1114,7 @@ void LogRL_dev12(double l, void *params, double *dev1, double *dev2) {
   return;
 }
 
-void LMM::CalcRLWald(const double &l, const FUNC_PARAM &params, double &beta,
+void LMM::CalcRLWald(const double l, const FUNC_PARAM &params, double &beta,
                      double &se, double &p_wald) {
   size_t n_cvt = params.n_cvt;
   size_t n_index = (n_cvt + 2 + 1) * (n_cvt + 2) / 2;
@@ -1156,7 +1156,7 @@ void LMM::CalcRLWald(const double &l, const FUNC_PARAM &params, double &beta,
   return;
 }
 
-void LMM::CalcRLScore(const double &l, const FUNC_PARAM &params, double &beta,
+void LMM::CalcRLScore(const double l, const FUNC_PARAM &params, double &beta,
                       double &se, double &p_score) {
   size_t n_cvt = params.n_cvt;
   size_t n_index = (n_cvt + 2 + 1) * (n_cvt + 2) / 2;

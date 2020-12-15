@@ -118,9 +118,9 @@ public:
                         const gsl_vector *env);
   void WriteFiles();
 
-  void CalcRLWald(const double &lambda, const FUNC_PARAM &params, double &beta,
+  void CalcRLWald(const double lambda, const FUNC_PARAM &params, double &beta,
                   double &se, double &p_wald);
-  void CalcRLScore(const double &l, const FUNC_PARAM &params, double &beta,
+  void CalcRLScore(const double l, const FUNC_PARAM &params, double &beta,
                    double &se, double &p_score);
 };
 
