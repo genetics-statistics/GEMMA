@@ -42,6 +42,7 @@
 #include "gsl/gsl_vector.h"
 
 #include "gzstream.h"
+#include "gemma.h"
 #include "gemma_io.h"
 #include "fastblas.h"
 #include "lapack.h"
@@ -109,27 +110,27 @@ void LMM::WriteFiles() {
   }
 
   auto common_header = [&] () {
-    if (a_mode != 2) {
+    if (a_mode != M_LMM2) {
       outfile << "beta" << "\t";
       outfile << "se" << "\t";
     }
 
-    if (a_mode != 3)
-      outfile << "logl_H1" << "\t";  // we may make this an option
+    if (a_mode != M_LMM3)
+      outfile << "logl_H1" << "\t";
 
     switch(a_mode) {
-    case 1:
+    case M_LMM1:
       outfile << "l_remle" << "\t"
               << "p_wald" << endl;
       break;
-    case 2:
+    case M_LMM2:
       outfile << "l_mle" << "\t"
               << "p_lrt" << endl;
       break;
-    case 3:
+    case M_LMM3:
       outfile << "p_score" << endl;
       break;
-    case 4:
+    case M_LL4:
       outfile << "l_remle" << "\t"
               << "l_mle" << "\t"
               << "p_wald" << "\t"
@@ -1848,17 +1849,17 @@ void LMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
         FUNC_PARAM param1 = {false, ni_test, n_cvt, eval, Uab, ab, 0};
 
         // 3 is before 1, for beta.
-        if (a_mode == 3 || a_mode == 4) {
+        if (a_mode == M_LMM3 || a_mode == M_LMM4) {
           CalcRLScore(l_mle_null, param1, beta, se, p_score);
         }
 
-        if (a_mode == 1 || a_mode == 4) {
+        if (a_mode == M_LMM1 || a_mode == M_LMM4) {
           CalcLambda('R', param1, l_min, l_max, n_region, lambda_remle,
                      logl_H1);
           CalcRLWald(lambda_remle, param1, beta, se, p_wald);
         }
 
-        if (a_mode == 2 || a_mode == 4) {
+        if (a_mode == M_LMM2 || a_mode == M_LMM4) {
           CalcLambda('L', param1, l_min, l_max, n_region, lambda_mle, logl_H1);
           p_lrt = gsl_cdf_chisq_Q(2.0 * (logl_H1 - logl_mle_H0), 1);
         }

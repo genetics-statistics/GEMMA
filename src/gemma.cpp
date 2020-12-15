@@ -2550,8 +2550,8 @@ void GEMMA::BatchRun(PARAM &cPar) {
 
   // LMM or mvLMM or Eigen-Decomposition
   if (cPar.a_mode == M_LMM1 || cPar.a_mode == M_LMM2 || cPar.a_mode == M_LMM3 ||
-      cPar.a_mode == M_LMM4 || cPar.a_mode == M_LMM5 ||
-      cPar.a_mode == M_EIGEN) { // Fit LMM or mvLMM or eigen
+      cPar.a_mode == M_LMM4 || cPar.a_mode == M_LMM5 || cPar.a_mode == M_LMM9 ||
+      cPar.a_mode == M_EIGEN  ) { // Fit LMM or mvLMM or eigen
     gsl_matrix *Y = gsl_matrix_safe_alloc(cPar.ni_test, cPar.n_ph);
     enforce_msg(Y, "allocate Y"); // just to be sure
     gsl_matrix *W = gsl_matrix_safe_alloc(Y->size1, cPar.n_cvt);
@@ -2565,6 +2565,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
     gsl_vector *eval = gsl_vector_calloc(Y->size1);
     gsl_vector *env = gsl_vector_safe_alloc(Y->size1);
     gsl_vector *weight = gsl_vector_safe_alloc(Y->size1);
+    debug_msg("Started on LMM");
     assert_issue(is_issue(26), UtY->data[0] == 0.0);
 
     // set covariates matrix W and phenotype matrix Y
@@ -2578,6 +2579,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
     if (!(cPar.file_kin).empty()) {
       ReadFile_kin(cPar.file_kin, cPar.indicator_idv, cPar.mapID2num,
                    cPar.k_mode, cPar.error, G);
+      debug_msg("Read K/GRM file");
       if (cPar.error == true) {
         cout << "error! fail to read kinship/relatedness file. " << endl;
         return;
@@ -2609,7 +2611,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
         }
       }
 
-      // eigen-decomposition and calculate trace_G
+      // eigen-decomposition and calculate trace_G - main track
       cout << "Start Eigen-Decomposition..." << endl;
       time_start = clock();
 
@@ -2663,7 +2665,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
     if (cPar.a_mode == M_EIGEN) {
       cPar.WriteMatrix(U, "eigenU");
       cPar.WriteVector(eval, "eigenD");
-    } else if (!cPar.file_gene.empty()) {
+    } else if (!cPar.file_gene.empty()) { // Run with gene file
       // calculate UtW and Uty
       CalcUtX(U, W, UtW);
       CalcUtX(U, Y, UtY);
@@ -2682,6 +2684,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
       cLmm.WriteFiles();
       cLmm.CopyToParam(cPar);
     } else {
+      debug_msg("Main LMM track");
       // calculate UtW and Uty
       CalcUtX(U, W, UtW);
       CalcUtX(U, Y, UtY);
@@ -2736,6 +2739,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
 
         CalcPve(eval, UtW, &UtY_col.vector, cPar.l_remle_null, cPar.trace_G,
                 cPar.pve_null, cPar.pve_se_null);
+        debug_msg("main print summary");
         cPar.PrintSummary();
 
         // calculate and output residuals
@@ -2771,15 +2775,16 @@ void GEMMA::BatchRun(PARAM &cPar) {
           gsl_vector_safe_free(u_hat);
           gsl_vector_safe_free(e_hat);
           gsl_vector_safe_free(y_hat);
-        }
+        } // output residuals
       }
 
       // Fit LMM or mvLMM (w. LOCO)
-      if (cPar.a_mode == 1 || cPar.a_mode == 2 || cPar.a_mode == 3 ||
-          cPar.a_mode == 4) {
+      if (cPar.a_mode == M_LMM1 || cPar.a_mode == M_LMM2 || cPar.a_mode == M_LMM3 ||
+          cPar.a_mode == M_LMM4 || cPar.a_mode == M_LMM9) {
         if (cPar.n_ph == 1) {
+          debug_msg("fit LMM (one phenotype)");
           LMM cLmm;
-          cLmm.CopyFromParam(cPar);
+          cLmm.CopyFromParam(cPar); // set parameters
 
           // if (is_check_mode()) disable_segfpe(); // disable fast NaN checking for now
 
@@ -2811,8 +2816,9 @@ void GEMMA::BatchRun(PARAM &cPar) {
           cLmm.WriteFiles();
           cLmm.CopyToParam(cPar);
         } else {
+          debug_msg("fit mvLMM (multiple phenotypes)");
           MVLMM cMvlmm;
-          cMvlmm.CopyFromParam(cPar);
+          cMvlmm.CopyFromParam(cPar); // set parameters
 
           // if (is_check_mode()) disable_segfpe(); // disable fast NaN checking
 
