@@ -82,6 +82,23 @@ testBXDLMMLikelihoodRatio() {
     assertEquals "3088458213" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.0f",$sum }' $outfn`
 }
 
+testBXDLMM9LikelihoodRatio() {
+    # Test for GeneNetwork output
+    outn=BXD_LMM_LR
+    $gemma $gemmaopts -g ../example/BXD_geno.txt.gz \
+           -p ../example/BXD_pheno.txt \
+           -c ../example/BXD_covariates2.txt \
+           -a ../example/BXD_snps.txt \
+           -k ./output/BXD.cXX.txt \
+           -lmm 9 -no-check -maf 0.1 \
+           -o $outn
+    assertEquals 0 $?
+
+    outfn=output/$outn.assoc.txt
+    assertEquals "80498" `wc -w < $outfn`
+    assertEquals "3088496565" `perl -nle 'foreach $x (split(/\s+/,$_)) { $sum += sprintf("%.2f",(substr($x,,0,6))) } END { printf "%.0f",$sum }' $outfn`
+}
+
 testCenteredRelatednessMatrixissue188() {
     outn=issue188
     rm -f output/$outn.*
