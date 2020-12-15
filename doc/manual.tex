@@ -124,7 +124,8 @@ labels) for $n$ individuals; $\bW=(\bw_1, \cdots, \bw_c)$ is an
 $n\times c$ matrix of covariates (fixed effects) including a column of
 1s; $\boldsymbol \alpha$ is a $c$-vector of the corresponding
 coefficients including the intercept; $\bx$ is an $n$-vector of marker
-genotypes; $\beta$ is the effect size of the marker; $\bu$ is an
+genotypes; $\beta$ is the effect size of the marker and is an estimate
+ of the marker/SNP additive effect; $\bu$ is an
 $n$-vector of random effects; $\bepsilon$ is an $n$-vector of errors;
 $\tau^{-1}$ is the variance of the residual errors; $\lambda$ is the
 ratio between the two variance components; $\bK$ is a known $n\times
@@ -802,7 +803,11 @@ chr     rs      ps      n_mis   n_obs   allele1 allele0 af      beta    se      
 \end{verbatim}
 %
 
-The 11 columns are: chromosome numbers, snp ids, base pair positions on the chromosome, number of missing individuals for a given snp, number of non-missing individuals for a given snp, minor allele, major allele, allele frequency, beta estimates, standard errors for beta, and $p$ values from the Wald test.
+The 11 columns are: chromosome numbers, snp ids, base pair positions
+on the chromosome, number of missing individuals for a given snp,
+number of non-missing individuals for a given snp, minor allele, major
+allele, allele frequency, beta estimates (additive effect), standard
+errors for beta, and $p$ values from the Wald test.
 
 \subsection{Estimate Relatedness Matrix from Genotypes}
 
