@@ -510,6 +510,7 @@ void PARAM::CheckParam(void) {
     error = true;
   }
   if (a_mode != 1 && a_mode != 2 && a_mode != 3 && a_mode != 4 && a_mode != 5 &&
+      a_mode != M_LMM9 &&
       a_mode != 11 && a_mode != 12 && a_mode != 13 && a_mode != 14 &&
       a_mode != 15 && a_mode != 21 && a_mode != 22 && a_mode != 25 &&
       a_mode != 26 && a_mode != 27 && a_mode != 28 && a_mode != 31 &&

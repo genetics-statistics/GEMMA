@@ -115,7 +115,7 @@ void LMM::WriteFiles() {
       outfile << "se" << "\t";
     }
 
-    if (a_mode != M_LMM3)
+    if (a_mode != M_LMM3 && a_mode != M_LMM9)
       outfile << "logl_H1" << "\t";
 
     switch(a_mode) {
@@ -124,6 +124,7 @@ void LMM::WriteFiles() {
               << "p_wald" << endl;
       break;
     case M_LMM2:
+    case M_LMM9:
       outfile << "l_mle" << "\t"
               << "p_lrt" << endl;
       break;
@@ -148,7 +149,7 @@ void LMM::WriteFiles() {
       outfile << st.se << "\t";
     }
 
-    if (a_mode != M_LMM3)
+    if (a_mode != M_LMM3 && a_mode != M_LMM9)
       outfile << st.logl_H1 << "\t";
 
     switch(a_mode) {
@@ -157,6 +158,7 @@ void LMM::WriteFiles() {
               << st.p_wald << endl;
       break;
     case M_LMM2:
+    case M_LMM9:
       outfile << st.lambda_mle << "\t"
               << st.p_lrt << endl;
       break;
@@ -172,6 +174,7 @@ void LMM::WriteFiles() {
       break;
     }
   };
+
 
 
   if (!file_gene.empty()) {
@@ -1527,17 +1530,17 @@ void LMM::Analyze(std::function< SnpNameValues(size_t) >& fetch_snp,
       double logl_H1 = 0.0;
 
       // 3 is before 1.
-      if (a_mode == 3 || a_mode == 4) {
+      if (a_mode == M_LMM3 || a_mode == M_LMM4 || a_mode == M_LMM9 ) {
         CalcRLScore(l_mle_null, param1, beta, se, p_score);
       }
 
-      if (a_mode == 1 || a_mode == 4) {
+      if (a_mode == M_LMM1 || a_mode == M_LMM4) {
         // for univariate a_mode is 1
         CalcLambda('R', param1, l_min, l_max, n_region, lambda_remle, logl_H1);
         CalcRLWald(lambda_remle, param1, beta, se, p_wald);
       }
 
-      if (a_mode == 2 || a_mode == 4) {
+      if (a_mode == M_LMM2 || a_mode == M_LMM9 || a_mode == M_LMM4) {
         CalcLambda('L', param1, l_min, l_max, n_region, lambda_mle, logl_H1);
         p_lrt = gsl_cdf_chisq_Q(2.0 * (logl_H1 - logl_mle_H0), 1);
       }
