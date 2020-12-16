@@ -3383,7 +3383,8 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
   }
 
   if (cPar.a_mode == 1 || cPar.a_mode == 2 || cPar.a_mode == 3 ||
-      cPar.a_mode == 4 || cPar.a_mode == 5 || cPar.a_mode == 11 ||
+      cPar.a_mode == 4 || cPar.a_mode == 5 || cpar.a_mode == 9 ||
+      cPar.a_mode == 11 ||
       cPar.a_mode == 12 || cPar.a_mode == 13) {
     outfile << "## REMLE log-likelihood in the null model = "
             << cPar.logl_remle_H0 << endl;
@@ -3552,7 +3553,7 @@ void GEMMA::WriteLog(int argc, char **argv, PARAM &cPar) {
     outfile << "##      time on calculating UtX = " << cPar.time_UtX << " min "
             << endl;
   }
-  if ((cPar.a_mode >= 1 && cPar.a_mode <= 4) ||
+  if ((cPar.a_mode >= 1 && cPar.a_mode <= 4) || cPar.a_mode == 9 ||
       (cPar.a_mode >= 51 && cPar.a_mode <= 54)) {
     outfile << "##      time on optimization = " << cPar.time_opt << " min "
             << endl;

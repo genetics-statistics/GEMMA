@@ -650,7 +650,7 @@ void PARAM::CheckParam(void) {
   // Only LMM option (and one prediction option) can deal with
   // multiple phenotypes and no gene expression files.
   if (n_ph > 1 && a_mode != 1 && a_mode != 2 && a_mode != 3 && a_mode != 4 &&
-      a_mode != 43) {
+      a_mode != 9 && a_mode != 43) {
     cout << "error! the current analysis mode " << a_mode
          << " can not deal with multiple phenotypes." << endl;
     error = true;
@@ -920,7 +920,7 @@ void PARAM::CheckParam(void) {
   enforce_fexists(file_anno, "open file");
 
   if (!loco.empty()) {
-    enforce_msg((a_mode >= 1 && a_mode <= 4) || a_mode == 21 || a_mode == 22,
+    enforce_msg((a_mode >= 1 && a_mode <= 4) || a_mode == 9 || a_mode == 21 || a_mode == 22,
                 "LOCO only works with LMM and K");
     // enforce_msg(file_bfile.empty(), "LOCO does not work with PLink (yet)");
     enforce_msg(file_gxe.empty(), "LOCO does not support GXE (yet)");
@@ -948,7 +948,7 @@ void PARAM::CheckParam(void) {
   }
 
   if ((a_mode == 1 || a_mode == 2 || a_mode == 3 || a_mode == 4 ||
-       a_mode == 5 || a_mode == 31) &&
+       a_mode == 5 || a_mode == 9 || a_mode == 31) &&
       (file_kin.empty() && (file_ku.empty() || file_kd.empty()))) {
     cout << "error! missing relatedness file. " << endl;
     error = true;
