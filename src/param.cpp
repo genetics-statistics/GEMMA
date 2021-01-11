@@ -107,7 +107,8 @@ PARAM::PARAM(void)
       time_UtZ(0.0), time_opt(0.0), time_Omega(0.0) {}
 
 PARAM::~PARAM() {
-  gsl_rng_free(gsl_r);
+  if (gsl_r)
+    gsl_rng_free(gsl_r);
 }
 
 // Read files: obtain ns_total, ng_total, ns_test, ni_test.

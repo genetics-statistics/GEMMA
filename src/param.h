@@ -213,7 +213,7 @@ public:
   size_t n_mh;         // # MH steps in each iter.
   double geo_mean;     // Mean of geometric dist.
   long int randseed;   // holds -seed parameter
-  gsl_rng *gsl_r;      // Track the randomizer
+  gsl_rng *gsl_r = NULL;      // Track the randomizer
   double trace_G;
 
   HYPBSLMM cHyp_initial;
