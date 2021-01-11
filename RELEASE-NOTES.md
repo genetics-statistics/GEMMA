@@ -4,8 +4,12 @@ see
 and
 [commits](https://github.com/genetics-statistics/GEMMA/commits/master).
 
-## ChangeLog v0.99-pre1 (2020/??)
+## ChangeLog v0.99-pre1 (2021/??)
 
+## ChangeLog v0.98.5-pre1 (2021/??)
+
+* Fix error on free with randomizer, see #239
+* Moved travis-ci.org to travis-ci.com
 
 ## ChangeLog v0.98.4 (2020/??)
 
