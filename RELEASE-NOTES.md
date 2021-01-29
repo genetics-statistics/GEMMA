@@ -4,15 +4,10 @@ see
 and
 [commits](https://github.com/genetics-statistics/GEMMA/commits/master).
 
-## ChangeLog v0.99-pre1 (2021/??)
-
-## ChangeLog v0.98.5-pre1 (2021/??)
+## ChangeLog v0.98.4 (2021/01/29)
 
 * Fix error on free with randomizer, see #239
 * Moved travis-ci.org to travis-ci.com
-
-## ChangeLog v0.98.4 (2020/??)
-
 * GEMMA builds on ARM and other architectures, see #189 and https://buildd.debian.org/status/package.php?p=gemma (thanks @tillea)
 * Fixed static build with 00480e8549987b6cae7100b28bcead2a2d501177 - requires gfortran path for OpenBLAS
 * Updated README's and Manual

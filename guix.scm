@@ -38,7 +38,7 @@
 (define-public gemma-git
   (package
     (name "gemma-git")
-    (version (git-version "0.98.4-pre" "HEAD" %git-commit))
+    (version (git-version "0.98.4" "HEAD" %git-commit))
     (source (local-file %source-dir #:recursive? #t))
     (build-system meson-build-system)
     (inputs `(
