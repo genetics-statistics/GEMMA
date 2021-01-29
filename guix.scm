@@ -45,6 +45,7 @@
               ("gsl" ,gsl)
               ;; ("shunit2" ,shunit2) ;; comes with gemma
               ("openblas" ,openblas)
+              ("zlib:static" ,zlib "static")
               ("zlib" ,zlib)
               ))
     (native-inputs ; for running tests
