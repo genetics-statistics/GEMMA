@@ -407,7 +407,8 @@ rs2, G, C, 0.98, 0.04, 1.00
 GEMMA codes alleles exactly as provided in the mean genotype file, and
 ignores the allele types in the second and third columns. Therefore,
 the minor allele is the effect allele only if one codes minor allele
-as 1 and major allele as 0.
+as 1 and major allele as 0. Missing genotypes are represented as
+``NA'' values.
 
 One can use the following bash command (in one line) to generate
 BIMBAM mean genotype file from IMPUTE genotype files
