@@ -411,12 +411,13 @@ as 1 and major allele as 0. Missing genotypes are represented as
 ``NA'' values.
 
 One can use the following bash command (in one line) to generate
-BIMBAM mean genotype file from IMPUTE genotype files
+BIMBAM mean genotype file from IMPUTE genotype files \\
 (\url{http://www.stats.ox.ac.uk/~marchini/software/gwas/file_format.html})\cite{Howie:2009}:
 %
 \begin{verbatim}
 cat [impute filename] | awk -v s=[number of samples/individuals]
-'{ printf $2 "," $4 "," $5; for(i=1; i<=s; i++) printf "," $(i*3+3)*2+$(i*3+4); printf "\n" }'
+'{ printf $2 "," $4 "," $5; for(i=1; i<=s; i++) \
+    printf "," $(i*3+3)*2+$(i*3+4); printf "\n" }'
 > [bimbam filename]
 \end{verbatim}
 %
