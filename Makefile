@@ -203,8 +203,8 @@ ifdef WITH_LAPACK
   endif
 endif
 
-HDR          = $(wildcard src/*.h) ./src/version.h
-SOURCES      = $(wildcard src/*.cpp)
+HDR          = $(sort $(wildcard src/*.h)) ./src/version.h
+SOURCES      = $(sort $(wildcard src/*.cpp))
 
 # all
 OBJS = $(SOURCES:.cpp=.o)
