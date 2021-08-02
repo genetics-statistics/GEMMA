@@ -2,7 +2,7 @@
     Genome-wide Efficient Mixed Model Association (GEMMA)
     Copyright © 2011-2017, Xiang Zhou
     Copyright © 2017, Peter Carbonetto
-    Copyright © 2017-2018, Pjotr Prins
+    Copyright © 2017-2021, Pjotr Prins
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -82,7 +82,7 @@ void gemma_gsl_error_handler (const char * reason,
 void GEMMA::PrintHeader(void) {
 
   cout <<
-    "GEMMA " << version << " (" << date << ") by Xiang Zhou and team (C) 2012-" << year << endl;
+    "GEMMA " << version << " (" << date << ") by Xiang Zhou, Pjotr Prins and team (C) 2012-" << year << endl;
   return;
 }
 

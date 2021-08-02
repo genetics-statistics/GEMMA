@@ -4,6 +4,11 @@ see
 and
 [commits](https://github.com/genetics-statistics/GEMMA/commits/master).
 
+## ChangeLog v0.99.0 (2021/mm/dd)
+
+* Changed banner to show Copyright (C) 2012–2021, Xiang Zhou, Pjotr Prins and team
+* Fixed tests for new Debian stable release - mostly roundoff confusion
+
 ## ChangeLog v0.98.4 (2021/01/29)
 
 Maintenance release

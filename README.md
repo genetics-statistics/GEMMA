@@ -193,7 +193,7 @@ studies.](https://doi.org/10.1101/042846) *Annals of Applied Statistics*, in pre
 
 ## License
 
-Copyright (C) 2012–2020, Xiang Zhou and team.
+Copyright (C) 2012–2021, Xiang Zhou, Pjotr Prins and team.
 
 The *GEMMA* source code repository is free software: you can
 redistribute it under the terms of the
@@ -288,9 +288,13 @@ The *GEMMA* software was developed by:
 Dept. of Biostatistics<br>
 University of Michigan<br>
 
-Peter Carbonetto, Tim Flutre, Matthew Stephens,
-[Pjotr Prins](http://thebird.nl/) and
-[others](https://github.com/genetics-statistics/GEMMA/graphs/contributors)
-have also contributed to the development of this software.
+and
+
+[Pjotr Prins](http://thebird.nl/)<br>
+Dept. of Genetics, Genomics and Informatics<br>
+University of Tennessee Health Science Center<br>
+
+with contributions from Peter Carbonetto, Tim Flutre, Matthew Stephens,
+and [others](https://github.com/genetics-statistics/GEMMA/graphs/contributors).
 
 [latest_release]: https://github.com/genetics-statistics/GEMMA/releases "Most recent stable releases"
