@@ -539,6 +539,7 @@ void GEMMA::PrintHelp(size_t option) {
     cout << "                   3: Score test" << endl;
     cout << "                   4: 1-3" << endl;
     cout << "                   5: Parameter estimation in the null model only"
+    cout << "                   9: same as option 2, but with additive effect"
          << endl;
     cout << " -lmin     [num]          "
          << " specify minimal value for lambda (default 1e-5)" << endl;

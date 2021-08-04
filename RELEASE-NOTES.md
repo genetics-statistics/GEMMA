@@ -8,6 +8,7 @@ and
 
 * Changed banner to show Copyright (C) 2012–2021, Xiang Zhou, Pjotr Prins and team
 * Fixed tests for new Debian stable release - mostly roundoff confusion
+* Documented `-lmm 9` which adds additive effect to `-lmm 2`
 
 ## ChangeLog v0.98.4 (2021/01/29)
 
