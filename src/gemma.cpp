@@ -538,7 +538,7 @@ void GEMMA::PrintHelp(size_t option) {
     cout << "                   2: Likelihood ratio test" << endl;
     cout << "                   3: Score test" << endl;
     cout << "                   4: 1-3" << endl;
-    cout << "                   5: Parameter estimation in the null model only"
+    cout << "                   5: Parameter estimation in the null model only" << endl;
     cout << "                   9: same as option 2, but with additive effect"
          << endl;
     cout << " -lmin     [num]          "
