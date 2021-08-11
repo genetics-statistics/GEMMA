@@ -1,5 +1,70 @@
 * GEMMA performance stats
 
+** GEMMA 0.99.0-pre1
+
+Measurements taken on a recent AMD Ryzen 7 3700X 8-Core Processor @2.195GHz.
+
+#+begin_src sh
+time ./bin/gemma -g ./example/mouse_hs1940.geno.txt.gz -p ./example/mouse_hs1940.pheno.txt -a ./example/mouse_hs1940.anno.txt -gk -no-check
+GEMMA 0.99.0-pre1 (2021-08-11) by Xiang Zhou, Pjotr Prins and team (C) 2012-2021
+Reading Files ...
+## number of total individuals = 1940
+## number of analyzed individuals = 1410
+## number of covariates = 1
+## number of phenotypes = 1
+## number of total SNPs/var        =    12226
+## number of analyzed SNPs         =    10768
+Calculating Relatedness Matrix ...
+================================================== 100%
+
+real    0m5.288s
+user    0m11.829s
+sys     0m1.992s
+
+time ./bin/gemma -g ./example/mouse_hs1940.geno.txt.gz -p ./example/mouse_hs1940.pheno.txt -n 1 -a ./example/mouse_hs1940.anno.txt -k ./output/result.cXX.txt -lmm -no-check
+GEMMA 0.99.0-pre1 (2021-08-11) by Xiang Zhou, Pjotr Prins and team (C) 2012-2021
+Reading Files ...
+## number of total individuals = 1940
+## number of analyzed individuals = 1410
+## number of covariates = 1
+## number of phenotypes = 1
+## number of total SNPs/var        =    12226
+## number of analyzed SNPs         =    10768
+Start Eigen-Decomposition...
+pve estimate =0.608801
+se(pve) =0.032774
+================================================== 100%
+
+real    0m8.383s
+user    0m12.863s
+sys     0m4.943s
+
+time ./bin/gemma -g ./example/mouse_hs1940.geno.txt.gz -p ./example/mouse_hs1940.pheno.txt -n 1 2 -a ./example/mouse_hs1940.anno.txt -k ./output/result.cXX.txt -lmm -no-check
+GEMMA 0.99.0-pre1 (2021-08-11) by Xiang Zhou, Pjotr Prins and team (C) 2012-2021
+Reading Files ...
+## number of total individuals = 1940
+## number of analyzed individuals = 757
+## number of covariates = 1
+## number of phenotypes = 2
+## number of total SNPs/var        =    12226
+## number of analyzed SNPs         =    10775
+
+real    0m47.586s
+user    0m49.588s
+sys     0m3.521s
+#+end_src
+
+Built with:
+
+        libopenblas.so.0 => /gnu/store/bs9pl1f805ins80xaf4s3n35a0x2lyq3-openblas-0.3.9/lib/libopenblas.so.0
+        libstdc++.so.6 => /gnu/store/01b4w3m6mp55y531kyi1g8shh722kwqm-gcc-7.5.0-lib/lib/libstdc++.so.6 (0x00007f2d61ba9000)
+        libm.so.6 => /gnu/store/fa6wj5bxkj5ll1d7292a70knmyl7a0cr-glibc-2.31/lib/libm.so.6 (0x00007f2d61a68000)
+        libc.so.6 => /gnu/store/fa6wj5bxkj5ll1d7292a70knmyl7a0cr-glibc-2.31/lib/libc.so.6 (0x00007f2d6186f000)
+        libgfortran.so.4 => /gnu/store/741057r2x06zwg6zcmqmdyv51spm6n9i-gfortran-7.5.0-lib/lib/libgfortran.so.4 (0x00007f2d61699000)
+
+
+** GEMMA 0.98.4
+
 Below measurements are taken on 4x Intel(R) Core(TM) i7-6770HQ CPU @
 2.60GHz with hyperthreading and 16 GB RAM with warmed up memory
 buffers.
