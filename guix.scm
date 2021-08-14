@@ -18,6 +18,7 @@
   (gnu packages bioinformatics)
   (gnu packages build-tools)
   (gnu packages curl)
+  (gnu packages gdb)
   (gnu packages llvm)
   (gnu packages maths)
   (gnu packages ninja)
@@ -42,6 +43,7 @@
     (source (local-file %source-dir #:recursive? #t))
     (build-system meson-build-system)
     (inputs `(
+              ("gdb" ,gdb)
               ("gsl" ,gsl)
               ;; ("shunit2" ,shunit2) ;; comes with gemma
               ("openblas" ,openblas)
