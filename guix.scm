@@ -36,10 +36,13 @@
 (define %git-commit
     (read-string (open-pipe "git show HEAD | head -1 | cut -d ' ' -f 2" OPEN_READ)))
 
+(define %gemma-version
+    (read-string (open-pipe "cat VERSION" OPEN_READ)))
+
 (define-public gemma-git
   (package
     (name "gemma-git")
-    (version (git-version "0.98.4" "HEAD" %git-commit))
+    (version (git-version %gemma-version "HEAD" %git-commit))
     (source (local-file %source-dir #:recursive? #t))
     (build-system meson-build-system)
     (inputs `(
