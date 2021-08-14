@@ -846,6 +846,7 @@ double LogRL_f(double l, void *params) {
   }
   index_ww = GetabIndex(n_cvt + 2, n_cvt + 2, n_cvt);
   double P_yy = gsl_matrix_safe_get(Pab, nc_total, index_ww);
+  if (P_yy < 0.00000001) P_yy = 0.00000001;
 
   double c = 0.5 * df * (safe_log(df) - safe_log(2 * M_PI) - 1.0);
   f = c - 0.5 * logdet_h - 0.5 * logdet_hiw - 0.5 * df * safe_log(P_yy);
@@ -1859,7 +1860,8 @@ void LMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
         if (a_mode == M_LMM1 || a_mode == M_LMM4) {
           CalcLambda('R', param1, l_min, l_max, n_region, lambda_remle,
                      logl_H1);
-          CalcRLWald(lambda_remle, param1, beta, se, p_wald);
+          if (!isnan(logl_H1))
+            CalcRLWald(lambda_remle, param1, beta, se, p_wald);
         }
 
         if (a_mode == M_LMM2 || a_mode == M_LMM4) {
@@ -1870,6 +1872,9 @@ void LMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
         time_opt += (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
 
         // Store summary data.
+        if (isnan(logl_H1)) { // invalidate values
+          p_wald = p_lrt = logl_H1;
+        }
         SUMSTAT SNPs = {beta,   se,    lambda_remle, lambda_mle,
                         p_wald, p_lrt, p_score, logl_H1};
         sumStat.push_back(SNPs);
@@ -1943,6 +1948,7 @@ void CalcLambda(const char func_name, FUNC_PARAM &params, const double l_min,
   vector<pair<double, double>> lambda_lh;
 
   // Evaluate first-order derivates in different intervals.
+  assert(l_max > l_min);
   double lambda_l, lambda_h,
       lambda_interval = safe_log(l_max / l_min) / (double)n_region;
   double dev1_l, dev1_h, logf_l, logf_h;
@@ -1985,8 +1991,9 @@ void CalcLambda(const char func_name, FUNC_PARAM &params, const double l_min,
 
     // If derivates change signs.
     int status;
-    int iter = 0, max_iter = 100;
-    double l, l_temp;
+    int iter = 0;
+    const auto max_iter = 100;
+    double l=0.0, l_temp = 0.0;
 
     gsl_function F;
     gsl_function_fdf FDF;
@@ -2021,27 +2028,54 @@ void CalcLambda(const char func_name, FUNC_PARAM &params, const double l_min,
       lambda_h = lambda_lh[i].second;
       gsl_root_fsolver_set(s_f, &F, lambda_l, lambda_h);
 
+      auto handler = gsl_set_error_handler_off();
       do {
         iter++;
         status = gsl_root_fsolver_iterate(s_f);
+        if (status != GSL_SUCCESS && status != GSL_CONTINUE) {
+          warning_msg("Brent did not converge");
+          break;
+        }
         l = gsl_root_fsolver_root(s_f);
         lambda_l = gsl_root_fsolver_x_lower(s_f);
         lambda_h = gsl_root_fsolver_x_upper(s_f);
         status = gsl_root_test_interval(lambda_l, lambda_h, 0, 1e-1);
+        if (status != GSL_SUCCESS && status != GSL_CONTINUE) {
+          debug_msg("Brent did not converge");
+          break;
+        }
       } while (status == GSL_CONTINUE && iter < max_iter);
 
       iter = 0;
 
       gsl_root_fdfsolver_set(s_fdf, &FDF, l);
-
       do {
         iter++;
         status = gsl_root_fdfsolver_iterate(s_fdf);
+        if (status != GSL_SUCCESS && status != GSL_CONTINUE) {
+          debug_msg("Newton did not converge");
+          break;
+        }
         l_temp = l;
         l = gsl_root_fdfsolver_root(s_fdf);
         status = gsl_root_test_delta(l, l_temp, 0, 1e-5);
-      } while (status == GSL_CONTINUE && iter < max_iter && l > l_min &&
-               l < l_max);
+        if (status != GSL_SUCCESS && status != GSL_CONTINUE) {
+          debug_msg("Newton did not converge");
+          break;
+        }
+      } while (status == GSL_CONTINUE && iter < max_iter && l > l_min && l < l_max);
+      gsl_set_error_handler(handler);
+
+      if (status == GSL_CONTINUE) {
+        debug_msg("Root did not converge: too many iterations");
+      }
+
+      if (status == GSL_CONTINUE || status != GSL_SUCCESS) {
+        // make sure results are invalid
+        logf = nan("NAN");
+        lambda = nan("NAN");
+        return;
+      }
 
       l = l_temp;
       if (l < l_min) {
