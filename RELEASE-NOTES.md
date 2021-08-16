@@ -6,10 +6,11 @@ and
 
 ## ChangeLog v0.98.5 (2021/mm/dd)
 
-* Changed banner to show Copyright (C) 2012–2021, Xiang Zhou, Pjotr Prins and team
+* Changed banner to show 'Copyright (C) 2012–2021, Xiang Zhou, Pjotr Prins and team'
 * Fixed tests for new Debian stable release - mostly roundoff confusion
 * Documented `-lmm 9` which adds additive effect to `-lmm 2`
-* Fix of GSL ERROR: function value is not finite in brent.c at line 202 errno 9 #210
+* Fix of GSL ERROR: function value is not finite in brent.c at line 202 errno 9, see #210
+* Added profiler support in Guix profile and make file. Profiling issue #243
 
 ## ChangeLog v0.98.4 (2021/01/29)
 
