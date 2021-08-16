@@ -116,15 +116,15 @@ a typical example would be
 
 ```sh
 # compute Kinship matrix
-gemma -g ../example/mouse_hs1940.geno.txt.gz -p ../example/mouse_hs1940.pheno.txt \
+gemma -g ./example/mouse_hs1940.geno.txt.gz -p ./example/mouse_hs1940.pheno.txt \
     -gk -o mouse_hs1940
 # run univariate LMM
-gemma -g ../example/mouse_hs1940.geno.txt.gz \
-    -p ../example/mouse_hs1940.pheno.txt -n 1 -a ../example/mouse_hs1940.anno.txt \
+gemma -g ./example/mouse_hs1940.geno.txt.gz \
+    -p ./example/mouse_hs1940.pheno.txt -n 1 -a ./example/mouse_hs1940.anno.txt \
     -k ./output/mouse_hs1940.cXX.txt -lmm -o mouse_hs1940_CD8_lmm
 ```
 
-Above example files can be downloaded from
+Above example files are in the git repo and can be downloaded from
 [github](https://github.com/genetics-statistics/GEMMA/tree/master/example).
 
 ### Debugging and optimization

@@ -3666,6 +3666,8 @@ void MVLMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
     t_last++;
   }
   for (vector<SNPINFO>::size_type t = 0; t < snpInfo.size(); ++t) {
+    cout << snpInfo[t].rs_number << endl;
+
     if (t % d_pace == 0 || t == snpInfo.size() - 1) {
       ProgressBar("Reading SNPs", t, snpInfo.size() - 1);
     }
@@ -3752,6 +3754,10 @@ void MVLMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
       gsl_matrix_set_zero(Xlarge);
 
       for (size_t i = 0; i < l; i++) {
+        double t = (double(clock()-time_start)/(double(CLOCKS_PER_SEC)));
+        printf("%.2f ",t);
+        if (i>10) exit(1);
+        cout << i << "," << l  << endl;
         gsl_vector_view UtXlarge_col = gsl_matrix_column(UtXlarge, i);
         gsl_vector_memcpy(&X_row.vector, &UtXlarge_col.vector);
 
