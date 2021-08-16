@@ -143,7 +143,7 @@ endif
 
 debug check fast-check: CPPFLAGS += -g $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
 
-profile: CPPFLAGS += -pg
+profile: CPPFLAGS += -g $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
 
 release: CPPFLAGS += -DNDEBUG -O3 $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
 
@@ -181,6 +181,8 @@ ifdef EXTRA_FLAGS
   LIBS += $(EXTRA_FLAGS)
 endif
 
+profile: LIBS += -Wl,--no-as-needed -lprofiler -Wl,--as-needed
+
 .PHONY: all test
 
 OUTPUT = $(BIN_DIR)/gemma
@@ -213,7 +215,7 @@ release: $(OUTPUT)
 
 static: $(OUTPUT)
 
-debug: $(OUTPUT)
+debug profile: $(OUTPUT)
 
 ./src/version.h: ./VERSION
 	$(shell bash $(VGEN) $(GUIX_PROFILE) > src/version.h)
