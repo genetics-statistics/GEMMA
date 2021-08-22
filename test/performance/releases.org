@@ -1,12 +1,12 @@
 * GEMMA performance stats
 
-** GEMMA 0.99.0-pre1
+** GEMMA 0.98.5-pre1
 
 Measurements taken on a recent AMD Ryzen 7 3700X 8-Core Processor @2.195GHz.
 
 #+begin_src sh
 time ./bin/gemma -g ./example/mouse_hs1940.geno.txt.gz -p ./example/mouse_hs1940.pheno.txt -a ./example/mouse_hs1940.anno.txt -gk -no-check
-GEMMA 0.99.0-pre1 (2021-08-11) by Xiang Zhou, Pjotr Prins and team (C) 2012-2021
+GEMMA 0.98.5-pre1 (2021-08-11) by Xiang Zhou, Pjotr Prins and team (C) 2012-2021
 Reading Files ...
 ## number of total individuals = 1940
 ## number of analyzed individuals = 1410
@@ -22,7 +22,7 @@ user    0m11.829s
 sys     0m1.992s
 
 time ./bin/gemma -g ./example/mouse_hs1940.geno.txt.gz -p ./example/mouse_hs1940.pheno.txt -n 1 -a ./example/mouse_hs1940.anno.txt -k ./output/result.cXX.txt -lmm -no-check
-GEMMA 0.99.0-pre1 (2021-08-11) by Xiang Zhou, Pjotr Prins and team (C) 2012-2021
+GEMMA 0.98.5-pre1 (2021-08-11) by Xiang Zhou, Pjotr Prins and team (C) 2012-2021
 Reading Files ...
 ## number of total individuals = 1940
 ## number of analyzed individuals = 1410
@@ -40,7 +40,7 @@ user    0m12.863s
 sys     0m4.943s
 
 time ./bin/gemma -g ./example/mouse_hs1940.geno.txt.gz -p ./example/mouse_hs1940.pheno.txt -n 1 2 -a ./example/mouse_hs1940.anno.txt -k ./output/result.cXX.txt -lmm -no-check
-GEMMA 0.99.0-pre1 (2021-08-11) by Xiang Zhou, Pjotr Prins and team (C) 2012-2021
+GEMMA 0.98.5-pre1 (2021-08-11) by Xiang Zhou, Pjotr Prins and team (C) 2012-2021
 Reading Files ...
 ## number of total individuals = 1940
 ## number of analyzed individuals = 757
