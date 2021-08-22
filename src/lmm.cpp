@@ -846,7 +846,7 @@ double LogRL_f(double l, void *params) {
   }
   index_ww = GetabIndex(n_cvt + 2, n_cvt + 2, n_cvt);
   double P_yy = gsl_matrix_safe_get(Pab, nc_total, index_ww);
-  if (P_yy < 0.00000001) P_yy = 0.00000001;
+  // if (P_yy > 0.0 && P_yy < 0.00000001) P_yy = 0.00000001; // control potential round-off
 
   double c = 0.5 * df * (safe_log(df) - safe_log(2 * M_PI) - 1.0);
   f = c - 0.5 * logdet_h - 0.5 * logdet_hiw - 0.5 * df * safe_log(P_yy);
