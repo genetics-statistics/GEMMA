@@ -24,7 +24,8 @@
   (gnu packages ninja)
   (gnu packages parallel)
   (gnu packages perl)
-  (gnu packages perl6)
+  ;; (gnu packages perl6)
+  (gnu packages ruby)
   (gnu packages pkg-config)
   ;; (gnu packages shell)  ;; for shunit2
   (srfi srfi-1)
@@ -50,11 +51,12 @@
               ("gsl" ,gsl)
               ;; ("shunit2" ,shunit2) ;; comes with gemma
               ("openblas" ,openblas)
+              ("ruby" ,ruby) ;; for testing
               ("zlib:static" ,zlib "static")
               ("zlib" ,zlib)
               ))
     (native-inputs ; for running tests
-     `(("perl" ,perl)
+      `(("perl" ,perl)
        ("which" ,which)
        ))
     (home-page "https://github.com/genetics-statistics")

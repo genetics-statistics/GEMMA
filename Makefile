@@ -234,9 +234,13 @@ unittests: all ./bin/unittests-gemma
 	./bin/unittests-gemma
 
 fast-check: all unittests
+	rm -vf output/*
+	ruby -Eutf-8 -Itest ./test/dev_tests.rb | tee ./dev_test.log
+
+old-check: all unittests
 	rm -vf test/output/*
-	cd test && ./dev_test_suite.sh | tee ../dev_test.log
-	grep -q 'success rate: 100%' dev_test.log
+	cd test && ./dev_test_suite.sh | tee ../test.log
+	grep -q 'success rate: 100%' test.log
 
 slow-check: all
 	rm -vf test/output/*
@@ -248,9 +252,7 @@ lengthy-check: all
 	cd test && ./lengthy_test_suite.sh | tee ../lengthy_test.log
 	grep -q 'success rate: 100%' lengthy_test.log
 
-check: fast-check slow-check
-
-check-all: check lengthy-check
+check: fast-check
 
 clean:
 	rm -vf $(SRC_DIR)/*.o
