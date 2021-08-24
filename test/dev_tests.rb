@@ -22,4 +22,22 @@ class TestQuick < MiniTest::Test
                                                    [3,9,"3.909916e-02"]])
   end
 
+  def test_BXD
+    assert gemma("-g ./example/BXD_geno.txt.gz \
+           -p ./example/BXD_pheno.txt \
+           -c ./example/BXD_covariates2.txt \
+           -a ./example/BXD_snps.txt \
+           -gk \
+           -o BXD")
+
+    assert gemma("-g ./example/BXD_geno.txt.gz \
+           -p ./example/BXD_pheno.txt \
+           -c ./example/BXD_covariates2.txt \
+           -a ./example/BXD_snps.txt \
+           -k ./output/BXD.cXX.txt \
+           -lmm 2 -no-check -maf 0.1 \
+           -o BXDLMM")
+
+    expect("output/BXDLMM.assoc.txt",[[2,9,"1.234747e-01"]])
+  end
 end
