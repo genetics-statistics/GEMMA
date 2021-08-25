@@ -846,7 +846,8 @@ double LogRL_f(double l, void *params) {
   }
   index_ww = GetabIndex(n_cvt + 2, n_cvt + 2, n_cvt);
   double P_yy = gsl_matrix_safe_get(Pab, nc_total, index_ww);
-  // if (P_yy > 0.0 && P_yy < 0.00000001) P_yy = 0.00000001; // control potential round-off
+  // P_yy is positive and may get zeroed printf("P_yy=%f",P_yy);
+  if (P_yy == 0.0) P_yy = 0.00000001; // control potential round-off
 
   double c = 0.5 * df * (safe_log(df) - safe_log(2 * M_PI) - 1.0);
   f = c - 0.5 * logdet_h - 0.5 * logdet_hiw - 0.5 * df * safe_log(P_yy);
@@ -1938,6 +1939,10 @@ void MatrixCalcLR(const gsl_matrix *U, const gsl_matrix *UtX,
 void CalcLambda(const char func_name, FUNC_PARAM &params, const double l_min,
                 const double l_max, const size_t n_region, double &lambda,
                 double &logf) {
+  // wipe return values
+  logf = nan("NAN");
+  lambda = nan("NAN");
+
   if (func_name != 'R' && func_name != 'L' && func_name != 'r' &&
       func_name != 'l') {
     cout << "func_name only takes 'R' or 'L': 'R' for "
@@ -2013,25 +2018,21 @@ void CalcLambda(const char func_name, FUNC_PARAM &params, const double l_min,
       FDF.fdf = &LogL_dev12;
     }
 
-    const gsl_root_fsolver_type *T_f;
-    gsl_root_fsolver *s_f;
-    T_f = gsl_root_fsolver_brent;
-    s_f = gsl_root_fsolver_alloc(T_f);
-
-    const gsl_root_fdfsolver_type *T_fdf;
-    gsl_root_fdfsolver *s_fdf;
-    T_fdf = gsl_root_fdfsolver_newton;
-    s_fdf = gsl_root_fdfsolver_alloc(T_fdf);
+    const gsl_root_fsolver_type *T_f = gsl_root_fsolver_brent;
+    const gsl_root_fsolver *s_f = gsl_root_fsolver_alloc(T_f);
+    const gsl_root_fdfsolver_type *T_fdf = gsl_root_fdfsolver_newton;
+    const gsl_root_fdfsolver *s_fdf = gsl_root_fdfsolver_alloc(T_fdf);
 
     for (vector<double>::size_type i = 0; i < lambda_lh.size(); ++i) {
       lambda_l = lambda_lh[i].first;
       lambda_h = lambda_lh[i].second;
-      gsl_root_fsolver_set(s_f, &F, lambda_l, lambda_h);
+      gsl_root_fsolver_set((gsl_root_fsolver*)s_f, &F, lambda_l, lambda_h);
 
       auto handler = gsl_set_error_handler_off();
+      iter = 0;
       do {
         iter++;
-        status = gsl_root_fsolver_iterate(s_f);
+        status = gsl_root_fsolver_iterate((gsl_root_fsolver*)s_f);
         if (status != GSL_SUCCESS && status != GSL_CONTINUE) {
           warning_msg("Brent did not converge");
           break;
@@ -2047,23 +2048,24 @@ void CalcLambda(const char func_name, FUNC_PARAM &params, const double l_min,
       } while (status == GSL_CONTINUE && iter < max_iter);
 
       iter = 0;
-
-      gsl_root_fdfsolver_set(s_fdf, &FDF, l);
+      gsl_root_fdfsolver_set((gsl_root_fdfsolver*)s_fdf, &FDF, l);
       do {
         iter++;
-        status = gsl_root_fdfsolver_iterate(s_fdf);
+        status = gsl_root_fdfsolver_iterate((gsl_root_fdfsolver*)s_fdf);
         if (status != GSL_SUCCESS && status != GSL_CONTINUE) {
           debug_msg("Newton did not converge");
           break;
         }
         l_temp = l;
-        l = gsl_root_fdfsolver_root(s_fdf);
+        l = gsl_root_fdfsolver_root((gsl_root_fdfsolver*)s_fdf);
         status = gsl_root_test_delta(l, l_temp, 0, 1e-5);
         if (status != GSL_SUCCESS && status != GSL_CONTINUE) {
           debug_msg("Newton did not converge");
           break;
         }
       } while (status == GSL_CONTINUE && iter < max_iter && l > l_min && l < l_max);
+
+      // cleanup
       gsl_set_error_handler(handler);
 
       if (status == GSL_CONTINUE) {
@@ -2074,6 +2076,8 @@ void CalcLambda(const char func_name, FUNC_PARAM &params, const double l_min,
         // make sure results are invalid
         logf = nan("NAN");
         lambda = nan("NAN");
+        gsl_root_fsolver_free((gsl_root_fsolver*)s_f);
+        gsl_root_fdfsolver_free((gsl_root_fdfsolver*)s_fdf);
         return;
       }
 
@@ -2099,8 +2103,8 @@ void CalcLambda(const char func_name, FUNC_PARAM &params, const double l_min,
       } else {
       }
     }
-    gsl_root_fsolver_free(s_f);
-    gsl_root_fdfsolver_free(s_fdf);
+    gsl_root_fsolver_free((gsl_root_fsolver*)s_f);
+    gsl_root_fdfsolver_free((gsl_root_fdfsolver*)s_fdf);
 
     if (func_name == 'R' || func_name == 'r') {
       logf_l = LogRL_f(l_min, &params);
