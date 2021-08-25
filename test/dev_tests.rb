@@ -38,6 +38,29 @@ class TestQuick < MiniTest::Test
            -lmm 2 -no-check -maf 0.1 \
            -o BXDLMM")
 
-    expect("output/BXDLMM.assoc.txt",[[2,9,"1.234747e-01"]])
+    expect("output/BXDLMM.assoc.txt",[[2,9,"1.234747e-01"],
+                                      [:max,9,"9.997119e-01"]])
+  end
+
+  def test_mouse_hs1940_loco
+    assert gemma("-g ./example/mouse_hs1940.geno.txt.gz \
+           -p ./example/mouse_hs1940.pheno.txt \
+           -a ./example/mouse_hs1940.anno.txt \
+           -snps ./example/mouse_hs1940_snps.txt \
+           -nind 400 -loco 1 -gk \
+           -o mouse_hs1940_loco")
+
+    assert gemma("-g ./example/mouse_hs1940.geno.txt.gz \
+           -p ./example/mouse_hs1940.pheno.txt \
+	   -n 1 \
+	   -loco 1 \
+           -a ./example/mouse_hs1940.anno.txt \
+           -k ./output/mouse_hs1940_loco.cXX.txt \
+	   -snps ./example/mouse_hs1940_snps.txt \
+           -lmm \
+	   -nind 400 -no-check \
+           -o mouse_hs1940_loco")
+    expect("output/mouse_hs1940_loco.assoc.txt",[[2,9,"-3.073643e+02"],
+                                                 [:max,11,"9.716047e-01"]])
   end
 end
