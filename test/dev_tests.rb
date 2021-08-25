@@ -7,6 +7,7 @@ class TestQuick < MiniTest::Test
   include TestHelpers
 
   def setup
+    ENV['GSL_RNG_SEED']=100.to_s
   end
 
   def test_linear_model

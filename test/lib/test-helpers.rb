@@ -2,7 +2,7 @@ module TestHelpers
 
   # Runs gemma and returns true if successful
   def gemma(opts)
-    assert system("./bin/gemma #{opts}")
+    assert system("./bin/gemma -debug -check #{opts}")
   end
 
   def read(fn, line=0)
