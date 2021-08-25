@@ -10,7 +10,7 @@ class TestQuick < MiniTest::Test
   end
 
   def test_linear_model
-    assert gemma("-g ./example/mouse_hs1940.geno.txt.gz \
+    gemma("-g ./example/mouse_hs1940.geno.txt.gz \
            -p ./example/mouse_hs1940.pheno.txt \
            -n 1 \
            -a ./example/mouse_hs1940.anno.txt \
@@ -23,14 +23,14 @@ class TestQuick < MiniTest::Test
   end
 
   def test_BXD
-    assert gemma("-g ./example/BXD_geno.txt.gz \
+    gemma("-g ./example/BXD_geno.txt.gz \
            -p ./example/BXD_pheno.txt \
            -c ./example/BXD_covariates2.txt \
            -a ./example/BXD_snps.txt \
            -gk \
            -o BXD")
 
-    assert gemma("-g ./example/BXD_geno.txt.gz \
+    gemma("-g ./example/BXD_geno.txt.gz \
            -p ./example/BXD_pheno.txt \
            -c ./example/BXD_covariates2.txt \
            -a ./example/BXD_snps.txt \
@@ -39,18 +39,18 @@ class TestQuick < MiniTest::Test
            -o BXDLMM")
 
     expect("output/BXDLMM.assoc.txt",[[2,9,"1.234747e-01"],
-                                      [:max,9,"9.997119e-01"]])
+                                      [:max,"p_lrt","9.997119e-01"]])
   end
 
   def test_mouse_hs1940_loco
-    assert gemma("-g ./example/mouse_hs1940.geno.txt.gz \
+    gemma("-g ./example/mouse_hs1940.geno.txt.gz \
            -p ./example/mouse_hs1940.pheno.txt \
            -a ./example/mouse_hs1940.anno.txt \
            -snps ./example/mouse_hs1940_snps.txt \
            -nind 400 -loco 1 -gk \
            -o mouse_hs1940_loco")
 
-    assert gemma("-g ./example/mouse_hs1940.geno.txt.gz \
+    gemma("-g ./example/mouse_hs1940.geno.txt.gz \
            -p ./example/mouse_hs1940.pheno.txt \
 	   -n 1 \
 	   -loco 1 \
@@ -61,6 +61,26 @@ class TestQuick < MiniTest::Test
 	   -nind 400 -no-check \
            -o mouse_hs1940_loco")
     expect("output/mouse_hs1940_loco.assoc.txt",[[2,9,"-3.073643e+02"],
-                                                 [:max,11,"9.716047e-01"]])
+                                                 [:max,"p_wald","9.716047e-01"]])
   end
+
+  # Test for https://github.com/genetics-statistics/GEMMA/issues/58
+  # fixed GSLv2 NaN's that appeared with covariates.
+  def test_plink_covariates_lmm
+    gemma("-bfile example/HLC -gk 2 -o testPlinkStandardRelatednessMatrixK")
+
+    gemma("-bfile example/HLC \
+           -k output/testPlinkStandardRelatednessMatrixK.sXX.txt \
+           -lmm 1 \
+           -maf 0.1 \
+           -c example/HLC_covariates.txt \
+           -no-check \
+           -o plink_lmm1_cov")
+    expect("output/plink_lmm1_cov.assoc.txt",[[100,"p_wald","5.189953e-01"],
+                                              [:max,"logl_H1","279.2689"],
+                                              [:max,"l_remle","1.686062"],
+                                              [:max,"p_wald","0.9999996"]])
+  end
+
+
 end

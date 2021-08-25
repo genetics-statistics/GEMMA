@@ -1,5 +1,7 @@
 #!/bin/sh
 
+echo "WARNING: THIS TEST SUITE IS NO LONGER USED"
+
 gemma=../bin/gemma
 # gemmaopts="-debug -strict"
 gemmaopts="-debug -check"

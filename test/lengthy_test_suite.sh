@@ -2,6 +2,8 @@
 #
 # Long running tests go here
 
+echo "WARNING: THIS TEST SUITE IS NO LONGER USED"
+
 gemma=../bin/gemma
 export GSL_RNG_SEED=100
 

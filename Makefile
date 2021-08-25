@@ -237,16 +237,19 @@ fast-check: all unittests
 	rm -vf output/*
 	ruby -Eutf-8 -Itest ./test/dev_tests.rb | tee ./dev_test.log
 
+# Note the following tests are not robust for different architectures
 old-check: all unittests
 	rm -vf test/output/*
 	cd test && ./dev_test_suite.sh | tee ../test.log
 	grep -q 'success rate: 100%' test.log
 
+# Note the following tests are not robust for different architectures
 slow-check: all
 	rm -vf test/output/*
 	cd test && ./test_suite.sh | tee ../test.log
 	grep -q 'success rate: 100%' test.log
 
+# Note the following tests are not robust for different architectures
 lengthy-check: all
 	rm -vf test/output/*
 	cd test && ./lengthy_test_suite.sh | tee ../lengthy_test.log
