@@ -40,6 +40,17 @@ class TestQuick < MiniTest::Test
 
     expect("output/BXDLMM.assoc.txt",[[2,9,"1.234747e-01"],
                                       [:max,"p_lrt","9.997119e-01"]])
+
+    gemma("-g ./example/BXD_geno.txt.gz \
+           -p ./example/BXD_pheno.txt \
+           -c ./example/BXD_covariates2.txt \
+           -a ./example/BXD_snps.txt \
+           -k ./output/BXD.cXX.txt \
+           -lmm 9 -no-check -maf 0.1 \
+           -o BXDLMM9")
+
+    expect("output/BXDLMM9.assoc.txt",[[:max,"l_mle","0.7531109"],
+                                       [:max,"p_lrt","9.997119e-01"]])
   end
 
   def test_mouse_hs1940_loco

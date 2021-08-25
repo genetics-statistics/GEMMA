@@ -1425,7 +1425,7 @@ void LMM::AnalyzeGene(const gsl_matrix *U, const gsl_vector *eval,
     CalcUab(UtW, Uty, Uab);
     FUNC_PARAM param0 = {false, ni_test, n_cvt, eval, Uab, ab, 0};
 
-    if (a_mode == M_LMM2 || a_mode == M_LMM3 || a_mode == M_LMM4) {
+    if (a_mode == M_LMM2 || a_mode == M_LMM3 || a_mode == M_LMM4 || a_mode == M_LMM9) {
       CalcLambda('L', param0, l_min, l_max, n_region, l_H0, logl_H0);
     }
 
@@ -1434,7 +1434,7 @@ void LMM::AnalyzeGene(const gsl_matrix *U, const gsl_vector *eval,
     FUNC_PARAM param1 = {false, ni_test, n_cvt, eval, Uab, ab, 0};
 
     // 3 is before 1.
-    if (a_mode == M_LMM3 || a_mode == M_LMM4) {
+    if (a_mode == M_LMM3 || a_mode == M_LMM4 || a_mode == M_LMM9) {
       CalcRLScore(l_H0, param1, beta, se, p_score);
     }
 
@@ -1443,7 +1443,7 @@ void LMM::AnalyzeGene(const gsl_matrix *U, const gsl_vector *eval,
       CalcRLWald(lambda_remle, param1, beta, se, p_wald);
     }
 
-    if (a_mode == M_LMM2 || a_mode == M_LMM4) {
+    if (a_mode == M_LMM2 || a_mode == M_LMM4 || a_mode == M_LMM9) {
       CalcLambda('L', param1, l_min, l_max, n_region, lambda_mle, logl_H1);
       p_lrt = gsl_cdf_chisq_Q(2.0 * (logl_H1 - logl_H0), 1);
     }
@@ -1543,7 +1543,7 @@ void LMM::Analyze(std::function< SnpNameValues(size_t) >& fetch_snp,
         CalcRLWald(lambda_remle, param1, beta, se, p_wald);
       }
 
-      if (a_mode == M_LMM2 || a_mode == M_LMM9 || a_mode == M_LMM4) {
+      if (a_mode == M_LMM2 || a_mode == M_LMM4 || a_mode == M_LMM9) {
         CalcLambda('L', param1, l_min, l_max, n_region, lambda_mle, logl_H1);
         p_lrt = gsl_cdf_chisq_Q(2.0 * (logl_H1 - logl_mle_H0), 1);
       }
@@ -1855,7 +1855,7 @@ void LMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
         FUNC_PARAM param1 = {false, ni_test, n_cvt, eval, Uab, ab, 0};
 
         // 3 is before 1, for beta.
-        if (a_mode == M_LMM3 || a_mode == M_LMM4) {
+        if (a_mode == M_LMM3 || a_mode == M_LMM4 || a_mode == M_LMM9) {
           CalcRLScore(l_mle_null, param1, beta, se, p_score);
         }
 
@@ -1866,7 +1866,7 @@ void LMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
             CalcRLWald(lambda_remle, param1, beta, se, p_wald);
         }
 
-        if (a_mode == M_LMM2 || a_mode == M_LMM4) {
+        if (a_mode == M_LMM2 || a_mode == M_LMM4 || a_mode == M_LMM9) {
           CalcLambda('L', param1, l_min, l_max, n_region, lambda_mle, logl_H1);
           p_lrt = gsl_cdf_chisq_Q(2.0 * (logl_H1 - logl_mle_H0), 1);
         }
@@ -2382,7 +2382,7 @@ void LMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval,
     FUNC_PARAM param1 = {false, ni_test, n_cvt + 2, eval, Uab, ab, 0};
 
     // 3 is before 1.
-    if (a_mode == 3 || a_mode == 4) {
+    if (a_mode == 3 || a_mode == 4 || a_mode == 9) {
       CalcRLScore(l_mle_null, param1, beta, se, p_score);
     }
 
@@ -2391,7 +2391,7 @@ void LMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval,
       CalcRLWald(lambda_remle, param1, beta, se, p_wald);
     }
 
-    if (a_mode == 2 || a_mode == 4) {
+    if (a_mode == 2 || a_mode == 4 || a_mode == 9) {
       CalcLambda('L', param1, l_min, l_max, n_region, lambda_mle, logl_H1);
       p_lrt = gsl_cdf_chisq_Q(2.0 * (logl_H1 - logl_H0), 1);
     }
@@ -2560,7 +2560,7 @@ void LMM::AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval,
     FUNC_PARAM param1 = {false, ni_test, n_cvt + 2, eval, Uab, ab, 0};
 
     // 3 is before 1, for beta.
-    if (a_mode == 3 || a_mode == 4) {
+    if (a_mode == 3 || a_mode == 4 || a_mode == 9) {
       CalcRLScore(l_mle_null, param1, beta, se, p_score);
     }
 
@@ -2569,7 +2569,7 @@ void LMM::AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval,
       CalcRLWald(lambda_remle, param1, beta, se, p_wald);
     }
 
-    if (a_mode == 2 || a_mode == 4) {
+    if (a_mode == 2 || a_mode == 4 || a_mode == 9) {
       CalcLambda('L', param1, l_min, l_max, n_region, lambda_mle, logl_H1);
       p_lrt = gsl_cdf_chisq_Q(2.0 * (logl_H1 - logl_H0), 1);
     }
