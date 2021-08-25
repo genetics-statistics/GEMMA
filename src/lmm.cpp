@@ -522,10 +522,11 @@ double LogL_f(double l, void *params) {
   index_yy = GetabIndex(n_cvt + 2, n_cvt + 2, n_cvt);
   double P_yy = gsl_matrix_safe_get(Pab, nc_total, index_yy);
 
+  if (P_yy == 0.0) P_yy = 0.00000001; // control potential round-off
   if (is_check_mode() || is_debug_mode()) {
     // cerr << "P_yy is" << P_yy << endl;
     assert(!is_nan(P_yy));
-    assert(P_yy > 0);
+    assert(P_yy > 0.0);
   }
   f = c - 0.5 * logdet_h - 0.5 * (double)ni_test * safe_log(P_yy);
   if (is_check_mode() || is_debug_mode()) {
@@ -1995,9 +1996,6 @@ void CalcLambda(const char func_name, FUNC_PARAM &params, const double l_min,
   } else {
 
     // If derivates change signs.
-    int status;
-    int iter = 0;
-    const auto max_iter = 100;
     double l=0.0, l_temp = 0.0;
 
     gsl_function F;
@@ -2028,8 +2026,11 @@ void CalcLambda(const char func_name, FUNC_PARAM &params, const double l_min,
       lambda_h = lambda_lh[i].second;
       gsl_root_fsolver_set((gsl_root_fsolver*)s_f, &F, lambda_l, lambda_h);
 
+      int status = GSL_FAILURE;
+      uint iter = 0;
+      const auto max_iter = 100;
+
       auto handler = gsl_set_error_handler_off();
-      iter = 0;
       do {
         iter++;
         status = gsl_root_fsolver_iterate((gsl_root_fsolver*)s_f);
@@ -2047,10 +2048,15 @@ void CalcLambda(const char func_name, FUNC_PARAM &params, const double l_min,
         }
       } while (status == GSL_CONTINUE && iter < max_iter);
 
-      iter = 0;
+      if (status == GSL_CONTINUE) {
+        debug_msg("Brent root did not converge: too many iterations");
+        break;
+      }
+
+      uint iter2 = 0;
       gsl_root_fdfsolver_set((gsl_root_fdfsolver*)s_fdf, &FDF, l);
       do {
-        iter++;
+        iter2++;
         status = gsl_root_fdfsolver_iterate((gsl_root_fdfsolver*)s_fdf);
         if (status != GSL_SUCCESS && status != GSL_CONTINUE) {
           debug_msg("Newton did not converge");
@@ -2063,13 +2069,13 @@ void CalcLambda(const char func_name, FUNC_PARAM &params, const double l_min,
           debug_msg("Newton did not converge");
           break;
         }
-      } while (status == GSL_CONTINUE && iter < max_iter && l > l_min && l < l_max);
+      } while (status == GSL_CONTINUE && iter2 < max_iter && l > l_min && l < l_max);
 
       // cleanup
       gsl_set_error_handler(handler);
 
       if (status == GSL_CONTINUE) {
-        debug_msg("Root did not converge: too many iterations");
+        debug_msg("Newton root did not converge: too many iterations");
       }
 
       if (status == GSL_CONTINUE || status != GSL_SUCCESS) {
