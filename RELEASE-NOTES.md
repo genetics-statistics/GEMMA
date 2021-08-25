@@ -4,7 +4,9 @@ see
 and
 [commits](https://github.com/genetics-statistics/GEMMA/commits/master).
 
-## ChangeLog v0.98.5 (2021/mm/dd)
+## ChangeLog v0.98.6 (2021/--/--)
+
+## ChangeLog v0.98.5 (2021/08/25)
 
 * Changed banner to show 'Copyright (C) 2012–2021, Xiang Zhou, Pjotr Prins and team'
 * Fixed tests for new Debian stable release - mostly roundoff confusion
@@ -12,6 +14,8 @@ and
 * Fix of GSL ERROR: function value is not finite in brent.c at line 202 errno 9, see #210
 * Added profiler support in Guix profile and make file. Profiling issue #243
 * Added new test suite to replace shunit2 scripts - should make it more robust for different architectures, see github issues #242 and #247.
+* Fixed iter could go out of bounds in CalcLambda, see 43bbfda6253d1c5b88cb4ef5c092eb8be716592f
+* Make sure P_yy=0 does not fail
 
 ## ChangeLog v0.98.4 (2021/01/29)
 
