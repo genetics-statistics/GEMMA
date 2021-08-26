@@ -17,6 +17,10 @@ and
 * Fixed iter could go out of bounds in CalcLambda, see 43bbfda6253d1c5b88cb4ef5c092eb8be716592f
 * Make sure P_yy=0 does not fail
 
+MD5SUM of static binary:
+
+    f5e90535ff6a36867dcb5f6b0fb24135  gemma-0.98.5
+
 ## ChangeLog v0.98.4 (2021/01/29)
 
 Maintenance release
