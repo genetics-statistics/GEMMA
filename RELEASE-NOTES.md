@@ -7,6 +7,7 @@ and
 ## ChangeLog v0.98.6 (2021/--/--)
 
 * Added github-CI: https://github.com/genetics-statistics/GEMMA/actions
+* Removed travis-CI because it won't connect for some reason
 
 ## ChangeLog v0.98.5 (2021/08/25)
 
