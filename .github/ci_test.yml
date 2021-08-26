@@ -1,0 +1,17 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  arch:
+    name: gemma
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    steps:
+    - name: Install dependencies
+      run: sudo apt-get install gfortran libopenblas-dev libgsl-dev zlib1g-dev catch ruby python
+    - uses: actions/checkout@v2
+    - name: Build
+      run: make debug
+    - name: Run tests
+      run: make check
