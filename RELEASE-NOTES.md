@@ -6,6 +6,8 @@ and
 
 ## ChangeLog v0.98.6 (2021/--/--)
 
+* Added github-CI: https://github.com/genetics-statistics/GEMMA/actions
+
 ## ChangeLog v0.98.5 (2021/08/25)
 
 * Changed banner to show 'Copyright (C) 2012–2021, Xiang Zhou, Pjotr Prins and team'
