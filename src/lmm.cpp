@@ -2,7 +2,7 @@
     Genome-wide Efficient Mixed Model Association (GEMMA)
     Copyright © 2011-2017, Xiang Zhou
     Copyright © 2017, Peter Carbonetto
-    Copyright © 2017-2018 Pjotr Prins
+    Copyright © 2017-2022 Pjotr Prins
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -48,6 +48,8 @@
 #include "lapack.h"
 #include "lmm.h"
 #include "mathfunc.h"
+
+#define P_YY_MIN 0.00000001
 
 using namespace std;
 
@@ -522,7 +524,8 @@ double LogL_f(double l, void *params) {
   index_yy = GetabIndex(n_cvt + 2, n_cvt + 2, n_cvt);
   double P_yy = gsl_matrix_safe_get(Pab, nc_total, index_yy);
 
-  if (P_yy == 0.0) P_yy = 0.00000001; // control potential round-off
+  if (P_yy >= 0.0 && (P_yy < P_YY_MIN)) P_yy = P_YY_MIN; // control potential round-off
+
   if (is_check_mode() || is_debug_mode()) {
     // cerr << "P_yy is" << P_yy << endl;
     assert(!is_nan(P_yy));
@@ -848,7 +851,7 @@ double LogRL_f(double l, void *params) {
   index_ww = GetabIndex(n_cvt + 2, n_cvt + 2, n_cvt);
   double P_yy = gsl_matrix_safe_get(Pab, nc_total, index_ww);
   // P_yy is positive and may get zeroed printf("P_yy=%f",P_yy);
-  if (P_yy == 0.0) P_yy = 0.00000001; // control potential round-off
+  if (P_yy >= 0.0 && (P_yy < P_YY_MIN)) P_yy = P_YY_MIN; // control potential round-off
 
   double c = 0.5 * df * (safe_log(df) - safe_log(2 * M_PI) - 1.0);
   f = c - 0.5 * logdet_h - 0.5 * logdet_hiw - 0.5 * df * safe_log(P_yy);
@@ -2024,13 +2027,14 @@ void CalcLambda(const char func_name, FUNC_PARAM &params, const double l_min,
     for (vector<double>::size_type i = 0; i < lambda_lh.size(); ++i) {
       lambda_l = lambda_lh[i].first;
       lambda_h = lambda_lh[i].second;
+      // printf("%f,%f\n",lambda_l,lambda_h);
+      auto handler = gsl_set_error_handler_off();
       gsl_root_fsolver_set((gsl_root_fsolver*)s_f, &F, lambda_l, lambda_h);
 
       int status = GSL_FAILURE;
       uint iter = 0;
       const auto max_iter = 100;
 
-      auto handler = gsl_set_error_handler_off();
       do {
         iter++;
         status = gsl_root_fsolver_iterate((gsl_root_fsolver*)s_f);
