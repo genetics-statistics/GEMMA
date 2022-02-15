@@ -59,7 +59,9 @@ which is maintained by the authors. See the
     env GUIX_PACKAGE_PATH=./guix-bioinformatics guix package -A gemma
 
 To build GEMMA from source you can opt to install the build tools with
-GNU Guix, the current build container is in [guix-dev](./.guix-dev)
+GNU Guix, the current build container is in [guix.scm](guix.scm). See the first lines on how to create one using `guix shell`.
+
+An alternative is the command line invocation of [guix-dev](./.guix-dev)
 
     source .guix-dev
     make

@@ -5,6 +5,7 @@
 ;; To get a development container (e.g., run in emacs shell).
 ;;
 ;;   guix environment -C -l guix.scm
+;;   guix shell -C -f guix.scm
 
 (use-modules
   ((guix licenses) #:prefix license:)
