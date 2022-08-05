@@ -150,7 +150,7 @@ std::istream &safeGetline(std::istream &is, std::string &t) {
 
 // Read SNP file. A single column of SNP names.
 bool ReadFile_snps(const string file_snps, set<string> &setSnps) {
-  debug_msg("entered");
+  debug_msg("enter ReadFile_snps");
   setSnps.clear();
 
   igzstream infile(file_snps.c_str(), igzstream::in);
@@ -329,6 +329,9 @@ bool ReadFile_anno(const string &file_anno, map<string, string> &mapRS2chr,
     mapRS2bp[rs] = b_pos;
     mapRS2cM[rs] = cM;
   }
+  // for (auto& [key, value] : mapRS2bp) {
+  //     cerr << key << endl;
+  //}
 
   infile.close();
   infile.clear();
@@ -693,6 +696,9 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
   file_pos = 0;
   auto count_warnings = 0;
   auto infilen = file_geno.c_str();
+  // for (auto& [key, value] : mapRS2bp) {
+  //      cerr << key << endl;
+  // }
   while (!safe_get_line(infile, line).eof()) {
     ch_ptr = strtok_safe2((char *)line.c_str(), " ,\t",infilen);
     rs = ch_ptr;
@@ -714,8 +720,7 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
 
     if (mapRS2bp.count(rs) == 0) {
       if (is_debug_mode() && count_warnings++ < 10) {
-        std::string msg = "Can't figure out position for ";
-        msg += rs;
+        std::string msg = "Can't figure out position for <" + rs + ">";
         debug_msg(msg);
         if (count_warnings == 10)
           debug_msg("Skipping similar warnings");
