@@ -684,6 +684,9 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
   double maf, geno, geno_old;
   size_t n_miss;
   size_t n_0, n_1, n_2;
+  double min_g = std::numeric_limits<float>::max();
+  double max_g = std::numeric_limits<float>::min();
+
   int flag_poly;
 
   int ni_total = indicator_idv.size();
@@ -770,6 +773,8 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
       }
 
       gsl_vector_set(genotype, c_idv, geno);
+      if (geno < min_g) min_g = geno;
+      if (geno > max_g) max_g = geno;
 
       // going through genotypes with 0.0 < geno < 2.0
       if (flag_poly == 0) { // first init in marker
@@ -845,6 +850,11 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
     indicator_snp.push_back(1);
     ns_test++;
   }
+
+  if (min_g != 0.0)
+    warning_msg("The minimum genotype value is not 0.0 - this is not the BIMBAM standard and will skew l_lme and effect sizes");
+  if (max_g != 2.0)
+    warning_msg("The maximum genotype value is not 2.0 - this is not the BIMBAM standard and will skew l_lme and effect sizes");
 
   gsl_vector_free(genotype);
   gsl_vector_free(genotype_miss);
