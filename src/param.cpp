@@ -65,6 +65,22 @@ void LOCO_set_Snps(set<string> &ksnps, set<string> &gwasnps,
   }
 }
 
+// This code defines a function named LOCO_set_Snps that takes four arguments: 
+// two set<string> references (ksnps and gwasnps), a constant map<string, string> reference (mapchr), and a constant string (loco).
+
+// The function first checks that both ksnps and gwasnps are empty sets to ensure they are not initialized twice.
+
+// Next, the function loops through each key-value pair (kv) in the mapchr map using a range-based for loop. 
+//For each key-value pair, the function extracts the key (snp) and value (chr) using auto.
+
+// Then, the function checks if chr is equal to loco. If it is, then the snp is added to 
+// gwasnps using the insert() method of the set container. If chr is not equal to loco, then snp is added to ksnps.
+
+// Essentially, the function divides the set of SNPs (single nucleotide polymorphisms) into two groups: 
+// the SNPs that are associated with the trait of interest (gwasnps) and the SNPs that are not associated with the trait of interest (ksnps). 
+// The loco variable specifies the chromosome on which the trait of interest is located.
+
+
 // Trim #individuals to size which is used to write tests that run faster
 //
 // Note it actually trims the number of functional individuals
@@ -240,6 +256,11 @@ void PARAM::ReadFiles(void) {
   }
   if (!file_weight.empty()) {
     if (ReadFile_column(file_weight, indicator_weight, weight, 1) == false) {
+      error = true;
+    }
+  }
+  if (!file_res.empty()) {
+    if (ReadFile_column(file_res, indicator_res, res_var, 1) == false) {
       error = true;
     }
   }
@@ -939,6 +960,7 @@ void PARAM::CheckParam(void) {
   enforce_fexists(file_weight, "open file");
   enforce_fexists(file_epm, "open file");
   enforce_fexists(file_ebv, "open file");
+  enforce_fexists(file_res, "open file");
   enforce_fexists(file_read, "open file");
 
   // Check if files are compatible with analysis mode.
@@ -1020,6 +1042,14 @@ void PARAM::CheckData(void) {
     return;
   }
 
+    if ((indicator_res).size() != 0 &&
+      (indicator_res).size() != (indicator_idv).size()) {
+    error = true;
+    cout << "error! number of rows in the residual variance file do not match "
+         << "the number of individuals. " << endl;
+    return;
+  }
+
   if ((indicator_read).size() != 0 &&
       (indicator_read).size() != (indicator_idv).size()) {
     error = true;
@@ -1065,6 +1095,12 @@ void PARAM::CheckData(void) {
 
     if (indicator_weight.size() != 0) {
       if (indicator_weight[i] == 0) {
+        continue;
+      }
+    }
+
+        if (indicator_res.size() != 0) {
+      if (indicator_res[i] == 0) {
         continue;
       }
     }
@@ -2026,6 +2062,13 @@ void PARAM::ProcessCvtPhen() {
     }
   }
 
+    // Remove individuals with missing residual variance.
+  if ((indicator_res).size() != 0) {
+    for (vector<int>::size_type i = 0; i < (indicator_idv).size(); ++i) {
+      indicator_idv[i] *= indicator_res[i];
+    }
+  }
+
   // Obtain ni_test.
   ni_test = 0;
   for (vector<int>::size_type i = 0; i < (indicator_idv).size(); ++i) {
@@ -2135,6 +2178,20 @@ void PARAM::CopyWeight(gsl_vector *w) {
       continue;
     }
     gsl_vector_set(w, ci_test, weight[i]);
+    ci_test++;
+  }
+
+  return;
+}
+
+void PARAM::CopyResid(gsl_vector *res) {
+  size_t ci_test = 0;
+
+  for (vector<int>::size_type i = 0; i < indicator_idv.size(); ++i) {
+    if (indicator_idv[i] == 0 || indicator_res[i] == 0) {
+      continue;
+    }
+    gsl_vector_set(res, ci_test, res_var[i]);
     ci_test++;
   }
 
