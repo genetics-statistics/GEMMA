@@ -507,7 +507,7 @@ bool ReadFile_cvt(const string &file_cvt, vector<int> &indicator_cvt,
 }
 
 bool ReadFile_res(const string &file_res, vector<int> &indicator_res,
-                  vector<vector<double>> &res, size_t &n_res) {
+                  vector<vector<double>> &res_var, size_t &n_res) {
   debug_msg("entered");
   indicator_res.clear();
 
@@ -543,7 +543,7 @@ bool ReadFile_res(const string &file_res, vector<int> &indicator_res,
     } else {
       indicator_res.push_back(0);
     }
-    res.push_back(v_d);
+    res_var.push_back(v_d);
   }
 
   if (indicator_res.empty()) {
@@ -557,9 +557,9 @@ bool ReadFile_res(const string &file_res, vector<int> &indicator_res,
 
       if (flag_na == 0) {
         flag_na = 1;
-        n_res = res[i].size();
+        n_res = res_var[i].size();
       }
-      if (flag_na != 0 && n_res != cvt[i].size()) {
+      if (flag_na != 0 && n_res != res_var[i].size()) {
         cout << "error! number of residuals in row " << i
              << " do not match other rows." << endl;
         return false;
@@ -748,6 +748,10 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
   double maf, geno, geno_old;
   size_t n_miss;
   size_t n_0, n_1, n_2;
+
+  double min_g = std::numeric_limits<float>::max();
+  double max_g = std::numeric_limits<float>::min();
+  
   int flag_poly;
 
   int ni_total = indicator_idv.size();
@@ -781,8 +785,7 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
 
     if (mapRS2bp.count(rs) == 0) {
       if (is_debug_mode() && count_warnings++ < 10) {
-        std::string msg = "Can't figure out position for ";
-        msg += rs;
+        std::string msg = "Can't figure out position for <" + rs + ">";
         debug_msg(msg);
         if (count_warnings == 10)
           debug_msg("Skipping similar warnings");
@@ -832,6 +835,8 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
       }
 
       gsl_vector_set(genotype, c_idv, geno);
+      if (geno < min_g) min_g = geno;
+      if (geno > max_g) max_g = geno;
 
       // going through genotypes with 0.0 < geno < 2.0
       if (flag_poly == 0) { // first init in marker
@@ -907,6 +912,11 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
     indicator_snp.push_back(1);
     ns_test++;
   }
+
+  if (min_g != 0.0)
+    warning_msg("The minimum genotype value is not 0.0 - this is not the BIMBAM standard and will skew l_lme and effect sizes");
+  if (max_g != 2.0)
+    warning_msg("The maximum genotype value is not 2.0 - this is not the BIMBAM standard and will skew l_lme and effect sizes");
 
   gsl_vector_free(genotype);
   gsl_vector_free(genotype_miss);
