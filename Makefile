@@ -141,13 +141,13 @@ ifneq ($(CXX), clang++)
   debug check fast-check: CPPFLAGS += -Og -Wfatal-errors
 endif
 
-debug check fast-check: CPPFLAGS += -g $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
+debug check fast-check: CPPFLAGS += -g $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -Isrc
 
-profile: CPPFLAGS += -g $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
+profile: CPPFLAGS += -g $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -Isrc
 
-release: CPPFLAGS += -DNDEBUG -O3 $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
+release: CPPFLAGS += -DNDEBUG -O3 $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -Isrc
 
-static: CPPFLAGS += -DNDEBUG -O3 $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -Icontrib/catch-1.9.7 -Isrc
+static: CPPFLAGS += -DNDEBUG -O3 $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -Isrc
 
 
 ifeq ($(SYS), WIN)
@@ -227,7 +227,7 @@ $(OBJS): $(HDR)
 
 .SUFFIXES : .cpp .c .o $(SUFFIXES)
 
-./bin/unittests-gemma: contrib/catch-1.9.7/catch.hpp $(TEST_SRC_DIR)/unittests-main.o $(TEST_SRC_DIR)/unittests-math.o $(OBJS)
+./bin/unittests-gemma: $(TEST_SRC_DIR)/unittests-main.o $(TEST_SRC_DIR)/unittests-math.o $(OBJS)
 	$(CPP) $(CPPFLAGS) $(TEST_SRC_DIR)/unittests-main.o  $(TEST_SRC_DIR)/unittests-math.o $(filter-out src/main.o, $(OBJS)) $(LIBS) -o ./bin/unittests-gemma
 
 unittests: all ./bin/unittests-gemma
