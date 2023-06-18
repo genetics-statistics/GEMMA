@@ -48,7 +48,7 @@
     (source (local-file %source-dir #:recursive? #t))
     (build-system gnu-build-system)
     (inputs `(
-              ("catch2" ,catch2)
+              ("catch" ,catch2)
               ("gdb" ,gdb)
               ("gsl" ,gsl)
               ;; ("shunit2" ,shunit2) ;; comes with gemma
@@ -74,7 +74,7 @@
                                (lambda* (#:key outputs #:allow-other-keys)
                                  (let ((out (assoc-ref outputs "out")))
                                    (install-file "bin/gemma" (string-append out "/bin"))))))
-       #:tests? #f
+       #:tests? #t
        #:parallel-tests? #f))
     (home-page "https://github.com/genetics-statistics")
     (synopsis "Tool for genome-wide efficient mixed model association")
