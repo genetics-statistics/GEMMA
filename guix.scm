@@ -4,7 +4,6 @@
 ;;
 ;; To get a development container (e.g., run in emacs shell).
 ;;
-;;   guix environment -C -l guix.scm
 ;;   guix shell -C -f guix.scm
 
 (use-modules
@@ -12,12 +11,13 @@
   (guix gexp)
   (guix packages)
   (guix git-download)
-  (guix build-system meson)
+  (guix build-system gnu)
   (gnu packages algebra)
   (gnu packages base)
   (gnu packages compression)
   (gnu packages bioinformatics)
   (gnu packages build-tools)
+  (gnu packages check)
   (gnu packages curl)
   (gnu packages gdb)
   (gnu packages llvm)
@@ -44,10 +44,11 @@
 (define-public gemma-git
   (package
     (name "gemma-git")
-    (version (git-version %gemma-version "HEAD" %git-commit))
+    (version (git-version "0.98.5" "HEAD" %git-commit))
     (source (local-file %source-dir #:recursive? #t))
-    (build-system meson-build-system)
+    (build-system gnu-build-system)
     (inputs `(
+              ("catch2" ,catch2)
               ("gdb" ,gdb)
               ("gsl" ,gsl)
               ;; ("shunit2" ,shunit2) ;; comes with gemma
@@ -60,6 +61,21 @@
       `(("perl" ,perl)
        ("which" ,which)
        ))
+    (arguments
+     `(#:phases
+       (modify-phases %standard-phases
+                      (delete 'configure)
+                      (delete 'validate-runpath)
+                      (add-before 'build 'bin-mkdir
+                                  (lambda _
+                                    (mkdir-p "bin")
+                                    ))
+                      (replace 'install
+                               (lambda* (#:key outputs #:allow-other-keys)
+                                 (let ((out (assoc-ref outputs "out")))
+                                   (install-file "bin/gemma" (string-append out "/bin"))))))
+       #:tests? #f
+       #:parallel-tests? #f))
     (home-page "https://github.com/genetics-statistics")
     (synopsis "Tool for genome-wide efficient mixed model association")
     (description "Genome-wide Efficient Mixed Model Association (GEMMA)
