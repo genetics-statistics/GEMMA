@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <string>
 #include <vector>
+#include <limits>
 
 #include "gsl/gsl_blas.h"
 #include "gsl/gsl_cdf.h"
