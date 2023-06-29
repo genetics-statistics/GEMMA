@@ -14,7 +14,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: install dependencies
-      run: sudo apt-get install gfortran libopenblas-dev libgsl-dev zlib1g-dev catch ruby python
+      run: sudo apt-get install gfortran libopenblas-dev libgsl-dev zlib1g-dev catch ruby python3
     - name: make
       run: make debug
     - name: make check
