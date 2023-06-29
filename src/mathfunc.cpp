@@ -24,7 +24,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <limits.h>
+#include <limits>
 #include <map>
 #include <regex>
 #include <set>
