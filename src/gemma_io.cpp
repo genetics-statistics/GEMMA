@@ -506,14 +506,14 @@ bool ReadFile_cvt(const string &file_cvt, vector<int> &indicator_cvt,
   return true;
 }
 
-bool ReadFile_res(const string &file_res, vector<int> &indicator_res,
-                  vector<vector<double>> &res_var, size_t &n_res) {
+bool ReadFile_resid(const string &file_resid, vector<int> &indicator_resid,
+                  vector<vector<double>> &residvar, size_t &n_resid) {
   debug_msg("entered");
-  indicator_res.clear();
+  indicator_resid.clear();
 
-  ifstream infile(file_res.c_str(), ifstream::in);
+  ifstream infile(file_resid.c_str(), ifstream::in);
   if (!infile) {
-    cout << "error! fail to open residual variance file: " << file_res << endl;
+    cout << "error! fail to open residual variance file: " << file_resid << endl;
     return false;
   }
 
@@ -539,27 +539,27 @@ bool ReadFile_res(const string &file_res, vector<int> &indicator_res,
       ch_ptr = strtok(NULL, " ,\t");
     }
     if (flag_na == 0) {
-      indicator_res.push_back(1);
+      indicator_resid.push_back(1);
     } else {
-      indicator_res.push_back(0);
+      indicator_resid.push_back(0);
     }
-    res_var.push_back(v_d);
+    residvar.push_back(v_d);
   }
 
-  if (indicator_res.empty()) {
-    n_res = 0;
+  if (indicator_resid.empty()) {
+    n_resid = 0;
   } else {
     flag_na = 0;
-    for (vector<int>::size_type i = 0; i < indicator_res.size(); ++i) {
-      if (indicator_res[i] == 0) {
+    for (vector<int>::size_type i = 0; i < indicator_resid.size(); ++i) {
+      if (indicator_resid[i] == 0) {
         continue;
       }
 
       if (flag_na == 0) {
         flag_na = 1;
-        n_res = res_var[i].size();
+        n_resid = residvar[i].size();
       }
-      if (flag_na != 0 && n_res != res_var[i].size()) {
+      if (flag_na != 0 && n_resid != residvar[i].size()) {
         cout << "error! number of residuals in row " << i
              << " do not match other rows." << endl;
         return false;

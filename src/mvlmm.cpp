@@ -86,6 +86,7 @@ void MVLMM::CopyFromParam(PARAM &cPar) {
   indicator_idv = cPar.indicator_idv;
   indicator_snp = cPar.indicator_snp;
   snpInfo = cPar.snpInfo;
+  file_resid - cPar.file_resid; // not entirely sure if this is the right place for this
 
   return;
 }
@@ -3074,15 +3075,15 @@ void MphInitial(const size_t em_iter, const double em_prec,
 
   gsl_vector_set_zero(XHiy);
 
-  double dl, d, delta, epsilon, dx, dy;
+  double dl, d, delta, epsilon, epsilon_sc, dx, dy;
 
   // Eigen decomposition and calculate log|Ve|.
   // double logdet_Ve = EigenProc(V_g, V_e, D_l, UltVeh, UltVehi);
-  EigenProc(V_g, V_e, D_l, UltVeh, UltVehi);
+  tie(V_e_temp, logdet_Ve) = EigenProc(V_g, V_e, D_l, UltVeh, UltVehi);
 
   // Calculate Qi and log|Q|.
   // double logdet_Q = CalcQi(eval, D_l, X, V_e_temp, Qi);
-  CalcQi(eval, eps_eval, D_l, X, V_e_temp, Qi);
+  CalcQi(eval, eps_eval, D_l, X, V_e_temp, Qi)
 
   // Calculate UltVehiY.
   gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, UltVehi, Y, 0.0, UltVehiY);
@@ -3151,7 +3152,7 @@ double PCRT(const size_t mode, const size_t d_size, const double p_value,
   return p_crt;
 }
 
-void MVLMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
+void MVLMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval, const gsl_vector *eps_eval,
                           const gsl_matrix *UtW, const gsl_matrix *UtY) {
   debug_msg("entering");
   igzstream infile(file_geno.c_str(), igzstream::in);
@@ -3589,7 +3590,7 @@ void MVLMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
   return;
 }
 
-void MVLMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
+void MVLMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval, const gsl_vector *eps_eval,
                          const gsl_matrix *UtW, const gsl_matrix *UtY) {
   debug_msg("entering");
   string file_bed = file_bfile + ".bed";
@@ -4072,7 +4073,7 @@ void MVLMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
 
 // Calculate Vg, Ve, B, se(B) in the null mvLMM model.
 // Both B and se_B are d by c matrices.
-void CalcMvLmmVgVeBeta(const gsl_vector *eval, const gsl_matrix *UtW,
+void CalcMvLmmVgVeBeta(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_matrix *UtW,
                        const gsl_matrix *UtY, const size_t em_iter,
                        const size_t nr_iter, const double em_prec,
                        const double nr_prec, const double l_min,
@@ -4141,7 +4142,7 @@ void CalcMvLmmVgVeBeta(const gsl_vector *eval, const gsl_matrix *UtW,
   return;
 }
 
-void MVLMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval,
+void MVLMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval, const gsl_vector *eps_eval,
                              const gsl_matrix *UtW, const gsl_matrix *UtY,
                              const gsl_vector *env) {
   debug_msg("entering");
@@ -4587,7 +4588,7 @@ void MVLMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval,
   return;
 }
 
-void MVLMM::AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval,
+void MVLMM::AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval, const gsl_vector *eps_eval,
                             const gsl_matrix *UtW, const gsl_matrix *UtY,
                             const gsl_vector *env) {
   debug_msg("entering");

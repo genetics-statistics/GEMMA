@@ -259,8 +259,8 @@ void PARAM::ReadFiles(void) {
       error = true;
     }
   }
-  if (!file_res.empty()) {
-    if (ReadFile_column(file_res, indicator_res, res_var, 1) == false) {
+  if (!file_resid.empty()) {
+    if (ReadFile_column(file_resid, indicator_resid, residvar, 1) == false) {
       error = true;
     }
   }
@@ -960,7 +960,7 @@ void PARAM::CheckParam(void) {
   enforce_fexists(file_weight, "open file");
   enforce_fexists(file_epm, "open file");
   enforce_fexists(file_ebv, "open file");
-  enforce_fexists(file_res, "open file");
+  enforce_fexists(file_resid, "open file");
   enforce_fexists(file_read, "open file");
 
   // Check if files are compatible with analysis mode.
@@ -1042,8 +1042,8 @@ void PARAM::CheckData(void) {
     return;
   }
 
-    if ((indicator_res).size() != 0 &&
-      (indicator_res).size() != (indicator_idv).size()) {
+  if ((indicator_resid).size() != 0 &&
+      (indicator_resid).size() != (indicator_idv).size()) {
     error = true;
     cout << "error! number of rows in the residual variance file do not match "
          << "the number of individuals. " << endl;
@@ -1099,8 +1099,8 @@ void PARAM::CheckData(void) {
       }
     }
 
-        if (indicator_res.size() != 0) {
-      if (indicator_res[i] == 0) {
+    if (indicator_resid.size() != 0) {
+      if (indicator_resid[i] == 0) {
         continue;
       }
     }
@@ -2063,9 +2063,9 @@ void PARAM::ProcessCvtPhen() {
   }
 
     // Remove individuals with missing residual variance.
-  if ((indicator_res).size() != 0) {
+  if ((indicator_resid).size() != 0) {
     for (vector<int>::size_type i = 0; i < (indicator_idv).size(); ++i) {
-      indicator_idv[i] *= indicator_res[i];
+      indicator_idv[i] *= indicator_resid[i];
     }
   }
 
@@ -2184,14 +2184,14 @@ void PARAM::CopyWeight(gsl_vector *w) {
   return;
 }
 
-void PARAM::CopyResid(gsl_vector *res) {
+void PARAM::CopyResid(gsl_vector *resid) {
   size_t ci_test = 0;
 
   for (vector<int>::size_type i = 0; i < indicator_idv.size(); ++i) {
-    if (indicator_idv[i] == 0 || indicator_res[i] == 0) {
+    if (indicator_idv[i] == 0 || indicator_resid[i] == 0) {
       continue;
     }
-    gsl_vector_set(res, ci_test, res_var[i]);
+    gsl_vector_set(resid, ci_test, residvar[i]);
     ci_test++;
   }
 
