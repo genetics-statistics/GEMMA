@@ -1974,6 +1974,45 @@ void PARAM::WriteVector(const gsl_vector *vector_D, const string suffix) {
   return;
 }
 
+void PARAM::CheckResidvar() {
+  if (indicator_residvar.size() == 0) {
+    return;
+  }
+
+  size_t ci_test = 0;
+
+  gsl_vector *eps_eval = gsl_vector_alloc(n_residvar);
+
+  for (size_t i = 0; i < n_residvar; ++i) {
+      gsl_vector_set(eps_eval, i, (residvar)[i]);
+    }
+
+  size_t flag_ipt = 0;
+  double v_min, v_max;
+  set<size_t> set_remove;
+
+  // If no residual variance is specified, eps_eval = V_e.
+  if (n_residvar == set_remove.size()) {
+    indicator_residvar.clear();
+    n_residvar = 1;
+  } else if (flag_ipt == 0) {
+    info_msg("no residual variances are found in the residvar file: a column of V_e is added");
+    for (vector<int>::size_type i = 0; i < indicator_idv.size(); ++i) {
+      if (indicator_idv[i] == 0 || indicator_residvar[i] == 0) {
+        continue;
+      }
+      gsl_vector_set(eps_eval, i, Ve_remle_null[i]);
+    }
+
+    n_residvar++;
+  } else {
+  }
+
+  gsl_vector_free(eps_eval);
+
+  return;
+}
+
 void PARAM::CheckCvt() {
   if (indicator_cvt.size() == 0) {
     return;
