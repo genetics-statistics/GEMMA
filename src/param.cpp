@@ -249,6 +249,13 @@ void PARAM::ReadFiles(void) {
   }
   trim_individuals(indicator_cvt, ni_max);
 
+    // Read residual variance files before the genotype files.
+  if (!file_residvar.empty()) {
+    if (ReadFile_column(file_residvar, indicator_residvar, residvar, 1) == false) {
+      error = true;
+    }
+  }
+
   if (!file_gxe.empty()) {
     if (ReadFile_column(file_gxe, indicator_gxe, gxe, 1) == false) {
       error = true;
@@ -259,11 +266,7 @@ void PARAM::ReadFiles(void) {
       error = true;
     }
   }
-  if (!file_resid.empty()) {
-    if (ReadFile_column(file_resid, indicator_resid, residvar, 1) == false) {
-      error = true;
-    }
-  }
+
 
   trim_individuals(indicator_idv, ni_max);
 
@@ -960,7 +963,7 @@ void PARAM::CheckParam(void) {
   enforce_fexists(file_weight, "open file");
   enforce_fexists(file_epm, "open file");
   enforce_fexists(file_ebv, "open file");
-  enforce_fexists(file_resid, "open file");
+  enforce_fexists(file_residvar, "open file");
   enforce_fexists(file_read, "open file");
 
   // Check if files are compatible with analysis mode.
@@ -1042,8 +1045,8 @@ void PARAM::CheckData(void) {
     return;
   }
 
-  if ((indicator_resid).size() != 0 &&
-      (indicator_resid).size() != (indicator_idv).size()) {
+  if ((indicator_residvar).size() != 0 &&
+      (indicator_residvar).size() != (indicator_idv).size()) {
     error = true;
     cout << "error! number of rows in the residual variance file do not match "
          << "the number of individuals. " << endl;
@@ -1099,8 +1102,8 @@ void PARAM::CheckData(void) {
       }
     }
 
-    if (indicator_resid.size() != 0) {
-      if (indicator_resid[i] == 0) {
+    if (indicator_residvar.size() != 0) {
+      if (indicator_residvar[i] == 0) {
         continue;
       }
     }
@@ -1150,6 +1153,7 @@ void PARAM::CheckData(void) {
       cout << "## number of analyzed individuals = " << ni_test << endl;
     }
     cout << "## number of covariates = " << n_cvt << endl;
+    cout << "## number of residual variances" << n_residvar << endl;
     cout << "## number of phenotypes = " << n_ph << endl;
     if (a_mode == 43) {
       cout << "## number of observed data = " << np_obs << endl;
@@ -2063,9 +2067,9 @@ void PARAM::ProcessCvtPhen() {
   }
 
     // Remove individuals with missing residual variance.
-  if ((indicator_resid).size() != 0) {
+  if ((indicator_residvar).size() != 0) {
     for (vector<int>::size_type i = 0; i < (indicator_idv).size(); ++i) {
-      indicator_idv[i] *= indicator_resid[i];
+      indicator_idv[i] *= indicator_residvar[i];
     }
   }
 
@@ -2184,14 +2188,14 @@ void PARAM::CopyWeight(gsl_vector *w) {
   return;
 }
 
-void PARAM::CopyResid(gsl_vector *resid) {
+void PARAM::CopyResid(gsl_vector *eps_eval) {
   size_t ci_test = 0;
 
   for (vector<int>::size_type i = 0; i < indicator_idv.size(); ++i) {
-    if (indicator_idv[i] == 0 || indicator_resid[i] == 0) {
+    if (indicator_idv[i] == 0 || indicator_residvar[i] == 0) {
       continue;
     }
-    gsl_vector_set(resid, ci_test, residvar[i]);
+    gsl_vector_set(eps_eval, ci_test, residvar[i]);
     ci_test++;
   }
 

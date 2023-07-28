@@ -86,6 +86,8 @@ void ReadFile_mk(const string &file_mk, vector<int> &indicator_idv,
                  gsl_matrix *G);
 void ReadFile_eigenU(const string &file_u, bool &error, gsl_matrix *U);
 void ReadFile_eigenD(const string &file_d, bool &error, gsl_vector *eval);
+bool ReadFile_residvar(const string &file_residvar, vector<int> &indicator_residvar,
+                  vector<vector<double>> &eps_eval, size_t &n_residvar);
 
 bool BimbamKin(const string file_geno, const set<string> ksnps,
                vector<int> &indicator_snp, const int k_mode,

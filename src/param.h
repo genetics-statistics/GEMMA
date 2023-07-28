@@ -136,6 +136,7 @@ public:
   string file_anno; // Optional.
   string file_gxe;  // Optional.
   string file_cvt;  // Optional.
+  string file_residvar; // Optional
   string file_cat, file_mcat;
   string file_catc, file_mcatc;
   string file_var;
@@ -218,6 +219,7 @@ public:
 
   HYPBSLMM cHyp_initial;
 
+
   // VARCOV-related parameters.
   double window_cm;
   size_t window_bp;
@@ -243,6 +245,7 @@ public:
   size_t ni_control, ni_case; // Number of controls and number of cases.
   size_t ni_subsample;        // Number of subsampled individuals.
   size_t n_cvt;               // Number of covariates.
+  size_t n_residvar;          // Number of residual variances.
   size_t n_cat;               // Number of continuous categories.
   size_t n_ph;                // Number of phenotypes.
   size_t n_vc;                // Number of variance components
@@ -266,6 +269,9 @@ public:
 
   // Vector recording all covariates (NA replaced with -9).
   vector<vector<double>> cvt;
+
+// Vector recording all residual variances (NA replaced with -9).
+  vector<double> residvar;
 
   // Vector recording all covariates (NA replaced with -9).
   vector<double> gxe;
@@ -293,6 +299,10 @@ public:
   // Indicator for covariates: 0 missing, 1 available for
   // analysis.
   vector<int> indicator_cvt;
+
+  // Indicator for residuals: 0 missing, 1 available for
+  // analysis.
+  vector<int> indicator_residvar;
 
   // Indicator for gxe: 0 missing, 1 available for analysis.
   vector<int> indicator_gxe;
@@ -340,6 +350,7 @@ public:
                      const bool calc_K);
   void CheckCvt();
   void CopyCvt(gsl_matrix *W);
+  void CopyResid(gsl_vector *eps_eval);
   void CopyA(size_t flag, gsl_matrix *A);
   void CopyGxe(gsl_vector *gxe);
   void CopyWeight(gsl_vector *w);

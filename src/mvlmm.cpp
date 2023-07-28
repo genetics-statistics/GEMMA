@@ -80,13 +80,13 @@ void MVLMM::CopyFromParam(PARAM &cPar) {
   ni_test = cPar.ni_test;
   ns_test = cPar.ns_test;
   n_cvt = cPar.n_cvt;
+  n_residvar = cPar.n_residvar;
 
   n_ph = cPar.n_ph;
 
   indicator_idv = cPar.indicator_idv;
   indicator_snp = cPar.indicator_snp;
   snpInfo = cPar.snpInfo;
-  file_resid - cPar.file_resid; // not entirely sure if this is the right place for this
 
   return;
 }
@@ -2967,9 +2967,9 @@ void MphInitial(const size_t em_iter, const double em_prec,
 
   for (size_t i = 0; i < d_size; i++) {
     gsl_vector_const_view Y_row = gsl_matrix_const_row(Y, i);
-    CalcLambda('R', eval, eps_eval, Xt, &Y_row.vector, l_min, l_max, n_region, lambda,
+    CalcLambda('R', eval,  Xt, &Y_row.vector, l_min, l_max, n_region, lambda,
                logl);
-    CalcLmmVgVeBeta(eval, eps_eval, Xt, &Y_row.vector, lambda, vg, ve, beta_temp,
+    CalcLmmVgVeBeta(eval,  Xt, &Y_row.vector, lambda, vg, ve, beta_temp,
                     se_beta_temp);
 
     gsl_matrix_set(V_g, i, i, vg);
@@ -3065,7 +3065,7 @@ void MphInitial(const size_t em_iter, const double em_prec,
 
   // Calculate B hat using GSL estimate.
   gsl_matrix *UltVehiY = gsl_matrix_alloc(d_size, n_size);
-
+  gsl_matrix *V_e_temp = gsl_matrix_alloc(d_size, d_size);
   gsl_vector *D_l = gsl_vector_alloc(d_size);
   gsl_matrix *UltVeh = gsl_matrix_alloc(d_size, d_size);
   gsl_matrix *UltVehi = gsl_matrix_alloc(d_size, d_size);
@@ -3075,7 +3075,7 @@ void MphInitial(const size_t em_iter, const double em_prec,
 
   gsl_vector_set_zero(XHiy);
 
-  double dl, d, delta, epsilon, epsilon_sc, dx, dy;
+  double logdet_Ve, dl, d, delta, epsilon, epsilon_sc, dx, dy;
 
   // Eigen decomposition and calculate log|Ve|.
   // double logdet_Ve = EigenProc(V_g, V_e, D_l, UltVeh, UltVehi);
@@ -3083,7 +3083,7 @@ void MphInitial(const size_t em_iter, const double em_prec,
 
   // Calculate Qi and log|Q|.
   // double logdet_Q = CalcQi(eval, D_l, X, V_e_temp, Qi);
-  CalcQi(eval, eps_eval, D_l, X, V_e_temp, Qi)
+  CalcQi(eval, eps_eval, D_l, X, V_e_temp, Qi);
 
   // Calculate UltVehiY.
   gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, UltVehi, Y, 0.0, UltVehiY);
