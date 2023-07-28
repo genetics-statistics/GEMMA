@@ -65,6 +65,22 @@ void LOCO_set_Snps(set<string> &ksnps, set<string> &gwasnps,
   }
 }
 
+// This code defines a function named LOCO_set_Snps that takes four arguments: 
+// two set<string> references (ksnps and gwasnps), a constant map<string, string> reference (mapchr), and a constant string (loco).
+
+// The function first checks that both ksnps and gwasnps are empty sets to ensure they are not initialized twice.
+
+// Next, the function loops through each key-value pair (kv) in the mapchr map using a range-based for loop. 
+//For each key-value pair, the function extracts the key (snp) and value (chr) using auto.
+
+// Then, the function checks if chr is equal to loco. If it is, then the snp is added to 
+// gwasnps using the insert() method of the set container. If chr is not equal to loco, then snp is added to ksnps.
+
+// Essentially, the function divides the set of SNPs (single nucleotide polymorphisms) into two groups: 
+// the SNPs that are associated with the trait of interest (gwasnps) and the SNPs that are not associated with the trait of interest (ksnps). 
+// The loco variable specifies the chromosome on which the trait of interest is located.
+
+
 // Trim #individuals to size which is used to write tests that run faster
 //
 // Note it actually trims the number of functional individuals
@@ -233,6 +249,13 @@ void PARAM::ReadFiles(void) {
   }
   trim_individuals(indicator_cvt, ni_max);
 
+    // Read residual variance files before the genotype files.
+  if (!file_residvar.empty()) {
+    if (ReadFile_column(file_residvar, indicator_residvar, residvar, 1) == false) {
+      error = true;
+    }
+  }
+
   if (!file_gxe.empty()) {
     if (ReadFile_column(file_gxe, indicator_gxe, gxe, 1) == false) {
       error = true;
@@ -243,6 +266,7 @@ void PARAM::ReadFiles(void) {
       error = true;
     }
   }
+
 
   trim_individuals(indicator_idv, ni_max);
 
@@ -939,6 +963,7 @@ void PARAM::CheckParam(void) {
   enforce_fexists(file_weight, "open file");
   enforce_fexists(file_epm, "open file");
   enforce_fexists(file_ebv, "open file");
+  enforce_fexists(file_residvar, "open file");
   enforce_fexists(file_read, "open file");
 
   // Check if files are compatible with analysis mode.
@@ -1020,6 +1045,14 @@ void PARAM::CheckData(void) {
     return;
   }
 
+  if ((indicator_residvar).size() != 0 &&
+      (indicator_residvar).size() != (indicator_idv).size()) {
+    error = true;
+    cout << "error! number of rows in the residual variance file do not match "
+         << "the number of individuals. " << endl;
+    return;
+  }
+
   if ((indicator_read).size() != 0 &&
       (indicator_read).size() != (indicator_idv).size()) {
     error = true;
@@ -1069,6 +1102,12 @@ void PARAM::CheckData(void) {
       }
     }
 
+    if (indicator_residvar.size() != 0) {
+      if (indicator_residvar[i] == 0) {
+        continue;
+      }
+    }
+
     for (size_t j = 0; j < indicator_pheno[i].size(); j++) {
       if (indicator_pheno[i][j] == 0) {
         np_miss++;
@@ -1114,6 +1153,7 @@ void PARAM::CheckData(void) {
       cout << "## number of analyzed individuals = " << ni_test << endl;
     }
     cout << "## number of covariates = " << n_cvt << endl;
+    cout << "## number of residual variances" << n_residvar << endl;
     cout << "## number of phenotypes = " << n_ph << endl;
     if (a_mode == 43) {
       cout << "## number of observed data = " << np_obs << endl;
@@ -1934,6 +1974,45 @@ void PARAM::WriteVector(const gsl_vector *vector_D, const string suffix) {
   return;
 }
 
+void PARAM::CheckResidvar() {
+  if (indicator_residvar.size() == 0) {
+    return;
+  }
+
+  size_t ci_test = 0;
+
+  gsl_vector *eps_eval = gsl_vector_alloc(n_residvar);
+
+  for (size_t i = 0; i < n_residvar; ++i) {
+      gsl_vector_set(eps_eval, i, (residvar)[i]);
+    }
+
+  size_t flag_ipt = 0;
+  double v_min, v_max;
+  set<size_t> set_remove;
+
+  // If no residual variance is specified, eps_eval = V_e.
+  if (n_residvar == set_remove.size()) {
+    indicator_residvar.clear();
+    n_residvar = 1;
+  } else if (flag_ipt == 0) {
+    info_msg("no residual variances are found in the residvar file: a column of V_e is added");
+    for (vector<int>::size_type i = 0; i < indicator_idv.size(); ++i) {
+      if (indicator_idv[i] == 0 || indicator_residvar[i] == 0) {
+        continue;
+      }
+      gsl_vector_set(eps_eval, i, Ve_remle_null[i]);
+    }
+
+    n_residvar++;
+  } else {
+  }
+
+  gsl_vector_free(eps_eval);
+
+  return;
+}
+
 void PARAM::CheckCvt() {
   if (indicator_cvt.size() == 0) {
     return;
@@ -2023,6 +2102,13 @@ void PARAM::ProcessCvtPhen() {
   if ((indicator_weight).size() != 0) {
     for (vector<int>::size_type i = 0; i < (indicator_idv).size(); ++i) {
       indicator_idv[i] *= indicator_weight[i];
+    }
+  }
+
+    // Remove individuals with missing residual variance.
+  if ((indicator_residvar).size() != 0) {
+    for (vector<int>::size_type i = 0; i < (indicator_idv).size(); ++i) {
+      indicator_idv[i] *= indicator_residvar[i];
     }
   }
 
@@ -2135,6 +2221,20 @@ void PARAM::CopyWeight(gsl_vector *w) {
       continue;
     }
     gsl_vector_set(w, ci_test, weight[i]);
+    ci_test++;
+  }
+
+  return;
+}
+
+void PARAM::CopyResid(gsl_vector *eps_eval) {
+  size_t ci_test = 0;
+
+  for (vector<int>::size_type i = 0; i < indicator_idv.size(); ++i) {
+    if (indicator_idv[i] == 0 || indicator_residvar[i] == 0) {
+      continue;
+    }
+    gsl_vector_set(eps_eval, ci_test, residvar[i]);
     ci_test++;
   }
 

@@ -337,6 +337,17 @@ void GEMMA::PrintHelp(size_t option) {
     cout << "                  variable for individual 2" << endl;
     cout << "                  ..." << endl;
     cout << "          missing value: NA" << endl;
+        cout << " -residvar   [filename]     "
+         << " residual variance file contains a column of positive values to be used "
+         << "directly as for the residual variance---each value corresponds to an "
+         << "individual, in which each value is the empirical residual variance based"
+         << "on a trait value calculated from multiple replicates for this individual" 
+         << "(similar in format to phenotype file)"
+         << endl;
+    cout << "          format: variable for individual 1" << endl;
+    cout << "                  variable for individual 2" << endl;
+    cout << "                  ..." << endl;
+    cout << "          missing value: NA" << endl;
     cout << " -k        [filename]     "
          << " specify input kinship/relatedness matrix file name" << endl;
     cout << " -mk       [filename]     "
@@ -824,6 +835,14 @@ void GEMMA::Assign(int argc, char **argv, PARAM &cPar) {
       str.clear();
       str.assign(argv[i]);
       cPar.file_weight = str;
+    } else if (strcmp(argv[i], "-residvar") == 0) {
+      if (argv[i + 1] == NULL || argv[i + 1][0] == '-') {
+        continue;
+      }
+      ++i;
+      str.clear();
+      str.assign(argv[i]);
+      cPar.file_resid = str;
     } else if (strcmp(argv[i], "-wsnp") == 0) {
       if (argv[i + 1] == NULL || argv[i + 1][0] == '-') {
         continue;
@@ -2611,6 +2630,8 @@ void GEMMA::BatchRun(PARAM &cPar) {
           }
         }
       }
+      // Need some way of reading the residual variance file and then
+      // assigning it to what would have been the ..+ 1 part of the computation
 
       // eigen-decomposition and calculate trace_G - main track
       cout << "Start Eigen-Decomposition..." << endl;
@@ -2795,11 +2816,11 @@ void GEMMA::BatchRun(PARAM &cPar) {
           if (!cPar.file_bfile.empty()) {
             // PLINK analysis
             if (cPar.file_gxe.empty()) {
-              cLmm.AnalyzePlink(U, eval, UtW, &UtY_col.vector, W,
+              cLmm.AnalyzePlink(U, eval, eps_eval, UtW, &UtY_col.vector, W,
                                 &Y_col.vector, cPar.setGWASnps);
             }
             else {
-              cLmm.AnalyzePlinkGXE(U, eval, UtW, &UtY_col.vector, W,
+              cLmm.AnalyzePlinkGXE(U, eval, eps_eval, UtW, &UtY_col.vector, W,
                                    &Y_col.vector, env);
             }
           }
@@ -2807,10 +2828,10 @@ void GEMMA::BatchRun(PARAM &cPar) {
             // BIMBAM analysis
 
             if (cPar.file_gxe.empty()) {
-              cLmm.AnalyzeBimbam(U, eval, UtW, &UtY_col.vector, W,
+              cLmm.AnalyzeBimbam(U, eval, eps_eval, UtW, &UtY_col.vector, W,
                                  &Y_col.vector, cPar.setGWASnps);
             } else {
-              cLmm.AnalyzeBimbamGXE(U, eval, UtW, &UtY_col.vector, W,
+              cLmm.AnalyzeBimbamGXE(U, eval, eps_eval, UtW, &UtY_col.vector, W,
                                     &Y_col.vector, env);
             }
           }
@@ -2827,15 +2848,15 @@ void GEMMA::BatchRun(PARAM &cPar) {
 
           if (!cPar.file_bfile.empty()) {
             if (cPar.file_gxe.empty()) {
-              cMvlmm.AnalyzePlink(U, eval, UtW, UtY);
+              cMvlmm.AnalyzePlink(U, eval, eps_eval, UtW, UtY);
             } else {
-              cMvlmm.AnalyzePlinkGXE(U, eval, UtW, UtY, env);
+              cMvlmm.AnalyzePlinkGXE(U, eval, eps_eval, UtW, UtY, env);
             }
           } else {
             if (cPar.file_gxe.empty()) {
-              cMvlmm.AnalyzeBimbam(U, eval, UtW, UtY);
+              cMvlmm.AnalyzeBimbam(U, eval, eps_eval, UtW, UtY);
             } else {
-              cMvlmm.AnalyzeBimbamGXE(U, eval, UtW, UtY, env);
+              cMvlmm.AnalyzeBimbamGXE(U, eval, eps_eval, UtW, UtY, env);
             }
           }
 
@@ -2924,9 +2945,9 @@ void GEMMA::BatchRun(PARAM &cPar) {
       CalcUtX(U, y, Uty);
 
       // calculate REMLE/MLE estimate and pve
-      CalcLambda('L', eval, UtW, Uty, cPar.l_min, cPar.l_max, cPar.n_region,
+      CalcLambda('L', eval, eps_eval, UtW, Uty, cPar.l_min, cPar.l_max, cPar.n_region,
                  cPar.l_mle_null, cPar.logl_mle_H0);
-      CalcLambda('R', eval, UtW, Uty, cPar.l_min, cPar.l_max, cPar.n_region,
+      CalcLambda('R', eval, eps_eval, UtW, Uty, cPar.l_min, cPar.l_max, cPar.n_region,
                  cPar.l_remle_null, cPar.logl_remle_H0);
       CalcPve(eval, UtW, Uty, cPar.l_remle_null, cPar.trace_G, cPar.pve_null,
               cPar.pve_se_null);
@@ -3034,9 +3055,9 @@ void GEMMA::BatchRun(PARAM &cPar) {
         CalcUtX(U, y, Uty);
 
         // calculate REMLE/MLE estimate and pve
-        CalcLambda('L', eval, UtW, Uty, cPar.l_min, cPar.l_max, cPar.n_region,
+        CalcLambda('L', eval, eps_eval, UtW, Uty, cPar.l_min, cPar.l_max, cPar.n_region,
                    cPar.l_mle_null, cPar.logl_mle_H0);
-        CalcLambda('R', eval, UtW, Uty, cPar.l_min, cPar.l_max, cPar.n_region,
+        CalcLambda('R', eval, eps_eval, UtW, Uty, cPar.l_min, cPar.l_max, cPar.n_region,
                    cPar.l_remle_null, cPar.logl_remle_H0);
         CalcPve(eval, UtW, Uty, cPar.l_remle_null, cPar.trace_G, cPar.pve_null,
                 cPar.pve_se_null);
