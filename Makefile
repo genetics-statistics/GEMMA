@@ -145,9 +145,9 @@ debug check fast-check: CPPFLAGS += -g $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -Isrc
 
 profile: CPPFLAGS += -g $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -Isrc
 
-release: CPPFLAGS += -DNDEBUG -O3 $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -Isrc
+release: CPPFLAGS += -DNDEBUG -g -O3 $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -Isrc
 
-static: CPPFLAGS += -DNDEBUG -O3 $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -Isrc
+static: CPPFLAGS += -DNDEBUG -g $(GCC_FLAGS) $(GSL_INCLUDE_PATH) -Isrc
 
 
 ifeq ($(SYS), WIN)

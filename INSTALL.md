@@ -152,3 +152,7 @@ To create a static release, locate the gfortran lib and use
 otherwise OpenBlas will complain with
 
     undefined reference to `_gfortran_concat_string'
+
+Note you can use guix.scm if you load with
+
+    guix shell -L ~/guix-pjotr -C -D -f guix.scm

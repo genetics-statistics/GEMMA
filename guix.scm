@@ -4,7 +4,8 @@
 ;;
 ;; To get a development container (e.g., run in emacs shell).
 ;;
-;;   guix shell -C -f guix.scm
+;;   guix shell -C -D -f guix.scm
+;;
 
 (use-modules
   ((guix licenses) #:prefix license:)
@@ -28,6 +29,7 @@
   ;; (gnu packages perl6)
   (gnu packages ruby)
   (gnu packages pkg-config)
+  (pjotr packages openblas) ;; we use this for the static builds
   ;; (gnu packages shell)  ;; for shunit2
   (srfi srfi-1)
   (ice-9 popen)
@@ -47,18 +49,19 @@
     (version (git-version "0.98.5" "HEAD" %git-commit))
     (source (local-file %source-dir #:recursive? #t))
     (build-system gnu-build-system)
-    (inputs `(
-              ("catch" ,catch2)
-              ("gdb" ,gdb)
-              ("gsl" ,gsl)
-              ;; ("shunit2" ,shunit2) ;; comes with gemma
-              ("openblas" ,openblas)
-              ("ruby" ,ruby) ;; for testing
-              ("zlib:static" ,zlib "static")
-              ("zlib" ,zlib)
-              ))
+    (inputs
+     `(
+       ("catch" ,catch2)
+       ("gdb" ,gdb)
+       ("gsl-static" ,gsl-static)
+       ("gsl" ,gsl)
+       ("openblas" ,openblas)
+       ("ruby" ,ruby) ;; for testing
+       ("zlib:static" ,zlib "static")
+       ("zlib" ,zlib)))
+
     (native-inputs ; for running tests
-      `(("perl" ,perl)
+     `(("perl" ,perl)
        ("which" ,which)
        ))
     (arguments
