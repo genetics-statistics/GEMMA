@@ -3,7 +3,8 @@ Nat. Genet., 2016)](cfw.gif)
 
 # GEMMA: Genome-wide Efficient Mixed Model Association
 
-[![Github-CI](https://github.com/genetics-statistics/GEMMA/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/genetics-statistics/GEMMA/actions/workflows/c-cpp.yml) [![Anaconda-Server Badge](https://anaconda.org/bioconda/gemma/badges/installer/conda.svg)](https://anaconda.org/bioconda/gemma) [![DL](https://anaconda.org/bioconda/gemma/badges/downloads.svg)](https://anaconda.org/bioconda/gemma) [![BrewBadge](https://img.shields.io/badge/%F0%9F%8D%BAbrew-gemma--0.98-brightgreen.svg)](https://github.com/brewsci/homebrew-bio) [![GuixBadge](https://img.shields.io/badge/gnuguix-gemma-brightgreen.svg)](https://www.gnu.org/software/guix/packages/G/) [![DebianBadge](https://badges.debian.net/badges/debian/testing/gemma/version.svg)](https://packages.debian.org/search?keywords=gemma&searchon=names&suite=all&section=all)
+[![Github-CI](https://github.com/genetics-statistics/GEMMA/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/genetics-statistics/GEMMA/actions/workflows/c-cpp.yml) [![Anaconda-Server Badge](
+https://anaconda.org/bioconda/gemma/badges/platforms.svg)](https://anaconda.org/bioconda/gemma) [![DL](https://anaconda.org/bioconda/gemma/badges/downloads.svg)](https://anaconda.org/bioconda/gemma) [![BrewBadge](https://img.shields.io/badge/%F0%9F%8D%BAbrew-gemma--0.98-brightgreen.svg)](https://github.com/brewsci/homebrew-bio) [![GuixBadge](https://img.shields.io/badge/gnuguix-gemma-brightgreen.svg)](https://packages.guix.gnu.org/packages/gemma/) [![DebianBadge](https://badges.debian.net/badges/debian/testing/gemma/version.svg)](https://packages.debian.org/search?keywords=gemma&searchon=names&suite=all&section=all)
 
 GEMMA is a software toolkit for fast application of linear mixed
 models (LMMs) and related models to genome-wide association studies
