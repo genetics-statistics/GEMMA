@@ -151,7 +151,7 @@ std::istream &safeGetline(std::istream &is, std::string &t) {
 
 // Read SNP file. A single column of SNP names.
 bool ReadFile_snps(const string file_snps, set<string> &setSnps) {
-  debug_msg("enter ReadFile_snps");
+  debug_msg("entered");
   setSnps.clear();
 
   igzstream infile(file_snps.c_str(), igzstream::in);
@@ -330,9 +330,6 @@ bool ReadFile_anno(const string &file_anno, map<string, string> &mapRS2chr,
     mapRS2bp[rs] = b_pos;
     mapRS2cM[rs] = cM;
   }
-  // for (auto& [key, value] : mapRS2bp) {
-  //     cerr << key << endl;
-  //}
 
   infile.close();
   infile.clear();
@@ -498,6 +495,73 @@ bool ReadFile_cvt(const string &file_cvt, vector<int> &indicator_cvt,
       }
       if (flag_na != 0 && n_cvt != cvt[i].size()) {
         cout << "error! number of covariates in row " << i
+             << " do not match other rows." << endl;
+        return false;
+      }
+    }
+  }
+
+  infile.close();
+  infile.clear();
+
+  return true;
+}
+
+bool ReadFile_residvar(const string &file_residvar, vector<int> &indicator_residvar,
+                  vector<vector<double>> &eps_eval, size_t &n_residvar) {
+  debug_msg("entered");
+  indicator_residvar.clear();
+
+  ifstream infile(file_residvar.c_str(), ifstream::in);
+  if (!infile) {
+    cout << "error! fail to open residual variance file: " << file_residvar << endl;
+    return false;
+  }
+
+  string line;
+  char *ch_ptr;
+  double d;
+
+  int flag_na = 0;
+
+  while (!safeGetline(infile, line).eof()) {
+    vector<double> v_d;
+    flag_na = 0;
+    ch_ptr = strtok((char *)line.c_str(), " ,\t");
+    while (ch_ptr != NULL) {
+      if (strcmp(ch_ptr, "NA") == 0) {
+        flag_na = 1;
+        d = -9;
+      } else {
+        d = atof(ch_ptr);
+      }
+
+      v_d.push_back(d);
+      ch_ptr = strtok(NULL, " ,\t");
+    }
+    if (flag_na == 0) {
+      indicator_residvar.push_back(1);
+    } else {
+      indicator_residvar.push_back(0);
+    }
+    eps_eval.push_back(v_d);
+  }
+
+  if (indicator_residvar.empty()) {
+    n_residvar = 0;
+  } else {
+    flag_na = 0;
+    for (vector<int>::size_type i = 0; i < indicator_residvar.size(); ++i) {
+      if (indicator_residvar[i] == 0) {
+        continue;
+      }
+
+      if (flag_na == 0) {
+        flag_na = 1;
+        n_residvar = eps_eval[i].size();
+      }
+      if (flag_na != 0 && n_residvar != eps_eval[i].size()) {
+        cout << "error! number of residuals in row " << i
              << " do not match other rows." << endl;
         return false;
       }
@@ -685,9 +749,10 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
   double maf, geno, geno_old;
   size_t n_miss;
   size_t n_0, n_1, n_2;
+
   double min_g = std::numeric_limits<float>::max();
   double max_g = std::numeric_limits<float>::min();
-
+  
   int flag_poly;
 
   int ni_total = indicator_idv.size();
@@ -700,9 +765,6 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
   file_pos = 0;
   auto count_warnings = 0;
   auto infilen = file_geno.c_str();
-  // for (auto& [key, value] : mapRS2bp) {
-  //      cerr << key << endl;
-  // }
   while (!safe_get_line(infile, line).eof()) {
     ch_ptr = strtok_safe2((char *)line.c_str(), " ,\t",infilen);
     rs = ch_ptr;
@@ -1403,6 +1465,51 @@ void ReadFile_eigenD(const string &file_kd, bool &error, gsl_vector *eval) {
     }
 
     gsl_vector_set(eval, i_row, d);
+
+    i_row++;
+  }
+
+  infile.close();
+  infile.clear();
+
+  return;
+}
+
+void ReadFile_residvar(const string &file_residvar, bool &error, gsl_vector *eps_eval) {
+  debug_msg("entered");
+  igzstream infile(file_residvar.c_str(), igzstream::in);
+  if (!infile) {
+    cout << "error! fail to open the residual variance file: " << file_residvar << endl;
+    error = true;
+    return;
+  }
+
+  size_t n_row = eps_eval->size, i_row = 0;
+
+  gsl_vector_set_zero(eps_eval); //change this so that eps_eval = V_e somehow
+
+  string line;
+  char *ch_ptr;
+  double d;
+
+  while (getline(infile, line)) {
+    if (i_row == n_row) {
+      cout << "error! number of rows in the residual variance file is larger "
+           << "than expected." << endl;
+      error = true;
+    }
+
+    ch_ptr = strtok_safe2((char *)line.c_str(), " ,\t",file_residvar.c_str());
+    d = atof(ch_ptr);
+
+    ch_ptr = strtok(NULL, " ,\t");
+    if (ch_ptr != NULL) {
+      cout << "error! number of columns in the residual variance file is larger "
+           << "than expected, for row = " << i_row << endl;
+      error = true;
+    }
+
+    gsl_vector_set(eps_eval, i_row, d);
 
     i_row++;
   }
