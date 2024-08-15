@@ -2617,7 +2617,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
       time_start = clock();
 
       if (cPar.a_mode == M_EIGEN) {
-        cPar.trace_G = EigenDecomp_Zeroed(G, U, eval, 1);
+        cPar.trace_G = EigenDecomp_Zeroed(G, U, eval, 0);
       } else {
         cPar.trace_G = EigenDecomp_Zeroed(G, U, eval, 0);
       }
