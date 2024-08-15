@@ -2768,6 +2768,7 @@ void MphInitial(const size_t em_iter, const double em_prec,
                 gsl_matrix *B) {
 
   debug_msg("MphInitial");
+  write(Y, "Y in MphInitial");
   gsl_matrix_set_zero(V_g);
   gsl_matrix_set_zero(V_e);
   gsl_matrix_set_zero(B);
@@ -2971,6 +2972,7 @@ double PCRT(const size_t mode, const size_t d_size, const double p_value,
 void MVLMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
                           const gsl_matrix *UtW, const gsl_matrix *UtY) {
   debug_msg("entering");
+  write(UtY, "UtY in AnalyzeBimbam");
   igzstream infile(file_geno.c_str(), igzstream::in);
   if (!infile) {
     cout << "error reading genotype file:" << file_geno << endl;

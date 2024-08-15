@@ -1478,6 +1478,8 @@ void LMM::Analyze(std::function< SnpNameValues(size_t) >& fetch_snp,
                   const set<string> gwasnps) {
   clock_t time_start = clock();
 
+  write(W, "W");
+  write(y, "y");
   // Subset/LOCO support
   bool process_gwasnps = gwasnps.size();
   if (process_gwasnps)
@@ -2162,7 +2164,7 @@ void CalcLambda(const char func_name, const gsl_vector *eval,
 
   gsl_matrix_set_zero(Uab);
   write(UtW,"UtW");
-  write(UtW,"Uty");
+  write(Uty,"Uty");
   CalcUab(UtW, Uty, Uab);
   write(Uab,"Uab");
   Calcab(UtW, Uty, ab);
@@ -2211,6 +2213,7 @@ void CalcLmmVgVeBeta(const gsl_vector *eval, const gsl_matrix *UtW,
   size_t n_cvt = UtW->size2, ni_test = UtW->size1;
   size_t n_index = (n_cvt + 2 + 1) * (n_cvt + 2) / 2;
 
+  write(Uty, "VgVe Uty");
   gsl_matrix *Uab = gsl_matrix_safe_alloc(ni_test, n_index);
   gsl_vector *ab = gsl_vector_safe_alloc(n_index);
   gsl_matrix *Pab = gsl_matrix_safe_alloc(n_cvt + 2, n_index);
@@ -2238,7 +2241,8 @@ void CalcLmmVgVeBeta(const gsl_vector *eval, const gsl_matrix *UtW,
   }
   fast_dgemm("T", "N", 1.0, HiW, UtW, 0.0, WHiW);
   gsl_blas_dgemv(CblasTrans, 1.0, HiW, Uty, 0.0, WHiy);
-
+  write(WHiW, "VgVe WHiW");
+  write(WHiy, "VgVe WHiy");
   int sig;
   gsl_permutation *pmt = gsl_permutation_alloc(UtW->size2);
   LUDecomp(WHiW, pmt, &sig);

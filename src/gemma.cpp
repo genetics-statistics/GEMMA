@@ -1777,6 +1777,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
     // write(eval,"eval zeroed");
     cPar.time_eigen = (clock() - time_start) / (double(CLOCKS_PER_SEC) * 60.0);
 
+    write(W, "W before UtW");
     // calculate UtW and Uty
     CalcUtX(U, W, UtW);
     CalcUtX(U, Y, UtY);
@@ -2552,7 +2553,8 @@ void GEMMA::BatchRun(PARAM &cPar) {
   // LMM or mvLMM or Eigen-Decomposition
   if (cPar.a_mode == M_LMM1 || cPar.a_mode == M_LMM2 || cPar.a_mode == M_LMM3 ||
       cPar.a_mode == M_LMM4 || cPar.a_mode == M_LMM5 || cPar.a_mode == M_LMM9 ||
-      cPar.a_mode == M_EIGEN  ) { // Fit LMM or mvLMM or eigen
+      cPar.a_mode == M_EIGEN) { // Fit LMM or mvLMM or eigen
+    write(cPar.a_mode, "Mode");
     gsl_matrix *Y = gsl_matrix_safe_alloc(cPar.ni_test, cPar.n_ph);
     enforce_msg(Y, "allocate Y"); // just to be sure
     gsl_matrix *W = gsl_matrix_safe_alloc(Y->size1, cPar.n_cvt);
@@ -2589,6 +2591,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
       // center matrix G
       CenterMatrix(G);
       validate_K(G);
+      write(G, "G");
 
       // is residual weights are provided, then
       if (!cPar.file_weight.empty()) {
@@ -2685,8 +2688,11 @@ void GEMMA::BatchRun(PARAM &cPar) {
       cLmm.WriteFiles();
       cLmm.CopyToParam(cPar);
     } else {
-      debug_msg("Main LMM track");
+      write("Main LMM track", "Main LMM track");
       // calculate UtW and Uty
+      write(W, "W");
+      write(Y, "Y");
+      write(U, "U");
       CalcUtX(U, W, UtW);
       CalcUtX(U, Y, UtY);
       assert_issue(is_issue(26), ROUND(UtY->data[0]) == -16.6143);
@@ -2779,6 +2785,8 @@ void GEMMA::BatchRun(PARAM &cPar) {
         } // output residuals
       }
 
+      write(UtW, "UtW");
+
       // Fit LMM or mvLMM (w. LOCO)
       if (cPar.a_mode == M_LMM1 || cPar.a_mode == M_LMM2 || cPar.a_mode == M_LMM3 ||
           cPar.a_mode == M_LMM4 || cPar.a_mode == M_LMM9) {
@@ -2791,6 +2799,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
 
           gsl_vector_view Y_col = gsl_matrix_column(Y, 0);
           gsl_vector_view UtY_col = gsl_matrix_column(UtY, 0);
+          write(&Y_col.vector, "Y_col");
 
           if (!cPar.file_bfile.empty()) {
             // PLINK analysis
