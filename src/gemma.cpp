@@ -1601,6 +1601,9 @@ void GEMMA::Assign(int argc, char **argv, PARAM &cPar) {
       // cPar.mode_debug = true;
       debug_set_debug_data_mode(true);
       debug_set_debug_mode(true);
+    } else if (strcmp(argv[i], "-debug-dump") == 0) {
+      debug_set_debug_dump_mode(true, (char *)cPar.path_out.c_str());
+      debug_set_debug_mode(true);
     } else if (strcmp(argv[i], "-debug") == 0) {
       // cPar.mode_debug = true;
       debug_set_debug_mode(true);

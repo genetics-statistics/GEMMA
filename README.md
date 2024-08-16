@@ -141,6 +141,7 @@ GEMMA has a wide range of debugging options which can be viewed with
  -silence                 silent terminal display
  -debug                   debug output
  -debug-data              debug data output
+ -debug-dump              -debug-data, but store the data to files (grep write() calls for messages/names)
  -nind       [num]        read up to num individuals
  -issue      [num]        enable tests relevant to issue tracker
  -legacy                  run gemma in legacy mode

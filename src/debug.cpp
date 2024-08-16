@@ -41,7 +41,9 @@
 
 static bool debug_mode      = false;
 static bool debug_data_mode = false;
-static bool debug_check     = false;  // check data/algorithms
+static string debug_dump_path;
+static bool debug_dump_mode = false; // Dump all the pieces of data to files
+static bool debug_check     = false; // check data/algorithms
 static bool debug_fpe_check = true;  // check floating point errors (intel hardware)
 static bool debug_strict    = false; // fail on error, more rigorous checks
 static bool debug_quiet     = false;
@@ -50,6 +52,7 @@ static bool debug_legacy    = false; // legacy mode
 
 void debug_set_debug_mode(bool setting) { debug_mode = setting; }
 void debug_set_debug_data_mode(bool setting) { debug_data_mode = setting; }
+void debug_set_debug_dump_mode(bool setting, char *path) { debug_dump_mode = setting; debug_dump_path = path;}
 void debug_set_check_mode(bool setting) {debug_check = setting; }
 void debug_set_no_check_mode(bool setting) {debug_check = !setting; }
 void debug_set_no_fpe_check_mode(bool setting) {debug_fpe_check = !setting; }
@@ -60,6 +63,7 @@ void debug_set_legacy_mode(bool setting) { debug_legacy = setting; }
 
 bool is_debug_mode() { return debug_mode; };
 bool is_debug_data_mode() { return debug_data_mode; };
+bool is_debug_dump_mode() { return debug_dump_mode; };
 bool is_no_check_mode() { return !debug_check; };
 bool is_check_mode() { return debug_check; };
 bool is_fpe_check_mode() { return debug_fpe_check; };
@@ -157,29 +161,43 @@ void disable_segfpe() {
 }
 
 void write(const char *s, const char *msg) {
-  if (!is_debug_data_mode()) return;
-  cout << s << ": " << msg << endl;
+  if (!is_debug_data_mode() && !is_debug_dump_mode()) return;
+  ofstream out(debug_dump_path + "debug-dump-" + msg + ".txt");
+  (is_debug_dump_mode() ? out : cout)
+          << s << ": " << msg << endl;
 }
 
 void write(const double d, const char *msg) {
-  if (!is_debug_data_mode()) return;
-  cout << std::setprecision(6) << d << ": " << msg << endl;
+  if (!is_debug_data_mode() && !is_debug_dump_mode()) return;
+  ofstream out(debug_dump_path + "debug-dump-" + msg + ".txt");
+  (is_debug_dump_mode() ? out : cout)
+          << std::setprecision(6) << d << ": " << msg << endl;
 }
 
 void write(const gsl_vector *v, const char *msg) {
-  if (!is_debug_data_mode()) return;
-  if (msg) cout << "// " << msg << endl;
-  cout << "// vector size: " << v->size << endl;
-  cout << "double " << msg << "[] = {";
-  for (size_t i=0; i < v->size; i++) {
-    cout << gsl_vector_get(v,i) << ",";
+  if (!is_debug_data_mode() && !is_debug_dump_mode()) return;
+  ofstream out(debug_dump_path + "debug-dump-" + msg + ".txt");
+  if (is_debug_data_mode()) {
+          if (msg)
+                  cout << "// " << msg << endl;
+          cout << "// vector size: " << v->size << endl;
+          cout << "double " << msg << "[] = {";
   }
-  cout << "}" << endl;
+  for (size_t i=0; i < v->size; i++) {
+          (is_debug_dump_mode() ? out : cout)
+                  << gsl_vector_get(v,i)
+                  << (is_debug_dump_mode() ? "\t" : ",");
+  }
+  if (is_debug_dump_mode())
+          out << endl;
+  else
+          cout << "}" << endl;
 }
 
 void write(const gsl_matrix *m, const char *msg) {
-  if (!is_debug_data_mode()) return;
-  if (msg) cout << "// " << msg << endl;
+  if (!is_debug_data_mode() && !is_debug_dump_mode()) return;
+  if (msg && is_debug_data_mode())
+          cout << "// " << msg << endl;
   // Matrices are stored in row-major order, meaning that each row of
   // elements forms a contiguous block in memory. This is the standard
   // “C-language ordering” of two-dimensional arrays. The number of
@@ -187,18 +205,29 @@ void write(const gsl_matrix *m, const char *msg) {
   auto rows = m->size1; // see https://www.gnu.org/software/gsl/manual/html_node/Matrices.html#Matrices
   auto cols = m->size2;
   auto tda = m->tda;
+  ofstream out(debug_dump_path + "debug-dump-" + msg + ".txt");
 
-  cout << "// matrix size: " << cols << " cols, " << rows << " rows," << tda << " tda" << endl;
-  cout << "double " << msg << "[] = {";
-  for (size_t row=0; row < rows; row++) {
-    for (size_t col=0; col < cols; col++) {
-      // cout << "(" << i << "," << j << ")";
-      cout << gsl_matrix_safe_get(m,row,col);
-      cout << ",";
-    }
-    cout << "// row " << row << endl;
+  if (is_debug_data_mode()) {
+          cout << "// matrix size: " << cols << " cols, " << rows << " rows," << tda << " tda" << endl;
+          cout << "double " << msg << "[] = {";
   }
-  cout << "}" << endl;
+  for (size_t row = 0; row < rows; row++) {
+          for (size_t col = 0; col < cols; col++) {
+                  // cout << "(" << i << "," << j << ")";
+                  (is_debug_dump_mode() ? out : cout)
+                          << gsl_matrix_safe_get(m, row, col);
+                  if (is_debug_dump_mode())
+                          out << "\t";
+                  else
+                          cout << ",";
+          }
+          if (is_debug_dump_mode())
+                  out << endl;
+          else
+                  cout << "// row " << row << endl;
+  }
+  if (is_debug_data_mode())
+          cout << "}" << endl;
 }
 
 /*
