@@ -2688,7 +2688,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
       cLmm.WriteFiles();
       cLmm.CopyToParam(cPar);
     } else {
-      write("Main LMM track", "Main LMM track");
+      write("LMM Main track", "LMM Main track");
       // calculate UtW and Uty
       write(W, "W");
       write(Y, "Y");
