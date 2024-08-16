@@ -3058,11 +3058,18 @@ void MVLMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
   logl_H0 = MphEM('R', em_iter, em_prec, eval, &X_sub.matrix, Y, U_hat, E_hat,
                   OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE, V_g,
                   V_e, &B_sub.matrix);
+  write(V_g, "V_g0");
+  write(V_e, "V_e0");
   logl_H0 = MphNR('R', nr_iter, nr_prec, eval, &X_sub.matrix, Y, Hi_all,
                   &xHi_all_sub.matrix, Hiy_all, V_g, V_e, Hessian, crt_a, crt_b,
                   crt_c);
+  write(Hessian, "Hessian0");
+  write(crt_a, "crt_a0");
+  write(crt_b, "crt_b0");
+  write(crt_c, "crt_c0");
   MphCalcBeta(eval, &X_sub.matrix, Y, V_g, V_e, UltVehiY, &B_sub.matrix,
               se_B_null);
+  write(se_B_null, "se_B_null0");
 
   c = 0;
   Vg_remle_null.clear();
