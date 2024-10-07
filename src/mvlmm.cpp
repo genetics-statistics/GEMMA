@@ -346,28 +346,45 @@ double CalcQi(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matr
 // xHiy=\sum_{k=1}^n x_k\otimes ((delta_k*Dl+epsilon_k)^{-1}Ul^TVe^{-1/2}y.
 //
 // FIXME: mvlmm spends a massive amount of time here
-void CalcXHiY(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_vector *D_l,
+void CalcXHiY(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq, const gsl_vector *D_l,
               const gsl_matrix *X, const gsl_matrix *UltVehiY, const gsl_matrix *V_e_temp,
               gsl_vector *xHiy) {
   // debug_msg("enter");
-  size_t n_size = eval->size, c_size = X->size1, d_size = D_l->size;
+  size_t n_size = eval->size, 
+  c_size = X->size1, 
+  d_size = D_l->size;
 
   // gsl_vector_set_zero(xHiy);
+  std::vector<double> xHiy(d_size * c_size, 0.0);  // Initialize output vector xHiy
 
-  double x, delta, ve, epsilon, epsilon_sc, dl, y, d;
+  gsl_matrix *eval_vec_T = gsl_matrix_alloc(n_size, n_size);
+  gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
+
+  // Transpose eval_vec
+  gsl_matrix_transpose_memcpy(eval_vec_T, eval_vec);
+
+  double x, delta, ve, epsilon, dl, y, d;
+ 
   for (size_t i = 0; i < d_size; i++) {
     dl = gsl_vector_get(D_l, i);
     ve = gsl_matrix_get(V_e_temp, i, i);
+   
+   // Calculate Sigma = t(eval_vec) %*% (sigmasq / V_e_temp[i]) %*% eval_vec
+    gsl_matrix_set_zero(Sigma);
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, eval_vec_T, eval_vec, 0.0, Sigma);
+    double scalar = sigmasq / ve;
+    gsl_matrix_scale(Sigma, scalar);
+   
     for (size_t j = 0; j < c_size; j++) {
       d = 0.0;
       for (size_t k = 0; k < n_size; k++) {
         x = gsl_matrix_get(X, j, k);
         y = gsl_matrix_get(UltVehiY, i, k);
         delta = gsl_vector_get(eval, k);
-        epsilon = gsl_vector_get(eps_eval, k);
+        epsilon = gsl_vector_get(Sigma, k);
 
         epsilon_sc = epsilon / ve;
-        d += x * y / (delta * dl + epsilon_sc);
+        d += x * y / (delta * dl + epsilon);
       }
       gsl_vector_set(xHiy, j * d_size + i, d);
     }
@@ -379,11 +396,18 @@ void CalcXHiY(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_vect
 
 // OmegaU=D_l/(delta Dl+epsilon)^{-1}
 // OmegaE=delta D_l/(delta Dl+epsilon)^{-1}
-void CalcOmega(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_vector *D_l, const gsl_matrix *V_e_temp,
+void CalcOmega(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq, const gsl_vector *D_l, const gsl_matrix *V_e_temp,
                gsl_matrix *OmegaU, gsl_matrix *OmegaE) {
-  size_t n_size = eval->size, d_size = D_l->size;
+  size_t n_size = eval->size, 
+  d_size = D_l->size;
   double delta, ve, epsilon, epsilon_sc, dl, d_u, d_e;
 
+  gsl_matrix *eval_vec_T = gsl_matrix_alloc(n_size, n_size);
+  gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
+
+  // Transpose eval_vec
+  gsl_matrix_transpose_memcpy(eval_vec_T, eval_vec);
+ 
   for (size_t k = 0; k < n_size; k++) {
     delta = gsl_vector_get(eval, k);;
     epsilon = gsl_vector_get(eps_eval, k);
@@ -392,8 +416,17 @@ void CalcOmega(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_vec
       dl = gsl_vector_get(D_l, i);
       ve = gsl_matrix_get(V_e_temp, i, i);
 
-      epsilon_sc = epsilon / ve;
-      d_u = dl / (delta * dl + epsilon_sc);  // @@
+      // Calculate Sigma = t(eval_vec) %*% (sigmasq / V_e_temp[i]) %*% eval_vec
+      gsl_matrix_set_zero(Sigma);
+      gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, eval_vec_T, eval_vec, 0.0, Sigma);
+      double scalar = sigmasq / ve;
+      gsl_matrix_scale(Sigma, scalar);
+
+      // Get epsilon from Sigma
+      epsilon = gsl_matrix_get(Sigma, k, k);
+
+     
+      d_u = dl / (delta * dl + epsilon);  // @@
       d_e = delta * d_u;
 
       gsl_matrix_set(OmegaU, i, k, d_u);
@@ -463,7 +496,7 @@ void UpdateRL_B(const gsl_vector *xHiy, const gsl_matrix *Qi,
   return;
 }
 
-void UpdateV(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_matrix *U, const gsl_matrix *E,
+void UpdateV(const gsl_vector *eval, const gsl_vector *eval_vec, const gsl_matrix *sigmasq, const gsl_matrix *U, const gsl_matrix *E,
              const gsl_matrix *Sigma_uu, const gsl_matrix *Sigma_ee, const gsl_matrix *V_e_temp,
              gsl_matrix *V_g, gsl_matrix *V_e) {
   size_t n_size = eval->size, d_size = U->size1;
@@ -471,23 +504,36 @@ void UpdateV(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_matri
   gsl_matrix_set_zero(V_g);
   gsl_matrix_set_zero(V_e);
 
-  double delta, ve, epsilon, epsilon_sc;
+  double delta, ve;
 
-  // Calculate the first part: UD^{-1}U^T and EE^T.
+  gsl_matrix *eval_vec_T = gsl_matrix_alloc(n_size, n_size);
+  gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
+
+  // Transpose eval_vec
+  gsl_matrix_transpose_memcpy(eval_vec_T, eval_vec);
+  
+ // Calculate the first part: UD^{-1}U^T and EE^T.
   for (size_t i = 0; i < d_size; i++) {
     ve = gsl_matrix_get(V_e_temp, i, i);
   
   for (size_t k = 0; k < n_size; k++) {
     delta = gsl_vector_get(eval, k);
-    epsilon = gsl_vector_get(eps_eval, k);
+    
     if (delta == 0) {
       continue;
     }
-    epsilon_sc = epsilon / ve;
+   // Calculate Sigma = t(eval_vec) %*% (sigmasq / V_e_temp[i]) %*% eval_vec
+    gsl_matrix_set_zero(Sigma);
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, eval_vec_T, eval_vec, 0.0, Sigma);
+    double scalar = sigmasq / ve;
+    gsl_matrix_scale(Sigma, scalar);
+
+    double epsilon = gsl_matrix_get(Sigma, k, k);
+  
     gsl_vector_const_view U_col = gsl_matrix_const_column(U, k);
     gsl_vector_const_view E_col = gsl_matrix_const_column(E, k);
     gsl_blas_dsyr(CblasUpper, 1.0 / delta, &U_col.vector, V_g);
-    gsl_blas_dsyr(CblasUpper, 1.0 / epsilon_sc, &E_col.vector, V_e);
+    gsl_blas_dsyr(CblasUpper, 1.0 / epsilon, &E_col.vector, V_e);
   }
   }
 
@@ -511,8 +557,8 @@ void UpdateV(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_matri
   return;
 }
 
-void CalcSigma(const char func_name, const gsl_vector *eval, const gsl_vector *eps_eval,
-               const gsl_vector *D_l, const gsl_matrix *X,
+void CalcSigma(const char func_name, const gsl_vector *eval, const gsl_vector *eval_vec,
+               const gsl_matrix *sigmasq, const gsl_vector *D_l, const gsl_matrix *X,
                const gsl_matrix *OmegaU, const gsl_matrix *OmegaE,
                const gsl_matrix *UltVeh, const gsl_matrix *Qi, const gsl_matrix *V_e_temp,
                gsl_matrix *Sigma_uu, gsl_matrix *Sigma_ee) {
@@ -523,8 +569,10 @@ void CalcSigma(const char func_name, const gsl_vector *eval, const gsl_vector *e
     return;
   }
 
-  size_t n_size = eval->size, c_size = X->size1;
-  size_t d_size = D_l->size, dc_size = Qi->size1;
+  size_t n_size = eval->size, 
+  c_size = X->size1;
+  size_t d_size = D_l->size, 
+  dc_size = Qi->size1;
 
   gsl_matrix_set_zero(Sigma_uu);
   gsl_matrix_set_zero(Sigma_ee);
@@ -552,18 +600,28 @@ void CalcSigma(const char func_name, const gsl_vector *eval, const gsl_vector *e
     gsl_matrix_set_zero(M_u);
     gsl_matrix_set_zero(M_e);
 
+    // Transpose eval_vec
+    gsl_matrix_transpose_memcpy(eval_vec_T, eval_vec);
+
     for (size_t k = 0; k < n_size; k++) {
       delta = gsl_vector_get(eval, k);
-      epsilon = gsl_vector_get(eps_eval, k);
 
       for (size_t i = 0; i < d_size; i++) {
         dl = gsl_vector_get(D_l, i);
         ve = gsl_matrix_get(V_e_temp, i, i);
+
+        // Calculate Sigma = t(eval_vec) %*% (sigmasq / V_e_temp[i]) %*% eval_vec
+        gsl_matrix_set_zero(Sigma);
+        gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, eval_vec_T, eval_vec, 0.0, Sigma);
+        gsl_matrix_scale(Sigma, sigmasq / ve);
+
+        double epsilon = gsl_matrix_get(Sigma, k, k);
+       
         for (size_t j = 0; j < c_size; j++) {
           x = gsl_matrix_get(X, j, k);
 
           epsilon_sc = epsilon / ve;
-          d = x / (delta * dl + epsilon_sc);
+          d = x / (delta * dl + epsilon);
           gsl_matrix_set(M_e, j * d_size + i, i, d);
           gsl_matrix_set(M_u, j * d_size + i, i, d * dl);
         }
@@ -595,23 +653,36 @@ void CalcSigma(const char func_name, const gsl_vector *eval, const gsl_vector *e
 // 'R' for restricted likelihood and 'L' for likelihood.
 // 'R' update B and 'L' don't.
 // only calculate -0.5*\sum_{k=1}^n|H_k|-0.5yPxy.
-double MphCalcLogL(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_vector *xHiy,
+double MphCalcLogL(const gsl_vector *eval, const gsl_vector *eval_vec, const gsl_vector *xHiy, const gsl_matrix *sigmasq,
                    const gsl_vector *D_l, const gsl_matrix *UltVehiY, const gsl_matrix *V_e_temp,
                    const gsl_matrix *Qi) {
   size_t n_size = eval->size, d_size = D_l->size, dc_size = Qi->size1;
   double logl = 0.0, delta, ve, epsilon, epsilon_sc, dl, y, d;
+  // Create temporary matrix for Sigma
+  gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
+  gsl_matrix *eval_vec_T = gsl_matrix_alloc(n_size, n_size);
+    
+  // Transpose eval_vec
+  gsl_matrix_transpose_memcpy(eval_vec_T, eval_vec);
 
   // Calculate yHiy+log|H_k|.
   for (size_t k = 0; k < n_size; k++) {
     delta = gsl_vector_get(eval, k);
-    epsilon = gsl_vector_get(eps_eval, k);
+
     for (size_t i = 0; i < d_size; i++) {
       y = gsl_matrix_get(UltVehiY, i, k);
       dl = gsl_vector_get(D_l, i);
       ve = gsl_matrix_get(V_e_temp, i, i);
 
-      epsilon_sc = epsilon / ve;
-      d = delta * dl + epsilon_sc;
+      // Calculate Sigma = t(eval_vec) %*% (sigmasq / V_e_temp[i]) %*% eval_vec
+      gsl_matrix_set_zero(Sigma);
+      gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, eval_vec_T, eval_vec, 0.0, Sigma);
+      gsl_matrix_scale(Sigma, sigmasq / ve);
+
+      double epsilon = gsl_matrix_get(Sigma, k, k);
+
+      // Calculate d = delta * dl + epsilon
+      double d = delta * dl + epsilon;
 
       logl += y * y / d + safe_log(d);
     }
@@ -634,7 +705,7 @@ double MphCalcLogL(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl
 // dxd matrix, V_e is a dxd matrix, eval is a size n vector
 //'R' for restricted likelihood and 'L' for likelihood.
 double MphEM(const char func_name, const size_t max_iter, const double max_prec,
-             const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_matrix *X, const gsl_matrix *Y,
+             const gsl_vector *eval, const gsl_vector *eval_vec, const gsl_matrix *sigmasq, const gsl_matrix *X, const gsl_matrix *Y,
              gsl_matrix *U_hat, gsl_matrix *E_hat, gsl_matrix *OmegaU,
              gsl_matrix *OmegaE, gsl_matrix *UltVehiY, gsl_matrix *UltVehiBX,
              gsl_matrix *UltVehiU, gsl_matrix *UltVehiE, gsl_matrix *V_g,
