@@ -283,21 +283,32 @@ tuple<gsl_matrix *, double> EigenProc(const gsl_matrix *V_g, const gsl_matrix *V
 }
 
 // Qi=(\sum_{k=1}^n x_kx_k^T\otimes(delta_k*Dl+epsilon_k)^{-1} )^{-1}.
-double CalcQi(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_vector *D_l,
+double CalcQi(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq, const gsl_vector *D_l,
               const gsl_matrix *X, const gsl_matrix *V_e_temp, gsl_matrix *Qi) {
   size_t n_size = eval->size, d_size = D_l->size, dc_size = Qi->size1;
   size_t c_size = dc_size / d_size;
 
-  double delta, ve, epsilon, epsilon_sc, dl, d1, d2, d, logdet_Q;
+  double delta, ve, epsilon, dl, d1, d2, d, logdet_Q;
 
   gsl_matrix *Q = gsl_matrix_alloc(dc_size, dc_size);
   gsl_matrix_set_zero(Q);
+
+  gsl_matrix *eval_vec_T = gsl_matrix_alloc(n_size, n_size);
+ // Transpose eval_vec
+  gsl_matrix_transpose_memcpy(eval_vec_T, eval_vec);
+
+  gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
 
   for (size_t i = 0; i < c_size; i++) {
     for (size_t j = 0; j < c_size; j++) {
       for (size_t l = 0; l < d_size; l++) {
         dl = gsl_vector_get(D_l, l);
         ve = gsl_matrix_get(V_e_temp, l, l);
+        gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, eval_vec_T, eval_vec, 0.0, Sigma);
+
+       double sigmasq_value = gsl_matrix_get(sigmasq, 0, 0);  // Adjust if sigmasq has different structure
+       double scalar = sigmasq_value / ve;
+       gsl_matrix_scale(eps_eval, scalar);
 
         if (j < i) {
           d = gsl_matrix_get(Q, j * d_size + l, i * d_size + l);
@@ -309,8 +320,7 @@ double CalcQi(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_vect
             delta = gsl_vector_get(eval, k);
             epsilon = gsl_vector_get(eps_eval, k);
 
-            epsilon_sc = epsilon / ve;
-            d += d1 * d2 / (dl * delta + epsilon_sc); // @@
+            d += d1 * d2 / (dl * delta + epsilon); // @@
           }
         }
 
