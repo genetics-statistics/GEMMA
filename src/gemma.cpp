@@ -337,7 +337,7 @@ void GEMMA::PrintHelp(size_t option) {
     cout << "                  variable for individual 2" << endl;
     cout << "                  ..." << endl;
     cout << "          missing value: NA" << endl;
-        cout << " -residvar   [filename]     "
+    cout << " -residvar   [filename]     "
          << " residual variance file contains a column of positive values to be used "
          << "directly as for the residual variance---each value corresponds to an "
          << "individual, in which each value is the empirical residual variance based"
