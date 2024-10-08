@@ -2,7 +2,7 @@
     Genome-wide Efficient Mixed Model Association (GEMMA)
     Copyright © 2011-2017, Xiang Zhou
     Copyright © 2017, Peter Carbonetto
-    Copyright © 2017-2018 Pjotr Prins
+    Copyright © 2017-2022 Pjotr Prins
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -2201,7 +2201,7 @@ void CalcPve(const gsl_vector *eval, const gsl_matrix *UtW,
 // Obtain REML estimate for Vg and Ve using lambda_remle.
 // Obtain beta and se(beta) for coefficients.
 // ab is not used when e_mode==0.
-void CalcLmmVgVeBeta(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_matrix *UtW,
+void CalcLmmVgVeBeta(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq, const gsl_matrix *UtW,
                      const gsl_vector *Uty, const double lambda, double &vg,
                      double &ve, gsl_vector *beta, gsl_vector *se_beta) {
   size_t n_cvt = UtW->size2, ni_test = UtW->size1;
