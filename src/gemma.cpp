@@ -340,7 +340,7 @@ void GEMMA::PrintHelp(size_t option) {
     cout << " -residvar   [filename]     "
          << " residual variance file contains a column of positive values to be used "
          << "directly as for the residual variance---each value corresponds to an "
-         << "individual, in which each value is the empirical residual variance based"
+         << "individual, in which each value is the empirical residual variance (sigmasq) based"
          << "on a trait value calculated from multiple replicates for this individual" 
          << "(similar in format to phenotype file)"
          << endl;
