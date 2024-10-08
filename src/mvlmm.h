@@ -35,6 +35,7 @@ public:
 
   string file_bfile;
   string file_geno;
+  //string file_residvar maybe?
   string file_oxford;
   string file_out;
   string path_out;
@@ -79,22 +80,22 @@ public:
   // Main functions
   void CopyFromParam(PARAM &cPar);
   void CopyToParam(PARAM &cPar);
-  void AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval, const gsl_vector *eps_eval,
+  void AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq,
                      const gsl_matrix *UtW, const gsl_matrix *UtY);
-  void AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval, const gsl_vector *eps_eval,
+  void AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq,
                     const gsl_matrix *UtW, const gsl_matrix *UtY);
   void Analyzebgen(const gsl_matrix *U, const gsl_vector *eval,
                    const gsl_matrix *UtW, const gsl_matrix *UtY);
-  void AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval, const gsl_vector *eps_eval,
+  void AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq,
                         const gsl_matrix *UtW, const gsl_matrix *UtY,
                         const gsl_vector *env);
-  void AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval, const gsl_vector *eps_eval,
+  void AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq,
                        const gsl_matrix *UtW, const gsl_matrix *UtY,
                        const gsl_vector *env);
   void WriteFiles();
 };
 
-void CalcMvLmmVgVeBeta(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_matrix *UtW,
+void CalcMvLmmVgVeBeta(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq, const gsl_matrix *UtW,
                        const gsl_matrix *UtY, const size_t em_iter,
                        const size_t nr_iter, const double em_prec,
                        const double nr_prec, const double l_min,
