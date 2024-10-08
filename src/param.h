@@ -350,7 +350,7 @@ public:
                      const bool calc_K);
   void CheckCvt();
   void CopyCvt(gsl_matrix *W);
-  void CopyResid(gsl_vector *eps_eval);
+  void CopyResid(gsl_matrix *sigmasq);
   void CopyA(size_t flag, gsl_matrix *A);
   void CopyGxe(gsl_vector *gxe);
   void CopyWeight(gsl_vector *w);
