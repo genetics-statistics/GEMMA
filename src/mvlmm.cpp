@@ -577,7 +577,7 @@ void CalcSigma(const char func_name, const gsl_vector *eval, const gsl_vector *e
   gsl_matrix_set_zero(Sigma_uu);
   gsl_matrix_set_zero(Sigma_ee);
 
-  double delta, ve, epsilon, epsilon_sc, dl, x, d;
+  double delta, ve, epsilon, dl, x, d;
 
   // Calculate the first diagonal term.
   gsl_vector_view Suu_diag = gsl_matrix_diagonal(Sigma_uu);
@@ -803,14 +803,14 @@ double MphEM(const char func_name, const size_t max_iter, const double max_prec,
   for (size_t t = 0; t < max_iter; t++) {
     tie(V_e_temp, logdet_Ve) = EigenProc(V_g, V_e, D_l, UltVeh, UltVehi);
 
-    logdet_Q = CalcQi(eval, eps_eval, D_l, X, V_e_temp, Qi);
+    logdet_Q = CalcQi(eval, eval_vec, sigmasq, D_l, X, V_e_temp, Qi);
 
     gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, UltVehi, Y, 0.0, UltVehiY);
-    CalcXHiY(eval, eps_eval, D_l, X, UltVehiY, V_e_temp, xHiy);
+    CalcXHiY(eval, eval_vec, sigmasq, D_l, X, UltVehiY, V_e_temp, xHiy);
 
     // Calculate log likelihood/restricted likelihood value, and
     // terminate if change is small.
-    logl_new = logl_const + MphCalcLogL(eval, eps_eval, xHiy, D_l, UltVehiY, V_e_temp, Qi) -
+    logl_new = logl_const + MphCalcLogL(eval, eval_vec, xHiy, sigmasq, D_l, UltVehiY, V_e_temp, Qi) -
                0.5 * (double)n_size * logdet_Ve;
     if (func_name == 'R' || func_name == 'r') {
       logl_new += -0.5 * (logdet_Q - (double)c_size * logdet_Ve);
@@ -820,7 +820,7 @@ double MphEM(const char func_name, const size_t max_iter, const double max_prec,
     }
     logl_old = logl_new;
 
-    CalcOmega(eval, eps_eval, D_l, V_e_temp, OmegaU, OmegaE);
+    CalcOmega(eval, eval_vec, sigmasq, D_l, V_e_temp, OmegaU, OmegaE);
 
     // Update UltVehiB, UltVehiU.
     if (func_name == 'R' || func_name == 'r') {
@@ -852,11 +852,11 @@ double MphEM(const char func_name, const size_t max_iter, const double max_prec,
     gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, UltVeh, UltVehiB, 0.0, B);
 
     // Calculate Sigma_uu and Sigma_ee.
-    CalcSigma(func_name, eval, eps_eval, D_l, X, OmegaU, OmegaE, UltVeh, Qi, V_e_temp, Sigma_uu,
+    CalcSigma(func_name, eval, eval_vec, sigmasq, D_l, X, OmegaU, OmegaE, UltVeh, Qi, V_e_temp, Sigma_uu,
               Sigma_ee);
 
     // Update V_g and V_e.
-    UpdateV(eval, eps_eval, U_hat, E_hat, Sigma_uu, Sigma_ee, V_e_temp, V_g, V_e);
+    UpdateV(eval, eval_vec, sigmasq, U_hat, E_hat, Sigma_uu, Sigma_ee, V_e_temp, V_g, V_e);
     // print statements
     //print iteration number:
     cout<< t<<endl;
@@ -916,7 +916,7 @@ double MphEM(const char func_name, const size_t max_iter, const double max_prec,
 }
 
 // Calculate p-value, beta (d by 1 vector) and V(beta).
-double MphCalcP(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_vector *x_vec,
+double MphCalcP(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq, const gsl_vector *x_vec,
                 const gsl_matrix *W, const gsl_matrix *Y, const gsl_matrix *V_g,
                 const gsl_matrix *V_e, gsl_matrix *UltVehiY, gsl_vector *beta,
                 gsl_matrix *Vbeta) {
@@ -947,27 +947,38 @@ double MphCalcP(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_ve
 
   // Calculate Qi and log|Q|.
   // double logdet_Q = CalcQi(eval, D_l, W, Qi);
-  CalcQi(eval, eps_eval, D_l, W, V_e_temp, Qi);
+  CalcQi(eval, eval_vec, sigmasq, D_l, W, V_e_temp, Qi);
 
   // Calculate UltVehiY.
   gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, UltVehi, Y, 0.0, UltVehiY);
+
+  gsl_matrix *eval_vec_T = gsl_matrix_alloc(n_size, n_size);
+  gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
+
+  // Transpose eval_vec
+  gsl_matrix_transpose_memcpy(eval_vec_T, eval_vec);
 
   // Calculate WHix, WHiy, xHiy, xHix.
   for (size_t i = 0; i < d_size; i++) {
     dl = gsl_vector_get(D_l, i);
     ve = gsl_matrix_get(V_e_temp, i, i);
 
+    // Calculate Sigma = t(eval_vec) %*% (sigmasq / V_e_temp[i]) %*% eval_vec
+    gsl_matrix_set_zero(Sigma);
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, eval_vec_T, eval_vec, 0.0, Sigma);
+    double scalar = sigmasq / ve;
+    gsl_matrix_scale(Sigma, scalar);
+   
     d1 = 0.0;
     d2 = 0.0;
     for (size_t k = 0; k < n_size; k++) {
       delta = gsl_vector_get(eval, k);
-      epsilon = gsl_vector_get(eps_eval, k);
+      epsilon = = gsl_matrix_get(Sigma, k, k);
       dx = gsl_vector_get(x_vec, k);
       dy = gsl_matrix_get(UltVehiY, i, k);
 
-      epsilon_sc = epsilon / ve;
-      d1 += dx * dy / (delta * dl + epsilon_sc);
-      d2 += dx * dx / (delta * dl + epsilon_sc);
+      d1 += dx * dy / (delta * dl + epsilon);
+      d2 += dx * dx / (delta * dl + epsilon);
     }
     gsl_vector_set(xPy, i, d1);
     gsl_matrix_set(xPx, i, i, d2);
@@ -977,14 +988,13 @@ double MphCalcP(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_ve
       d2 = 0.0;
       for (size_t k = 0; k < n_size; k++) {
         delta = gsl_vector_get(eval, k);
-        epsilon = gsl_vector_get(eps_eval, k);
+        epsilon = = gsl_matrix_get(Sigma, k, k);
         dx = gsl_vector_get(x_vec, k);
         dw = gsl_matrix_get(W, j, k);
         dy = gsl_matrix_get(UltVehiY, i, k);
 
-        epsilon_sc = epsilon / ve;
-        d1 += dx * dw / (delta * dl + epsilon_sc);
-        d2 += dy * dw / (delta * dl + epsilon_sc);
+        d1 += dx * dw / (delta * dl + epsilon);
+        d2 += dy * dw / (delta * dl + epsilon);
       }
       gsl_matrix_set(WHix, j * d_size + i, i, d1);
       gsl_vector_set(WHiy, j * d_size + i, d2);
@@ -1030,7 +1040,7 @@ double MphCalcP(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_ve
 
 // Calculate B and its standard error (which is a matrix of the same
 // dimension as B).
-void MphCalcBeta(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_matrix *W,
+void MphCalcBeta(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq, const gsl_matrix *W,
                  const gsl_matrix *Y, const gsl_matrix *V_g,
                  const gsl_matrix *V_e, gsl_matrix *UltVehiY, gsl_matrix *B,
                  gsl_matrix *se_B) {
@@ -1048,6 +1058,11 @@ void MphCalcBeta(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_m
   gsl_vector *QiWHiy = gsl_vector_alloc(dc_size);
   gsl_vector *beta = gsl_vector_alloc(dc_size);
   gsl_matrix *Vbeta = gsl_matrix_alloc(dc_size, dc_size);
+  gsl_matrix *eval_vec_T = gsl_matrix_alloc(n_size, n_size);
+  gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
+
+  // Transpose eval_vec
+  gsl_matrix_transpose_memcpy(eval_vec_T, eval_vec);
 
   gsl_vector_set_zero(WHiy);
 
@@ -1057,7 +1072,7 @@ void MphCalcBeta(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_m
 
   // Calculate Qi and log|Q|.
   // double logdet_Q = CalcQi(eval, D_l, W, V_e_temp, Qi);
-  CalcQi(eval, eps_eval, D_l, W, V_e_temp, Qi);
+  CalcQi(eval, eval_vec, sigmasq, D_l, W, V_e_temp, Qi);
 
   // Calculate UltVehiY.
   gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, UltVehi, Y, 0.0, UltVehiY);
@@ -1067,16 +1082,21 @@ void MphCalcBeta(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_m
     dl = gsl_vector_get(D_l, i);
     ve = gsl_matrix_get(V_e_temp, i, i);
 
+    // Calculate Sigma = t(eval_vec) %*% (sigmasq / V_e_temp[i]) %*% eval_vec
+    gsl_matrix_set_zero(Sigma);
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, eval_vec_T, eval_vec, 0.0, Sigma);
+    double scalar = sigmasq / ve;
+    gsl_matrix_scale(Sigma, scalar);
+   
     for (size_t j = 0; j < c_size; j++) {
       d = 0.0;
       for (size_t k = 0; k < n_size; k++) {
         delta = gsl_vector_get(eval, k);
-        epsilon = gsl_vector_get(eps_eval, k);
+        double epsilon = gsl_matrix_get(Sigma, k, k);
         dw = gsl_matrix_get(W, j, k);
         dy = gsl_matrix_get(UltVehiY, i, k);
 
-        epsilon_sc = epsilon / ve;
-        d += dy * dw / (delta * dl + epsilon_sc);
+        d += dy * dw / (delta * dl + epsilon);
       }
       gsl_vector_set(WHiy, j * d_size + i, d);
     }
@@ -1142,7 +1162,7 @@ void MphCalcBeta(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_m
 // Calculate all Hi and return logdet_H=\sum_{k=1}^{n}log|H_k|
 // and calculate Qi and return logdet_Q
 // and calculate yPy.
-void CalcHiQi(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_matrix *X,
+void CalcHiQi(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq, const gsl_matrix *X,
               const gsl_matrix *V_g, const gsl_matrix *V_e, gsl_matrix *Hi_all,
               gsl_matrix *Qi, double &logdet_H, double &logdet_Q) {
   gsl_matrix_set_zero(Hi_all);
@@ -1158,6 +1178,11 @@ void CalcHiQi(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_matr
   gsl_matrix *UltVehi = gsl_matrix_alloc(d_size, d_size);
   gsl_matrix *V_e_temp = gsl_matrix_alloc(d_size, d_size);
   gsl_vector *D_l = gsl_vector_alloc(d_size);
+  gsl_matrix *eval_vec_T = gsl_matrix_alloc(n_size, n_size);
+  gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
+
+  // Transpose eval_vec
+  gsl_matrix_transpose_memcpy(eval_vec_T, eval_vec);
 
   // Calculate D_l, UltVeh and UltVehi.
   tie(V_e_temp, logdet_Ve) = EigenProc(V_g, V_e, D_l, UltVeh, UltVehi);
@@ -1166,15 +1191,21 @@ void CalcHiQi(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_matr
   logdet_H = (double)n_size * logdet_Ve;
   for (size_t k = 0; k < n_size; k++) {
     delta = gsl_vector_get(eval, k);
-    epsilon = gsl_vector_get(eps_eval, k);
 
     gsl_matrix_memcpy(mat_dd, UltVehi);
-    for (size_t i = 0; i < d_size; i++) {
+    
+   for (size_t i = 0; i < d_size; i++) {
       dl = gsl_vector_get(D_l, i);
       ve = gsl_matrix_get(V_e_temp, i, i);
+      // Calculate Sigma = t(eval_vec) %*% (sigmasq / V_e_temp[i]) %*% eval_vec
+      gsl_matrix_set_zero(Sigma);
+      gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, eval_vec_T, eval_vec, 0.0, Sigma);
+      double scalar = sigmasq / ve;
+      gsl_matrix_scale(Sigma, scalar);
 
-      epsilon_sc = epsilon / ve;
-      d = delta * dl + epsilon_sc;
+     double epsilon = gsl_matrix_get(Sigma, k, k);
+     
+      d = delta * dl + epsilon;
 
       gsl_vector_view mat_row = gsl_matrix_row(mat_dd, i);
       gsl_vector_scale(&mat_row.vector, 1.0 / d); // @@
@@ -1191,7 +1222,7 @@ void CalcHiQi(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_matr
   // Calculate Qi, and multiply I\o times UtVeh on both side and
   // calculate logdet_Q, don't forget to substract
   // c_size*logdet_Ve.
-  logdet_Q = CalcQi(eval, eps_eval, D_l, X, V_e_temp, Qi) - (double)c_size * logdet_Ve;
+  logdet_Q = CalcQi(eval, eval_vec, sigmasq, D_l, X, V_e_temp, Qi) - (double)c_size * logdet_Ve;
 
   for (size_t i = 0; i < c_size; i++) {
     for (size_t j = 0; j < c_size; j++) {
@@ -1316,7 +1347,7 @@ size_t GetIndex(const size_t i, const size_t j, const size_t d_size) {
   return (2 * d_size - s + 1) * s / 2 + l - s;
 }
 
-void Calc_yHiDHiy(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_matrix *Hiy,  const gsl_matrix *V_e_temp, const size_t i,
+void Calc_yHiDHiy(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq, const gsl_matrix *Hiy,  const gsl_matrix *V_e_temp, const size_t i,
                   const size_t j, double &yHiDHiy_g, double &yHiDHiy_e) {
   yHiDHiy_g = 0.0;
   yHiDHiy_e = 0.0;
@@ -1324,24 +1355,34 @@ void Calc_yHiDHiy(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_
   size_t n_size = eval->size;
   size_t d_size = V_e_temp->size1;
 
-  double delta, ve, epsilon, epsilon_sc, d1, d2;
+  double delta, ve, epsilon, d1, d2;
+
+  gsl_matrix *eval_vec_T = gsl_matrix_alloc(n_size, n_size);
+  gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
+
+  // Transpose eval_vec
+  gsl_matrix_transpose_memcpy(eval_vec_T, eval_vec);
 
 for (size_t i = 0; i < d_size; i++) {
   ve = gsl_matrix_get(V_e_temp, i, i);
+  // Calculate Sigma = t(eval_vec) %*% (sigmasq / V_e_temp[i]) %*% eval_vec
+  gsl_matrix_set_zero(Sigma);
+  gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, eval_vec_T, eval_vec, 0.0, Sigma);
+  double scalar = sigmasq / ve;
+  gsl_matrix_scale(Sigma, scalar);
+ 
   for (size_t k = 0; k < n_size; k++) {
     delta = gsl_vector_get(eval, k);
-    epsilon = gsl_vector_get(eps_eval, k);
+    epsilon = gsl_matrix_get(Sigma,k, k);
     d1 = gsl_matrix_get(Hiy, i, k);
     d2 = gsl_matrix_get(Hiy, j, k);
 
-    epsilon_sc = epsilon / ve;
-
     if (i == j) {
       yHiDHiy_g += delta * d1 * d2;
-      yHiDHiy_e += epsilon_sc * d1 * d2;
+      yHiDHiy_e += epsilon * d1 * d2;
     } else {
       yHiDHiy_g += delta * d1 * d2 * 2.0;
-      yHiDHiy_e += epsilon_sc * d1 * d2 * 2.0;
+      yHiDHiy_e += epsilon * d1 * d2 * 2.0;
     }
   }
 }
@@ -1350,7 +1391,7 @@ for (size_t i = 0; i < d_size; i++) {
   return;
 }
 
-void Calc_xHiDHiy(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_matrix *xHi,
+void Calc_xHiDHiy(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigma, const gsl_matrix *xHi,
                   const gsl_matrix *Hiy, const gsl_matrix *V_e_temp, const size_t i, const size_t j,
                   gsl_vector *xHiDHiy_g, gsl_vector *xHiDHiy_e) {
   gsl_vector_set_zero(xHiDHiy_g);
@@ -1358,36 +1399,47 @@ void Calc_xHiDHiy(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_
 
   size_t n_size = eval->size, d_size = Hiy->size1;
 
-  double delta, ve, epsilon, epsilon_sc, d;
-for (size_t i = 0; i < d_size; d++) {
-  ve = gsl_matrix_get(V_e_temp, i, i);
-  for (size_t k = 0; k < n_size; k++) {
-    delta = gsl_vector_get(eval, k);
-    epsilon = gsl_vector_get(eps_eval, k);
+  gsl_matrix *eval_vec_T = gsl_matrix_alloc(n_size, n_size);
+  gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
 
-    epsilon_sc = epsilon / ve;
+  // Transpose eval_vec
+  gsl_matrix_transpose_memcpy(eval_vec_T, eval_vec);
+ 
+  double delta, ve, epsilon, d;
+  for (size_t i = 0; i < d_size; d++) {
+    ve = gsl_matrix_get(V_e_temp, i, i);
 
-    gsl_vector_const_view xHi_col_i =
-        gsl_matrix_const_column(xHi, k * d_size + i);
-    d = gsl_matrix_get(Hiy, j, k);
+    // Calculate Sigma = t(eval_vec) %*% (sigmasq / V_e_temp[i]) %*% eval_vec
+    gsl_matrix_set_zero(Sigma);
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, eval_vec_T, eval_vec, 0.0, Sigma);
+    double scalar = sigmasq / ve;
+    gsl_matrix_scale(Sigma, scalar);
+   
+    for (size_t k = 0; k < n_size; k++) {
+      delta = gsl_vector_get(eval, k);
+      epsilon = gsl_matrix_get(Sigma, k, k);
 
-    gsl_blas_daxpy(d * delta, &xHi_col_i.vector, xHiDHiy_g);
-    gsl_blas_daxpy(d * epsilon_sc, &xHi_col_i.vector, xHiDHiy_e);
+      gsl_vector_const_view xHi_col_i = //Is there somethign missing here?
+      gsl_matrix_const_column(xHi, k * d_size + i);
+      d = gsl_matrix_get(Hiy, j, k);
 
-    if (i != j) {
-      gsl_vector_const_view xHi_col_j =
+      gsl_blas_daxpy(d * delta, &xHi_col_i.vector, xHiDHiy_g);
+      gsl_blas_daxpy(d * epsilon, &xHi_col_i.vector, xHiDHiy_e);
+
+      if (i != j) {
+        gsl_vector_const_view xHi_col_j =
           gsl_matrix_const_column(xHi, k * d_size + j);
-      d = gsl_matrix_get(Hiy, i, k);
+        d = gsl_matrix_get(Hiy, i, k);
 
-      gsl_blas_daxpy(d * delta, &xHi_col_j.vector, xHiDHiy_g);
-      gsl_blas_daxpy(d * epsilon_sc, &xHi_col_j.vector, xHiDHiy_e);
+        gsl_blas_daxpy(d * delta, &xHi_col_j.vector, xHiDHiy_g);
+        gsl_blas_daxpy(d * epsilon, &xHi_col_j.vector, xHiDHiy_e);
     }
   }
 }
   return;
 }
 
-void Calc_xHiDHix(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_matrix *V_e_temp, const gsl_matrix *xHi, const size_t i,
+void Calc_xHiDHix(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigma, const gsl_matrix *V_e_temp, const gsl_matrix *xHi, const size_t i,
                   const size_t j, gsl_matrix *xHiDHix_g,
                   gsl_matrix *xHiDHix_e) {
   gsl_matrix_set_zero(xHiDHix_g);
@@ -1396,36 +1448,47 @@ void Calc_xHiDHix(const gsl_vector *eval, const gsl_vector *eps_eval, const gsl_
   size_t n_size = eval->size, dc_size = xHi->size1;
   size_t d_size = xHi->size2 / n_size;
 
-  double delta, ve, epsilon, epsilon_sc;
+  gsl_matrix *eval_vec_T = gsl_matrix_alloc(n_size, n_size);
+  gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
+
+  // Transpose eval_vec
+  gsl_matrix_transpose_memcpy(eval_vec_T, eval_vec);
+ 
+  double delta, ve, epsilon;
 
   gsl_matrix *mat_dcdc = gsl_matrix_alloc(dc_size, dc_size);
   gsl_matrix *mat_dcdc_t = gsl_matrix_alloc(dc_size, dc_size);
-for (size_t i = 0; i < d_size; i++) {
-  ve = gsl_matrix_get(V_e_temp, i, i);
-  for (size_t k = 0; k < n_size; k++) {
-    delta = gsl_vector_get(eval, k);
-    epsilon = gsl_vector_get(eps_eval, k);
+  for (size_t i = 0; i < d_size; i++) {
+    ve = gsl_matrix_get(V_e_temp, i, i);
 
-    epsilon_sc = epsilon / ve;
+    // Calculate Sigma = t(eval_vec) %*% (sigmasq / V_e_temp[i]) %*% eval_vec
+    gsl_matrix_set_zero(Sigma);
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, eval_vec_T, eval_vec, 0.0, Sigma);
+    double scalar = sigmasq / ve;
+    gsl_matrix_scale(Sigma, scalar);
+   
+    for (size_t k = 0; k < n_size; k++) {
+      delta = gsl_vector_get(eval, k);
+      epsilon = gsl_matrix_get(Sigma, k, k);
 
-    gsl_vector_const_view xHi_col_i =
+      gsl_vector_const_view xHi_col_i =
         gsl_matrix_const_column(xHi, k * d_size + i);
-    gsl_vector_const_view xHi_col_j =
+      gsl_vector_const_view xHi_col_j =
         gsl_matrix_const_column(xHi, k * d_size + j);
 
-    gsl_matrix_set_zero(mat_dcdc);
-    gsl_blas_dger(1.0, &xHi_col_i.vector, &xHi_col_j.vector, mat_dcdc);
+      gsl_matrix_set_zero(mat_dcdc);
+      gsl_blas_dger(1.0, &xHi_col_i.vector, &xHi_col_j.vector, mat_dcdc);
 
-    gsl_matrix_transpose_memcpy(mat_dcdc_t, mat_dcdc);
+      gsl_matrix_transpose_memcpy(mat_dcdc_t, mat_dcdc);
 
-    gsl_matrix_scale(mat_dcdc, epsilon_sc);
-    gsl_matrix_add(xHiDHix_e, mat_dcdc);
+      gsl_matrix_scale(mat_dcdc, epsilon);
+      gsl_matrix_add(xHiDHix_e, mat_dcdc);
 
-    gsl_matrix_scale(mat_dcdc, delta);
-    gsl_matrix_add(xHiDHix_g, mat_dcdc);
+      gsl_matrix_scale(mat_dcdc, delta);
+      gsl_matrix_add(xHiDHix_g, mat_dcdc);
 
-    if (i != j) {
-      gsl_matrix_scale(mat_dcdc_t, epsilon_sc);
+      if (i != j) {
+      gsl_matrix_scale(mat_dcdc_t, epsilon);
       gsl_matrix_add(xHiDHix_e, mat_dcdc_t);
 
       gsl_matrix_scale(mat_dcdc_t, delta);
@@ -4669,7 +4732,7 @@ void MVLMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval, const 
   return;
 }
 
-void MVLMM::AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval, const gsl_vector *eps_eval,
+void MVLMM::AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq,
                             const gsl_matrix *UtW, const gsl_matrix *UtY,
                             const gsl_vector *env) {
   debug_msg("entering");
