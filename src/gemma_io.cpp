@@ -507,7 +507,7 @@ bool ReadFile_cvt(const string &file_cvt, vector<int> &indicator_cvt,
 }
 
 bool ReadFile_residvar(const string &file_residvar, vector<int> &indicator_residvar,
-                  vector<vector<double>> &eps_eval, size_t &n_residvar) {
+                  vector<vector<double>> &sigmasq, size_t &n_residvar) {
   debug_msg("entered");
   indicator_residvar.clear();
 
@@ -543,7 +543,7 @@ bool ReadFile_residvar(const string &file_residvar, vector<int> &indicator_resid
     } else {
       indicator_residvar.push_back(0);
     }
-    eps_eval.push_back(v_d);
+    sigmasq.push_back(v_d);
   }
 
   if (indicator_residvar.empty()) {
@@ -557,9 +557,9 @@ bool ReadFile_residvar(const string &file_residvar, vector<int> &indicator_resid
 
       if (flag_na == 0) {
         flag_na = 1;
-        n_residvar = eps_eval[i].size();
+        n_residvar = sigmasq[i].size();
       }
-      if (flag_na != 0 && n_residvar != eps_eval[i].size()) {
+      if (flag_na != 0 && n_residvar != sigmasq[i].size()) {
         cout << "error! number of residuals in row " << i
              << " do not match other rows." << endl;
         return false;
@@ -1483,9 +1483,9 @@ void ReadFile_residvar(const string &file_residvar, bool &error, gsl_vector *eps
     return;
   }
 
-  size_t n_row = eps_eval->size, i_row = 0;
+  size_t n_row = sigmasq->size, i_row = 0;
 
-  gsl_vector_set_zero(eps_eval); //change this so that eps_eval = V_e somehow
+  gsl_vector_set_zero(sigmasq); //change this so that sigmasq = V_e somehow
 
   string line;
   char *ch_ptr;
@@ -1508,7 +1508,7 @@ void ReadFile_residvar(const string &file_residvar, bool &error, gsl_vector *eps
       error = true;
     }
 
-    gsl_vector_set(eps_eval, i_row, d);
+    gsl_vector_set(sigmasq, i_row, d);
 
     i_row++;
   }
