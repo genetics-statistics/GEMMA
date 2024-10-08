@@ -1976,40 +1976,47 @@ void PARAM::WriteVector(const gsl_vector *vector_D, const string suffix) {
 
 void PARAM::CheckResidvar() {
   if (indicator_residvar.size() == 0) {
+    // No residual variance is specified, fill sigmasq with Ve_remle_null along the diagonal
+    gsl_matrix *sigmasq = gsl_matrix_alloc(n_residvar, n_residvar);
+
+    for (size_t i = 0; i < n_residvar; ++i) {
+      gsl_matrix_set(sigmasq, i, i, Ve_remle_null[i]);
+    }
+
+    info_msg("No residual variances were specified: Ve_remle_null is placed along the diagonal.");
+    gsl_matrix_free(sigmasq);
     return;
   }
 
   size_t ci_test = 0;
+  gsl_matrix *sigmasq = gsl_matrix_alloc(n_residvar, n_residvar);
 
-  gsl_vector *eps_eval = gsl_vector_alloc(n_residvar);
-
+  // If residual variance is specified, use residvar matrix
   for (size_t i = 0; i < n_residvar; ++i) {
-      gsl_vector_set(eps_eval, i, (residvar)[i]);
-    }
+    gsl_matrix_set(sigmasq, i, i, residvar[i][i]);
+  }
 
   size_t flag_ipt = 0;
   double v_min, v_max;
-  set<size_t> set_remove;
+  std::set<size_t> set_remove;
 
-  // If no residual variance is specified, eps_eval = V_e.
+  // If no residual variance is found, assign Ve_remle_null
   if (n_residvar == set_remove.size()) {
     indicator_residvar.clear();
     n_residvar = 1;
   } else if (flag_ipt == 0) {
-    info_msg("no residual variances are found in the residvar file: a column of V_e is added");
-    for (vector<int>::size_type i = 0; i < indicator_idv.size(); ++i) {
+    info_msg("No residual variances found in the residvar file: a diagonal of Ve_remle_null is added.");
+    for (std::vector<int>::size_type i = 0; i < indicator_idv.size(); ++i) {
       if (indicator_idv[i] == 0 || indicator_residvar[i] == 0) {
         continue;
       }
-      gsl_vector_set(eps_eval, i, Ve_remle_null[i]);
+      gsl_matrix_set(residvar, i, i, Ve_remle_null[i]);
     }
 
     n_residvar++;
-  } else {
   }
 
-  gsl_vector_free(eps_eval);
-
+  gsl_matrix_free(sigmasq);
   return;
 }
 
@@ -2227,14 +2234,19 @@ void PARAM::CopyWeight(gsl_vector *w) {
   return;
 }
 
-void PARAM::CopyResid(gsl_vector *eps_eval) {
+void PARAM::CopyResid(gsl_matrix *sigmasq) {
   size_t ci_test = 0;
 
-  for (vector<int>::size_type i = 0; i < indicator_idv.size(); ++i) {
+  // Loop through the individuals and residual variance indicators
+  for (std::vector<int>::size_type i = 0; i < indicator_idv.size(); ++i) {
     if (indicator_idv[i] == 0 || indicator_residvar[i] == 0) {
-      continue;
+      continue;  // Skip if either the individual or residual variance is not active
     }
-    gsl_vector_set(eps_eval, ci_test, residvar[i]);
+    
+    // Set the diagonal element in sigmasq from residvar
+    gsl_matrix_set(sigmasq, ci_test, ci_test, gsl_matrix_get(residvar, i, i));
+
+    // Increment the index for the next valid individual/residual variance
     ci_test++;
   }
 
