@@ -245,7 +245,7 @@ public:
   size_t ni_control, ni_case; // Number of controls and number of cases.
   size_t ni_subsample;        // Number of subsampled individuals.
   size_t n_cvt;               // Number of covariates.
-  size_t n_residvar;          // Number of residual variances.
+  size_t n_resid;          // Number of residual variances.
   size_t n_cat;               // Number of continuous categories.
   size_t n_ph;                // Number of phenotypes.
   size_t n_vc;                // Number of variance components
@@ -271,7 +271,7 @@ public:
   vector<vector<double>> cvt;
 
 // Vector recording all residual variances (NA replaced with -9).
-  vector<double> residvar;
+  vector<double> resid;
 
   // Vector recording all covariates (NA replaced with -9).
   vector<double> gxe;
@@ -302,7 +302,7 @@ public:
 
   // Indicator for residuals: 0 missing, 1 available for
   // analysis.
-  vector<int> indicator_residvar;
+  vector<int> indicator_resid;
 
   // Indicator for gxe: 0 missing, 1 available for analysis.
   vector<int> indicator_gxe;
