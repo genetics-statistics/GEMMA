@@ -136,7 +136,7 @@ public:
   string file_anno; // Optional.
   string file_gxe;  // Optional.
   string file_cvt;  // Optional.
-  string file_residvar; // Optional
+  string file_resid; // Optional
   string file_cat, file_mcat;
   string file_catc, file_mcatc;
   string file_var;
