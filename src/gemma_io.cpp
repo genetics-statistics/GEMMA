@@ -506,14 +506,14 @@ bool ReadFile_cvt(const string &file_cvt, vector<int> &indicator_cvt,
   return true;
 }
 
-bool ReadFile_residvar(const string &file_residvar, vector<int> &indicator_residvar,
-                  vector<vector<double>> &sigmasq, size_t &n_residvar) {
+bool ReadFile_resid(const string &file_resid, vector<int> &indicator_resid,
+                  vector<vector<double>> &sigmasq, size_t &n_resid) {
   debug_msg("entered");
-  indicator_residvar.clear();
+  indicator_resid.clear();
 
-  ifstream infile(file_residvar.c_str(), ifstream::in);
+  ifstream infile(file_resid.c_str(), ifstream::in);
   if (!infile) {
-    cout << "error! fail to open residual variance file: " << file_residvar << endl;
+    cout << "error! fail to open residual variance file: " << file_resid << endl;
     return false;
   }
 
@@ -539,27 +539,27 @@ bool ReadFile_residvar(const string &file_residvar, vector<int> &indicator_resid
       ch_ptr = strtok(NULL, " ,\t");
     }
     if (flag_na == 0) {
-      indicator_residvar.push_back(1);
+      indicator_resid.push_back(1);
     } else {
-      indicator_residvar.push_back(0);
+      indicator_resid.push_back(0);
     }
     sigmasq.push_back(v_d);
   }
 
-  if (indicator_residvar.empty()) {
-    n_residvar = 0;
+  if (indicator_resid.empty()) {
+    n_resid = 0;
   } else {
     flag_na = 0;
-    for (vector<int>::size_type i = 0; i < indicator_residvar.size(); ++i) {
-      if (indicator_residvar[i] == 0) {
+    for (vector<int>::size_type i = 0; i < indicator_resid.size(); ++i) {
+      if (indicator_resid[i] == 0) {
         continue;
       }
 
       if (flag_na == 0) {
         flag_na = 1;
-        n_residvar = sigmasq[i].size();
+        n_resid = sigmasq[i].size();
       }
-      if (flag_na != 0 && n_residvar != sigmasq[i].size()) {
+      if (flag_na != 0 && n_resid != sigmasq[i].size()) {
         cout << "error! number of residuals in row " << i
              << " do not match other rows." << endl;
         return false;
@@ -1474,11 +1474,11 @@ void ReadFile_eigenD(const string &file_kd, bool &error, gsl_vector *eval) {
   return;
 }
 
-void ReadFile_residvar(const string &file_residvar, bool &error, gsl_vector *eps_eval) {
+void ReadFile_resid(const string &file_resid, bool &error, gsl_vector *eps_eval) {
   debug_msg("entered");
-  igzstream infile(file_residvar.c_str(), igzstream::in);
+  igzstream infile(file_resid.c_str(), igzstream::in);
   if (!infile) {
-    cout << "error! fail to open the residual variance file: " << file_residvar << endl;
+    cout << "error! fail to open the residual variance file: " << file_resid << endl;
     error = true;
     return;
   }
@@ -1498,7 +1498,7 @@ void ReadFile_residvar(const string &file_residvar, bool &error, gsl_vector *eps
       error = true;
     }
 
-    ch_ptr = strtok_safe2((char *)line.c_str(), " ,\t",file_residvar.c_str());
+    ch_ptr = strtok_safe2((char *)line.c_str(), " ,\t",file_resid.c_str());
     d = atof(ch_ptr);
 
     ch_ptr = strtok(NULL, " ,\t");
