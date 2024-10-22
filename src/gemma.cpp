@@ -337,7 +337,7 @@ void GEMMA::PrintHelp(size_t option) {
     cout << "                  variable for individual 2" << endl;
     cout << "                  ..." << endl;
     cout << "          missing value: NA" << endl;
-    cout << " -residvar   [filename]     "
+    cout << " -resid   [filename]     "
          << " residual variance file contains a column of positive values to be used "
          << "directly as for the residual variance---each value corresponds to an "
          << "individual, in which each value is the empirical residual variance (sigmasq) based"
@@ -835,7 +835,7 @@ void GEMMA::Assign(int argc, char **argv, PARAM &cPar) {
       str.clear();
       str.assign(argv[i]);
       cPar.file_weight = str;
-    } else if (strcmp(argv[i], "-residvar") == 0) {
+    } else if (strcmp(argv[i], "-resid") == 0) {
       if (argv[i + 1] == NULL || argv[i + 1][0] == '-') {
         continue;
       }
