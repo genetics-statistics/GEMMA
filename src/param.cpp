@@ -250,8 +250,8 @@ void PARAM::ReadFiles(void) {
   trim_individuals(indicator_cvt, ni_max);
 
     // Read residual variance files before the genotype files.
-  if (!file_residvar.empty()) {
-    if (ReadFile_column(file_residvar, indicator_residvar, residvar, 1) == false) {
+  if (!file_resid.empty()) {
+    if (ReadFile_column(file_resid, indicator_resid, resid, 1) == false) {
       error = true;
     }
   }
@@ -963,7 +963,7 @@ void PARAM::CheckParam(void) {
   enforce_fexists(file_weight, "open file");
   enforce_fexists(file_epm, "open file");
   enforce_fexists(file_ebv, "open file");
-  enforce_fexists(file_residvar, "open file");
+  enforce_fexists(file_resid, "open file");
   enforce_fexists(file_read, "open file");
 
   // Check if files are compatible with analysis mode.
@@ -1045,8 +1045,8 @@ void PARAM::CheckData(void) {
     return;
   }
 
-  if ((indicator_residvar).size() != 0 &&
-      (indicator_residvar).size() != (indicator_idv).size()) {
+  if ((indicator_resid).size() != 0 &&
+      (indicator_resid).size() != (indicator_idv).size()) {
     error = true;
     cout << "error! number of rows in the residual variance file do not match "
          << "the number of individuals. " << endl;
@@ -1102,8 +1102,8 @@ void PARAM::CheckData(void) {
       }
     }
 
-    if (indicator_residvar.size() != 0) {
-      if (indicator_residvar[i] == 0) {
+    if (indicator_resid.size() != 0) {
+      if (indicator_resid[i] == 0) {
         continue;
       }
     }
@@ -1153,7 +1153,7 @@ void PARAM::CheckData(void) {
       cout << "## number of analyzed individuals = " << ni_test << endl;
     }
     cout << "## number of covariates = " << n_cvt << endl;
-    cout << "## number of residual variances" << n_residvar << endl;
+    cout << "## number of residual variances" << n_resid << endl;
     cout << "## number of phenotypes = " << n_ph << endl;
     if (a_mode == 43) {
       cout << "## number of observed data = " << np_obs << endl;
@@ -1974,12 +1974,12 @@ void PARAM::WriteVector(const gsl_vector *vector_D, const string suffix) {
   return;
 }
 
-void PARAM::CheckResidvar() {
-  if (indicator_residvar.size() == 0) {
+void PARAM::Checkresid() {
+  if (indicator_resid.size() == 0) {
     // No residual variance is specified, fill sigmasq with Ve_remle_null along the diagonal
-    gsl_matrix *sigmasq = gsl_matrix_alloc(n_residvar, n_residvar);
+    gsl_matrix *sigmasq = gsl_matrix_alloc(n_resid, n_resid);
 
-    for (size_t i = 0; i < n_residvar; ++i) {
+    for (size_t i = 0; i < n_resid; ++i) {
       gsl_matrix_set(sigmasq, i, i, Ve_remle_null[i]);
     }
 
@@ -1989,11 +1989,11 @@ void PARAM::CheckResidvar() {
   }
 
   size_t ci_test = 0;
-  gsl_matrix *sigmasq = gsl_matrix_alloc(n_residvar, n_residvar);
+  gsl_matrix *sigmasq = gsl_matrix_alloc(n_resid, n_resid);
 
-  // If residual variance is specified, use residvar matrix
-  for (size_t i = 0; i < n_residvar; ++i) {
-    gsl_matrix_set(sigmasq, i, i, residvar[i][i]);
+  // If residual variance is specified, use resid matrix
+  for (size_t i = 0; i < n_resid; ++i) {
+    gsl_matrix_set(sigmasq, i, i, resid[i][i]);
   }
 
   size_t flag_ipt = 0;
@@ -2001,19 +2001,19 @@ void PARAM::CheckResidvar() {
   std::set<size_t> set_remove;
 
   // If no residual variance is found, assign Ve_remle_null
-  if (n_residvar == set_remove.size()) {
-    indicator_residvar.clear();
-    n_residvar = 1;
+  if (n_resid == set_remove.size()) {
+    indicator_resid.clear();
+    n_resid = 1;
   } else if (flag_ipt == 0) {
-    info_msg("No residual variances found in the residvar file: a diagonal of Ve_remle_null is added.");
+    info_msg("No residual variances found in the resid file: a diagonal of Ve_remle_null is added.");
     for (std::vector<int>::size_type i = 0; i < indicator_idv.size(); ++i) {
-      if (indicator_idv[i] == 0 || indicator_residvar[i] == 0) {
+      if (indicator_idv[i] == 0 || indicator_resid[i] == 0) {
         continue;
       }
-      gsl_matrix_set(residvar, i, i, Ve_remle_null[i]);
+      gsl_matrix_set(resid, i, i, Ve_remle_null[i]);
     }
 
-    n_residvar++;
+    n_resid++;
   }
 
   gsl_matrix_free(sigmasq);
@@ -2113,9 +2113,9 @@ void PARAM::ProcessCvtPhen() {
   }
 
     // Remove individuals with missing residual variance.
-  if ((indicator_residvar).size() != 0) {
+  if ((indicator_resid).size() != 0) {
     for (vector<int>::size_type i = 0; i < (indicator_idv).size(); ++i) {
-      indicator_idv[i] *= indicator_residvar[i];
+      indicator_idv[i] *= indicator_resid[i];
     }
   }
 
@@ -2239,12 +2239,12 @@ void PARAM::CopyResid(gsl_matrix *sigmasq) {
 
   // Loop through the individuals and residual variance indicators
   for (std::vector<int>::size_type i = 0; i < indicator_idv.size(); ++i) {
-    if (indicator_idv[i] == 0 || indicator_residvar[i] == 0) {
+    if (indicator_idv[i] == 0 || indicator_resid[i] == 0) {
       continue;  // Skip if either the individual or residual variance is not active
     }
     
-    // Set the diagonal element in sigmasq from residvar
-    gsl_matrix_set(sigmasq, ci_test, ci_test, gsl_matrix_get(residvar, i, i));
+    // Set the diagonal element in sigmasq from resid
+    gsl_matrix_set(sigmasq, ci_test, ci_test, gsl_matrix_get(resid, i, i));
 
     // Increment the index for the next valid individual/residual variance
     ci_test++;
