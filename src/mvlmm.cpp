@@ -612,14 +612,14 @@ void CalcSigma(const char func_name, const gsl_vector *eval, const gsl_matrix *U
         // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
         gsl_matrix_set_zero(Sigma);
         gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
-        gsl_matrix_scale(Sigma, sigmasq / ve);
+        double scalar = gsl_matrix_get(sigmasq, 0, 0) / ve;
+        gsl_matrix_scale(Sigma, scalar);
 
         double epsilon = gsl_matrix_get(Sigma, k, k);
        
         for (size_t j = 0; j < c_size; j++) {
           x = gsl_matrix_get(X, j, k);
 
-          epsilon_sc = epsilon / ve;
           d = x / (delta * dl + epsilon);
           gsl_matrix_set(M_e, j * d_size + i, i, d);
           gsl_matrix_set(M_u, j * d_size + i, i, d * dl);
@@ -676,7 +676,8 @@ double MphCalcLogL(const gsl_vector *eval, const gsl_matrix *U, const gsl_vector
       // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
       gsl_matrix_set_zero(Sigma);
       gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
-      gsl_matrix_scale(Sigma, sigmasq / ve);
+      double scalar = gsl_matrix_get(sigmasq, 0, 0) / ve;
+      gsl_matrix_scale(Sigma, scalar);
 
       double epsilon = gsl_matrix_get(Sigma, k, k);
 
