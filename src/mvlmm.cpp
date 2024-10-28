@@ -54,6 +54,7 @@ void MVLMM::CopyFromParam(PARAM &cPar) {
 
   file_bfile = cPar.file_bfile;
   file_geno = cPar.file_geno;
+  file_resid = cPar.file_resid;
   file_out = cPar.file_out;
   path_out = cPar.path_out;
 
@@ -80,7 +81,7 @@ void MVLMM::CopyFromParam(PARAM &cPar) {
   ni_test = cPar.ni_test;
   ns_test = cPar.ns_test;
   n_cvt = cPar.n_cvt;
-  n_residvar = cPar.n_residvar;
+  n_resid = cPar.n_resid;
 
   n_ph = cPar.n_ph;
 
@@ -283,7 +284,7 @@ tuple<gsl_matrix *, double> EigenProc(const gsl_matrix *V_g, const gsl_matrix *V
 }
 
 // Qi=(\sum_{k=1}^n x_kx_k^T\otimes(delta_k*Dl+epsilon_k)^{-1} )^{-1}.
-double CalcQi(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq, const gsl_vector *D_l,
+double CalcQi(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq, const gsl_vector *D_l,
               const gsl_matrix *X, const gsl_matrix *V_e_temp, gsl_matrix *Qi) {
   size_t n_size = eval->size, d_size = D_l->size, dc_size = Qi->size1;
   size_t c_size = dc_size / d_size;
@@ -293,9 +294,9 @@ double CalcQi(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matr
   gsl_matrix *Q = gsl_matrix_alloc(dc_size, dc_size);
   gsl_matrix_set_zero(Q);
 
-  gsl_matrix *eval_vec_T = gsl_matrix_alloc(n_size, n_size);
- // Transpose eval_vec
-  gsl_matrix_transpose_memcpy(eval_vec_T, eval_vec);
+  gsl_matrix *U_T = gsl_matrix_alloc(n_size, n_size);
+ // Transpose U
+  gsl_matrix_transpose_memcpy(U_T, U);
 
   gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
 
@@ -304,7 +305,7 @@ double CalcQi(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matr
       for (size_t l = 0; l < d_size; l++) {
         dl = gsl_vector_get(D_l, l);
         ve = gsl_matrix_get(V_e_temp, l, l);
-        gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, eval_vec_T, eval_vec, 0.0, Sigma);
+        gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
 
        double sigmasq_value = gsl_matrix_get(sigmasq, 0, 0);  // Adjust if sigmasq has different structure
        double scalar = sigmasq_value / ve;
@@ -346,7 +347,7 @@ double CalcQi(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matr
 // xHiy=\sum_{k=1}^n x_k\otimes ((delta_k*Dl+epsilon_k)^{-1}Ul^TVe^{-1/2}y.
 //
 // FIXME: mvlmm spends a massive amount of time here
-void CalcXHiY(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq, const gsl_vector *D_l,
+void CalcXHiY(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq, const gsl_vector *D_l,
               const gsl_matrix *X, const gsl_matrix *UltVehiY, const gsl_matrix *V_e_temp,
               gsl_vector *xHiy) {
   // debug_msg("enter");
@@ -357,11 +358,11 @@ void CalcXHiY(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matr
   // gsl_vector_set_zero(xHiy);
   std::vector<double> xHiy(d_size * c_size, 0.0);  // Initialize output vector xHiy
 
-  gsl_matrix *eval_vec_T = gsl_matrix_alloc(n_size, n_size);
+  gsl_matrix *U_T = gsl_matrix_alloc(n_size, n_size);
   gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
 
-  // Transpose eval_vec
-  gsl_matrix_transpose_memcpy(eval_vec_T, eval_vec);
+  // Transpose U
+  gsl_matrix_transpose_memcpy(U_T, U);
 
   double x, delta, ve, epsilon, dl, y, d;
  
@@ -369,9 +370,9 @@ void CalcXHiY(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matr
     dl = gsl_vector_get(D_l, i);
     ve = gsl_matrix_get(V_e_temp, i, i);
    
-   // Calculate Sigma = t(eval_vec) %*% (sigmasq / V_e_temp[i]) %*% eval_vec
+   // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
     gsl_matrix_set_zero(Sigma);
-    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, eval_vec_T, eval_vec, 0.0, Sigma);
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
     double scalar = sigmasq / ve;
     gsl_matrix_scale(Sigma, scalar);
    
@@ -396,17 +397,17 @@ void CalcXHiY(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matr
 
 // OmegaU=D_l/(delta Dl+epsilon)^{-1}
 // OmegaE=delta D_l/(delta Dl+epsilon)^{-1}
-void CalcOmega(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq, const gsl_vector *D_l, const gsl_matrix *V_e_temp,
+void CalcOmega(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq, const gsl_vector *D_l, const gsl_matrix *V_e_temp,
                gsl_matrix *OmegaU, gsl_matrix *OmegaE) {
   size_t n_size = eval->size, 
   d_size = D_l->size;
-  double delta, ve, epsilon, epsilon_sc, dl, d_u, d_e;
+  double delta, ve, epsilon, dl, d_u, d_e;
 
-  gsl_matrix *eval_vec_T = gsl_matrix_alloc(n_size, n_size);
+  gsl_matrix *U_T = gsl_matrix_alloc(n_size, n_size);
   gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
 
-  // Transpose eval_vec
-  gsl_matrix_transpose_memcpy(eval_vec_T, eval_vec);
+  // Transpose U
+  gsl_matrix_transpose_memcpy(U_T, U);
  
   for (size_t k = 0; k < n_size; k++) {
     delta = gsl_vector_get(eval, k);;
@@ -415,9 +416,9 @@ void CalcOmega(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_mat
       dl = gsl_vector_get(D_l, i);
       ve = gsl_matrix_get(V_e_temp, i, i);
 
-      // Calculate Sigma = t(eval_vec) %*% (sigmasq / V_e_temp[i]) %*% eval_vec
+      // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
       gsl_matrix_set_zero(Sigma);
-      gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, eval_vec_T, eval_vec, 0.0, Sigma);
+      gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
       double scalar = sigmasq / ve;
       gsl_matrix_scale(Sigma, scalar);
 
@@ -495,7 +496,7 @@ void UpdateRL_B(const gsl_vector *xHiy, const gsl_matrix *Qi,
   return;
 }
 
-void UpdateV(const gsl_vector *eval, const gsl_vector *eval_vec, const gsl_matrix *sigmasq, const gsl_matrix *U, const gsl_matrix *E,
+void UpdateV(const gsl_vector *eval, const gsl_matrix *sigmasq, const gsl_matrix *U, const gsl_matrix *E,
              const gsl_matrix *Sigma_uu, const gsl_matrix *Sigma_ee, const gsl_matrix *V_e_temp,
              gsl_matrix *V_g, gsl_matrix *V_e) {
   size_t n_size = eval->size, d_size = U->size1;
@@ -505,11 +506,11 @@ void UpdateV(const gsl_vector *eval, const gsl_vector *eval_vec, const gsl_matri
 
   double delta, ve;
 
-  gsl_matrix *eval_vec_T = gsl_matrix_alloc(n_size, n_size);
+  gsl_matrix *U_T = gsl_matrix_alloc(n_size, n_size);
   gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
 
-  // Transpose eval_vec
-  gsl_matrix_transpose_memcpy(eval_vec_T, eval_vec);
+  // Transpose U
+  gsl_matrix_transpose_memcpy(U_T, U);
   
  // Calculate the first part: UD^{-1}U^T and EE^T.
   for (size_t i = 0; i < d_size; i++) {
@@ -521,9 +522,9 @@ void UpdateV(const gsl_vector *eval, const gsl_vector *eval_vec, const gsl_matri
     if (delta == 0) {
       continue;
     }
-   // Calculate Sigma = t(eval_vec) %*% (sigmasq / V_e_temp[i]) %*% eval_vec
+   // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
     gsl_matrix_set_zero(Sigma);
-    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, eval_vec_T, eval_vec, 0.0, Sigma);
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
     double scalar = sigmasq / ve;
     gsl_matrix_scale(Sigma, scalar);
 
@@ -556,7 +557,7 @@ void UpdateV(const gsl_vector *eval, const gsl_vector *eval_vec, const gsl_matri
   return;
 }
 
-void CalcSigma(const char func_name, const gsl_vector *eval, const gsl_vector *eval_vec,
+void CalcSigma(const char func_name, const gsl_vector *eval, const gsl_matrix *U,
                const gsl_matrix *sigmasq, const gsl_vector *D_l, const gsl_matrix *X,
                const gsl_matrix *OmegaU, const gsl_matrix *OmegaE,
                const gsl_matrix *UltVeh, const gsl_matrix *Qi, const gsl_matrix *V_e_temp,
@@ -599,8 +600,8 @@ void CalcSigma(const char func_name, const gsl_vector *eval, const gsl_vector *e
     gsl_matrix_set_zero(M_u);
     gsl_matrix_set_zero(M_e);
 
-    // Transpose eval_vec
-    gsl_matrix_transpose_memcpy(eval_vec_T, eval_vec);
+    // Transpose U
+    gsl_matrix_transpose_memcpy(U_T, U);
 
     for (size_t k = 0; k < n_size; k++) {
       delta = gsl_vector_get(eval, k);
@@ -609,9 +610,9 @@ void CalcSigma(const char func_name, const gsl_vector *eval, const gsl_vector *e
         dl = gsl_vector_get(D_l, i);
         ve = gsl_matrix_get(V_e_temp, i, i);
 
-        // Calculate Sigma = t(eval_vec) %*% (sigmasq / V_e_temp[i]) %*% eval_vec
+        // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
         gsl_matrix_set_zero(Sigma);
-        gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, eval_vec_T, eval_vec, 0.0, Sigma);
+        gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
         gsl_matrix_scale(Sigma, sigmasq / ve);
 
         double epsilon = gsl_matrix_get(Sigma, k, k);
@@ -652,17 +653,17 @@ void CalcSigma(const char func_name, const gsl_vector *eval, const gsl_vector *e
 // 'R' for restricted likelihood and 'L' for likelihood.
 // 'R' update B and 'L' don't.
 // only calculate -0.5*\sum_{k=1}^n|H_k|-0.5yPxy.
-double MphCalcLogL(const gsl_vector *eval, const gsl_vector *eval_vec, const gsl_vector *xHiy, const gsl_matrix *sigmasq,
+double MphCalcLogL(const gsl_vector *eval, const gsl_matrix *U, const gsl_vector *xHiy, const gsl_matrix *sigmasq,
                    const gsl_vector *D_l, const gsl_matrix *UltVehiY, const gsl_matrix *V_e_temp,
                    const gsl_matrix *Qi) {
   size_t n_size = eval->size, d_size = D_l->size, dc_size = Qi->size1;
   double logl = 0.0, delta, ve, epsilon, epsilon_sc, dl, y, d;
   // Create temporary matrix for Sigma
   gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
-  gsl_matrix *eval_vec_T = gsl_matrix_alloc(n_size, n_size);
+  gsl_matrix *U_T = gsl_matrix_alloc(n_size, n_size);
     
-  // Transpose eval_vec
-  gsl_matrix_transpose_memcpy(eval_vec_T, eval_vec);
+  // Transpose U
+  gsl_matrix_transpose_memcpy(U_T, U);
 
   // Calculate yHiy+log|H_k|.
   for (size_t k = 0; k < n_size; k++) {
@@ -673,9 +674,9 @@ double MphCalcLogL(const gsl_vector *eval, const gsl_vector *eval_vec, const gsl
       dl = gsl_vector_get(D_l, i);
       ve = gsl_matrix_get(V_e_temp, i, i);
 
-      // Calculate Sigma = t(eval_vec) %*% (sigmasq / V_e_temp[i]) %*% eval_vec
+      // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
       gsl_matrix_set_zero(Sigma);
-      gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, eval_vec_T, eval_vec, 0.0, Sigma);
+      gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
       gsl_matrix_scale(Sigma, sigmasq / ve);
 
       double epsilon = gsl_matrix_get(Sigma, k, k);
@@ -704,7 +705,7 @@ double MphCalcLogL(const gsl_vector *eval, const gsl_vector *eval_vec, const gsl
 // dxd matrix, V_e is a dxd matrix, eval is a size n vector
 //'R' for restricted likelihood and 'L' for likelihood.
 double MphEM(const char func_name, const size_t max_iter, const double max_prec,
-             const gsl_vector *eval, const gsl_vector *eval_vec, const gsl_matrix *sigmasq, const gsl_matrix *X, const gsl_matrix *Y,
+             const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq, const gsl_matrix *X, const gsl_matrix *Y,
              gsl_matrix *U_hat, gsl_matrix *E_hat, gsl_matrix *OmegaU,
              gsl_matrix *OmegaE, gsl_matrix *UltVehiY, gsl_matrix *UltVehiBX,
              gsl_matrix *UltVehiU, gsl_matrix *UltVehiE, gsl_matrix *V_g,
@@ -802,14 +803,14 @@ double MphEM(const char func_name, const size_t max_iter, const double max_prec,
   for (size_t t = 0; t < max_iter; t++) {
     tie(V_e_temp, logdet_Ve) = EigenProc(V_g, V_e, D_l, UltVeh, UltVehi);
 
-    logdet_Q = CalcQi(eval, eval_vec, sigmasq, D_l, X, V_e_temp, Qi);
+    logdet_Q = CalcQi(eval, U, sigmasq, D_l, X, V_e_temp, Qi);
 
     gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, UltVehi, Y, 0.0, UltVehiY);
-    CalcXHiY(eval, eval_vec, sigmasq, D_l, X, UltVehiY, V_e_temp, xHiy);
+    CalcXHiY(eval, U, sigmasq, D_l, X, UltVehiY, V_e_temp, xHiy);
 
     // Calculate log likelihood/restricted likelihood value, and
     // terminate if change is small.
-    logl_new = logl_const + MphCalcLogL(eval, eval_vec, xHiy, sigmasq, D_l, UltVehiY, V_e_temp, Qi) -
+    logl_new = logl_const + MphCalcLogL(eval, U, xHiy, sigmasq, D_l, UltVehiY, V_e_temp, Qi) -
                0.5 * (double)n_size * logdet_Ve;
     if (func_name == 'R' || func_name == 'r') {
       logl_new += -0.5 * (logdet_Q - (double)c_size * logdet_Ve);
@@ -819,7 +820,7 @@ double MphEM(const char func_name, const size_t max_iter, const double max_prec,
     }
     logl_old = logl_new;
 
-    CalcOmega(eval, eval_vec, sigmasq, D_l, V_e_temp, OmegaU, OmegaE);
+    CalcOmega(eval, U, sigmasq, D_l, V_e_temp, OmegaU, OmegaE);
 
     // Update UltVehiB, UltVehiU.
     if (func_name == 'R' || func_name == 'r') {
@@ -851,11 +852,11 @@ double MphEM(const char func_name, const size_t max_iter, const double max_prec,
     gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, UltVeh, UltVehiB, 0.0, B);
 
     // Calculate Sigma_uu and Sigma_ee.
-    CalcSigma(func_name, eval, eval_vec, sigmasq, D_l, X, OmegaU, OmegaE, UltVeh, Qi, V_e_temp, Sigma_uu,
+    CalcSigma(func_name, eval, U, sigmasq, D_l, X, OmegaU, OmegaE, UltVeh, Qi, V_e_temp, Sigma_uu,
               Sigma_ee);
 
     // Update V_g and V_e.
-    UpdateV(eval, eval_vec, sigmasq, U_hat, E_hat, Sigma_uu, Sigma_ee, V_e_temp, V_g, V_e);
+    UpdateV(eval, U, sigmasq, U_hat, E_hat, Sigma_uu, Sigma_ee, V_e_temp, V_g, V_e);
     // print statements
     //print iteration number:
     cout<< t<<endl;
@@ -915,7 +916,7 @@ double MphEM(const char func_name, const size_t max_iter, const double max_prec,
 }
 
 // Calculate p-value, beta (d by 1 vector) and V(beta).
-double MphCalcP(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq, const gsl_vector *x_vec,
+double MphCalcP(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq, const gsl_vector *x_vec,
                 const gsl_matrix *W, const gsl_matrix *Y, const gsl_matrix *V_g,
                 const gsl_matrix *V_e, gsl_matrix *UltVehiY, gsl_vector *beta,
                 gsl_matrix *Vbeta) {
@@ -946,25 +947,25 @@ double MphCalcP(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_ma
 
   // Calculate Qi and log|Q|.
   // double logdet_Q = CalcQi(eval, D_l, W, Qi);
-  CalcQi(eval, eval_vec, sigmasq, D_l, W, V_e_temp, Qi);
+  CalcQi(eval, U, sigmasq, D_l, W, V_e_temp, Qi);
 
   // Calculate UltVehiY.
   gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, UltVehi, Y, 0.0, UltVehiY);
 
-  gsl_matrix *eval_vec_T = gsl_matrix_alloc(n_size, n_size);
+  gsl_matrix *U_T = gsl_matrix_alloc(n_size, n_size);
   gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
 
-  // Transpose eval_vec
-  gsl_matrix_transpose_memcpy(eval_vec_T, eval_vec);
+  // Transpose U
+  gsl_matrix_transpose_memcpy(U_T, U);
 
   // Calculate WHix, WHiy, xHiy, xHix.
   for (size_t i = 0; i < d_size; i++) {
     dl = gsl_vector_get(D_l, i);
     ve = gsl_matrix_get(V_e_temp, i, i);
 
-    // Calculate Sigma = t(eval_vec) %*% (sigmasq / V_e_temp[i]) %*% eval_vec
+    // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
     gsl_matrix_set_zero(Sigma);
-    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, eval_vec_T, eval_vec, 0.0, Sigma);
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
     double scalar = sigmasq / ve;
     gsl_matrix_scale(Sigma, scalar);
    
@@ -1039,7 +1040,7 @@ double MphCalcP(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_ma
 
 // Calculate B and its standard error (which is a matrix of the same
 // dimension as B).
-void MphCalcBeta(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq, const gsl_matrix *W,
+void MphCalcBeta(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq, const gsl_matrix *W,
                  const gsl_matrix *Y, const gsl_matrix *V_g,
                  const gsl_matrix *V_e, gsl_matrix *UltVehiY, gsl_matrix *B,
                  gsl_matrix *se_B) {
@@ -1057,11 +1058,11 @@ void MphCalcBeta(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_m
   gsl_vector *QiWHiy = gsl_vector_alloc(dc_size);
   gsl_vector *beta = gsl_vector_alloc(dc_size);
   gsl_matrix *Vbeta = gsl_matrix_alloc(dc_size, dc_size);
-  gsl_matrix *eval_vec_T = gsl_matrix_alloc(n_size, n_size);
+  gsl_matrix *U_T = gsl_matrix_alloc(n_size, n_size);
   gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
 
-  // Transpose eval_vec
-  gsl_matrix_transpose_memcpy(eval_vec_T, eval_vec);
+  // Transpose U
+  gsl_matrix_transpose_memcpy(U_T, U);
 
   gsl_vector_set_zero(WHiy);
 
@@ -1071,7 +1072,7 @@ void MphCalcBeta(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_m
 
   // Calculate Qi and log|Q|.
   // double logdet_Q = CalcQi(eval, D_l, W, V_e_temp, Qi);
-  CalcQi(eval, eval_vec, sigmasq, D_l, W, V_e_temp, Qi);
+  CalcQi(eval, U, sigmasq, D_l, W, V_e_temp, Qi);
 
   // Calculate UltVehiY.
   gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, UltVehi, Y, 0.0, UltVehiY);
@@ -1081,9 +1082,9 @@ void MphCalcBeta(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_m
     dl = gsl_vector_get(D_l, i);
     ve = gsl_matrix_get(V_e_temp, i, i);
 
-    // Calculate Sigma = t(eval_vec) %*% (sigmasq / V_e_temp[i]) %*% eval_vec
+    // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
     gsl_matrix_set_zero(Sigma);
-    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, eval_vec_T, eval_vec, 0.0, Sigma);
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
     double scalar = sigmasq / ve;
     gsl_matrix_scale(Sigma, scalar);
    
@@ -1161,7 +1162,7 @@ void MphCalcBeta(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_m
 // Calculate all Hi and return logdet_H=\sum_{k=1}^{n}log|H_k|
 // and calculate Qi and return logdet_Q
 // and calculate yPy.
-void CalcHiQi(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq, const gsl_matrix *X,
+void CalcHiQi(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq, const gsl_matrix *X,
               const gsl_matrix *V_g, const gsl_matrix *V_e, gsl_matrix *Hi_all,
               gsl_matrix *Qi, double &logdet_H, double &logdet_Q) {
   gsl_matrix_set_zero(Hi_all);
@@ -1177,11 +1178,11 @@ void CalcHiQi(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matr
   gsl_matrix *UltVehi = gsl_matrix_alloc(d_size, d_size);
   gsl_matrix *V_e_temp = gsl_matrix_alloc(d_size, d_size);
   gsl_vector *D_l = gsl_vector_alloc(d_size);
-  gsl_matrix *eval_vec_T = gsl_matrix_alloc(n_size, n_size);
+  gsl_matrix *U_T = gsl_matrix_alloc(n_size, n_size);
   gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
 
-  // Transpose eval_vec
-  gsl_matrix_transpose_memcpy(eval_vec_T, eval_vec);
+  // Transpose U
+  gsl_matrix_transpose_memcpy(U_T, U);
 
   // Calculate D_l, UltVeh and UltVehi.
   tie(V_e_temp, logdet_Ve) = EigenProc(V_g, V_e, D_l, UltVeh, UltVehi);
@@ -1196,9 +1197,9 @@ void CalcHiQi(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matr
    for (size_t i = 0; i < d_size; i++) {
       dl = gsl_vector_get(D_l, i);
       ve = gsl_matrix_get(V_e_temp, i, i);
-      // Calculate Sigma = t(eval_vec) %*% (sigmasq / V_e_temp[i]) %*% eval_vec
+      // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
       gsl_matrix_set_zero(Sigma);
-      gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, eval_vec_T, eval_vec, 0.0, Sigma);
+      gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
       double scalar = sigmasq / ve;
       gsl_matrix_scale(Sigma, scalar);
 
@@ -1221,7 +1222,7 @@ void CalcHiQi(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matr
   // Calculate Qi, and multiply I\o times UtVeh on both side and
   // calculate logdet_Q, don't forget to substract
   // c_size*logdet_Ve.
-  logdet_Q = CalcQi(eval, eval_vec, sigmasq, D_l, X, V_e_temp, Qi) - (double)c_size * logdet_Ve;
+  logdet_Q = CalcQi(eval, U, sigmasq, D_l, X, V_e_temp, Qi) - (double)c_size * logdet_Ve;
 
   for (size_t i = 0; i < c_size; i++) {
     for (size_t j = 0; j < c_size; j++) {
@@ -1346,7 +1347,7 @@ size_t GetIndex(const size_t i, const size_t j, const size_t d_size) {
   return (2 * d_size - s + 1) * s / 2 + l - s;
 }
 
-void Calc_yHiDHiy(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq, const gsl_matrix *Hiy,  const gsl_matrix *V_e_temp, const size_t i,
+void Calc_yHiDHiy(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq, const gsl_matrix *Hiy,  const gsl_matrix *V_e_temp, const size_t i,
                   const size_t j, double &yHiDHiy_g, double &yHiDHiy_e) {
   yHiDHiy_g = 0.0;
   yHiDHiy_e = 0.0;
@@ -1356,17 +1357,17 @@ void Calc_yHiDHiy(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_
 
   double delta, ve, epsilon, d1, d2;
 
-  gsl_matrix *eval_vec_T = gsl_matrix_alloc(n_size, n_size);
+  gsl_matrix *U_T = gsl_matrix_alloc(n_size, n_size);
   gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
 
-  // Transpose eval_vec
-  gsl_matrix_transpose_memcpy(eval_vec_T, eval_vec);
+  // Transpose U
+  gsl_matrix_transpose_memcpy(U_T, U);
 
 for (size_t i = 0; i < d_size; i++) {
   ve = gsl_matrix_get(V_e_temp, i, i);
-  // Calculate Sigma = t(eval_vec) %*% (sigmasq / V_e_temp[i]) %*% eval_vec
+  // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
   gsl_matrix_set_zero(Sigma);
-  gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, eval_vec_T, eval_vec, 0.0, Sigma);
+  gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
   double scalar = sigmasq / ve;
   gsl_matrix_scale(Sigma, scalar);
  
@@ -1390,7 +1391,7 @@ for (size_t i = 0; i < d_size; i++) {
   return;
 }
 
-void Calc_xHiDHiy(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigma, const gsl_matrix *xHi,
+void Calc_xHiDHiy(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigma, const gsl_matrix *xHi,
                   const gsl_matrix *Hiy, const gsl_matrix *V_e_temp, const size_t i, const size_t j,
                   gsl_vector *xHiDHiy_g, gsl_vector *xHiDHiy_e) {
   gsl_vector_set_zero(xHiDHiy_g);
@@ -1398,19 +1399,19 @@ void Calc_xHiDHiy(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_
 
   size_t n_size = eval->size, d_size = Hiy->size1;
 
-  gsl_matrix *eval_vec_T = gsl_matrix_alloc(n_size, n_size);
+  gsl_matrix *U_T = gsl_matrix_alloc(n_size, n_size);
   gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
 
-  // Transpose eval_vec
-  gsl_matrix_transpose_memcpy(eval_vec_T, eval_vec);
+  // Transpose U
+  gsl_matrix_transpose_memcpy(U_T, U);
  
   double delta, ve, epsilon, d;
   for (size_t i = 0; i < d_size; d++) {
     ve = gsl_matrix_get(V_e_temp, i, i);
 
-    // Calculate Sigma = t(eval_vec) %*% (sigmasq / V_e_temp[i]) %*% eval_vec
+    // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
     gsl_matrix_set_zero(Sigma);
-    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, eval_vec_T, eval_vec, 0.0, Sigma);
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
     double scalar = sigmasq / ve;
     gsl_matrix_scale(Sigma, scalar);
    
@@ -1438,7 +1439,7 @@ void Calc_xHiDHiy(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_
   return;
 }
 
-void Calc_xHiDHix(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigma, const gsl_matrix *V_e_temp, const gsl_matrix *xHi, const size_t i,
+void Calc_xHiDHix(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigma, const gsl_matrix *V_e_temp, const gsl_matrix *xHi, const size_t i,
                   const size_t j, gsl_matrix *xHiDHix_g,
                   gsl_matrix *xHiDHix_e) {
   gsl_matrix_set_zero(xHiDHix_g);
@@ -1447,11 +1448,11 @@ void Calc_xHiDHix(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_
   size_t n_size = eval->size, dc_size = xHi->size1;
   size_t d_size = xHi->size2 / n_size;
 
-  gsl_matrix *eval_vec_T = gsl_matrix_alloc(n_size, n_size);
+  gsl_matrix *U_T = gsl_matrix_alloc(n_size, n_size);
   gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
 
-  // Transpose eval_vec
-  gsl_matrix_transpose_memcpy(eval_vec_T, eval_vec);
+  // Transpose U
+  gsl_matrix_transpose_memcpy(U_T, U);
  
   double delta, ve, epsilon;
 
@@ -1460,9 +1461,9 @@ void Calc_xHiDHix(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_
   for (size_t i = 0; i < d_size; i++) {
     ve = gsl_matrix_get(V_e_temp, i, i);
 
-    // Calculate Sigma = t(eval_vec) %*% (sigmasq / V_e_temp[i]) %*% eval_vec
+    // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
     gsl_matrix_set_zero(Sigma);
-    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, eval_vec_T, eval_vec, 0.0, Sigma);
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
     double scalar = sigmasq / ve;
     gsl_matrix_scale(Sigma, scalar);
    
@@ -1502,7 +1503,7 @@ void Calc_xHiDHix(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_
   return;
 }
 
-void Calc_yHiDHiDHiy(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq, const gsl_matrix *Hi,
+void Calc_yHiDHiDHiy(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq, const gsl_matrix *Hi,
                      const gsl_matrix *Hiy, const gsl_matrix *V_e_temp, const size_t i1, const size_t j1,
                      const size_t i2, const size_t j2, double &yHiDHiDHiy_gg,
                      double &yHiDHiDHiy_ee, double &yHiDHiDHiy_ge) {
@@ -1512,20 +1513,20 @@ void Calc_yHiDHiDHiy(const gsl_vector *eval, const gsl_matrix *eval_vec, const g
 
   size_t n_size = eval->size, d_size = Hiy->size1;
 
-  gsl_matrix *eval_vec_T = gsl_matrix_alloc(n_size, n_size);
+  gsl_matrix *U_T = gsl_matrix_alloc(n_size, n_size);
   gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
 
-  // Transpose eval_vec
-  gsl_matrix_transpose_memcpy(eval_vec_T, eval_vec);
+  // Transpose U
+  gsl_matrix_transpose_memcpy(U_T, U);
 
   double delta, ve, epsilon, d_Hiy_i1, d_Hiy_j1, d_Hiy_i2, d_Hiy_j2;
   double d_Hi_i1i2, d_Hi_i1j2, d_Hi_j1i2, d_Hi_j1j2;
   for (size_t i = 0; i < d_size; i++) {
     ve = gsl_matrix_get(V_e_temp, i, i);
 
-    // Calculate Sigma = t(eval_vec) %*% (sigmasq / V_e_temp[i]) %*% eval_vec
+    // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
     gsl_matrix_set_zero(Sigma);
-    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, eval_vec_T, eval_vec, 0.0, Sigma);
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
     double scalar = sigmasq / ve;
     gsl_matrix_scale(Sigma, scalar);
    
@@ -1576,7 +1577,7 @@ void Calc_yHiDHiDHiy(const gsl_vector *eval, const gsl_matrix *eval_vec, const g
   return;
 }
 
-void Calc_xHiDHiDHiy(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq, const gsl_matrix *Hi,
+void Calc_xHiDHiDHiy(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq, const gsl_matrix *Hi,
                      const gsl_matrix *xHi, const gsl_matrix *Hiy, const gsl_matrix *V_e_temp,
                      const size_t i1, const size_t j1, const size_t i2,
                      const size_t j2, gsl_vector *xHiDHiDHiy_gg,
@@ -1587,11 +1588,11 @@ void Calc_xHiDHiDHiy(const gsl_vector *eval, const gsl_matrix *eval_vec, const g
 
   size_t n_size = eval->size, d_size = Hiy->size1;
 
-  gsl_matrix *eval_vec_T = gsl_matrix_alloc(n_size, n_size);
+  gsl_matrix *U_T = gsl_matrix_alloc(n_size, n_size);
   gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
 
-  // Transpose eval_vec
-  gsl_matrix_transpose_memcpy(eval_vec_T, eval_vec);
+  // Transpose U
+  gsl_matrix_transpose_memcpy(U_T, U);
 
   double delta, ve, epsilon, d_Hiy_i, d_Hiy_j, d_Hi_i1i2, d_Hi_i1j2;
   double d_Hi_j1i2, d_Hi_j1j2;
@@ -1599,9 +1600,9 @@ void Calc_xHiDHiDHiy(const gsl_vector *eval, const gsl_matrix *eval_vec, const g
 for (size_t i = 0; i < d_size; i++) {
   ve = gsl_matrix_get(V_e_temp, i, i);
 
-  // Calculate Sigma = t(eval_vec) %*% (sigmasq / V_e_temp[i]) %*% eval_vec
+  // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
   gsl_matrix_set_zero(Sigma);
-  gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, eval_vec_T, eval_vec, 0.0, Sigma);
+  gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
   double scalar = sigmasq / ve;
   gsl_matrix_scale(Sigma, scalar);
  
@@ -1673,7 +1674,7 @@ for (size_t i = 0; i < d_size; i++) {
   return;
 }
 
-void Calc_xHiDHiDHix(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq, const gsl_matrix *Hi, const gsl_matrix *V_e_temp,
+void Calc_xHiDHiDHix(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq, const gsl_matrix *Hi, const gsl_matrix *V_e_temp,
                      const gsl_matrix *xHi, const size_t i1, const size_t j1,
                      const size_t i2, const size_t j2,
                      gsl_matrix *xHiDHiDHix_gg, gsl_matrix *xHiDHiDHix_ee,
@@ -1688,19 +1689,19 @@ void Calc_xHiDHiDHix(const gsl_vector *eval, const gsl_matrix *eval_vec, const g
 
   gsl_matrix *mat_dcdc = gsl_matrix_alloc(dc_size, dc_size);
 
-  gsl_matrix *eval_vec_T = gsl_matrix_alloc(n_size, n_size);
+  gsl_matrix *U_T = gsl_matrix_alloc(n_size, n_size);
   gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
 
-  // Transpose eval_vec
-  gsl_matrix_transpose_memcpy(eval_vec_T, eval_vec);
+  // Transpose U
+  gsl_matrix_transpose_memcpy(U_T, U);
 
 
   for (size_t i = 0; i < d_size; i++) {
     ve = gsl_matrix_get(V_e_temp, i, i);
 
-    // Calculate Sigma = t(eval_vec) %*% (sigmasq / V_e_temp[i]) %*% eval_vec
+    // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
     gsl_matrix_set_zero(Sigma);
-    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, eval_vec_T, eval_vec, 0.0, Sigma);
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
     double scalar = sigmasq / ve;
     gsl_matrix_scale(Sigma, scalar);
    
@@ -1795,7 +1796,7 @@ void Calc_xHiDHiDHix(const gsl_vector *eval, const gsl_matrix *eval_vec, const g
   return;
 }
 
-void Calc_traceHiD(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq, const gsl_matrix *Hi, const gsl_matrix *V_e_temp, const size_t i,
+void Calc_traceHiD(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq, const gsl_matrix *Hi, const gsl_matrix *V_e_temp, const size_t i,
                    const size_t j, double &tHiD_g, double &tHiD_e) {
   tHiD_g = 0.0;
   tHiD_e = 0.0;
@@ -1803,18 +1804,18 @@ void Calc_traceHiD(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl
   size_t n_size = eval->size, d_size = Hi->size1;
   double delta, ve, epsilon, d;
 
-  gsl_matrix *eval_vec_T = gsl_matrix_alloc(n_size, n_size);
+  gsl_matrix *U_T = gsl_matrix_alloc(n_size, n_size);
   gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
 
-  // Transpose eval_vec
-  gsl_matrix_transpose_memcpy(eval_vec_T, eval_vec);
+  // Transpose U
+  gsl_matrix_transpose_memcpy(U_T, U);
 
   for (size_t i = 0; i < d_size; i++) {
     ve = gsl_matrix_get(V_e_temp, i, i);
 
-    // Calculate Sigma = t(eval_vec) %*% (sigmasq / V_e_temp[i]) %*% eval_vec
+    // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
     gsl_matrix_set_zero(Sigma);
-    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, eval_vec_T, eval_vec, 0.0, Sigma);
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
     double scalar = sigmasq / ve;
     gsl_matrix_scale(Sigma, scalar);
    
@@ -1836,7 +1837,7 @@ void Calc_traceHiD(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl
   return;
 }
 
-void Calc_traceHiDHiD(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq, const gsl_matrix *Hi, const gsl_matrix *V_e_temp,
+void Calc_traceHiDHiD(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq, const gsl_matrix *Hi, const gsl_matrix *V_e_temp,
                       const size_t i1, const size_t j1, const size_t i2,
                       const size_t j2, double &tHiDHiD_gg, double &tHiDHiD_ee,
                       double &tHiDHiD_ge) {
@@ -1847,17 +1848,17 @@ void Calc_traceHiDHiD(const gsl_vector *eval, const gsl_matrix *eval_vec, const 
   size_t n_size = eval->size, d_size = Hi->size1;
   double delta, ve, epsilon, d_Hi_i1i2, d_Hi_i1j2, d_Hi_j1i2, d_Hi_j1j2;
 
-  gsl_matrix *eval_vec_T = gsl_matrix_alloc(n_size, n_size);
+  gsl_matrix *U_T = gsl_matrix_alloc(n_size, n_size);
   gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
 
-  // Transpose eval_vec
-  gsl_matrix_transpose_memcpy(eval_vec_T, eval_vec);
+  // Transpose U
+  gsl_matrix_transpose_memcpy(U_T, U);
 
   for (size_t i = 0; i < d_size; i++) {
    ve = gsl_matrix_get(V_e_temp, i, i);
-   // Calculate Sigma = t(eval_vec) %*% (sigmasq / V_e_temp[i]) %*% eval_vec
+   // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
    gsl_matrix_set_zero(Sigma);
-   gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, eval_vec_T, eval_vec, 0.0, Sigma);
+   gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
    double scalar = sigmasq / ve;
    gsl_matrix_scale(Sigma, scalar);
    for (size_t k = 0; k < n_size; k++) {
@@ -1899,7 +1900,7 @@ void Calc_traceHiDHiD(const gsl_vector *eval, const gsl_matrix *eval_vec, const 
 }
 
 // trace(PD) = trace((Hi-HixQixHi)D)=trace(HiD) - trace(HixQixHiD)
-void Calc_tracePD(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq, const gsl_matrix *Qi, const gsl_matrix *V_e_temp, 
+void Calc_tracePD(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq, const gsl_matrix *Qi, const gsl_matrix *V_e_temp, 
                   const gsl_matrix *Hi, const gsl_matrix *xHiDHix_all_g,
                   const gsl_matrix *xHiDHix_all_e, const size_t i,
                   const size_t j, double &tPD_g, double &tPD_e) {
@@ -1909,7 +1910,7 @@ void Calc_tracePD(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_
   double d;
 
   // Calculate the first part: trace(HiD).
-  Calc_traceHiD(eval, eval_vec, sigmasq, Hi, V_e_temp, i, j, tPD_g, tPD_e);
+  Calc_traceHiD(eval, U, sigmasq, Hi, V_e_temp, i, j, tPD_g, tPD_e);
 
   // Calculate the second part: -trace(HixQixHiD).
   for (size_t k = 0; k < dc_size; k++) {
@@ -1931,7 +1932,7 @@ void Calc_tracePD(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_
 // trace(PDPD) = trace((Hi-HixQixHi)D(Hi-HixQixHi)D)
 //             = trace(HiDHiD) - trace(HixQixHiDHiD)
 //               - trace(HiDHixQixHiD) + trace(HixQixHiDHixQixHiD)
-void Calc_tracePDPD(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq, const gsl_matrix *Qi, const gsl_matrix *V_e_temp,
+void Calc_tracePDPD(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq, const gsl_matrix *Qi, const gsl_matrix *V_e_temp,
                     const gsl_matrix *Hi, const gsl_matrix *xHi,
                     const gsl_matrix *QixHiDHix_all_g,
                     const gsl_matrix *QixHiDHix_all_e,
@@ -1947,7 +1948,7 @@ void Calc_tracePDPD(const gsl_vector *eval, const gsl_matrix *eval_vec, const gs
   double d;
 
   // Calculate the first part: trace(HiDHiD).
-  Calc_traceHiDHiD(eval, eval_vec, sigmasq, Hi, V_e_temp, i1, j1, i2, j2, tPDPD_gg, tPDPD_ee, tPDPD_ge);
+  Calc_traceHiDHiD(eval, U, sigmasq, Hi, V_e_temp, i1, j1, i2, j2, tPDPD_gg, tPDPD_ee, tPDPD_ge);
 
   // Calculate the second and third parts:
   // -trace(HixQixHiDHiD) - trace(HiDHixQixHiD)
@@ -1997,7 +1998,7 @@ void Calc_tracePDPD(const gsl_vector *eval, const gsl_matrix *eval_vec, const gs
 }
 
 // Calculate (xHiDHiy) for every pair (i,j).
-void Calc_xHiDHiy_all(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq, const gsl_matrix *xHi, const gsl_matrix *V_e_temp,
+void Calc_xHiDHiy_all(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq, const gsl_matrix *xHi, const gsl_matrix *V_e_temp,
                       const gsl_matrix *Hiy, gsl_matrix *xHiDHiy_all_g,
                       gsl_matrix *xHiDHiy_all_e) {
   gsl_matrix_set_zero(xHiDHiy_all_g);
@@ -2016,14 +2017,14 @@ void Calc_xHiDHiy_all(const gsl_vector *eval, const gsl_matrix *eval_vec, const 
       gsl_vector_view xHiDHiy_g = gsl_matrix_column(xHiDHiy_all_g, v);
       gsl_vector_view xHiDHiy_e = gsl_matrix_column(xHiDHiy_all_e, v);
 
-      Calc_xHiDHiy(eval, eval_vec, sigmasq, xHi, Hiy, V_e_temp, i, j, &xHiDHiy_g.vector, &xHiDHiy_e.vector);
+      Calc_xHiDHiy(eval, U, sigmasq, xHi, Hiy, V_e_temp, i, j, &xHiDHiy_g.vector, &xHiDHiy_e.vector);
     }
   }
   return;
 }
 
 // Calculate (xHiDHix) for every pair (i,j).
-void Calc_xHiDHix_all(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq, const gsl_matrix *xHi, const gsl_matrix *V_e_temp, 
+void Calc_xHiDHix_all(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq, const gsl_matrix *xHi, const gsl_matrix *V_e_temp, 
                       gsl_matrix *xHiDHix_all_g, gsl_matrix *xHiDHix_all_e) {
   gsl_matrix_set_zero(xHiDHix_all_g);
   gsl_matrix_set_zero(xHiDHix_all_e);
@@ -2043,14 +2044,14 @@ void Calc_xHiDHix_all(const gsl_vector *eval, const gsl_matrix *eval_vec, const 
       gsl_matrix_view xHiDHix_e =
           gsl_matrix_submatrix(xHiDHix_all_e, 0, v * dc_size, dc_size, dc_size);
 
-      Calc_xHiDHix(eval, eval_vec, sigmasq, V_e_temp, xHi, i, j, &xHiDHix_g.matrix, &xHiDHix_e.matrix);
+      Calc_xHiDHix(eval, U, sigmasq, V_e_temp, xHi, i, j, &xHiDHix_g.matrix, &xHiDHix_e.matrix);
     }
   }
   return;
 }
 
 // Calculate (xHiDHiy) for every pair (i,j).
-void Calc_xHiDHiDHiy_all(const size_t v_size, const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq,
+void Calc_xHiDHiDHiy_all(const size_t v_size, const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq,
                          const gsl_matrix *Hi, const gsl_matrix *xHi, const gsl_matrix *V_e_temp,
                          const gsl_matrix *Hiy, gsl_matrix *xHiDHiDHiy_all_gg,
                          gsl_matrix *xHiDHiDHiy_all_ee,
@@ -2083,7 +2084,7 @@ void Calc_xHiDHiDHiy_all(const size_t v_size, const gsl_vector *eval, const gsl_
           gsl_vector_view xHiDHiDHiy_ge =
               gsl_matrix_column(xHiDHiDHiy_all_ge, v1 * v_size + v2);
 
-          Calc_xHiDHiDHiy(eval, eval_vec, sigmasq, Hi, xHi, Hiy, V_e_temp, i1, j1, i2, j2,
+          Calc_xHiDHiDHiy(eval, U, sigmasq, Hi, xHi, Hiy, V_e_temp, i1, j1, i2, j2,
                           &xHiDHiDHiy_gg.vector, &xHiDHiDHiy_ee.vector,
                           &xHiDHiDHiy_ge.vector);
         }
@@ -2094,7 +2095,7 @@ void Calc_xHiDHiDHiy_all(const size_t v_size, const gsl_vector *eval, const gsl_
 }
 
 // Calculate (xHiDHix) for every pair (i,j).
-void Calc_xHiDHiDHix_all(const size_t v_size, const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq,
+void Calc_xHiDHiDHix_all(const size_t v_size, const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq,
                          const gsl_matrix *Hi, const gsl_matrix *xHi, const gsl_matrix *V_e_temp, 
                          gsl_matrix *xHiDHiDHix_all_gg,
                          gsl_matrix *xHiDHiDHix_all_ee,
@@ -2134,7 +2135,7 @@ void Calc_xHiDHiDHix_all(const size_t v_size, const gsl_vector *eval, const gsl_
               xHiDHiDHix_all_ge, 0, (v1 * v_size + v2) * dc_size, dc_size,
               dc_size);
 
-          Calc_xHiDHiDHix(eval, eval_vec, sigmasq, Hi, V_e_temp, xHi, i1, j1, i2, j2, &xHiDHiDHix_gg1.matrix,
+          Calc_xHiDHiDHix(eval, U, sigmasq, Hi, V_e_temp, xHi, i1, j1, i2, j2, &xHiDHiDHix_gg1.matrix,
                           &xHiDHiDHix_ee1.matrix, &xHiDHiDHix_ge1.matrix);
 
           if (v2 != v1) {
@@ -2236,7 +2237,7 @@ void Calc_QiMat_all(const gsl_matrix *Qi, const gsl_matrix *mat_all_g,
 // yPDPy = y(Hi-HixQixHi)D(Hi-HixQixHi)y
 //       = ytHiDHiy - (yHix)Qi(xHiDHiy) - (yHiDHix)Qi(xHiy)
 //         + (yHix)Qi(xHiDHix)Qi(xtHiy)
-void Calc_yPDPy(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq, const gsl_matrix *Hiy, const gsl_matrix *V_e_temp,
+void Calc_yPDPy(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq, const gsl_matrix *Hiy, const gsl_matrix *V_e_temp,
                 const gsl_vector *QixHiy, const gsl_matrix *xHiDHiy_all_g,
                 const gsl_matrix *xHiDHiy_all_e,
                 const gsl_matrix *xHiDHixQixHiy_all_g,
@@ -2248,7 +2249,7 @@ void Calc_yPDPy(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_ma
   double d;
 
   // First part: ytHiDHiy.
-  Calc_yHiDHiy(eval, eval_vec, sigmasq, Hiy, V_e_temp, i, j, yPDPy_g, yPDPy_e);
+  Calc_yHiDHiy(eval, U, sigmasq, Hiy, V_e_temp, i, j, yPDPy_g, yPDPy_e);
 
   // Second and third parts: -(yHix)Qi(xHiDHiy)-(yHiDHix)Qi(xHiy)
   gsl_vector_const_view xHiDHiy_g = gsl_matrix_const_column(xHiDHiy_all_g, v);
@@ -2282,7 +2283,7 @@ void Calc_yPDPy(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_ma
 //                     + (yHix)Qi(xHiDHiDHix)Qi(xHiy)
 //                     - (yHix)Qi(xHiDHix)Qi(xHiDHix)Qi(xHiy)
 void Calc_yPDPDPy(
-    const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq, const gsl_matrix *Hi, const gsl_matrix *xHi, const gsl_matrix *V_e_temp,
+    const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq, const gsl_matrix *Hi, const gsl_matrix *xHi, const gsl_matrix *V_e_temp,
     const gsl_matrix *Hiy, const gsl_vector *QixHiy,
     const gsl_matrix *xHiDHiy_all_g, const gsl_matrix *xHiDHiy_all_e,
     const gsl_matrix *QixHiDHiy_all_g, const gsl_matrix *QixHiDHiy_all_e,
@@ -2304,7 +2305,7 @@ void Calc_yPDPDPy(
   gsl_vector *xHiDHiDHixQixHiy = gsl_vector_alloc(dc_size);
 
   // First part: yHiDHiDHiy.
-  Calc_yHiDHiDHiy(eval, eval_vec, sigmasq, Hi, Hiy, V_e_temp, i1, j1, i2, j2, yPDPDPy_gg, yPDPDPy_ee,
+  Calc_yHiDHiDHiy(eval, U, sigmasq, Hi, Hiy, V_e_temp, i1, j1, i2, j2, yPDPDPy_gg, yPDPDPy_ee,
                   yPDPDPy_ge);
 
   // Second and third parts:
@@ -2733,7 +2734,7 @@ void CalcCRT(const gsl_matrix *Hessian_inv, const gsl_matrix *Qi,
 }
 
 // Calculate first-order and second-order derivatives.
-void CalcDev(const char func_name, const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq, const gsl_matrix *Qi,
+void CalcDev(const char func_name, const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq, const gsl_matrix *Qi,
              const gsl_matrix *Hi, const gsl_matrix *xHi, const gsl_matrix *Hiy,
              const gsl_vector *QixHiy, gsl_vector *gradient,
              gsl_matrix *Hessian_inv, double &crt_a, double &crt_b,
@@ -2778,14 +2779,14 @@ void CalcDev(const char func_name, const gsl_vector *eval, const gsl_matrix *eva
       gsl_matrix_alloc(dc_size, v_size * v_size * dc_size);
 
   // Calculate xHiDHiy_all, xHiDHix_all and xHiDHixQixHiy_all.
-  Calc_xHiDHiy_all(eval, eval_vec, sigmasq, xHi, V_e_temp, Hiy, xHiDHiy_all_g, xHiDHiy_all_e);
-  Calc_xHiDHix_all(eval, eval_vec, sigmasq, xHi, V_e_temp, xHiDHix_all_g, xHiDHix_all_e);
+  Calc_xHiDHiy_all(eval, U, sigmasq, xHi, V_e_temp, Hiy, xHiDHiy_all_g, xHiDHiy_all_e);
+  Calc_xHiDHix_all(eval, U, sigmasq, xHi, V_e_temp, xHiDHix_all_g, xHiDHix_all_e);
   Calc_xHiDHixQixHiy_all(xHiDHix_all_g, xHiDHix_all_e, QixHiy,
                          xHiDHixQixHiy_all_g, xHiDHixQixHiy_all_e);
 
-  Calc_xHiDHiDHiy_all(v_size, eval, eval_vec, sigmasq, Hi, xHi, V_e_temp, Hiy, xHiDHiDHiy_all_gg,
+  Calc_xHiDHiDHiy_all(v_size, eval, U, sigmasq, Hi, xHi, V_e_temp, Hiy, xHiDHiDHiy_all_gg,
                       xHiDHiDHiy_all_ee, xHiDHiDHiy_all_ge);
-  Calc_xHiDHiDHix_all(v_size, eval, eval_vec, sigmasq, Hi, xHi, V_e_temp, xHiDHiDHix_all_gg,
+  Calc_xHiDHiDHix_all(v_size, eval, U, sigmasq, Hi, xHi, V_e_temp, xHiDHiDHix_all_gg,
                       xHiDHiDHix_all_ee, xHiDHiDHix_all_ge);
 
   // Calculate QixHiDHiy_all, QixHiDHix_all and QixHiDHixQixHiy_all.
@@ -2808,18 +2809,18 @@ void CalcDev(const char func_name, const gsl_vector *eval, const gsl_matrix *eva
       }
       v1 = GetIndex(i1, j1, d_size);
 
-      Calc_yPDPy(eval, eval_vec, sigmasq, Hiy, V_e_temp, QixHiy, xHiDHiy_all_g, xHiDHiy_all_e,
+      Calc_yPDPy(eval, U, sigmasq, Hiy, V_e_temp, QixHiy, xHiDHiy_all_g, xHiDHiy_all_e,
                  xHiDHixQixHiy_all_g, xHiDHixQixHiy_all_e, i1, j1, yPDPy_g,
                  yPDPy_e);
 
       if (func_name == 'R' || func_name == 'r') {
-        Calc_tracePD(eval, eval_vec, sigmasq, Qi, V_e_temp, Hi, xHiDHix_all_g, xHiDHix_all_e, i1, j1, tPD_g,
+        Calc_tracePD(eval, U, sigmasq, Qi, V_e_temp, Hi, xHiDHix_all_g, xHiDHix_all_e, i1, j1, tPD_g,
                      tPD_e);
 
         dev1_g = -0.5 * tPD_g + 0.5 * yPDPy_g;
         dev1_e = -0.5 * tPD_e + 0.5 * yPDPy_e;
       } else {
-        Calc_traceHiD(eval, eval_vec, sigmasq, Hi, V_e_temp, i1, j1, tHiD_g, tHiD_e);
+        Calc_traceHiD(eval, U, sigmasq, Hi, V_e_temp, i1, j1, tHiD_g, tHiD_e);
 
         dev1_g = -0.5 * tHiD_g + 0.5 * yPDPy_g;
         dev1_e = -0.5 * tHiD_e + 0.5 * yPDPy_e;
@@ -2839,7 +2840,7 @@ void CalcDev(const char func_name, const gsl_vector *eval, const gsl_matrix *eva
             continue;
           }
 
-          Calc_yPDPDPy(eval, eval_vec, sigmasq, Hi, xHi, V_e_temp, Hiy, QixHiy, xHiDHiy_all_g, xHiDHiy_all_e,
+          Calc_yPDPDPy(eval, U, sigmasq, Hi, xHi, V_e_temp, Hiy, QixHiy, xHiDHiy_all_g, xHiDHiy_all_e,
                        QixHiDHiy_all_g, QixHiDHiy_all_e, xHiDHixQixHiy_all_g,
                        xHiDHixQixHiy_all_e, QixHiDHixQixHiy_all_g,
                        QixHiDHixQixHiy_all_e, xHiDHiDHiy_all_gg,
@@ -2849,7 +2850,7 @@ void CalcDev(const char func_name, const gsl_vector *eval, const gsl_matrix *eva
 
           // AI for REML.
           if (func_name == 'R' || func_name == 'r') {
-            Calc_tracePDPD(eval, eval_vec, sigmasq, Qi, V_e_temp, Hi, xHi, QixHiDHix_all_g, QixHiDHix_all_e,
+            Calc_tracePDPD(eval, U, sigmasq, Qi, V_e_temp, Hi, xHi, QixHiDHix_all_g, QixHiDHix_all_e,
                            xHiDHiDHix_all_gg, xHiDHiDHix_all_ee,
                            xHiDHiDHix_all_ge, i1, j1, i2, j2, tPDPD_gg,
                            tPDPD_ee, tPDPD_ge);
@@ -2858,7 +2859,7 @@ void CalcDev(const char func_name, const gsl_vector *eval, const gsl_matrix *eva
             dev2_ee = 0.5 * tPDPD_ee - yPDPDPy_ee;
             dev2_ge = 0.5 * tPDPD_ge - yPDPDPy_ge;
           } else {
-            Calc_traceHiDHiD(eval, eval_vec, sigmasq, Hi, V_e_temp, i1, j1, i2, j2, tHiDHiD_gg, tHiDHiD_ee,
+            Calc_traceHiDHiD(eval, U, sigmasq, Hi, V_e_temp, i1, j1, i2, j2, tHiDHiD_gg, tHiDHiD_ee,
                              tHiDHiD_ge);
 
             dev2_gg = 0.5 * tHiDHiD_gg - yPDPDPy_gg;
@@ -2982,7 +2983,7 @@ void UpdateVgVe(const gsl_matrix *Hessian_inv, const gsl_vector *gradient,
 }
 
 double MphNR(const char func_name, const size_t max_iter, const double max_prec,
-             const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq, const gsl_matrix *X, const gsl_matrix *Y,
+             const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq, const gsl_matrix *X, const gsl_matrix *Y,
              gsl_matrix *Hi_all, gsl_matrix *xHi_all, gsl_matrix *Hiy_all,
              gsl_matrix *V_g, gsl_matrix *V_e, gsl_matrix *Hessian_inv,
              double &crt_a, double &crt_b, double &crt_c) {
@@ -3071,7 +3072,7 @@ double MphNR(const char func_name, const size_t max_iter, const double max_prec,
       // If flag_pd==1, continue to calculate quantities
       // and logl.
       if (flag_pd == 1) {
-        CalcHiQi(eval, eval_vec, sigmasq, X, V_g, V_e, Hi_all, Qi, logdet_H, logdet_Q);
+        CalcHiQi(eval, U, sigmasq, X, V_g, V_e, Hi_all, Qi, logdet_H, logdet_Q);
         Calc_Hiy_all(Y, Hi_all, Hiy_all);
         Calc_xHi_all(X, Hi_all, xHi_all);
 
@@ -3112,7 +3113,7 @@ double MphNR(const char func_name, const size_t max_iter, const double max_prec,
 
     logl_old = logl_new;
 
-    CalcDev(func_name, eval, eval_vec, sigmasq, Qi, Hi_all, xHi_all, Hiy_all, QixHiy, gradient,
+    CalcDev(func_name, eval, U, sigmasq, Qi, Hi_all, xHi_all, Hiy_all, QixHiy, gradient,
             Hessian_inv, crt_a, crt_b, crt_c);
   }
 
@@ -3140,7 +3141,7 @@ double MphNR(const char func_name, const size_t max_iter, const double max_prec,
 // Initialize Vg, Ve and B.
 void MphInitial(const size_t em_iter, const double em_prec,
                 const size_t nr_iter, const double nr_prec,
-                const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq, const gsl_matrix *X,
+                const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq, const gsl_matrix *X,
                 const gsl_matrix *Y, const double l_min, const double l_max,
                 const size_t n_region, gsl_matrix *V_g, gsl_matrix *V_e,
                 gsl_matrix *B) {
@@ -3164,9 +3165,9 @@ void MphInitial(const size_t em_iter, const double em_prec,
 
   for (size_t i = 0; i < d_size; i++) {
     gsl_vector_const_view Y_row = gsl_matrix_const_row(Y, i);
-    CalcLambda('R', eval, eval_vec, sigmasq, Xt, &Y_row.vector, l_min, l_max, n_region, lambda,
+    CalcLambda('R', eval, U, sigmasq, Xt, &Y_row.vector, l_min, l_max, n_region, lambda,
                logl);
-    CalcLmmVgVeBeta(eval, eval_vec, sigmasq, Xt, &Y_row.vector, lambda, vg, ve, beta_temp,
+    CalcLmmVgVeBeta(eval, U, sigmasq, Xt, &Y_row.vector, lambda, vg, ve, beta_temp,
                     se_beta_temp);
 
     gsl_matrix_set(V_g, i, i, vg);
@@ -3225,10 +3226,10 @@ void MphInitial(const size_t em_iter, const double em_prec,
         gsl_matrix_set(Vg_sub, 1, 1, gsl_matrix_get(V_g, j, j));
         gsl_matrix_set(Ve_sub, 1, 1, gsl_matrix_get(V_e, j, j));
 
-        logl = MphEM('R', em_iter, em_prec, eval, eval_vec, sigmasq, X, Y_sub, U_hat, E_hat,
+        logl = MphEM('R', em_iter, em_prec, eval, U, sigmasq, X, Y_sub, U_hat, E_hat,
                      OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE,
                      Vg_sub, Ve_sub, B_sub);
-        logl = MphNR('R', nr_iter, nr_prec, eval, eval_vec, sigmasq, X, Y_sub, Hi_all, xHi_all,
+        logl = MphNR('R', nr_iter, nr_prec, eval, U, sigmasq, X, Y_sub, Hi_all, xHi_all,
                      Hiy_all, Vg_sub, Ve_sub, Hessian, a, b, c);
 
         gsl_matrix_set(V_g, i, j, gsl_matrix_get(Vg_sub, 0, 1));
@@ -3272,11 +3273,11 @@ void MphInitial(const size_t em_iter, const double em_prec,
 
   gsl_vector_set_zero(XHiy);
 
-  gsl_matrix *eval_vec_T = gsl_matrix_alloc(n_size, n_size);
+  gsl_matrix *U_T = gsl_matrix_alloc(n_size, n_size);
   gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
 
-  // Transpose eval_vec
-  gsl_matrix_transpose_memcpy(eval_vec_T, eval_vec);
+  // Transpose U
+  gsl_matrix_transpose_memcpy(U_T, U);
 
   double logdet_Ve, dl, d, delta, epsilon, dx, dy;
 
@@ -3286,7 +3287,7 @@ void MphInitial(const size_t em_iter, const double em_prec,
 
   // Calculate Qi and log|Q|.
   // double logdet_Q = CalcQi(eval, D_l, X, V_e_temp, Qi);
-  CalcQi(eval, eval_vec, sigmasq, D_l, X, V_e_temp, Qi);
+  CalcQi(eval, U, sigmasq, D_l, X, V_e_temp, Qi);
 
   // Calculate UltVehiY.
   gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, UltVehi, Y, 0.0, UltVehiY);
@@ -3296,9 +3297,9 @@ void MphInitial(const size_t em_iter, const double em_prec,
     dl = gsl_vector_get(D_l, i);
     ve = gsl_matrix_get(V_e_temp, i, i);
 
-    // Calculate Sigma = t(eval_vec) %*% (sigmasq / V_e_temp[i]) %*% eval_vec
+    // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
     gsl_matrix_set_zero(Sigma);
-    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, eval_vec_T, eval_vec, 0.0, Sigma);
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
     double scalar = sigmasq / ve;
     gsl_matrix_scale(Sigma, scalar);
    
@@ -3361,7 +3362,7 @@ double PCRT(const size_t mode, const size_t d_size, const double p_value,
   return p_crt;
 }
 
-void MVLMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq,
+void MVLMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq,
                           const gsl_matrix *UtW, const gsl_matrix *UtY) {
   debug_msg("entering");
   igzstream infile(file_geno.c_str(), igzstream::in);
@@ -3444,15 +3445,15 @@ void MVLMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval, const gsl
   gsl_vector_view B_col = gsl_matrix_column(B, c_size);
   gsl_vector_set_zero(&B_col.vector);
 
-  MphInitial(em_iter, em_prec, nr_iter, nr_prec, eval, eval_vec, sigmasq, &X_sub.matrix, Y, l_min,
+  MphInitial(em_iter, em_prec, nr_iter, nr_prec, eval, U, sigmasq, &X_sub.matrix, Y, l_min,
              l_max, n_region, V_g, V_e, &B_sub.matrix);
-  logl_H0 = MphEM('R', em_iter, em_prec, eval, eval_vec, sigmasq, &X_sub.matrix, Y, U_hat, E_hat,
+  logl_H0 = MphEM('R', em_iter, em_prec, eval, U, sigmasq, &X_sub.matrix, Y, U_hat, E_hat,
                   OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE, V_g,
                   V_e, &B_sub.matrix);
-  logl_H0 = MphNR('R', nr_iter, nr_prec, eval, eval_vec, sigmasq, &X_sub.matrix, Y, Hi_all,
+  logl_H0 = MphNR('R', nr_iter, nr_prec, eval, U, sigmasq, &X_sub.matrix, Y, Hi_all,
                   &xHi_all_sub.matrix, Hiy_all, V_g, V_e, Hessian, crt_a, crt_b,
                   crt_c);
-  MphCalcBeta(eval, eval_vec, sigmasq, &X_sub.matrix, Y, V_g, V_e, UltVehiY, &B_sub.matrix,
+  MphCalcBeta(eval, U, sigmasq, &X_sub.matrix, Y, V_g, V_e, UltVehiY, &B_sub.matrix,
               se_B_null);
 
   c = 0;
@@ -3512,13 +3513,13 @@ void MVLMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval, const gsl
   }
   cout << "REMLE likelihood = " << logl_H0 << endl;
 
-  logl_H0 = MphEM('L', em_iter, em_prec, eval, eval_vec, sigmasq, &X_sub.matrix, Y, U_hat, E_hat,
+  logl_H0 = MphEM('L', em_iter, em_prec, eval, U, sigmasq, &X_sub.matrix, Y, U_hat, E_hat,
                   OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE, V_g,
                   V_e, &B_sub.matrix);
-  logl_H0 = MphNR('L', nr_iter, nr_prec, eval, eval_vec, sigmasq, &X_sub.matrix, Y, Hi_all,
+  logl_H0 = MphNR('L', nr_iter, nr_prec, eval, U, sigmasq, &X_sub.matrix, Y, Hi_all,
                   &xHi_all_sub.matrix, Hiy_all, V_g, V_e, Hessian, crt_a, crt_b,
                   crt_c);
-  MphCalcBeta(eval, eval_vec, sigmasq, &X_sub.matrix, Y, V_g, V_e, UltVehiY, &B_sub.matrix,
+  MphCalcBeta(eval, U, sigmasq, &X_sub.matrix, Y, V_g, V_e, UltVehiY, &B_sub.matrix,
               se_B_null);
 
   c = 0;
@@ -3681,32 +3682,32 @@ void MVLMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval, const gsl
 
         // 3 is before 1.
         if (a_mode == 3 || a_mode == 4) {
-          p_score = MphCalcP(eval, eval_vec, sigmasq,, &X_row.vector, &X_sub.matrix, Y, V_g_null,
+          p_score = MphCalcP(eval, U, sigmasq, &X_row.vector, &X_sub.matrix, Y, V_g_null,
                              V_e_null, UltVehiY, beta, Vbeta);
           if (p_score < p_nr && crt == 1) {
-            logl_H1 = MphNR('R', 1, nr_prec * 10, eval, eval_vec, sigmasq,, X, Y, Hi_all, xHi_all,
+            logl_H1 = MphNR('R', 1, nr_prec * 10, eval, U, sigmasq, X, Y, Hi_all, xHi_all,
                             Hiy_all, V_g, V_e, Hessian, crt_a, crt_b, crt_c);
             p_score = PCRT(3, d_size, p_score, crt_a, crt_b, crt_c);
           }
         }
 
         if (a_mode == 2 || a_mode == 4) {
-          logl_H1 = MphEM('L', em_iter / 10, em_prec * 10, eval, eval_vec, sigmasq,, X, Y, U_hat,
+          logl_H1 = MphEM('L', em_iter / 10, em_prec * 10, eval, U, sigmasq, X, Y, U_hat,
                           E_hat, OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU,
                           UltVehiE, V_g, V_e, B);
 
           // Calculate beta and Vbeta.
-          p_lrt = MphCalcP(eval, eval_vec, sigmasq,, &X_row.vector, &X_sub.matrix, Y, V_g, V_e,
+          p_lrt = MphCalcP(eval, U, sigmasq, &X_row.vector, &X_sub.matrix, Y, V_g, V_e,
                            UltVehiY, beta, Vbeta);
           p_lrt = gsl_cdf_chisq_Q(2.0 * (logl_H1 - logl_H0), (double)d_size);
 
           if (p_lrt < p_nr) {
             logl_H1 =
-                MphNR('L', nr_iter / 10, nr_prec * 10, eval, eval_vec, sigmasq,, X, Y, Hi_all,
+                MphNR('L', nr_iter / 10, nr_prec * 10, eval, U, sigmasq, X, Y, Hi_all,
                       xHi_all, Hiy_all, V_g, V_e, Hessian, crt_a, crt_b, crt_c);
 
             // Calculate beta and Vbeta.
-            p_lrt = MphCalcP(eval, eval_vec, sigmasq,, &X_row.vector, &X_sub.matrix, Y, V_g, V_e,
+            p_lrt = MphCalcP(eval, U, sigmasq, &X_row.vector, &X_sub.matrix, Y, V_g, V_e,
                              UltVehiY, beta, Vbeta);
             p_lrt = gsl_cdf_chisq_Q(2.0 * (logl_H1 - logl_H0), (double)d_size);
 
@@ -3717,17 +3718,17 @@ void MVLMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval, const gsl
         }
 
         if (a_mode == 1 || a_mode == 4) {
-          logl_H1 = MphEM('R', em_iter / 10, em_prec * 10, eval, eval_vec, sigmasq,, X, Y, U_hat,
+          logl_H1 = MphEM('R', em_iter / 10, em_prec * 10, eval, U, sigmasq, X, Y, U_hat,
                           E_hat, OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU,
                           UltVehiE, V_g, V_e, B);
-          p_wald = MphCalcP(eval, eval_vec, sigmasq,, &X_row.vector, &X_sub.matrix, Y, V_g, V_e,
+          p_wald = MphCalcP(eval, U, sigmasq, &X_row.vector, &X_sub.matrix, Y, V_g, V_e,
                             UltVehiY, beta, Vbeta);
 
           if (p_wald < p_nr) {
             logl_H1 =
-                MphNR('R', nr_iter / 10, nr_prec * 10, eval, eval_vec, sigmasq,, X, Y, Hi_all,
+                MphNR('R', nr_iter / 10, nr_prec * 10, eval, U, sigmasq, X, Y, Hi_all,
                       xHi_all, Hiy_all, V_g, V_e, Hessian, crt_a, crt_b, crt_c);
-            p_wald = MphCalcP(eval, eval_vec, sigmasq,, &X_row.vector, &X_sub.matrix, Y, V_g, V_e,
+            p_wald = MphCalcP(eval, U, sigmasq, &X_row.vector, &X_sub.matrix, Y, V_g, V_e,
                               UltVehiY, beta, Vbeta);
 
             if (crt == 1) {
@@ -3799,7 +3800,7 @@ void MVLMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval, const gsl
   return;
 }
 
-void MVLMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq,
+void MVLMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq,
                          const gsl_matrix *UtW, const gsl_matrix *UtY) {
   debug_msg("entering");
   string file_bed = file_bfile + ".bed";
@@ -3881,18 +3882,18 @@ void MVLMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval, const gsl_
   gsl_vector_view B_col = gsl_matrix_column(B, c_size);
   gsl_vector_set_zero(&B_col.vector);
 
-  MphInitial(em_iter, em_prec, nr_iter, nr_prec, eval, eval_vec, sigmasq, &X_sub.matrix, Y, l_min,
+  MphInitial(em_iter, em_prec, nr_iter, nr_prec, eval, U, sigmasq, &X_sub.matrix, Y, l_min,
              l_max, n_region, V_g, V_e, &B_sub.matrix);
 
   write(eval,"eval4");
 
-  logl_H0 = MphEM('R', em_iter, em_prec, eval, eval_vec, sigmasq, &X_sub.matrix, Y, U_hat, E_hat,
+  logl_H0 = MphEM('R', em_iter, em_prec, eval, U, sigmasq, &X_sub.matrix, Y, U_hat, E_hat,
                   OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE, V_g,
                   V_e, &B_sub.matrix);
-  logl_H0 = MphNR('R', nr_iter, nr_prec, eval, eval_vec, sigmasq, &X_sub.matrix, Y, Hi_all,
+  logl_H0 = MphNR('R', nr_iter, nr_prec, eval, U, sigmasq, &X_sub.matrix, Y, Hi_all,
                   &xHi_all_sub.matrix, Hiy_all, V_g, V_e, Hessian, crt_a, crt_b,
                   crt_c);
-  MphCalcBeta(eval, eval_vec, sigmasq, &X_sub.matrix, Y, V_g, V_e, UltVehiY, &B_sub.matrix,
+  MphCalcBeta(eval, U, sigmasq, &X_sub.matrix, Y, V_g, V_e, UltVehiY, &B_sub.matrix,
               se_B_null);
 
   c = 0;
@@ -3955,13 +3956,13 @@ void MVLMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval, const gsl_
   }
   cout << "REMLE likelihood = " << logl_H0 << endl;
 
-  logl_H0 = MphEM('L', em_iter, em_prec, eval, eval_vec, sigmasq, &X_sub.matrix, Y, U_hat, E_hat,
+  logl_H0 = MphEM('L', em_iter, em_prec, eval, U, sigmasq, &X_sub.matrix, Y, U_hat, E_hat,
                   OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE, V_g,
                   V_e, &B_sub.matrix);
-  logl_H0 = MphNR('L', nr_iter, nr_prec, eval, eval_vec, sigmasq, &X_sub.matrix, Y, Hi_all,
+  logl_H0 = MphNR('L', nr_iter, nr_prec, eval, U, sigmasq, &X_sub.matrix, Y, Hi_all,
                   &xHi_all_sub.matrix, Hiy_all, V_g, V_e, Hessian, crt_a, crt_b,
                   crt_c);
-  MphCalcBeta(eval, eval_vec, sigmasq, &X_sub.matrix, Y, V_g, V_e, UltVehiY, &B_sub.matrix,
+  MphCalcBeta(eval, U, sigmasq, &X_sub.matrix, Y, V_g, V_e, UltVehiY, &B_sub.matrix,
               se_B_null);
 
   c = 0;
@@ -4163,33 +4164,33 @@ void MVLMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval, const gsl_
 
         // 3 is before 1.
         if (a_mode == 3 || a_mode == 4) {
-          p_score = MphCalcP(eval, eval_vec, sigmasq,, &X_row.vector, &X_sub.matrix, Y, V_g_null,
+          p_score = MphCalcP(eval, U, sigmasq, &X_row.vector, &X_sub.matrix, Y, V_g_null,
                              V_e_null, UltVehiY, beta, Vbeta);
 
           if (p_score < p_nr && crt == 1) {
-            logl_H1 = MphNR('R', 1, nr_prec * 10, eval, eval_vec, sigmasq,, X, Y, Hi_all, xHi_all,
+            logl_H1 = MphNR('R', 1, nr_prec * 10, eval, U, sigmasq, X, Y, Hi_all, xHi_all,
                             Hiy_all, V_g, V_e, Hessian, crt_a, crt_b, crt_c);
             p_score = PCRT(3, d_size, p_score, crt_a, crt_b, crt_c);
           }
         }
 
         if (a_mode == 2 || a_mode == 4) {
-          logl_H1 = MphEM('L', em_iter / 10, em_prec * 10, eval, eval_vec, sigmasq,, X, Y, U_hat,
+          logl_H1 = MphEM('L', em_iter / 10, em_prec * 10, eval, U, sigmasq, X, Y, U_hat,
                           E_hat, OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU,
                           UltVehiE, V_g, V_e, B);
 
           // Calculate beta and Vbeta.
-          p_lrt = MphCalcP(eval, eval_vec, sigmasq,, &X_row.vector, &X_sub.matrix, Y, V_g, V_e,
+          p_lrt = MphCalcP(eval, U, sigmasq, &X_row.vector, &X_sub.matrix, Y, V_g, V_e,
                            UltVehiY, beta, Vbeta);
           p_lrt = gsl_cdf_chisq_Q(2.0 * (logl_H1 - logl_H0), (double)d_size);
 
           if (p_lrt < p_nr) {
             logl_H1 =
-                MphNR('L', nr_iter / 10, nr_prec * 10, eval, eval_vec, sigmasq,, X, Y, Hi_all,
+                MphNR('L', nr_iter / 10, nr_prec * 10, eval, U, sigmasq, X, Y, Hi_all,
                       xHi_all, Hiy_all, V_g, V_e, Hessian, crt_a, crt_b, crt_c);
 
             // Calculate beta and Vbeta.
-            p_lrt = MphCalcP(eval, eval_vec, sigmasq,, &X_row.vector, &X_sub.matrix, Y, V_g, V_e,
+            p_lrt = MphCalcP(eval, U, sigmasq, &X_row.vector, &X_sub.matrix, Y, V_g, V_e,
                              UltVehiY, beta, Vbeta);
             p_lrt = gsl_cdf_chisq_Q(2.0 * (logl_H1 - logl_H0), (double)d_size);
             if (crt == 1) {
@@ -4199,17 +4200,17 @@ void MVLMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval, const gsl_
         }
 
         if (a_mode == 1 || a_mode == 4) {
-          logl_H1 = MphEM('R', em_iter / 10, em_prec * 10, eval, eval_vec, sigmasq,, X, Y, U_hat,
+          logl_H1 = MphEM('R', em_iter / 10, em_prec * 10, eval, U, sigmasq, X, Y, U_hat,
                           E_hat, OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU,
                           UltVehiE, V_g, V_e, B);
-          p_wald = MphCalcP(eval, eval_vec, sigmasq,, &X_row.vector, &X_sub.matrix, Y, V_g, V_e,
+          p_wald = MphCalcP(eval, U, sigmasq, &X_row.vector, &X_sub.matrix, Y, V_g, V_e,
                             UltVehiY, beta, Vbeta);
 
           if (p_wald < p_nr) {
             logl_H1 =
-                MphNR('R', nr_iter / 10, nr_prec * 10, eval, eval_vec, sigmasq,, X, Y, Hi_all,
+                MphNR('R', nr_iter / 10, nr_prec * 10, eval, U, sigmasq, X, Y, Hi_all,
                       xHi_all, Hiy_all, V_g, V_e, Hessian, crt_a, crt_b, crt_c);
-            p_wald = MphCalcP(eval, eval_vec, sigmasq,, &X_row.vector, &X_sub.matrix, Y, V_g, V_e,
+            p_wald = MphCalcP(eval, U, sigmasq, &X_row.vector, &X_sub.matrix, Y, V_g, V_e,
                               UltVehiY, beta, Vbeta);
 
             if (crt == 1) {
@@ -4282,7 +4283,7 @@ void MVLMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval, const gsl_
 
 // Calculate Vg, Ve, B, se(B) in the null mvLMM model.
 // Both B and se_B are d by c matrices.
-void CalcMvLmmVgVeBeta(const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq, const gsl_matrix *UtW,
+void CalcMvLmmVgVeBeta(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq, const gsl_matrix *UtW,
                        const gsl_matrix *UtY, const size_t em_iter,
                        const size_t nr_iter, const double em_prec,
                        const double nr_prec, const double l_min,
@@ -4322,13 +4323,13 @@ void CalcMvLmmVgVeBeta(const gsl_vector *eval, const gsl_matrix *eval_vec, const
   gsl_matrix_transpose_memcpy(W, UtW);
 
   // Initial, EM, NR, and calculate B.
-  MphInitial(em_iter, em_prec, nr_iter, nr_prec, eval, eval_vec, sigmasq, W, Y, l_min, l_max,
+  MphInitial(em_iter, em_prec, nr_iter, nr_prec, eval, U, sigmasq, W, Y, l_min, l_max,
              n_region, V_g, V_e, B);
-  MphEM('R', em_iter, em_prec, eval, eval_vec, sigmasq, W, Y, U_hat, E_hat, OmegaU, OmegaE,
+  MphEM('R', em_iter, em_prec, eval, U, sigmasq, W, Y, U_hat, E_hat, OmegaU, OmegaE,
         UltVehiY, UltVehiBX, UltVehiU, UltVehiE, V_g, V_e, B);
-  MphNR('R', nr_iter, nr_prec, eval, eval_vec, sigmasq, W, Y, Hi_all, xHi_all, Hiy_all, V_g,
+  MphNR('R', nr_iter, nr_prec, eval, U, sigmasq, W, Y, Hi_all, xHi_all, Hiy_all, V_g,
         V_e, Hessian, crt_a, crt_b, crt_c);
-  MphCalcBeta(eval, eval_vec, sigmasq, W, Y, V_g, V_e, UltVehiY, B, se_B);
+  MphCalcBeta(eval, U, sigmasq, W, Y, V_g, V_e, UltVehiY, B, se_B);
 
   // Free matrices.
   gsl_matrix_free(U_hat);
@@ -4351,7 +4352,7 @@ void CalcMvLmmVgVeBeta(const gsl_vector *eval, const gsl_matrix *eval_vec, const
   return;
 }
 
-void MVLMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq,
+void MVLMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq,
                              const gsl_matrix *UtW, const gsl_matrix *UtY,
                              const gsl_vector *env) {
   debug_msg("entering");
@@ -4443,15 +4444,15 @@ void MVLMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval, const 
   gsl_vector_view B_col2 = gsl_matrix_column(B, c_size);
   gsl_vector_set_zero(&B_col2.vector);
 
-  MphInitial(em_iter, em_prec, nr_iter, nr_prec, eval, eval_vec, sigmasq, &X_sub1.matrix, Y, l_min,
+  MphInitial(em_iter, em_prec, nr_iter, nr_prec, eval, U, sigmasq, &X_sub1.matrix, Y, l_min,
              l_max, n_region, V_g, V_e, &B_sub1.matrix);
-  logl_H0 = MphEM('R', em_iter, em_prec, eval, eval_vec, sigmasq, &X_sub1.matrix, Y, U_hat, E_hat,
+  logl_H0 = MphEM('R', em_iter, em_prec, eval, U, sigmasq, &X_sub1.matrix, Y, U_hat, E_hat,
                   OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE, V_g,
                   V_e, &B_sub1.matrix);
-  logl_H0 = MphNR('R', nr_iter, nr_prec, eval, eval_vec, sigmasq, &X_sub1.matrix, Y, Hi_all,
+  logl_H0 = MphNR('R', nr_iter, nr_prec, eval, U, sigmasq, &X_sub1.matrix, Y, Hi_all,
                   &xHi_all_sub1.matrix, Hiy_all, V_g, V_e, Hessian, crt_a,
                   crt_b, crt_c);
-  MphCalcBeta(eval, eval_vec, sigmasq, &X_sub1.matrix, Y, V_g, V_e, UltVehiY, &B_sub1.matrix,
+  MphCalcBeta(eval, U, sigmasq, &X_sub1.matrix, Y, V_g, V_e, UltVehiY, &B_sub1.matrix,
               se_B_null1);
 
   c = 0;
@@ -4511,13 +4512,13 @@ void MVLMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval, const 
   }
   cout << "REMLE likelihood = " << logl_H0 << endl;
 
-  logl_H0 = MphEM('L', em_iter, em_prec, eval, eval_vec, sigmasq, &X_sub1.matrix, Y, U_hat, E_hat,
+  logl_H0 = MphEM('L', em_iter, em_prec, eval, U, sigmasq, &X_sub1.matrix, Y, U_hat, E_hat,
                   OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE, V_g,
                   V_e, &B_sub1.matrix);
-  logl_H0 = MphNR('L', nr_iter, nr_prec, eval, eval_vec, sigmasq, &X_sub1.matrix, Y, Hi_all,
+  logl_H0 = MphNR('L', nr_iter, nr_prec, eval, U, sigmasq, &X_sub1.matrix, Y, Hi_all,
                   &xHi_all_sub1.matrix, Hiy_all, V_g, V_e, Hessian, crt_a,
                   crt_b, crt_c);
-  MphCalcBeta(eval, eval_vec, sigmasq, &X_sub1.matrix, Y, V_g, V_e, UltVehiY, &B_sub1.matrix,
+  MphCalcBeta(eval, U, sigmasq, &X_sub1.matrix, Y, V_g, V_e, UltVehiY, &B_sub1.matrix,
               se_B_null1);
 
   c = 0;
@@ -4653,24 +4654,24 @@ void MVLMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval, const 
 
     if (a_mode == 2 || a_mode == 3 || a_mode == 4) {
       if (a_mode == 3 || a_mode == 4) {
-        logl_H0 = MphEM('R', em_iter / 10, em_prec * 10, eval, eval_vec, sigmasq, &X_sub2.matrix,
+        logl_H0 = MphEM('R', em_iter / 10, em_prec * 10, eval, U, sigmasq, &X_sub2.matrix,
                         Y, U_hat, E_hat, OmegaU, OmegaE, UltVehiY, UltVehiBX,
                         UltVehiU, UltVehiE, V_g, V_e, &B_sub2.matrix);
-        logl_H0 = MphNR('R', nr_iter / 10, nr_prec * 10, eval, eval_vec, sigmasq, &X_sub2.matrix,
+        logl_H0 = MphNR('R', nr_iter / 10, nr_prec * 10, eval, U, sigmasq, &X_sub2.matrix,
                         Y, Hi_all, &xHi_all_sub2.matrix, Hiy_all, V_g, V_e,
                         Hessian, crt_a, crt_b, crt_c);
-        MphCalcBeta(eval, eval_vec, sigmasq, &X_sub2.matrix, Y, V_g, V_e, UltVehiY, &B_sub2.matrix,
+        MphCalcBeta(eval, U, sigmasq, &X_sub2.matrix, Y, V_g, V_e, UltVehiY, &B_sub2.matrix,
                     se_B_null2);
       }
 
       if (a_mode == 2 || a_mode == 4) {
-        logl_H0 = MphEM('L', em_iter / 10, em_prec * 10, eval, eval_vec, sigmasq, &X_sub2.matrix,
+        logl_H0 = MphEM('L', em_iter / 10, em_prec * 10, eval, U, sigmasq, &X_sub2.matrix,
                         Y, U_hat, E_hat, OmegaU, OmegaE, UltVehiY, UltVehiBX,
                         UltVehiU, UltVehiE, V_g, V_e, &B_sub2.matrix);
-        logl_H0 = MphNR('L', nr_iter / 10, nr_prec * 10, eval, eval_vec, sigmasq, &X_sub2.matrix,
+        logl_H0 = MphNR('L', nr_iter / 10, nr_prec * 10, eval, U, sigmasq, &X_sub2.matrix,
                         Y, Hi_all, &xHi_all_sub2.matrix, Hiy_all, V_g, V_e,
                         Hessian, crt_a, crt_b, crt_c);
-        MphCalcBeta(eval, eval_vec, sigmasq, &X_sub2.matrix, Y, V_g, V_e, UltVehiY, &B_sub2.matrix,
+        MphCalcBeta(eval, U, sigmasq, &X_sub2.matrix, Y, V_g, V_e, UltVehiY, &B_sub2.matrix,
                     se_B_null2);
       }
     }
@@ -4679,32 +4680,32 @@ void MVLMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval, const 
 
     // 3 is before 1.
     if (a_mode == 3 || a_mode == 4) {
-      p_score = MphCalcP(eval, eval_vec, sigmasq, &X_row2.vector, &X_sub2.matrix, Y, V_g_null,
+      p_score = MphCalcP(eval, U, sigmasq, &X_row2.vector, &X_sub2.matrix, Y, V_g_null,
                          V_e_null, UltVehiY, beta, Vbeta);
       if (p_score < p_nr && crt == 1) {
-        logl_H1 = MphNR('R', 1, nr_prec * 10, eval, eval_vec, sigmasq, X, Y, Hi_all, xHi_all,
+        logl_H1 = MphNR('R', 1, nr_prec * 10, eval, U, sigmasq, X, Y, Hi_all, xHi_all,
                         Hiy_all, V_g, V_e, Hessian, crt_a, crt_b, crt_c);
         p_score = PCRT(3, d_size, p_score, crt_a, crt_b, crt_c);
       }
     }
 
     if (a_mode == 2 || a_mode == 4) {
-      logl_H1 = MphEM('L', em_iter / 10, em_prec * 10, eval, eval_vec, sigmasq, X, Y, U_hat, E_hat,
+      logl_H1 = MphEM('L', em_iter / 10, em_prec * 10, eval, U, sigmasq, X, Y, U_hat, E_hat,
                       OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE,
                       V_g, V_e, B);
 
       // Calculate beta and Vbeta.
-      p_lrt = MphCalcP(eval, eval_vec, sigmasq, &X_row2.vector, &X_sub2.matrix, Y, V_g, V_e,
+      p_lrt = MphCalcP(eval, U, sigmasq, &X_row2.vector, &X_sub2.matrix, Y, V_g, V_e,
                        UltVehiY, beta, Vbeta);
       p_lrt = gsl_cdf_chisq_Q(2.0 * (logl_H1 - logl_H0), (double)d_size);
 
       if (p_lrt < p_nr) {
         logl_H1 =
-            MphNR('L', nr_iter / 10, nr_prec * 10, eval, eval_vec, sigmasq, X, Y, Hi_all, xHi_all,
+            MphNR('L', nr_iter / 10, nr_prec * 10, eval, U, sigmasq, X, Y, Hi_all, xHi_all,
                   Hiy_all, V_g, V_e, Hessian, crt_a, crt_b, crt_c);
 
         // Calculate beta and Vbeta.
-        p_lrt = MphCalcP(eval, eval_vec, sigmasq, &X_row2.vector, &X_sub2.matrix, Y, V_g, V_e,
+        p_lrt = MphCalcP(eval, U, sigmasq, &X_row2.vector, &X_sub2.matrix, Y, V_g, V_e,
                          UltVehiY, beta, Vbeta);
         p_lrt = gsl_cdf_chisq_Q(2.0 * (logl_H1 - logl_H0), (double)d_size);
 
@@ -4715,17 +4716,17 @@ void MVLMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval, const 
     }
 
     if (a_mode == 1 || a_mode == 4) {
-      logl_H1 = MphEM('R', em_iter / 10, em_prec * 10, eval, eval_vec, sigmasq, X, Y, U_hat, E_hat,
+      logl_H1 = MphEM('R', em_iter / 10, em_prec * 10, eval, U, sigmasq, X, Y, U_hat, E_hat,
                       OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE,
                       V_g, V_e, B);
-      p_wald = MphCalcP(eval, eval_vec, sigmasq, &X_row2.vector, &X_sub2.matrix, Y, V_g, V_e,
+      p_wald = MphCalcP(eval, U, sigmasq, &X_row2.vector, &X_sub2.matrix, Y, V_g, V_e,
                         UltVehiY, beta, Vbeta);
 
       if (p_wald < p_nr) {
         logl_H1 =
-            MphNR('R', nr_iter / 10, nr_prec * 10, eval, eval_vec, sigmasq, X, Y, Hi_all, xHi_all,
+            MphNR('R', nr_iter / 10, nr_prec * 10, eval, U, sigmasq, X, Y, Hi_all, xHi_all,
                   Hiy_all, V_g, V_e, Hessian, crt_a, crt_b, crt_c);
-        p_wald = MphCalcP(eval, eval_vec, sigmasq, &X_row2.vector, &X_sub2.matrix, Y, V_g, V_e,
+        p_wald = MphCalcP(eval, U, sigmasq, &X_row2.vector, &X_sub2.matrix, Y, V_g, V_e,
                           UltVehiY, beta, Vbeta);
 
         if (crt == 1) {
@@ -4797,7 +4798,7 @@ void MVLMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval, const 
   return;
 }
 
-void MVLMM::AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *eval_vec, const gsl_matrix *sigmasq,
+void MVLMM::AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq,
                             const gsl_matrix *UtW, const gsl_matrix *UtY,
                             const gsl_vector *env) {
   debug_msg("entering");
@@ -4888,16 +4889,16 @@ void MVLMM::AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval, const g
   gsl_vector_view B_col2 = gsl_matrix_column(B, c_size);
   gsl_vector_set_zero(&B_col2.vector);
 
-  MphInitial(em_iter, em_prec, nr_iter, nr_prec, eval, eval_vec, sigmasq, &X_sub1.matrix, Y, l_min,
+  MphInitial(em_iter, em_prec, nr_iter, nr_prec, eval, U, sigmasq, &X_sub1.matrix, Y, l_min,
              l_max, n_region, V_g, V_e, &B_sub1.matrix);
 
-  logl_H0 = MphEM('R', em_iter, em_prec, eval, eval_vec, sigmasq, &X_sub1.matrix, Y, U_hat, E_hat,
+  logl_H0 = MphEM('R', em_iter, em_prec, eval, U, sigmasq, &X_sub1.matrix, Y, U_hat, E_hat,
                   OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE, V_g,
                   V_e, &B_sub1.matrix);
-  logl_H0 = MphNR('R', nr_iter, nr_prec, eval, eval_vec, sigmasq, &X_sub1.matrix, Y, Hi_all,
+  logl_H0 = MphNR('R', nr_iter, nr_prec, eval, U, sigmasq, &X_sub1.matrix, Y, Hi_all,
                   &xHi_all_sub1.matrix, Hiy_all, V_g, V_e, Hessian, crt_a,
                   crt_b, crt_c);
-  MphCalcBeta(eval, eval_vec, sigmasq, &X_sub1.matrix, Y, V_g, V_e, UltVehiY, &B_sub1.matrix,
+  MphCalcBeta(eval, U, sigmasq, &X_sub1.matrix, Y, V_g, V_e, UltVehiY, &B_sub1.matrix,
               se_B_null1);
 
   c = 0;
@@ -4956,13 +4957,13 @@ void MVLMM::AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval, const g
   }
   cout << "REMLE likelihood = " << logl_H0 << endl;
 
-  logl_H0 = MphEM('L', em_iter, em_prec, eval, eval_vec, sigmasq, &X_sub1.matrix, Y, U_hat, E_hat,
+  logl_H0 = MphEM('L', em_iter, em_prec, eval, U, sigmasq, &X_sub1.matrix, Y, U_hat, E_hat,
                   OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE, V_g,
                   V_e, &B_sub1.matrix);
-  logl_H0 = MphNR('L', nr_iter, nr_prec, eval, eval_vec, sigmasq, &X_sub1.matrix, Y, Hi_all,
+  logl_H0 = MphNR('L', nr_iter, nr_prec, eval, U, sigmasq, &X_sub1.matrix, Y, Hi_all,
                   &xHi_all_sub1.matrix, Hiy_all, V_g, V_e, Hessian, crt_a,
                   crt_b, crt_c);
-  MphCalcBeta(eval, eval_vec, sigmasq, &X_sub1.matrix, Y, V_g, V_e, UltVehiY, &B_sub1.matrix,
+  MphCalcBeta(eval, U, sigmasq, &X_sub1.matrix, Y, V_g, V_e, UltVehiY, &B_sub1.matrix,
               se_B_null1);
 
   c = 0;
@@ -5129,24 +5130,24 @@ void MVLMM::AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval, const g
 
     if (a_mode == 2 || a_mode == 3 || a_mode == 4) {
       if (a_mode == 3 || a_mode == 4) {
-        logl_H0 = MphEM('R', em_iter / 10, em_prec * 10, eval, eval_vec, sigmasq, &X_sub2.matrix,
+        logl_H0 = MphEM('R', em_iter / 10, em_prec * 10, eval, U, sigmasq, &X_sub2.matrix,
                         Y, U_hat, E_hat, OmegaU, OmegaE, UltVehiY, UltVehiBX,
                         UltVehiU, UltVehiE, V_g, V_e, &B_sub2.matrix);
-        logl_H0 = MphNR('R', nr_iter / 10, nr_prec * 10, eval, eval_vec, sigmasq, &X_sub2.matrix,
+        logl_H0 = MphNR('R', nr_iter / 10, nr_prec * 10, eval, U, sigmasq, &X_sub2.matrix,
                         Y, Hi_all, &xHi_all_sub2.matrix, Hiy_all, V_g, V_e,
                         Hessian, crt_a, crt_b, crt_c);
-        MphCalcBeta(eval, eval_vec, sigmasq, &X_sub2.matrix, Y, V_g, V_e, UltVehiY, &B_sub2.matrix,
+        MphCalcBeta(eval, U, sigmasq, &X_sub2.matrix, Y, V_g, V_e, UltVehiY, &B_sub2.matrix,
                     se_B_null2);
       }
 
       if (a_mode == 2 || a_mode == 4) {
-        logl_H0 = MphEM('L', em_iter / 10, em_prec * 10, eval, eval_vec, sigmasq,, &X_sub2.matrix,
+        logl_H0 = MphEM('L', em_iter / 10, em_prec * 10, eval, U, sigmasq, &X_sub2.matrix,
                         Y, U_hat, E_hat, OmegaU, OmegaE, UltVehiY, UltVehiBX,
                         UltVehiU, UltVehiE, V_g, V_e, &B_sub2.matrix);
-        logl_H0 = MphNR('L', nr_iter / 10, nr_prec * 10, eval, eval_vec, sigmasq,, &X_sub2.matrix,
+        logl_H0 = MphNR('L', nr_iter / 10, nr_prec * 10, eval, U, sigmasq, &X_sub2.matrix,
                         Y, Hi_all, &xHi_all_sub2.matrix, Hiy_all, V_g, V_e,
                         Hessian, crt_a, crt_b, crt_c);
-        MphCalcBeta(eval, eval_vec, sigmasq,, &X_sub2.matrix, Y, V_g, V_e, UltVehiY, &B_sub2.matrix,
+        MphCalcBeta(eval, U, sigmasq, &X_sub2.matrix, Y, V_g, V_e, UltVehiY, &B_sub2.matrix,
                     se_B_null2);
       }
     }
@@ -5155,33 +5156,33 @@ void MVLMM::AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval, const g
 
     // 3 is before 1.
     if (a_mode == 3 || a_mode == 4) {
-      p_score = MphCalcP(eval, eval_vec, sigmasq,, &X_row2.vector, &X_sub2.matrix, Y, V_g_null,
+      p_score = MphCalcP(eval, U, sigmasq, &X_row2.vector, &X_sub2.matrix, Y, V_g_null,
                          V_e_null, UltVehiY, beta, Vbeta);
 
       if (p_score < p_nr && crt == 1) {
-        logl_H1 = MphNR('R', 1, nr_prec * 10, eval, eval_vec, sigmasq,, X, Y, Hi_all, xHi_all,
+        logl_H1 = MphNR('R', 1, nr_prec * 10, eval, U, sigmasq, X, Y, Hi_all, xHi_all,
                         Hiy_all, V_g, V_e, Hessian, crt_a, crt_b, crt_c);
         p_score = PCRT(3, d_size, p_score, crt_a, crt_b, crt_c);
       }
     }
 
     if (a_mode == 2 || a_mode == 4) {
-      logl_H1 = MphEM('L', em_iter / 10, em_prec * 10, eval, eval_vec, sigmasq,, X, Y, U_hat, E_hat,
+      logl_H1 = MphEM('L', em_iter / 10, em_prec * 10, eval, U, sigmasq, X, Y, U_hat, E_hat,
                       OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE,
                       V_g, V_e, B);
 
       // Calculate beta and Vbeta.
-      p_lrt = MphCalcP(eval, eval_vec, sigmasq,, &X_row2.vector, &X_sub2.matrix, Y, V_g, V_e,
+      p_lrt = MphCalcP(eval, U, sigmasq, &X_row2.vector, &X_sub2.matrix, Y, V_g, V_e,
                        UltVehiY, beta, Vbeta);
       p_lrt = gsl_cdf_chisq_Q(2.0 * (logl_H1 - logl_H0), (double)d_size);
 
       if (p_lrt < p_nr) {
         logl_H1 =
-            MphNR('L', nr_iter / 10, nr_prec * 10, eval, eval_vec, sigmasq,, X, Y, Hi_all, xHi_all,
+            MphNR('L', nr_iter / 10, nr_prec * 10, eval, U, sigmasq, X, Y, Hi_all, xHi_all,
                   Hiy_all, V_g, V_e, Hessian, crt_a, crt_b, crt_c);
 
         // Calculate beta and Vbeta.
-        p_lrt = MphCalcP(eval, eval_vec, sigmasq,, &X_row2.vector, &X_sub2.matrix, Y, V_g, V_e,
+        p_lrt = MphCalcP(eval, U, sigmasq, &X_row2.vector, &X_sub2.matrix, Y, V_g, V_e,
                          UltVehiY, beta, Vbeta);
         p_lrt = gsl_cdf_chisq_Q(2.0 * (logl_H1 - logl_H0), (double)d_size);
         if (crt == 1) {
@@ -5191,17 +5192,17 @@ void MVLMM::AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval, const g
     }
 
     if (a_mode == 1 || a_mode == 4) {
-      logl_H1 = MphEM('R', em_iter / 10, em_prec * 10, eval, eval_vec, sigmasq,, X, Y, U_hat, E_hat,
+      logl_H1 = MphEM('R', em_iter / 10, em_prec * 10, eval, U, sigmasq, X, Y, U_hat, E_hat,
                       OmegaU, OmegaE, UltVehiY, UltVehiBX, UltVehiU, UltVehiE,
                       V_g, V_e, B);
-      p_wald = MphCalcP(eval, eval_vec, sigmasq,, &X_row2.vector, &X_sub2.matrix, Y, V_g, V_e,
+      p_wald = MphCalcP(eval, U, sigmasq, &X_row2.vector, &X_sub2.matrix, Y, V_g, V_e,
                         UltVehiY, beta, Vbeta);
 
       if (p_wald < p_nr) {
         logl_H1 =
-            MphNR('R', nr_iter / 10, nr_prec * 10, eval, eval_vec, sigmasq,, X, Y, Hi_all, xHi_all,
+            MphNR('R', nr_iter / 10, nr_prec * 10, eval, U, sigmasq, X, Y, Hi_all, xHi_all,
                   Hiy_all, V_g, V_e, Hessian, crt_a, crt_b, crt_c);
-        p_wald = MphCalcP(eval, eval_vec, sigmasq,, &X_row2.vector, &X_sub2.matrix, Y, V_g, V_e,
+        p_wald = MphCalcP(eval, U, sigmasq, &X_row2.vector, &X_sub2.matrix, Y, V_g, V_e,
                           UltVehiY, beta, Vbeta);
 
         if (crt == 1) {
