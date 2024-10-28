@@ -80,9 +80,9 @@ public:
   // Main functions
   void CopyFromParam(PARAM &cPar);
   void CopyToParam(PARAM &cPar);
-  void AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *sigmasq,
+  void AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
                      const gsl_matrix *UtW, const gsl_matrix *UtY);
-  void AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *sigmasq,
+  void AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
                     const gsl_matrix *UtW, const gsl_matrix *UtY);
   void Analyzebgen(const gsl_matrix *U, const gsl_vector *eval,
                    const gsl_matrix *UtW, const gsl_matrix *UtY);
@@ -95,7 +95,7 @@ public:
   void WriteFiles();
 };
 
-void CalcMvLmmVgVeBeta(const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *sigmasq, const gsl_matrix *UtW,
+void CalcMvLmmVgVeBeta(const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *UtW,
                        const gsl_matrix *UtY, const size_t em_iter,
                        const size_t nr_iter, const double em_prec,
                        const double nr_prec, const double l_min,
