@@ -307,8 +307,7 @@ double CalcQi(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sig
         ve = gsl_matrix_get(V_e_temp, l, l);
         gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
 
-       double sigmasq_value = gsl_matrix_get(sigmasq, 0, 0);  // Adjust if sigmasq has different structure
-       double scalar = sigmasq_value / ve;
+       double scalar = gsl_matrix_get(sigmasq, 0, 0) / ve;
        gsl_matrix_scale(Sigma, scalar);
 
         if (j < i) {
@@ -373,7 +372,7 @@ void CalcXHiY(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sig
    // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
     gsl_matrix_set_zero(Sigma);
     gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
-    double scalar = sigmasq / ve;
+    double scalar = gsl_matrix_get(sigmasq, 0, 0) / ve;
     gsl_matrix_scale(Sigma, scalar);
    
     for (size_t j = 0; j < c_size; j++) {
@@ -419,7 +418,7 @@ void CalcOmega(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *si
       // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
       gsl_matrix_set_zero(Sigma);
       gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
-      double scalar = sigmasq / ve;
+      double scalar = gsl_matrix_get(sigmasq, 0, 0) / ve;
       gsl_matrix_scale(Sigma, scalar);
 
       // Get epsilon from Sigma
@@ -525,7 +524,7 @@ void UpdateV(const gsl_vector *eval, const gsl_matrix *sigmasq, const gsl_matrix
    // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
     gsl_matrix_set_zero(Sigma);
     gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
-    double scalar = sigmasq / ve;
+    double scalar = gsl_matrix_get(sigmasq, 0, 0) / ve;
     gsl_matrix_scale(Sigma, scalar);
 
     double epsilon = gsl_matrix_get(Sigma, k, k);
@@ -966,7 +965,7 @@ double MphCalcP(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *s
     // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
     gsl_matrix_set_zero(Sigma);
     gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
-    double scalar = sigmasq / ve;
+    double scalar = gsl_matrix_get(sigmasq, 0, 0) / ve;
     gsl_matrix_scale(Sigma, scalar);
    
     d1 = 0.0;
@@ -1085,7 +1084,7 @@ void MphCalcBeta(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *
     // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
     gsl_matrix_set_zero(Sigma);
     gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
-    double scalar = sigmasq / ve;
+    double scalar = gsl_matrix_get(sigmasq, 0, 0) / ve;
     gsl_matrix_scale(Sigma, scalar);
    
     for (size_t j = 0; j < c_size; j++) {
@@ -1200,7 +1199,7 @@ void CalcHiQi(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sig
       // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
       gsl_matrix_set_zero(Sigma);
       gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
-      double scalar = sigmasq / ve;
+      double scalar = gsl_matrix_get(sigmasq, 0, 0) / ve;
       gsl_matrix_scale(Sigma, scalar);
 
      double epsilon = gsl_matrix_get(Sigma, k, k);
@@ -1368,7 +1367,7 @@ for (size_t i = 0; i < d_size; i++) {
   // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
   gsl_matrix_set_zero(Sigma);
   gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
-  double scalar = sigmasq / ve;
+  double scalar = gsl_matrix_get(sigmasq, 0, 0) / ve;
   gsl_matrix_scale(Sigma, scalar);
  
   for (size_t k = 0; k < n_size; k++) {
@@ -1412,7 +1411,7 @@ void Calc_xHiDHiy(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix 
     // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
     gsl_matrix_set_zero(Sigma);
     gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
-    double scalar = sigmasq / ve;
+    double scalar = gsl_matrix_get(sigmasq, 0, 0) / ve;
     gsl_matrix_scale(Sigma, scalar);
    
     for (size_t k = 0; k < n_size; k++) {
@@ -1464,7 +1463,7 @@ void Calc_xHiDHix(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix 
     // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
     gsl_matrix_set_zero(Sigma);
     gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
-    double scalar = sigmasq / ve;
+    double scalar = gsl_matrix_get(sigmasq, 0, 0) / ve;
     gsl_matrix_scale(Sigma, scalar);
    
     for (size_t k = 0; k < n_size; k++) {
@@ -1527,7 +1526,7 @@ void Calc_yHiDHiDHiy(const gsl_vector *eval, const gsl_matrix *U, const gsl_matr
     // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
     gsl_matrix_set_zero(Sigma);
     gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
-    double scalar = sigmasq / ve;
+    double scalar = gsl_matrix_get(sigmasq, 0, 0) / ve;
     gsl_matrix_scale(Sigma, scalar);
    
     for (size_t k = 0; k < n_size; k++) {
@@ -1603,7 +1602,7 @@ for (size_t i = 0; i < d_size; i++) {
   // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
   gsl_matrix_set_zero(Sigma);
   gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
-  double scalar = sigmasq / ve;
+  double scalar = gsl_matrix_get(sigmasq, 0, 0) / ve;
   gsl_matrix_scale(Sigma, scalar);
  
   for (size_t k = 0; k < n_size; k++) {
@@ -1702,7 +1701,7 @@ void Calc_xHiDHiDHix(const gsl_vector *eval, const gsl_matrix *U, const gsl_matr
     // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
     gsl_matrix_set_zero(Sigma);
     gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
-    double scalar = sigmasq / ve;
+    double scalar = gsl_matrix_get(sigmasq, 0, 0) / ve;
     gsl_matrix_scale(Sigma, scalar);
    
     for (size_t k = 0; k < n_size; k++) {
@@ -1816,7 +1815,7 @@ void Calc_traceHiD(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix
     // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
     gsl_matrix_set_zero(Sigma);
     gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
-    double scalar = sigmasq / ve;
+    double scalar = gsl_matrix_get(sigmasq, 0, 0) / ve;
     gsl_matrix_scale(Sigma, scalar);
    
     for (size_t k = 0; k < n_size; k++) {
@@ -1859,7 +1858,7 @@ void Calc_traceHiDHiD(const gsl_vector *eval, const gsl_matrix *U, const gsl_mat
    // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
    gsl_matrix_set_zero(Sigma);
    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
-   double scalar = sigmasq / ve;
+   double scalar = gsl_matrix_get(sigmasq, 0, 0) / ve;
    gsl_matrix_scale(Sigma, scalar);
    for (size_t k = 0; k < n_size; k++) {
     delta = gsl_vector_get(eval, k);
@@ -3300,7 +3299,7 @@ void MphInitial(const size_t em_iter, const double em_prec,
     // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
     gsl_matrix_set_zero(Sigma);
     gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
-    double scalar = sigmasq / ve;
+    double scalar = gsl_matrix_get(sigmasq, 0, 0) / ve;
     gsl_matrix_scale(Sigma, scalar);
    
     for (size_t j = 0; j < c_size; j++) {
