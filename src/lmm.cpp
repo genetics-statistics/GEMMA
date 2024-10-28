@@ -2134,7 +2134,7 @@ void CalcLambda(const char func_name, FUNC_PARAM &params, const double l_min,
 }
 
 // Calculate lambda in the null model.
-void CalcLambda(const char func_name, const gsl_matrix *U, const gsl_vector *eval,
+void CalcLambda(const char func_name, const gsl_vector *eval,
                 const gsl_matrix *UtW, const gsl_vector *Uty,
                 const double l_min, const double l_max, const size_t n_region,
                 double &lambda, double &logl_H0) {
@@ -2201,7 +2201,7 @@ void CalcPve(const gsl_vector *eval, const gsl_matrix *UtW,
 // Obtain REML estimate for Vg and Ve using lambda_remle.
 // Obtain beta and se(beta) for coefficients.
 // ab is not used when e_mode==0.
-void CalcLmmVgVeBeta(const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *UtW,
+void CalcLmmVgVeBeta(const gsl_vector *eval, const gsl_matrix *UtW,
                      const gsl_vector *Uty, const double lambda, double &vg,
                      double &ve, gsl_vector *beta, gsl_vector *se_beta) {
   size_t n_cvt = UtW->size2, ni_test = UtW->size1;
