@@ -3361,7 +3361,7 @@ double PCRT(const size_t mode, const size_t d_size, const double p_value,
   return p_crt;
 }
 
-void MVLMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq,
+void MVLMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *sigmasq,
                           const gsl_matrix *UtW, const gsl_matrix *UtY) {
   debug_msg("entering");
   igzstream infile(file_geno.c_str(), igzstream::in);
@@ -3799,7 +3799,7 @@ void MVLMM::AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval, const gsl
   return;
 }
 
-void MVLMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq,
+void MVLMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *sigmasq,
                          const gsl_matrix *UtW, const gsl_matrix *UtY) {
   debug_msg("entering");
   string file_bed = file_bfile + ".bed";
@@ -4351,7 +4351,7 @@ void CalcMvLmmVgVeBeta(const gsl_vector *eval, const gsl_matrix *U, const gsl_ma
   return;
 }
 
-void MVLMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq,
+void MVLMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *sigmasq,
                              const gsl_matrix *UtW, const gsl_matrix *UtY,
                              const gsl_vector *env) {
   debug_msg("entering");
