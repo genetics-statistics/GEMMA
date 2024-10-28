@@ -657,7 +657,7 @@ double MphCalcLogL(const gsl_vector *eval, const gsl_matrix *U, const gsl_vector
                    const gsl_vector *D_l, const gsl_matrix *UltVehiY, const gsl_matrix *V_e_temp,
                    const gsl_matrix *Qi) {
   size_t n_size = eval->size, d_size = D_l->size, dc_size = Qi->size1;
-  double logl = 0.0, delta, ve, epsilon, epsilon_sc, dl, y, d;
+  double logl = 0.0, delta, ve, epsilon, dl, y, d;
   // Create temporary matrix for Sigma
   gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
   gsl_matrix *U_T = gsl_matrix_alloc(n_size, n_size);
