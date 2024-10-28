@@ -2720,11 +2720,11 @@ void GEMMA::BatchRun(PARAM &cPar) {
 
         assert_issue(is_issue(26), ROUND(UtY->data[0]) == -16.6143);
 
-        CalcLambda('L', U, eval, sigmasq, UtW, &UtY_col.vector, cPar.l_min, cPar.l_max,
+        CalcLambda('L', eval, UtW, &UtY_col.vector, cPar.l_min, cPar.l_max,
                    cPar.n_region, cPar.l_mle_null, cPar.logl_mle_H0);
         assert(!isnan(UtY->data[0]));
 
-        CalcLmmVgVeBeta(U, eval, sigmasq, UtW, &UtY_col.vector, cPar.l_mle_null,
+        CalcLmmVgVeBeta(eval, UtW, &UtY_col.vector, cPar.l_mle_null,
                         cPar.vg_mle_null, cPar.ve_mle_null, &beta.vector,
                         &se_beta.vector);
 
@@ -2743,9 +2743,9 @@ void GEMMA::BatchRun(PARAM &cPar) {
         assert(!isnan(cPar.se_beta_mle_null.front()));
 
         // the following functions do not modify eval
-        CalcLambda('R', U, eval, sigmasq, UtW, &UtY_col.vector, cPar.l_min, cPar.l_max,
+        CalcLambda('R', eval, UtW, &UtY_col.vector, cPar.l_min, cPar.l_max,
                    cPar.n_region, cPar.l_remle_null, cPar.logl_remle_H0);
-        CalcLmmVgVeBeta(U, eval, sigmasq, UtW, &UtY_col.vector, cPar.l_remle_null,
+        CalcLmmVgVeBeta(eval, sigmasq, UtW, &UtY_col.vector, cPar.l_remle_null,
                         cPar.vg_remle_null, cPar.ve_remle_null, &beta.vector,
                         &se_beta.vector);
 
@@ -2816,11 +2816,11 @@ void GEMMA::BatchRun(PARAM &cPar) {
           if (!cPar.file_bfile.empty()) {
             // PLINK analysis
             if (cPar.file_gxe.empty()) {
-              cLmm.AnalyzePlink(U, eval, sigmasq, UtW, &UtY_col.vector, W,
+              cLmm.AnalyzePlink(U, eval, UtW, &UtY_col.vector, W,
                                 &Y_col.vector, cPar.setGWASnps);
             }
             else {
-              cLmm.AnalyzePlinkGXE(U, eval, sigmasq, UtW, &UtY_col.vector, W,
+              cLmm.AnalyzePlinkGXE(U, eval, UtW, &UtY_col.vector, W,
                                    &Y_col.vector, env);
             }
           }
@@ -2828,10 +2828,10 @@ void GEMMA::BatchRun(PARAM &cPar) {
             // BIMBAM analysis
 
             if (cPar.file_gxe.empty()) {
-              cLmm.AnalyzeBimbam(U, eval, sigmasq, UtW, &UtY_col.vector, W,
+              cLmm.AnalyzeBimbam(U, eval, UtW, &UtY_col.vector, W,
                                  &Y_col.vector, cPar.setGWASnps);
             } else {
-              cLmm.AnalyzeBimbamGXE(U, eval, sigmasq, UtW, &UtY_col.vector, W,
+              cLmm.AnalyzeBimbamGXE(U, eval, UtW, &UtY_col.vector, W,
                                     &Y_col.vector, env);
             }
           }
@@ -2848,15 +2848,15 @@ void GEMMA::BatchRun(PARAM &cPar) {
 
           if (!cPar.file_bfile.empty()) {
             if (cPar.file_gxe.empty()) {
-              cMvlmm.AnalyzePlink(U, eval,  sigmasq, UtW, UtY);
+              cMvlmm.AnalyzePlink(U, eval, UtW, UtY);
             } else {
-              cMvlmm.AnalyzePlinkGXE(U, eval, sigmasq, UtW, UtY, env);
+              cMvlmm.AnalyzePlinkGXE(U, eval, UtW, UtY, env);
             }
           } else {
             if (cPar.file_gxe.empty()) {
-              cMvlmm.AnalyzeBimbam(U, eval, sigmasq, UtW, UtY);
+              cMvlmm.AnalyzeBimbam(U, eval, UtW, UtY);
             } else {
-              cMvlmm.AnalyzeBimbamGXE(U, eval, sigmasq, UtW, UtY, env);
+              cMvlmm.AnalyzeBimbamGXE(U, eval, UtW, UtY, env);
             }
           }
 
@@ -2945,9 +2945,9 @@ void GEMMA::BatchRun(PARAM &cPar) {
       CalcUtX(U, y, Uty);
 
       // calculate REMLE/MLE estimate and pve
-      CalcLambda('L', U, eval, sigmasq, UtW, Uty, cPar.l_min, cPar.l_max, cPar.n_region,
+      CalcLambda('L', eval, UtW, Uty, cPar.l_min, cPar.l_max, cPar.n_region,
                  cPar.l_mle_null, cPar.logl_mle_H0);
-      CalcLambda('R', U, eval, sigmasq, UtW, Uty, cPar.l_min, cPar.l_max, cPar.n_region,
+      CalcLambda('R', eval, UtW, Uty, cPar.l_min, cPar.l_max, cPar.n_region,
                  cPar.l_remle_null, cPar.logl_remle_H0);
       CalcPve(eval, UtW, Uty, cPar.l_remle_null, cPar.trace_G, cPar.pve_null,
               cPar.pve_se_null);
@@ -3055,9 +3055,9 @@ void GEMMA::BatchRun(PARAM &cPar) {
         CalcUtX(U, y, Uty);
 
         // calculate REMLE/MLE estimate and pve
-        CalcLambda('L', U, eval, sigmasq, UtW, Uty, cPar.l_min, cPar.l_max, cPar.n_region,
+        CalcLambda('L', eval, UtW, Uty, cPar.l_min, cPar.l_max, cPar.n_region,
                    cPar.l_mle_null, cPar.logl_mle_H0);
-        CalcLambda('R', U, eval, sigmasq, UtW, Uty, cPar.l_min, cPar.l_max, cPar.n_region,
+        CalcLambda('R', eval, UtW, Uty, cPar.l_min, cPar.l_max, cPar.n_region,
                    cPar.l_remle_null, cPar.logl_remle_H0);
         CalcPve(eval, UtW, Uty, cPar.l_remle_null, cPar.trace_G, cPar.pve_null,
                 cPar.pve_se_null);
