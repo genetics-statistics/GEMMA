@@ -1810,9 +1810,9 @@ void GEMMA::BatchRun(PARAM &cPar) {
       gsl_vector_view UtY_col = gsl_matrix_column(UtY, 0);
 
       // obtain estimates
-      CalcLambda('R', U, eval, sigmasq, UtW, &UtY_col.vector, cPar.l_min, cPar.l_max,
+      CalcLambda('R', eval, UtW, &UtY_col.vector, cPar.l_min, cPar.l_max,
                  cPar.n_region, lambda, logl);
-      CalcLmmVgVeBeta(U, eval, sigmasq, UtW, &UtY_col.vector, lambda, vg, ve, beta,
+      CalcLmmVgVeBeta(eval, UtW, &UtY_col.vector, lambda, vg, ve, beta,
                       se_beta);
 
       cout << "REMLE estimate for vg in the null model = " << vg << endl;
@@ -2745,7 +2745,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
         // the following functions do not modify eval
         CalcLambda('R', eval, UtW, &UtY_col.vector, cPar.l_min, cPar.l_max,
                    cPar.n_region, cPar.l_remle_null, cPar.logl_remle_H0);
-        CalcLmmVgVeBeta(eval, sigmasq, UtW, &UtY_col.vector, cPar.l_remle_null,
+        CalcLmmVgVeBeta(eval, UtW, &UtY_col.vector, cPar.l_remle_null,
                         cPar.vg_remle_null, cPar.ve_remle_null, &beta.vector,
                         &se_beta.vector);
 
