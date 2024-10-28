@@ -1474,7 +1474,7 @@ void ReadFile_eigenD(const string &file_kd, bool &error, gsl_vector *eval) {
   return;
 }
 
-void ReadFile_resid(const string &file_resid, bool &error, gsl_vector *eps_eval) {
+void ReadFile_resid(const string &file_resid, bool &error, gsl_matrix *sigmasq) {
   debug_msg("entered");
   igzstream infile(file_resid.c_str(), igzstream::in);
   if (!infile) {
@@ -1483,9 +1483,9 @@ void ReadFile_resid(const string &file_resid, bool &error, gsl_vector *eps_eval)
     return;
   }
 
-  size_t n_row = sigmasq->size, i_row = 0;
+  size_t n_row = sigmasq->size1, n_col = sigmasq->size2, i_row = 0, i_col = 0;
 
-  gsl_vector_set_zero(sigmasq); //change this so that sigmasq = V_e somehow
+  gsl_matrix_set_zero(sigmasq); //change this so that sigmasq = V_e somehow
 
   string line;
   char *ch_ptr;
@@ -1498,17 +1498,21 @@ void ReadFile_resid(const string &file_resid, bool &error, gsl_vector *eps_eval)
       error = true;
     }
 
-    ch_ptr = strtok_safe2((char *)line.c_str(), " ,\t",file_resid.c_str());
-    d = atof(ch_ptr);
+    i_col = 0;
+    ch_ptr = strtok((char *)line.c_str(), " ,\t");
+    while (ch_ptr != NULL) {
+      if (i_col == n_col) {
+        cout << "error! number of columns in the residual variance file "
+             << "is larger than expected, for row = " << i_row << endl;
+        error = true;
+      }
 
-    ch_ptr = strtok(NULL, " ,\t");
-    if (ch_ptr != NULL) {
-      cout << "error! number of columns in the residual variance file is larger "
-           << "than expected, for row = " << i_row << endl;
-      error = true;
+      d = atof(ch_ptr);
+      gsl_matrix_set(sigmasq, i_row, i_col, d);
+      i_col++;
+
+      ch_ptr = strtok(NULL, " ,\t");
     }
-
-    gsl_vector_set(sigmasq, i_row, d);
 
     i_row++;
   }
