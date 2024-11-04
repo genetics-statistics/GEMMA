@@ -80,16 +80,16 @@ public:
   // Main functions
   void CopyFromParam(PARAM &cPar);
   void CopyToParam(PARAM &cPar);
-  void AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval,
+  void AnalyzeBimbam(const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *sigmasq,
                      const gsl_matrix *UtW, const gsl_matrix *UtY);
-  void AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval,
+  void AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *sigmasq,
                     const gsl_matrix *UtW, const gsl_matrix *UtY);
   void Analyzebgen(const gsl_matrix *U, const gsl_vector *eval,
                    const gsl_matrix *UtW, const gsl_matrix *UtY);
-  void AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval,
+  void AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *sigmasq,
                         const gsl_matrix *UtW, const gsl_matrix *UtY,
                         const gsl_vector *env);
-  void AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval,
+  void AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *sigmasq,
                        const gsl_matrix *UtW, const gsl_matrix *UtY,
                        const gsl_vector *env);
   void WriteFiles();
