@@ -1974,7 +1974,7 @@ void PARAM::WriteVector(const gsl_vector *vector_D, const string suffix) {
   return;
 }
 
-void PARAM::Checkresid() {
+void PARAM::CheckResid() {
   if (indicator_resid.size() == 0) {
     // No residual variance is specified, fill sigmasq with Ve_remle_null along the diagonal
     gsl_matrix *sigmasq = gsl_matrix_alloc(n_resid, n_resid);
