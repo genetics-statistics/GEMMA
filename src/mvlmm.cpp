@@ -657,7 +657,7 @@ double MphCalcLogL(const gsl_vector *eval, const gsl_matrix *U, const gsl_vector
                    const gsl_vector *D_l, const gsl_matrix *UltVehiY, const gsl_matrix *V_e_temp,
                    const gsl_matrix *Qi) {
   size_t n_size = eval->size, d_size = D_l->size, dc_size = Qi->size1;
-  double logl = 0.0, delta, ve, epsilon, dl, y, d;
+  double logl = 0.0, delta, ve, dl, y, d;
   // Create temporary matrix for Sigma
   gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
   gsl_matrix *U_T = gsl_matrix_alloc(n_size, n_size);
@@ -989,7 +989,7 @@ double MphCalcP(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *s
       d2 = 0.0;
       for (size_t k = 0; k < n_size; k++) {
         delta = gsl_vector_get(eval, k);
-        epsilon = = gsl_matrix_get(Sigma, k, k);
+        epsilon = gsl_matrix_get(Sigma, k, k);
         dx = gsl_vector_get(x_vec, k);
         dw = gsl_matrix_get(W, j, k);
         dy = gsl_matrix_get(UltVehiY, i, k);
@@ -1047,7 +1047,7 @@ void MphCalcBeta(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *
                  gsl_matrix *se_B) {
   size_t n_size = eval->size, c_size = W->size1, d_size = V_g->size1;
   size_t dc_size = d_size * c_size;
-  double delta, ve, epsilon, dl, d, dy, dw; // , logdet_Ve, logdet_Q;
+  double delta, ve, dl, d, dy, dw; // , logdet_Ve, logdet_Q;
 
   gsl_vector *D_l = gsl_vector_alloc(d_size);
   gsl_matrix *UltVeh = gsl_matrix_alloc(d_size, d_size);
@@ -1170,10 +1170,10 @@ void CalcHiQi(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sig
   gsl_matrix_set_zero(Qi);
   logdet_H = 0.0;
   logdet_Q = 0.0;
-  logdet_Ve = 0.0;
+  double logdet_Ve = 0.0;
 
   size_t n_size = eval->size, c_size = X->size1, d_size = V_g->size1;
-  double  delta, ve, epsilon, dl, d;
+  double delta, ve, dl, d;
 
   gsl_matrix *mat_dd = gsl_matrix_alloc(d_size, d_size);
   gsl_matrix *UltVeh = gsl_matrix_alloc(d_size, d_size);
