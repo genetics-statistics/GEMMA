@@ -4800,7 +4800,7 @@ void MVLMM::AnalyzeBimbamGXE(const gsl_matrix *U, const gsl_vector *eval, const 
   return;
 }
 
-void MVLMM::AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq,
+void MVLMM::AnalyzePlinkGXE(const gsl_matrix *U, const gsl_vector *eval, const gsl_matrix *sigmasq,
                             const gsl_matrix *UtW, const gsl_matrix *UtY,
                             const gsl_vector *env) {
   debug_msg("entering");
