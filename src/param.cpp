@@ -251,7 +251,7 @@ void PARAM::ReadFiles(void) {
 
     // Read residual variance files before the genotype files.
   if (!file_resid.empty()) {
-    if (ReadFile_column(file_resid, indicator_resid, resid, 1) == false) {
+    if (ReadFile_resid(file_resid, indicator_resid, resid, 1) == false) {
       error = true;
     }
   }
