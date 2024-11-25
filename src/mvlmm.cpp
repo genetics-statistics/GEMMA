@@ -3169,7 +3169,7 @@ void MphInitial(const size_t em_iter, const double em_prec,
     gsl_vector_const_view Y_row = gsl_matrix_const_row(Y, i);
     CalcLambda('R', eval, Xt, &Y_row.vector, l_min, l_max, n_region, lambda,
                logl);
-    CalcLmmVgVeBeta(eval, U, Xt, &Y_row.vector, lambda, vg, ve, beta_temp,
+    CalcLmmVgVeBeta(eval, Xt, &Y_row.vector, lambda, vg, ve, beta_temp,
                     se_beta_temp);
 
     gsl_matrix_set(V_g, i, i, vg);
