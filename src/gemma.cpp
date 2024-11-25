@@ -2583,6 +2583,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
     gsl_matrix *UtW = gsl_matrix_calloc(Y->size1, W->size2);
     gsl_matrix *UtY = gsl_matrix_calloc(Y->size1, Y->size2);
     gsl_vector *eval = gsl_vector_calloc(Y->size1);
+    gsl_matrix *sigmasq = gsl_matrix_calloc(Y->size1, W->size2);
     gsl_vector *env = gsl_vector_safe_alloc(Y->size1);
     gsl_vector *weight = gsl_vector_safe_alloc(Y->size1);
     debug_msg("Started on LMM");
