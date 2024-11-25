@@ -271,7 +271,7 @@ public:
   vector<vector<double>> cvt;
 
 // Vector recording all residual variances (NA replaced with -9).
-  vector<double> resid;
+  vector<vector<double>> resid;
 
   // Vector recording all covariates (NA replaced with -9).
   vector<double> gxe;
