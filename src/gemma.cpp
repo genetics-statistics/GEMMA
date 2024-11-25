@@ -2848,15 +2848,15 @@ void GEMMA::BatchRun(PARAM &cPar) {
 
           if (!cPar.file_bfile.empty()) {
             if (cPar.file_gxe.empty()) {
-              cMvlmm.AnalyzePlink(U, eval, UtW, UtY);
+              cMvlmm.AnalyzePlink(U, eval, sigmasq, UtW, UtY);
             } else {
-              cMvlmm.AnalyzePlinkGXE(U, eval, UtW, UtY, env);
+              cMvlmm.AnalyzePlinkGXE(U, eval, sigmasq, UtW, UtY, env);
             }
           } else {
             if (cPar.file_gxe.empty()) {
-              cMvlmm.AnalyzeBimbam(U, eval, UtW, UtY);
+              cMvlmm.AnalyzeBimbam(U, eval, sigmasq, UtW, UtY);
             } else {
-              cMvlmm.AnalyzeBimbamGXE(U, eval, UtW, UtY, env);
+              cMvlmm.AnalyzeBimbamGXE(U, eval, sigmasq, UtW, UtY, env);
             }
           }
 
