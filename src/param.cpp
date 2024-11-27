@@ -118,7 +118,7 @@ PARAM::PARAM(void)
       rho_ngrid(10), s_min(0), s_max(300), w_step(100000), s_step(1000000),
       r_pace(10), w_pace(1000), n_accept(0), n_mh(10), geo_mean(2000.0),
       randseed(-1), window_cm(0), window_bp(0), window_ns(0), n_block(200),
-      error(false), ni_subsample(0), n_cvt(1), n_cat(0), n_vc(1),
+      error(false), ni_subsample(0), n_cvt(1), n_resid(0), n_cat(0), n_vc(1),
       time_total(0.0), time_G(0.0), time_eigen(0.0), time_UtX(0.0),
       time_UtZ(0.0), time_opt(0.0), time_Omega(0.0) {}
 
@@ -251,7 +251,7 @@ void PARAM::ReadFiles(void) {
 
     // Read residual variance files before the genotype files.
   if (!file_resid.empty()) {
-    if (ReadFile_resid(file_resid, indicator_resid, resid, 1) == false) {
+    if (ReadFile_resid(file_resid, indicator_resid, resid, n_resid) == false) {
       error = true;
     }
   }
@@ -1993,7 +1993,7 @@ void PARAM::CheckResid() {
 
   // If residual variance is specified, use resid matrix
   for (size_t i = 0; i < n_resid; ++i) {
-    gsl_matrix_set(sigmasq, i, i, resid[i][i]);
+    gsl_matrix_set(sigmasq, i, i, gsl_matrix_get(resid, i, i));
   }
 
   size_t flag_ipt = 0;
