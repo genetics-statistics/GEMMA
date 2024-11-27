@@ -270,8 +270,9 @@ public:
   // Vector recording all covariates (NA replaced with -9).
   vector<vector<double>> cvt;
 
-// Vector recording all residual variances (NA replaced with -9).
-  vector<vector<double>> resid;
+// Matrix recording all residual variances (NA replaced with -9).
+  //std::vector<std::vector<double>> resid;
+  gsl_matrix* resid;
 
   // Vector recording all covariates (NA replaced with -9).
   vector<double> gxe;
@@ -349,6 +350,7 @@ public:
   void ReadGenotypes(vector<vector<unsigned char>> &Xt, gsl_matrix *K,
                      const bool calc_K);
   void CheckCvt();
+  void CheckResid();
   void CopyCvt(gsl_matrix *W);
   void CopyResid(gsl_matrix *sigmasq);
   void CopyA(size_t flag, gsl_matrix *A);
