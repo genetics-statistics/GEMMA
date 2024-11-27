@@ -577,7 +577,8 @@ void CalcSigma(const char func_name, const gsl_vector *eval, const gsl_matrix *U
   gsl_matrix *U_T = gsl_matrix_alloc(n_size, n_size);
   gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
 
-  double delta, ve, epsilon, dl, x, d;
+  double delta, ve, dl, x, d;
+  double epsilon;
 
   // Calculate the first diagonal term.
   gsl_vector_view Suu_diag = gsl_matrix_diagonal(Sigma_uu);
@@ -4285,7 +4286,7 @@ void MVLMM::AnalyzePlink(const gsl_matrix *U, const gsl_vector *eval, const gsl_
 
 // Calculate Vg, Ve, B, se(B) in the null mvLMM model.
 // Both B and se_B are d by c matrices.
-void CalcMvLmmVgVeBeta(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq, const gsl_matrix *UtW,
+void MVLMM::CalcMvLmmVgVeBeta(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sigmasq, const gsl_matrix *UtW,
                        const gsl_matrix *UtY, const size_t em_iter,
                        const size_t nr_iter, const double em_prec,
                        const double nr_prec, const double l_min,
