@@ -1751,11 +1751,12 @@ void GEMMA::BatchRun(PARAM &cPar) {
     gsl_matrix *Y = gsl_matrix_safe_alloc(cPar.ni_test, cPar.n_ph);
     gsl_matrix *W = gsl_matrix_safe_alloc(Y->size1, cPar.n_cvt);
     gsl_matrix *G = gsl_matrix_safe_alloc(Y->size1, Y->size1);
+    gsl_matrix *sigmasq = gsl_matrix_safe_alloc(cPar.n_resid, cPar.n_resid);
     gsl_matrix *U = gsl_matrix_safe_alloc(Y->size1, Y->size1);
     gsl_matrix *UtW = gsl_matrix_safe_alloc(Y->size1, W->size2);
     gsl_matrix *UtY = gsl_matrix_safe_alloc(Y->size1, Y->size2);
     gsl_vector *eval = gsl_vector_safe_alloc(Y->size1);
-    gsl_matrix *sigmasq = gsl_matrix_safe_alloc(Y->size1, W->size2);
+
     gsl_matrix *Y_full = gsl_matrix_safe_alloc(cPar.ni_cvt, cPar.n_ph);
     gsl_matrix *W_full = gsl_matrix_safe_alloc(Y_full->size1, cPar.n_cvt);
 
@@ -1840,7 +1841,8 @@ void GEMMA::BatchRun(PARAM &cPar) {
       gsl_matrix *se_B = gsl_matrix_safe_alloc(cPar.n_ph, W->size2);
 
       // obtain estimates
-      CalcMvLmmVgVeBeta(eval, UtW, UtY, cPar.em_iter, cPar.nr_iter,
+      MVLMM cMvlmm;
+      cMvlmm.CalcMvLmmVgVeBeta(eval, U, sigmasq, UtW, UtY, cPar.em_iter, cPar.nr_iter,
                         cPar.em_prec, cPar.nr_prec, cPar.l_min, cPar.l_max,
                         cPar.n_region, Vg, Ve, B, se_B);
 
@@ -2583,7 +2585,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
     gsl_matrix *UtW = gsl_matrix_calloc(Y->size1, W->size2);
     gsl_matrix *UtY = gsl_matrix_calloc(Y->size1, Y->size2);
     gsl_vector *eval = gsl_vector_calloc(Y->size1);
-    gsl_matrix *sigmasq = gsl_matrix_calloc(Y->size1, W->size2);
+    gsl_matrix *sigmasq = gsl_matrix_calloc(cPar.n_resid, cPar.n_resid);
     gsl_vector *env = gsl_vector_safe_alloc(Y->size1);
     gsl_vector *weight = gsl_vector_safe_alloc(Y->size1);
     debug_msg("Started on LMM");
@@ -2910,7 +2912,6 @@ void GEMMA::BatchRun(PARAM &cPar) {
     } else {
       gsl_matrix *U = gsl_matrix_safe_alloc(y->size, y->size);
       gsl_vector *eval = gsl_vector_safe_alloc(y->size);
-      gsl_matrix *sigmasq = gsl_matrix_safe_alloc(Y->size1, W->size2);
       gsl_matrix *UtW = gsl_matrix_safe_alloc(y->size, W->size2);
       gsl_vector *Uty = gsl_vector_safe_alloc(y->size);
 
@@ -3022,7 +3023,6 @@ void GEMMA::BatchRun(PARAM &cPar) {
       } else {
         gsl_matrix *U = gsl_matrix_safe_alloc(y->size, y->size);
         gsl_vector *eval = gsl_vector_safe_alloc(y->size);
-	gsl_matrix *sigmasq = gsl_matrix_safe_alloc(Y->size1, W->size2);
         gsl_matrix *UtW = gsl_matrix_safe_alloc(y->size, W->size2);
         gsl_vector *Uty = gsl_vector_safe_alloc(y->size);
 
