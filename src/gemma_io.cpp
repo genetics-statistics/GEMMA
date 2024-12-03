@@ -507,71 +507,69 @@ bool ReadFile_cvt(const string &file_cvt, vector<int> &indicator_cvt,
   return true;
 }
 
-bool ReadFile_resid(const string &file_resid, vector<int> &indicator_resid,
-                  vector<vector<double>> &sigmasq, size_t &n_resid) {
-  debug_msg("entered");
-  indicator_resid.clear();
+bool ReadFile_resid(const std::string &file_resid, std::vector<int> &indicator_resid,
+                    gsl_matrix *resid, size_t &n_resid) {
+    debug_msg("entered");
+    indicator_resid.clear();
 
-  ifstream infile(file_resid.c_str(), ifstream::in);
-  if (!infile) {
-    cout << "error! fail to open residual variance file: " << file_resid << endl;
-    return false;
-  }
-
-  string line;
-  char *ch_ptr;
-  double d;
-
-  int flag_na = 0;
-
-  while (!safeGetline(infile, line).eof()) {
-    vector<double> v_d;
-    flag_na = 0;
-    ch_ptr = strtok((char *)line.c_str(), " ,\t");
-    while (ch_ptr != NULL) {
-      if (strcmp(ch_ptr, "NA") == 0) {
-        flag_na = 1;
-        d = -9;
-      } else {
-        d = atof(ch_ptr);
-      }
-
-      v_d.push_back(d);
-      ch_ptr = strtok(NULL, " ,\t");
-    }
-    if (flag_na == 0) {
-      indicator_resid.push_back(1);
-    } else {
-      indicator_resid.push_back(0);
-    }
-    sigmasq.push_back(v_d);
-  }
-
-  if (indicator_resid.empty()) {
-    n_resid = 0;
-  } else {
-    flag_na = 0;
-    for (vector<int>::size_type i = 0; i < indicator_resid.size(); ++i) {
-      if (indicator_resid[i] == 0) {
-        continue;
-      }
-
-      if (flag_na == 0) {
-        flag_na = 1;
-        n_resid = sigmasq[i].size();
-      }
-      if (flag_na != 0 && n_resid != sigmasq[i].size()) {
-        cout << "error! number of residuals in row " << i
-             << " do not match other rows." << endl;
+    std::ifstream infile(file_resid.c_str(), std::ifstream::in);
+    if (!infile) {
+        std::cout << "error! fail to open residual variance file: " << file_resid << std::endl;
         return false;
-      }
     }
-  }
 
-  infile.close();
-  infile.clear();
+    std::string line;
+    char *ch_ptr;
+    double d;
+    int flag_na = 0;
+    size_t row = 0;
 
-  return true;
+    // Read and parse each line
+    while (!safeGetline(infile, line).eof()) {
+        size_t col = 0;
+        flag_na = 0;
+
+        ch_ptr = strtok((char *)line.c_str(), " ,\t");
+        while (ch_ptr != NULL) {
+            if (strcmp(ch_ptr, "NA") == 0) {
+                flag_na = 1;
+                d = -9; // Handle missing value
+            } else {
+                d = atof(ch_ptr);
+            }
+
+            // Set value in gsl_matrix
+            gsl_matrix_set(resid, row, col, d);
+            col++;
+
+            ch_ptr = strtok(NULL, " ,\t");
+        }
+
+        if (flag_na == 0) {
+            indicator_resid.push_back(1); // No missing values
+        } else {
+            indicator_resid.push_back(0); // Contains missing values
+        }
+
+        if (row == 0) {
+            n_resid = col; // Set the number of residuals per row
+        } else if (n_resid != col) {
+            std::cout << "error! number of residuals in row " << row
+                      << " does not match other rows." << std::endl;
+            return false;
+        }
+
+        row++;
+    }
+
+    if (indicator_resid.empty()) {
+        n_resid = 0;
+    }
+
+    infile.close();
+    infile.clear();
+
+    return true;
 }
 
 // Read .bim file.
