@@ -1473,55 +1473,6 @@ void ReadFile_eigenD(const string &file_kd, bool &error, gsl_vector *eval) {
   return;
 }
 
-void ReadFile_resid(const string &file_resid, bool &error, gsl_matrix *sigmasq) {
-  debug_msg("entered");
-  igzstream infile(file_resid.c_str(), igzstream::in);
-  if (!infile) {
-    cout << "error! fail to open the residual variance file: " << file_resid << endl;
-    error = true;
-    return;
-  }
-
-  size_t n_row = sigmasq->size1, n_col = sigmasq->size2, i_row = 0, i_col = 0;
-
-  gsl_matrix_set_zero(sigmasq); //change this so that sigmasq = V_e somehow
-
-  string line;
-  char *ch_ptr;
-  double d;
-
-  while (getline(infile, line)) {
-    if (i_row == n_row) {
-      cout << "error! number of rows in the residual variance file is larger "
-           << "than expected." << endl;
-      error = true;
-    }
-
-    i_col = 0;
-    ch_ptr = strtok((char *)line.c_str(), " ,\t");
-    while (ch_ptr != NULL) {
-      if (i_col == n_col) {
-        cout << "error! number of columns in the residual variance file "
-             << "is larger than expected, for row = " << i_row << endl;
-        error = true;
-      }
-
-      d = atof(ch_ptr);
-      gsl_matrix_set(sigmasq, i_row, i_col, d);
-      i_col++;
-
-      ch_ptr = strtok(NULL, " ,\t");
-    }
-
-    i_row++;
-  }
-
-  infile.close();
-  infile.clear();
-
-  return;
-}
-
 // Read bimbam mean genotype file and calculate kinship matrix.
 bool BimbamKin(const string file_geno, const set<string> ksnps,
                vector<int> &indicator_snp, const int k_mode,
