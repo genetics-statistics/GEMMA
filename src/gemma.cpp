@@ -337,6 +337,17 @@ void GEMMA::PrintHelp(size_t option) {
     cout << "                  variable for individual 2" << endl;
     cout << "                  ..." << endl;
     cout << "          missing value: NA" << endl;
+    cout << " -resid   [filename]     "
+         << " residual variance file contains a column of positive values to be used "
+         << "directly as for the residual variance---each value corresponds to an "
+         << "individual, in which each value is the empirical residual variance (sigmasq) based"
+         << "on a trait value calculated from multiple replicates for this individual" 
+         << "(similar in format to phenotype file)"
+         << endl;
+    cout << "          format: variable for individual 1" << endl;
+    cout << "                  variable for individual 2" << endl;
+    cout << "                  ..." << endl;
+    cout << "          missing value: NA" << endl;
     cout << " -k        [filename]     "
          << " specify input kinship/relatedness matrix file name" << endl;
     cout << " -mk       [filename]     "
@@ -824,6 +835,14 @@ void GEMMA::Assign(int argc, char **argv, PARAM &cPar) {
       str.clear();
       str.assign(argv[i]);
       cPar.file_weight = str;
+    } else if (strcmp(argv[i], "-resid") == 0) {
+      if (argv[i + 1] == NULL || argv[i + 1][0] == '-') {
+        continue;
+      }
+      ++i;
+      str.clear();
+      str.assign(argv[i]);
+      cPar.file_resid = str;
     } else if (strcmp(argv[i], "-wsnp") == 0) {
       if (argv[i + 1] == NULL || argv[i + 1][0] == '-') {
         continue;
@@ -1732,6 +1751,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
     gsl_matrix *Y = gsl_matrix_safe_alloc(cPar.ni_test, cPar.n_ph);
     gsl_matrix *W = gsl_matrix_safe_alloc(Y->size1, cPar.n_cvt);
     gsl_matrix *G = gsl_matrix_safe_alloc(Y->size1, Y->size1);
+    gsl_matrix *sigmasq = gsl_matrix_safe_alloc(cPar.n_resid, cPar.n_resid);
     gsl_matrix *U = gsl_matrix_safe_alloc(Y->size1, Y->size1);
     gsl_matrix *UtW = gsl_matrix_safe_alloc(Y->size1, W->size2);
     gsl_matrix *UtY = gsl_matrix_safe_alloc(Y->size1, Y->size2);
@@ -1821,7 +1841,8 @@ void GEMMA::BatchRun(PARAM &cPar) {
       gsl_matrix *se_B = gsl_matrix_safe_alloc(cPar.n_ph, W->size2);
 
       // obtain estimates
-      CalcMvLmmVgVeBeta(eval, UtW, UtY, cPar.em_iter, cPar.nr_iter,
+      MVLMM cMvlmm;
+      cMvlmm.CalcMvLmmVgVeBeta(eval, U, sigmasq, UtW, UtY, cPar.em_iter, cPar.nr_iter,
                         cPar.em_prec, cPar.nr_prec, cPar.l_min, cPar.l_max,
                         cPar.n_region, Vg, Ve, B, se_B);
 
@@ -2564,6 +2585,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
     gsl_matrix *UtW = gsl_matrix_calloc(Y->size1, W->size2);
     gsl_matrix *UtY = gsl_matrix_calloc(Y->size1, Y->size2);
     gsl_vector *eval = gsl_vector_calloc(Y->size1);
+    gsl_matrix *sigmasq = gsl_matrix_calloc(cPar.n_resid, cPar.n_resid);
     gsl_vector *env = gsl_vector_safe_alloc(Y->size1);
     gsl_vector *weight = gsl_vector_safe_alloc(Y->size1);
     debug_msg("Started on LMM");
@@ -2611,6 +2633,8 @@ void GEMMA::BatchRun(PARAM &cPar) {
           }
         }
       }
+      // Need some way of reading the residual variance file and then
+      // assigning it to what would have been the ..+ 1 part of the computation
 
       // eigen-decomposition and calculate trace_G - main track
       cout << "Start Eigen-Decomposition..." << endl;
@@ -2827,15 +2851,15 @@ void GEMMA::BatchRun(PARAM &cPar) {
 
           if (!cPar.file_bfile.empty()) {
             if (cPar.file_gxe.empty()) {
-              cMvlmm.AnalyzePlink(U, eval, UtW, UtY);
+              cMvlmm.AnalyzePlink(U, eval, sigmasq, UtW, UtY);
             } else {
-              cMvlmm.AnalyzePlinkGXE(U, eval, UtW, UtY, env);
+              cMvlmm.AnalyzePlinkGXE(U, eval, sigmasq, UtW, UtY, env);
             }
           } else {
             if (cPar.file_gxe.empty()) {
-              cMvlmm.AnalyzeBimbam(U, eval, UtW, UtY);
+              cMvlmm.AnalyzeBimbam(U, eval, sigmasq, UtW, UtY);
             } else {
-              cMvlmm.AnalyzeBimbamGXE(U, eval, UtW, UtY, env);
+              cMvlmm.AnalyzeBimbamGXE(U, eval, sigmasq, UtW, UtY, env);
             }
           }
 
