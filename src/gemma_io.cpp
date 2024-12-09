@@ -704,6 +704,7 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
   //      cerr << key << endl;
   // }
   while (!safe_get_line(infile, line).eof()) {
+    // cout << line;
     ch_ptr = strtok_safe2((char *)line.c_str(), " ,\t",infilen);
     rs = ch_ptr;
     ch_ptr = strtok_safe2(NULL, " ,\t",infilen);
@@ -750,7 +751,7 @@ bool ReadFile_geno(const string &file_geno, const set<string> &setSnps,
     gsl_vector_set_zero(genotype_miss);
     auto infilen = file_geno.c_str();
     for (int i = 0; i < ni_total; ++i) {
-      ch_ptr = strtok_safe2(NULL, " ,\t",infilen);
+      ch_ptr = strtok_safe2(NULL, " ,\t",(string("To many individuals/strains/genometypes in pheno file for ")+infilen).c_str());
       if (indicator_idv[i] == 0)
         continue;
 
