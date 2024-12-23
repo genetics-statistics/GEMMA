@@ -338,11 +338,10 @@ void GEMMA::PrintHelp(size_t option) {
     cout << "                  ..." << endl;
     cout << "          missing value: NA" << endl;
     cout << " -resid   [filename]     "
-         << " residual variance file contains a column of positive values to be used "
-         << "directly as for the residual variance---each value corresponds to an "
+         << " residual variance file contains a diagonal matrix of positive values to be used "
+         << "directly as for the residual variance---each diagonal element corresponds to an "
          << "individual, in which each value is the empirical residual variance (sigmasq) based"
          << "on a trait value calculated from multiple replicates for this individual" 
-         << "(similar in format to phenotype file)"
          << endl;
     cout << "          format: variable for individual 1" << endl;
     cout << "                  variable for individual 2" << endl;
