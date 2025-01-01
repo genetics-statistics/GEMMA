@@ -2010,7 +2010,7 @@ void PARAM::CheckResid() {
       if (indicator_idv[i] == 0 || indicator_resid[i] == 0) {
         continue;
       }
-      gsl_matrix_set(resid, i, i, Ve_remle_null[i]);
+      gsl_matrix_set(sigmasq, i, i, Ve_remle_null[i]);
     }
 
     n_resid++;
