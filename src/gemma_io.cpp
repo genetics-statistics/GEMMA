@@ -508,67 +508,77 @@ bool ReadFile_cvt(const string &file_cvt, vector<int> &indicator_cvt,
 }
 
 bool ReadFile_resid(const std::string &file_resid, std::vector<int> &indicator_resid,
-                    gsl_matrix *resid, size_t &n_resid) {
-    debug_msg("entered");
+                    gsl_matrix *&resid, size_t &n_resid) {
+    debug_msg("entered ReadFile_resid");
     indicator_resid.clear();
 
     std::ifstream infile(file_resid.c_str(), std::ifstream::in);
     if (!infile) {
-        std::cout << "error! fail to open residual variance file: " << file_resid << std::endl;
+        std::cerr << "Error: Failed to open residual variance file: " << file_resid << std::endl;
         return false;
     }
 
+    std::vector<std::vector<double>> temp_data; // Temporary storage for residuals
     std::string line;
-    char *ch_ptr;
-    double d;
-    int flag_na = 0;
-    size_t row = 0;
+    size_t num_cols = 0;
 
     // Read and parse each line
     while (!safeGetline(infile, line).eof()) {
-        size_t col = 0;
-        flag_na = 0;
-
-        ch_ptr = strtok((char *)line.c_str(), " ,\t");
+        std::vector<double> row_data;
+        char *ch_ptr = strtok((char *)line.c_str(), " ,\t");
         while (ch_ptr != NULL) {
+            double d;
             if (strcmp(ch_ptr, "NA") == 0) {
-                flag_na = 1;
                 d = -9; // Handle missing value
             } else {
                 d = atof(ch_ptr);
             }
-
-            // Set value in gsl_matrix
-            gsl_matrix_set(resid, row, col, d);
-            col++;
-
+            row_data.push_back(d);
             ch_ptr = strtok(NULL, " ,\t");
         }
 
-        if (flag_na == 0) {
-            indicator_resid.push_back(1); // No missing values
-        } else {
-            indicator_resid.push_back(0); // Contains missing values
-        }
-
-        if (row == 0) {
-            n_resid = col; // Set the number of residuals per row
-        } else if (n_resid != col) {
-            std::cout << "error! number of residuals in row " << row
-                      << " does not match other rows." << std::endl;
+        if (temp_data.empty()) {
+            num_cols = row_data.size();
+        } else if (row_data.size() != num_cols) {
+            std::cerr << "Error: Number of columns in row " << temp_data.size() 
+                      << " does not match previous rows." << std::endl;
             return false;
         }
 
-        row++;
-    }
-
-    if (indicator_resid.empty()) {
-        n_resid = 0;
+        temp_data.push_back(row_data);
     }
 
     infile.close();
-    infile.clear();
 
+    // Allocate gsl_matrix for `resid`
+    size_t num_rows = temp_data.size();
+    if (num_rows == 0 || num_cols == 0) {
+        std::cerr << "Error: No valid data found in the residual variance file." << std::endl;
+        return false;
+    }
+
+    resid = gsl_matrix_alloc(num_rows, num_cols);
+    if (resid == NULL) {
+        std::cerr << "Error: Failed to allocate memory for resid matrix." << std::endl;
+        return false;
+    }
+
+    // Copy data into `resid`
+    for (size_t i = 0; i < num_rows; ++i) {
+        for (size_t j = 0; j < num_cols; ++j) {
+            gsl_matrix_set(resid, i, j, temp_data[i][j]);
+        }
+
+        // Set indicator_resid (1 if no missing values in the row, 0 otherwise)
+        indicator_resid.push_back(
+            std::all_of(temp_data[i].begin(), temp_data[i].end(), [](double val) { return val != -9; })
+        );
+    }
+
+    // Update the number of residuals (columns)
+    n_resid = num_cols;
+
+    debug_msg("ReadFile_resid completed successfully");
     return true;
 }
 
@@ -1473,54 +1483,55 @@ void ReadFile_eigenD(const string &file_kd, bool &error, gsl_vector *eval) {
   return;
 }
 
-void ReadFile_resid(const string &file_resid, bool &error, gsl_matrix *resid) {
-  debug_msg("entered");
-  igzstream infile(file_resid.c_str(), igzstream::in);
-  if (!infile) {
-    cout << "error! fail to open the residual variance file: " << file_resid << endl;
-    error = true;
-    return;
-  }
+//This is the second mention of this function...not sure why it's here or if we need it?
+//void ReadFile_resid(const string &file_resid, bool &error, gsl_matrix *resid) {
+//  debug_msg("entered");
+//  igzstream infile(file_resid.c_str(), igzstream::in);
+//  if (!infile) {
+//    cout << "error! fail to open the residual variance file: " << file_resid << endl;
+//    error = true;
+//    return;
+//  }
 
-  size_t n_row = resid->size1, n_col = resid->size2, i_row = 0, i_col = 0;
+//  size_t n_row = resid->size1, n_col = resid->size2, i_row = 0, i_col = 0;
 
-  gsl_matrix_set_zero(resid); //change this so that resid = V_e somehow
+//  gsl_matrix_set_zero(resid); //change this so that resid = V_e somehow
 
-  string line;
-  char *ch_ptr;
-  double d;
+//  string line;
+//  char *ch_ptr;
+//  double d;
 
-  while (getline(infile, line)) {
-    if (i_row == n_row) {
-      cout << "error! number of rows in the residual variance file is larger "
-           << "than expected." << endl;
-      error = true;
-    }
+//  while (getline(infile, line)) {
+//    if (i_row == n_row) {
+//      cout << "error! number of rows in the residual variance file is larger "
+//           << "than expected." << endl;
+//      error = true;
+//    }
 
-    i_col = 0;
-    ch_ptr = strtok((char *)line.c_str(), " ,\t");
-    while (ch_ptr != NULL) {
-      if (i_col == n_col) {
-        cout << "error! number of columns in the residual variance file "
-             << "is larger than expected, for row = " << i_row << endl;
-        error = true;
-      }
+//    i_col = 0;
+//    ch_ptr = strtok((char *)line.c_str(), " ,\t");
+//    while (ch_ptr != NULL) {
+//      if (i_col == n_col) {
+//        cout << "error! number of columns in the residual variance file "
+//             << "is larger than expected, for row = " << i_row << endl;
+//        error = true;
+//      }
 
-      d = atof(ch_ptr);
-      gsl_matrix_set(resid, i_row, i_col, d);
-      i_col++;
+//      d = atof(ch_ptr);
+//      gsl_matrix_set(resid, i_row, i_col, d);
+//      i_col++;
 
-      ch_ptr = strtok(NULL, " ,\t");
-    }
+//      ch_ptr = strtok(NULL, " ,\t");
+//    }
 
-    i_row++;
-  }
+//    i_row++;
+//  }
 
-  infile.close();
-  infile.clear();
+//  infile.close();
+//  infile.clear();
 
-  return;
-}
+//  return;
+//}
 
 
 // Read bimbam mean genotype file and calculate kinship matrix.
