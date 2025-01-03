@@ -508,77 +508,67 @@ bool ReadFile_cvt(const string &file_cvt, vector<int> &indicator_cvt,
 }
 
 bool ReadFile_resid(const std::string &file_resid, std::vector<int> &indicator_resid,
-                    gsl_matrix *&resid, size_t &n_resid) {
-    debug_msg("entered ReadFile_resid");
+                    gsl_matrix *resid, size_t &n_resid) {
+    debug_msg("entered");
     indicator_resid.clear();
 
     std::ifstream infile(file_resid.c_str(), std::ifstream::in);
     if (!infile) {
-        std::cerr << "Error: Failed to open residual variance file: " << file_resid << std::endl;
+        std::cout << "error! fail to open residual variance file: " << file_resid << std::endl;
         return false;
     }
 
-    std::vector<std::vector<double>> temp_data; // Temporary storage for residuals
     std::string line;
-    size_t num_cols = 0;
+    char *ch_ptr;
+    double d;
+    int flag_na = 0;
+    size_t row = 0;
 
     // Read and parse each line
     while (!safeGetline(infile, line).eof()) {
-        std::vector<double> row_data;
-        char *ch_ptr = strtok((char *)line.c_str(), " ,\t");
+        size_t col = 0;
+        flag_na = 0;
+
+        ch_ptr = strtok((char *)line.c_str(), " ,\t");
         while (ch_ptr != NULL) {
-            double d;
             if (strcmp(ch_ptr, "NA") == 0) {
+                flag_na = 1;
                 d = -9; // Handle missing value
             } else {
                 d = atof(ch_ptr);
             }
-            row_data.push_back(d);
+
+            // Set value in gsl_matrix
+            gsl_matrix_set(resid, row, col, d);
+            col++;
+
             ch_ptr = strtok(NULL, " ,\t");
         }
 
-        if (temp_data.empty()) {
-            num_cols = row_data.size();
-        } else if (row_data.size() != num_cols) {
-            std::cerr << "Error: Number of columns in row " << temp_data.size() 
-                      << " does not match previous rows." << std::endl;
+        if (flag_na == 0) {
+            indicator_resid.push_back(1); // No missing values
+        } else {
+            indicator_resid.push_back(0); // Contains missing values
+        }
+
+        if (row == 0) {
+            n_resid = col; // Set the number of residuals per row
+        } else if (n_resid != col) {
+            std::cout << "error! number of residuals in row " << row
+                      << " does not match other rows." << std::endl;
             return false;
         }
 
-        temp_data.push_back(row_data);
+        row++;
+    }
+
+    if (indicator_resid.empty()) {
+        n_resid = 0;
     }
 
     infile.close();
+    infile.clear();
 
-    // Allocate gsl_matrix for `resid`
-    size_t num_rows = temp_data.size();
-    if (num_rows == 0 || num_cols == 0) {
-        std::cerr << "Error: No valid data found in the residual variance file." << std::endl;
-        return false;
-    }
-
-    resid = gsl_matrix_alloc(num_rows, num_cols);
-    if (resid == NULL) {
-        std::cerr << "Error: Failed to allocate memory for resid matrix." << std::endl;
-        return false;
-    }
-
-    // Copy data into `resid`
-    for (size_t i = 0; i < num_rows; ++i) {
-        for (size_t j = 0; j < num_cols; ++j) {
-            gsl_matrix_set(resid, i, j, temp_data[i][j]);
-        }
-
-        // Set indicator_resid (1 if no missing values in the row, 0 otherwise)
-        indicator_resid.push_back(
-            std::all_of(temp_data[i].begin(), temp_data[i].end(), [](double val) { return val != -9; })
-        );
-    }
-
-    // Update the number of residuals (columns)
-    n_resid = num_cols;
-
-    debug_msg("ReadFile_resid completed successfully");
     return true;
 }
 
