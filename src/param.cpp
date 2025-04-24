@@ -1050,6 +1050,20 @@ void PARAM::CheckData(void) {
     error = true;
     cout << "error! number of rows in the residual variance file do not match "
          << "the number of individuals. " << endl;
+
+    // Debugging code to check residual variances
+    std::cout << "DEBUG: n_resid = " << n_resid << std::endl;
+    if (resid != nullptr) {
+      for (size_t i = 0; i < n_resid; ++i) {
+        for (size_t j = 0; j < n_resid; ++j) {
+          std::cout << gsl_matrix_get(resid, i, j) << " ";
+        }
+        std::cout << std::endl;
+      }
+    } else {
+      std::cout << "ERROR: Residual variance matrix not initialized." << std::endl;
+    }
+
     return;
   }
 
@@ -1153,7 +1167,7 @@ void PARAM::CheckData(void) {
       cout << "## number of analyzed individuals = " << ni_test << endl;
     }
     cout << "## number of covariates = " << n_cvt << endl;
-    cout << "## number of residual variances" << n_resid << endl;
+    cout << "## number of residual variances = " << n_resid << endl;
     cout << "## number of phenotypes = " << n_ph << endl;
     if (a_mode == 43) {
       cout << "## number of observed data = " << np_obs << endl;
