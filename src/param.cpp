@@ -1975,49 +1975,22 @@ void PARAM::WriteVector(const gsl_vector *vector_D, const string suffix) {
 }
 
 void PARAM::CheckResid() {
-  if (indicator_resid.size() == 0) {
-    // No residual variance is specified, fill sigmasq with Ve_remle_null along the diagonal
+    if (indicator_resid.size() == 0) {
+        std::cout << "DEBUG: No residual variances provided, using Ve_remle_null." << std::endl;
+        gsl_matrix *sigmasq = gsl_matrix_alloc(n_resid, n_resid);
+        for (size_t i = 0; i < n_resid; ++i) {
+            gsl_matrix_set(sigmasq, i, i, Ve_remle_null[i]);
+        }
+        gsl_matrix_free(sigmasq);
+        return;
+    }
+
+    std::cout << "DEBUG: Residual variances provided, initializing sigmasq matrix." << std::endl;
     gsl_matrix *sigmasq = gsl_matrix_alloc(n_resid, n_resid);
-
     for (size_t i = 0; i < n_resid; ++i) {
-      gsl_matrix_set(sigmasq, i, i, Ve_remle_null[i]);
+        gsl_matrix_set(sigmasq, i, i, gsl_matrix_get(resid, i, i));
     }
-
-    info_msg("No residual variances were specified: Ve_remle_null is placed along the diagonal.");
     gsl_matrix_free(sigmasq);
-    return;
-  }
-
-  size_t ci_test = 0;
-  gsl_matrix *sigmasq = gsl_matrix_alloc(n_resid, n_resid);
-
-  // If residual variance is specified, use resid matrix
-  for (size_t i = 0; i < n_resid; ++i) {
-    gsl_matrix_set(sigmasq, i, i, gsl_matrix_get(resid, i, i));
-  }
-
-  size_t flag_ipt = 0;
-  double v_min, v_max;
-  std::set<size_t> set_remove;
-
-  // If no residual variance is found, assign Ve_remle_null
-  if (n_resid == set_remove.size()) {
-    indicator_resid.clear();
-    n_resid = 1;
-  } else if (flag_ipt == 0) {
-    info_msg("No residual variances found in the resid file: a diagonal of Ve_remle_null is added.");
-    for (std::vector<int>::size_type i = 0; i < indicator_idv.size(); ++i) {
-      if (indicator_idv[i] == 0 || indicator_resid[i] == 0) {
-        continue;
-      }
-      gsl_matrix_set(sigmasq, i, i, Ve_remle_null[i]);
-    }
-
-    n_resid++;
-  }
-
-  gsl_matrix_free(sigmasq);
-  return;
 }
 
 void PARAM::CheckCvt() {
