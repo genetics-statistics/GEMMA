@@ -1989,17 +1989,12 @@ void PARAM::WriteVector(const gsl_vector *vector_D, const string suffix) {
 }
 
 void PARAM::CheckResid() {
-    if (indicator_resid.size() == 0) {
-        std::cout << "DEBUG: No residual variances provided, using Ve_remle_null." << std::endl;
-        gsl_matrix *sigmasq = gsl_matrix_alloc(n_resid, n_resid);
-        for (size_t i = 0; i < n_resid; ++i) {
-            gsl_matrix_set(sigmasq, i, i, Ve_remle_null[i]);
-        }
-        gsl_matrix_free(sigmasq);
+    if (n_resid == 0 || resid == nullptr) {
+        std::cout << "ERROR: Residual variances not initialized or empty." << std::endl;
         return;
     }
 
-    std::cout << "DEBUG: Residual variances provided, initializing sigmasq matrix." << std::endl;
+    std::cout << "DEBUG: Initializing sigmasq matrix for residual variances." << std::endl;
     gsl_matrix *sigmasq = gsl_matrix_alloc(n_resid, n_resid);
     for (size_t i = 0; i < n_resid; ++i) {
         gsl_matrix_set(sigmasq, i, i, gsl_matrix_get(resid, i, i));
