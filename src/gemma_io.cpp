@@ -566,6 +566,19 @@ bool ReadFile_resid(const std::string &file_resid, std::vector<int> &indicator_r
         n_resid = 0;
     }
 
+    // Debugging step: Print the residual variance matrix
+    std::cout << "DEBUG: n_resid = " << n_resid << std::endl;
+    if (resid != nullptr) {
+        for (size_t i = 0; i < n_resid; ++i) {
+            for (size_t j = 0; j < n_resid; ++j) {
+                std::cout << gsl_matrix_get(resid, i, j) << " ";
+            }
+            std::cout << std::endl;
+        }
+    } else {
+        std::cout << "ERROR: Residual variance matrix not initialized." << std::endl;
+    }
+
     infile.close();
     infile.clear();
 
