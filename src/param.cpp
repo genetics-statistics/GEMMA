@@ -118,8 +118,8 @@ PARAM::PARAM(void)
       rho_ngrid(10), s_min(0), s_max(300), w_step(100000), s_step(1000000),
       r_pace(10), w_pace(1000), n_accept(0), n_mh(10), geo_mean(2000.0),
       randseed(-1), window_cm(0), window_bp(0), window_ns(0), n_block(200),
-      error(false), ni_subsample(0), n_cvt(1), n_cat(0), n_vc(1),
-      ni_test(0), n_resid(0), resid(nullptr),
+      error(false), ni_subsample(0), ni_total(0), ni_test(0), ni_cvt(0), ni_study(0), ni_ref(0), 
+      n_vc(1), resid(nullptr), n_cvt(1), n_cat(0), n_resid(0),
       time_total(0.0), time_G(0.0), time_eigen(0.0), time_UtX(0.0),
       time_UtZ(0.0), time_opt(0.0), time_Omega(0.0) {}
 
