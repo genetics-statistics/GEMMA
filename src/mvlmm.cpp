@@ -342,9 +342,9 @@ double CalcQi(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sig
       for (size_t l = 0; l < d_size; l++) {
         dl = gsl_vector_get(D_l, l);
         ve = gsl_matrix_get(V_e_temp, l, l);
-        
+
         // Calculate Sigma using the new helper function
-        CalculateSigma(U_T, U, sigmasq, ve, Sigma);
+        CalculateSigma(U, sigmasq, ve, Sigma);
 
         if (j < i) {
           d = gsl_matrix_get(Q, j * d_size + l, i * d_size + l);
@@ -407,8 +407,7 @@ void CalcXHiY(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sig
    
    // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
    // Calculate Sigma using the new helper function
-   CalculateSigma(U_T, U, sigmasq, ve, Sigma);
-
+   CalculateSigma(U, sigmasq, ve, Sigma);
    
     for (size_t j = 0; j < c_size; j++) {
       d = 0.0;
@@ -451,7 +450,7 @@ void CalcOmega(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *si
 
       // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
       // Calculate Sigma using the new helper function
-      CalculateSigma(U_T, U, sigmasq, ve, Sigma);
+      CalculateSigma(U, sigmasq, ve, Sigma);
 
       // Get epsilon from Sigma
       epsilon = gsl_matrix_get(Sigma, k, k);
@@ -554,7 +553,7 @@ void UpdateV(const gsl_vector *eval, const gsl_matrix *sigmasq, const gsl_matrix
     }
     // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
     // Calculate Sigma using the new helper function
-    CalculateSigma(U_T, U, sigmasq, ve, Sigma);
+    CalculateSigma(U, sigmasq, ve, Sigma);
 
     epsilon = gsl_matrix_get(Sigma, k, k);
   
@@ -642,7 +641,7 @@ void CalcSigma(const char func_name, const gsl_vector *eval, const gsl_matrix *U
 
         // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
         // Calculate Sigma using the new helper function
-        CalculateSigma(U_T, U, sigmasq, ve, Sigma);
+        CalculateSigma(U, sigmasq, ve, Sigma);
 
         epsilon = gsl_matrix_get(Sigma, k, k);
        
@@ -704,7 +703,7 @@ double MphCalcLogL(const gsl_vector *eval, const gsl_matrix *U, const gsl_vector
 
       // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
       // Calculate Sigma using the new helper function
-      CalculateSigma(U_T, U, sigmasq, ve, Sigma);
+      CalculateSigma(U, sigmasq, ve, Sigma);
 
       double epsilon = gsl_matrix_get(Sigma, k, k);
 
@@ -992,7 +991,7 @@ double MphCalcP(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *s
 
     // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
     // Calculate Sigma using the new helper function
-    CalculateSigma(U_T, U, sigmasq, ve, Sigma);
+    CalculateSigma(U, sigmasq, ve, Sigma);
    
     d1 = 0.0;
     d2 = 0.0;
@@ -1109,7 +1108,7 @@ void MphCalcBeta(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *
 
     // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
     // Calculate Sigma using the new helper function
-    CalculateSigma(U_T, U, sigmasq, ve, Sigma);
+    CalculateSigma(U, sigmasq, ve, Sigma);
    
     for (size_t j = 0; j < c_size; j++) {
       d = 0.0;
@@ -1224,7 +1223,7 @@ void CalcHiQi(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix *sig
 
       // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
       // Calculate Sigma using the new helper function
-      CalculateSigma(U_T, U, sigmasq, ve, Sigma);
+      CalculateSigma(U, sigmasq, ve, Sigma);
 
      double epsilon = gsl_matrix_get(Sigma, k, k);
      
@@ -1390,7 +1389,7 @@ for (size_t i = 0; i < d_size; i++) {
   ve = gsl_matrix_get(V_e_temp, i, i);
   // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
   // Calculate Sigma using the new helper function
-  CalculateSigma(U_T, U, sigmasq, ve, Sigma);
+  CalculateSigma(U, sigmasq, ve, Sigma);
  
   for (size_t k = 0; k < n_size; k++) {
     delta = gsl_vector_get(eval, k);
@@ -1432,7 +1431,7 @@ void Calc_xHiDHiy(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix 
 
     // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
     // Calculate Sigma using the new helper function
-    CalculateSigma(U_T, U, sigmasq, ve, Sigma);
+    CalculateSigma(U, sigmasq, ve, Sigma);
    
     for (size_t k = 0; k < n_size; k++) {
       delta = gsl_vector_get(eval, k);
@@ -1482,7 +1481,7 @@ void Calc_xHiDHix(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix 
 
     // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
     // Calculate Sigma using the new helper function
-    CalculateSigma(U_T, U, sigmasq, ve, Sigma);
+    CalculateSigma(U, sigmasq, ve, Sigma);
    
     for (size_t k = 0; k < n_size; k++) {
       delta = gsl_vector_get(eval, k);
@@ -1543,7 +1542,7 @@ void Calc_yHiDHiDHiy(const gsl_vector *eval, const gsl_matrix *U, const gsl_matr
 
     // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
     // Calculate Sigma using the new helper function
-    CalculateSigma(U_T, U, sigmasq, ve, Sigma);
+    CalculateSigma(U, sigmasq, ve, Sigma);
    
     for (size_t k = 0; k < n_size; k++) {
       delta = gsl_vector_get(eval, k);
@@ -1617,7 +1616,7 @@ for (size_t i = 0; i < d_size; i++) {
 
   // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
   // Calculate Sigma using the new helper function
-  CalculateSigma(U_T, U, sigmasq, ve, Sigma);
+  CalculateSigma(U, sigmasq, ve, Sigma);
  
   for (size_t k = 0; k < n_size; k++) {
     delta = gsl_vector_get(eval, k);
@@ -1714,7 +1713,7 @@ void Calc_xHiDHiDHix(const gsl_vector *eval, const gsl_matrix *U, const gsl_matr
 
     // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
     // Calculate Sigma using the new helper function
-    CalculateSigma(U_T, U, sigmasq, ve, Sigma);
+    CalculateSigma(U, sigmasq, ve, Sigma);
    
     for (size_t k = 0; k < n_size; k++) {
       delta = gsl_vector_get(eval, k);
@@ -1826,7 +1825,7 @@ void Calc_traceHiD(const gsl_vector *eval, const gsl_matrix *U, const gsl_matrix
 
     // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
     // Calculate Sigma using the new helper function
-    CalculateSigma(U_T, U, sigmasq, ve, Sigma);
+    CalculateSigma(U, sigmasq, ve, Sigma);
    
     for (size_t k = 0; k < n_size; k++) {
      delta = gsl_vector_get(eval, k);
@@ -1868,7 +1867,7 @@ void Calc_traceHiDHiD(const gsl_vector *eval, const gsl_matrix *U, const gsl_mat
 
    // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
    // Calculate Sigma using the new helper function
-   CalculateSigma(U_T, U, sigmasq, ve, Sigma);
+   CalculateSigma(U, sigmasq, ve, Sigma);
 
    for (size_t k = 0; k < n_size; k++) {
     delta = gsl_vector_get(eval, k);
@@ -3308,7 +3307,7 @@ void MphInitial(const size_t em_iter, const double em_prec,
 
     // Calculate Sigma = t(U) %*% (sigmasq / V_e_temp[i]) %*% U
     // Calculate Sigma using the new helper function
-    CalculateSigma(U_T, U, sigmasq, ve, Sigma);
+    CalculateSigma(U, sigmasq, ve, Sigma);
    
     for (size_t j = 0; j < c_size; j++) {
       d = 0.0;
