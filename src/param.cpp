@@ -1995,7 +1995,7 @@ void PARAM::WriteVector(const gsl_vector *vector_D, const string suffix) {
 void PARAM::CheckResid() {
     if (file_resid.empty()) {
         // Default case: no residual variance file provided
-        std::cout << "DEBUG: No residual variances provided, using Ve_null." << std::endl;
+        std::cout << "DEBUG: No residual variances provided, seeing diagonals to 1." << std::endl;
 
         // Set n_resid to the number of analyzed individuals
         n_resid = ni_test;
