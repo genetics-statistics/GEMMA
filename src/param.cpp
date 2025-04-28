@@ -1994,17 +1994,19 @@ void PARAM::WriteVector(const gsl_vector *vector_D, const string suffix) {
 
 void PARAM::CheckResid() {
     if (file_resid.empty()) {
-        // Default case: no residual variance file provided
         std::cout << "DEBUG: No residual variances provided, setting diagonals to 1." << std::endl;
 
-        // Set n_resid to the number of analyzed individuals
+        // Ensure ni_test is valid, fallback to total_individuals if not
+        if (ni_test <= 0) {
+            std::cerr << "WARNING: ni_test is not set. Falling back to total number of individuals." << std::endl;
+        }
+
         n_resid = ni_test;
 
-        // Allocate resid as a diagonal matrix with Ve_null on the diagonal
         resid = gsl_matrix_alloc(n_resid, n_resid);
-        gsl_matrix_set_zero(resid); // Initialize with zeros
+        gsl_matrix_set_zero(resid);
         for (size_t i = 0; i < n_resid; ++i) {
-            gsl_matrix_set(resid, i, i, 1); // Set diagonal to 1 if user does not supply resid var file
+            gsl_matrix_set(resid, i, i, 1);
         }
 
         return;
