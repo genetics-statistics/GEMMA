@@ -1995,7 +1995,7 @@ void PARAM::WriteVector(const gsl_vector *vector_D, const string suffix) {
 void PARAM::CheckResid() {
     if (file_resid.empty()) {
         // Default case: no residual variance file provided
-        std::cout << "DEBUG: No residual variances provided, seeing diagonals to 1." << std::endl;
+        std::cout << "DEBUG: No residual variances provided, setting diagonals to 1." << std::endl;
 
         // Set n_resid to the number of analyzed individuals
         n_resid = ni_test;
@@ -2230,26 +2230,30 @@ void PARAM::CopyWeight(gsl_vector *w) {
 }
 
 void PARAM::CopyResid(gsl_matrix *sigmasq) {
+  // Zero everything first
+  gsl_matrix_set_zero(sigmasq);
+
   size_t ci_test = 0;
+  const size_t D = sigmasq->size1;
 
-  // Loop through the individuals and residual variance indicators
-  for (std::vector<int>::size_type i = 0; i < indicator_idv.size(); ++i) {
-    if (indicator_idv[i] == 0 || indicator_resid[i] == 0) {
-      continue;  // Skip if either the individual or residual variance is not active
+  // Loop over raw residuals; compact only the active ones
+  for (size_t i = 0; i < indicator_idv.size(); ++i) {
+    if (!indicator_idv[i] || !indicator_resid[i]) 
+      continue;
+
+    if (ci_test < D) {
+      // grab the i-th diagonal resid[i,i] and store at (ci,ci)
+      double r = gsl_matrix_get(resid, i, i);
+      gsl_matrix_set(sigmasq, ci_test, ci_test, r);
+      ++ci_test;
     }
-
-    if (ci_test >= sigmasq->size1 || ci_test >= sigmasq->size2) {
-    // Handle error or skip invalid indices
+    else {
+      // we've run out of room in sigmasq; you could break or warning()
+      break;
     }
-    // Set the diagonal element in sigmasq from resid
-    gsl_matrix_set(sigmasq, ci_test, ci_test, gsl_matrix_get(resid, i, i));
-
-    // Increment the index for the next valid individual/residual variance
-    ci_test++;
   }
-
-  return;
 }
+
 
 // If flag=0, then use indicator_idv to load W and Y;
 // else, use indicator_cvt to load them.
