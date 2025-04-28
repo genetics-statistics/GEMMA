@@ -118,7 +118,8 @@ PARAM::PARAM(void)
       rho_ngrid(10), s_min(0), s_max(300), w_step(100000), s_step(1000000),
       r_pace(10), w_pace(1000), n_accept(0), n_mh(10), geo_mean(2000.0),
       randseed(-1), window_cm(0), window_bp(0), window_ns(0), n_block(200),
-      error(false), ni_subsample(0), n_cvt(1), n_resid(0), n_cat(0), n_vc(1),
+      error(false), ni_subsample(0), n_cvt(1), n_cat(0), n_vc(1),
+      ni_test(0), n_resid(0), Ve_null(1.0), resid(nullptr),
       time_total(0.0), time_G(0.0), time_eigen(0.0), time_UtX(0.0),
       time_UtZ(0.0), time_opt(0.0), time_Omega(0.0) {}
 
@@ -249,12 +250,15 @@ void PARAM::ReadFiles(void) {
   }
   trim_individuals(indicator_cvt, ni_max);
 
-    // Read residual variance files before the genotype files.
-  if (!file_resid.empty()) {
-    if (ReadFile_resid(file_resid, indicator_resid, resid, n_resid) == false) {
-      error = true;
+    // Read residual variance file before genotype file
+    if (!file_resid.empty()) {
+        if (ReadFile_resid(file_resid, indicator_resid, resid, n_resid) == false) {
+            error = true;
+        }
+    } else {
+        // Call CheckResid to handle default case
+        CheckResid();
     }
-  }
 
   if (!file_gxe.empty()) {
     if (ReadFile_column(file_gxe, indicator_gxe, gxe, 1) == false) {
@@ -1989,17 +1993,26 @@ void PARAM::WriteVector(const gsl_vector *vector_D, const string suffix) {
 }
 
 void PARAM::CheckResid() {
-    if (n_resid == 0 || resid == nullptr) {
-        std::cout << "ERROR: Residual variances not initialized or empty." << std::endl;
+    if (file_resid.empty()) {
+        // Default case: no residual variance file provided
+        std::cout << "DEBUG: No residual variances provided, using Ve_null." << std::endl;
+
+        // Set n_resid to the number of analyzed individuals
+        n_resid = ni_test;
+
+        // Allocate resid as a diagonal matrix with Ve_null on the diagonal
+        resid = gsl_matrix_alloc(n_resid, n_resid);
+        gsl_matrix_set_zero(resid); // Initialize with zeros
+        for (size_t i = 0; i < n_resid; ++i) {
+            gsl_matrix_set(resid, i, i, Ve_null); // Set diagonal to Ve_null
+        }
+
         return;
     }
 
-    std::cout << "DEBUG: Initializing sigmasq matrix for residual variances." << std::endl;
-    gsl_matrix *sigmasq = gsl_matrix_alloc(n_resid, n_resid);
-    for (size_t i = 0; i < n_resid; ++i) {
-        gsl_matrix_set(sigmasq, i, i, gsl_matrix_get(resid, i, i));
-    }
-    gsl_matrix_free(sigmasq);
+    // Handle the case where file_resid is provided
+    std::cout << "DEBUG: Residual variances provided, initializing resid matrix." << std::endl;
+    // Ensure resid matrix is allocated and filled elsewhere
 }
 
 void PARAM::CheckCvt() {
