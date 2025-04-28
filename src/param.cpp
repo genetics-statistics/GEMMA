@@ -1,4 +1,4 @@
-/*
+ /*
     Genome-wide Efficient Mixed Model Association (GEMMA)
     Copyright © 2011-2017, Xiang Zhou
     Copyright © 2017, Peter Carbonetto
@@ -2004,7 +2004,7 @@ void PARAM::CheckResid() {
         resid = gsl_matrix_alloc(n_resid, n_resid);
         gsl_matrix_set_zero(resid); // Initialize with zeros
         for (size_t i = 0; i < n_resid; ++i) {
-            gsl_matrix_set(resid, i, i, Ve_null); // Set diagonal to Ve_null
+            gsl_matrix_set(resid, i, i, 1); // Set diagonal to 1 if user does not supply resid var file
         }
 
         return;
