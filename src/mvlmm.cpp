@@ -605,8 +605,7 @@ void CalcSigma(const char func_name, const gsl_vector *eval, const gsl_matrix *U
   gsl_matrix *U_T = gsl_matrix_alloc(n_size, n_size);
   gsl_matrix *Sigma = gsl_matrix_alloc(n_size, n_size);
 
-  double delta, ve, dl, x, d;
-  double epsilon;
+  double delta, ve, dl, x, d, epsilon;
 
   // Calculate the first diagonal term.
   gsl_vector_view Suu_diag = gsl_matrix_diagonal(Sigma_uu);
