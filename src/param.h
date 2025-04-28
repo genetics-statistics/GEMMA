@@ -233,7 +233,7 @@ public:
 
   // Number of individuals.
   size_t ni_total, ni_test, ni_cvt, ni_study, ni_ref;
-  size_t n_vc;
+  size_t n_vc;                // Number of variance components
   size_t ni_max = 0; // -nind switch for testing purposes
 
   // Matrix recording all residual variances (NA replaced with -9).
@@ -253,7 +253,6 @@ public:
   size_t n_resid;          // Number of residual variances.
   size_t n_cat;               // Number of continuous categories.
   size_t n_ph;                // Number of phenotypes.
-  size_t n_vc;                // Number of variance components
                               // (including the diagonal matrix).
   double time_total;          // Record total time.
   double time_G;              // Time spent on reading files the
