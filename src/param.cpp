@@ -119,7 +119,7 @@ PARAM::PARAM(void)
       r_pace(10), w_pace(1000), n_accept(0), n_mh(10), geo_mean(2000.0),
       randseed(-1), window_cm(0), window_bp(0), window_ns(0), n_block(200),
       error(false), ni_subsample(0), n_cvt(1), n_cat(0), n_vc(1),
-      ni_test(0), n_resid(0), Ve_null(1.0), resid(nullptr),
+      ni_test(0), n_resid(0), resid(nullptr),
       time_total(0.0), time_G(0.0), time_eigen(0.0), time_UtX(0.0),
       time_UtZ(0.0), time_opt(0.0), time_Omega(0.0) {}
 
