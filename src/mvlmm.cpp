@@ -283,13 +283,40 @@ tuple<gsl_matrix *, double> EigenProc(const gsl_matrix *V_g, const gsl_matrix *V
   return make_tuple(V_e_temp, logdet_Ve);
 }
 
-// Function to calculate Sigma
-void CalculateSigma(const gsl_matrix *U_T, const gsl_matrix *U, const gsl_matrix *sigmasq, 
-  double ve, gsl_matrix *Sigma) {
-gsl_matrix_set_zero(Sigma);
-gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, U_T, U, 0.0, Sigma);
-double scalar = gsl_matrix_get(sigmasq, 0, 0) / ve;
-gsl_matrix_scale(Sigma, scalar);
+// Compute Sigma = Uᵀ * (sigmasq / ve) * U
+//   U        : d × d orthonormal matrix
+//   sigmasq  : d × d matrix
+//   ve       : scalar (V_e_temp[l,l])
+//   Sigma    : d × d output (must already be allocated)
+//
+void CalculateSigma(
+    const gsl_matrix *U,
+    const gsl_matrix *sigmasq,
+    double ve,
+    gsl_matrix       *Sigma)
+{
+    // infer size
+    const size_t d = U->size1;
+
+    // 1) build M = sigmasq / ve
+    gsl_matrix *M = gsl_matrix_alloc(d, d);
+    gsl_matrix_memcpy(M, sigmasq);
+    gsl_matrix_scale(M, 1.0/ve);
+
+    // 2) tmp = Uᵀ * M
+    gsl_matrix *tmp = gsl_matrix_alloc(d, d);
+    gsl_blas_dgemm(CblasTrans, CblasNoTrans,
+                   1.0, U, M,
+                   0.0, tmp);
+
+    // 3) Sigma = tmp * U
+    gsl_matrix_set_zero(Sigma);
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans,
+                   1.0, tmp, U,
+                   0.0, Sigma);
+
+    gsl_matrix_free(M);
+    gsl_matrix_free(tmp);
 }
 
 // Qi=(\sum_{k=1}^n x_kx_k^T\otimes(delta_k*Dl+epsilon_k)^{-1} )^{-1}.
