@@ -2237,7 +2237,10 @@ void PARAM::CopyResid(gsl_matrix *sigmasq) {
     if (indicator_idv[i] == 0 || indicator_resid[i] == 0) {
       continue;  // Skip if either the individual or residual variance is not active
     }
-    
+
+    if (ci_test >= sigmasq->size1 || ci_test >= sigmasq->size2) {
+    // Handle error or skip invalid indices
+    }
     // Set the diagonal element in sigmasq from resid
     gsl_matrix_set(sigmasq, ci_test, ci_test, gsl_matrix_get(resid, i, i));
 
