@@ -175,7 +175,7 @@ public:
   double logl_mle_H0, logl_remle_H0;
   double pve_null, pve_se_null, pve_total, se_pve_total;
   double vg_remle_null, ve_remle_null, vg_mle_null, ve_mle_null;
-  vector<double> Vg_remle_null, Ve_remle_null, Vg_mle_null, Ve_mle_null;
+  vector<double> Vg_remle_null, Ve_remle_null, Vg_mle_null, Ve_mle_null, Ve_null;
   vector<double> VVg_remle_null, VVe_remle_null, VVg_mle_null;
   vector<double> VVe_mle_null;
   vector<double> beta_remle_null, se_beta_remle_null, beta_mle_null;
