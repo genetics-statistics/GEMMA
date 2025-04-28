@@ -233,7 +233,12 @@ public:
 
   // Number of individuals.
   size_t ni_total, ni_test, ni_cvt, ni_study, ni_ref;
+  size_t n_vc;
   size_t ni_max = 0; // -nind switch for testing purposes
+
+  // Matrix recording all residual variances (NA replaced with -9).
+  //std::vector<std::vector<double>> resid;
+  gsl_matrix* resid;
 
   // Number of observed and missing phenotypes.
   size_t np_obs, np_miss;
@@ -269,10 +274,6 @@ public:
 
   // Vector recording all covariates (NA replaced with -9).
   vector<vector<double>> cvt;
-
-// Matrix recording all residual variances (NA replaced with -9).
-  //std::vector<std::vector<double>> resid;
-  gsl_matrix* resid;
 
   // Vector recording all covariates (NA replaced with -9).
   vector<double> gxe;
