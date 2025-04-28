@@ -250,16 +250,6 @@ void PARAM::ReadFiles(void) {
   }
   trim_individuals(indicator_cvt, ni_max);
 
-    // Read residual variance file before genotype file
-    if (!file_resid.empty()) {
-        if (ReadFile_resid(file_resid, indicator_resid, resid, n_resid) == false) {
-            error = true;
-        }
-    } else {
-        // Call CheckResid to handle default case
-        CheckResid();
-    }
-
   if (!file_gxe.empty()) {
     if (ReadFile_column(file_gxe, indicator_gxe, gxe, 1) == false) {
       error = true;
@@ -302,6 +292,16 @@ void PARAM::ReadFiles(void) {
     // Post-process covariates and phenotypes, obtain
     // ni_test, save all useful covariates.
     ProcessCvtPhen();
+
+    // Read residual variance file before genotype file but after ni_test is defined
+    if (!file_resid.empty()) {
+        if (ReadFile_resid(file_resid, indicator_resid, resid, n_resid) == false) {
+            error = true;
+        }
+    } else {
+        // Call CheckResid to handle default case
+        CheckResid();
+    }
 
     // Obtain covariate matrix.
     auto W1 = gsl_matrix_safe_alloc(ni_test, n_cvt);
