@@ -139,6 +139,7 @@ inline int fedisableexcept(unsigned int excepts)
 
 #endif
 
+/*
 void enable_segfpe() {
   if (!is_fpe_check_mode() || is_legacy_mode()) return;
   #ifdef __GNUC__
@@ -159,6 +160,7 @@ void disable_segfpe() {
     #endif
   #endif
 }
+*/
 
 void write(const char *s, const char *msg) {
   if (!is_debug_data_mode() && !is_debug_dump_mode()) return;

@@ -1642,7 +1642,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
   clock_t time_begin, time_start;
   time_begin = clock();
 
-  if (is_check_mode()) enable_segfpe(); // fast NaN checking by default
+  // if (is_check_mode()) enable_segfpe(); // fast NaN checking by default
 
   // Read Files.
   cout << "Reading Files ... " << endl;
@@ -1932,7 +1932,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
     VARCOV cVarcov;
     cVarcov.CopyFromParam(cPar);
 
-    if (is_check_mode()) disable_segfpe(); // disable fast NaN checking for now
+    // if (is_check_mode()) disable_segfpe(); // disable fast NaN checking for now
 
     if (!cPar.file_bfile.empty()) {
       cVarcov.AnalyzePlink();
@@ -2047,7 +2047,7 @@ void GEMMA::BatchRun(PARAM &cPar) {
     VARCOV cVarcov;
     cVarcov.CopyFromParam(cPar);
 
-    if (is_check_mode()) disable_segfpe(); // fast NaN checking for now
+    // if (is_check_mode()) disable_segfpe(); // fast NaN checking for now
 
     if (!cPar.file_bfile.empty()) {
       cVarcov.AnalyzePlink();

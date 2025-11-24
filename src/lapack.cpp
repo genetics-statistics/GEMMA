@@ -196,7 +196,7 @@ void lapack_eigen_symmv(gsl_matrix *A, gsl_vector *eval, gsl_matrix *evec,
 
     // disable fast NaN checking for now - dsyevr throws NaN errors,
     // but fixes them (apparently)
-    if (is_check_mode()) disable_segfpe();
+    // if (is_check_mode()) disable_segfpe();
 
     // DSYEVR - computes selected eigenvalues and, optionally,
     // eigenvectors of a real symmetric matrix
@@ -223,7 +223,7 @@ void lapack_eigen_symmv(gsl_matrix *A, gsl_vector *eval, gsl_matrix *evec,
     if (INFO != 0) cerr << "ERROR: value of INFO is " << INFO;
     enforce_msg(INFO == 0, "lapack_eigen_symmv failed");
 
-    if (is_check_mode()) enable_segfpe(); // reinstate fast NaN checking
+    // if (is_check_mode()) enable_segfpe(); // reinstate fast NaN checking
 
     gsl_matrix_transpose(evec);
 
