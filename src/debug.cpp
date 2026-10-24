@@ -94,7 +94,7 @@ You can disable floating point tests with the -no-check switch (use at your own 
    this is an Intel hardware feature that does not slow down computations.
 */
 
-#if defined(__APPLE__) && defined(__MACH__)
+#if defined(__APPLE__) && defined(__MACH__) && defined(__x86_64__)
 
 // Public domain polyfill for feenableexcept on OS X
 // http://www-personal.umich.edu/~williams/archive/computation/fe-handling-example.c
